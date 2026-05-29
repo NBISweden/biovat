@@ -13,7 +13,9 @@ Nextflow pipeline for mapping, variant calling, data filtering
 and downstream analyses of population-level whole genome 
 resequencing data. 
 
-[](assets/biovat_overview_application.png)
+<p align="center">
+  <img src="assets/biovat_overview_application.png" alt="biovat" width="500">
+</p>
 
 <!-- TODO:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
