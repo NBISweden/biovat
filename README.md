@@ -14,7 +14,7 @@ and downstream analyses of population-level whole genome
 resequencing data. 
 
 <p align="center">
-  <img src="assets/biovat_overview_application.png" alt="biovat" width="500">
+  <img src="assets/biovat_overview_application.png" alt="BioVAT" width="500">
 </p>
 
 <!-- TODO:
@@ -22,7 +22,7 @@ resequencing data.
    major pipeline sections and the types of output it produces. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
 -->
 
-<!-- TODO: Include biovat figure, replace later with "tube map" design for that. See https://nf-co.re/docs/community/brand/workflow-schematics#examples for examples.   -->
+<!-- TODO: Include BioVAT figure, replace later with "tube map" design for that. See https://nf-co.re/docs/community/brand/workflow-schematics#examples for examples.   -->
 <!-- TODO: Fill in short bullet-pointed list of the default steps in the pipeline , e.g. 
 
 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
@@ -50,7 +50,7 @@ Now, you can run the pipeline using:
 TODO: update the following command to include all required parameters for a minimal example
 
 ```bash
-nextflow run biovat \
+nextflow run BioVAT \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
@@ -87,7 +87,7 @@ see the [contributing guidelines](docs/CONTRIBUTING.md).
 ## Citations
 
 <!-- TODO: Add citation for pipeline after first release. -->
-<!-- If you use biovat for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
+<!-- If you use BioVAT for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
 <!-- TODO: Add bibliography of tools and data used in your pipeline -->
 

@@ -79,7 +79,7 @@ workflow BIOVAT {
     MULTIQC(
         ch_multiqc_files.flatten().collect().map { files ->
             [
-                [id: 'biovat'],
+                [id: 'BioVAT'],
                 files,
                 multiqc_config
                     ? file(multiqc_config, checkIfExists: true)

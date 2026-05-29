@@ -1,5 +1,5 @@
 //
-// Subworkflow with functionality specific to the biovat pipeline
+// Subworkflow with functionality specific to the BioVAT pipeline
 //
 
 /*

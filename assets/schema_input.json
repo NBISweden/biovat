@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/biovat/master/assets/schema_input.json",
-    "title": "biovat pipeline - params.input schema",
+    "$id": "https://raw.githubusercontent.com/BioVAT/master/assets/schema_input.json",
+    "title": "BioVAT pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
     "items": {

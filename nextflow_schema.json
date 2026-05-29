@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/biovat/master/nextflow_schema.json",
-    "title": "biovat pipeline parameters",
+    "$id": "https://raw.githubusercontent.com/BioVAT/master/nextflow_schema.json",
+    "title": "BioVAT pipeline parameters",
     "description": "BioVAT (BIOdiversity Variant Analysis Toolkit), a modular Nextflow pipeline for population genomics analysis of non-model organisms ",
     "type": "object",
     "$defs": {

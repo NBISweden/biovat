@@ -1,4 +1,4 @@
-# biovat: Output
+# BioVAT: Output
 
 ## Introduction
 
