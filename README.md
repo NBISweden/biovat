@@ -1,8 +1,4 @@
-# biovat
-
-[![GitHub Actions CI Status](https://github.com/biovat/actions/workflows/nf-test.yml/badge.svg)](https://github.com/biovat/actions/workflows/nf-test.yml)
-[![GitHub Actions Linting Status](https://github.com/biovat/actions/workflows/linting.yml/badge.svg)](https://github.com/biovat/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
-[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
+# BioVAT
 
 [![Pixi Badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh)
 [![Nextflow](https://img.shields.io/badge/Nextflow-v26.04.3-brightgreen)]
@@ -24,7 +20,11 @@ resequencing data.
 -->
 
 <!-- TODO: Include biovat figure, replace later with "tube map" design for that. See https://nf-co.re/docs/community/brand/workflow-schematics#examples for examples.   -->
-<!-- TODO: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+<!-- TODO: Fill in short bullet-pointed list of the default steps in the pipeline , e.g. 
+
+1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
+2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+-->
 
 ## Usage
 
@@ -67,13 +67,13 @@ Lorena Ament, Per Unneberg, and Lucile Soler.
 We thank the following people for their extensive assistance 
 in the development of this pipeline:
 
-Filip Thörn
-Henrik Lantz
-Jacob Höglund
-Jesper Boman
-José Cerca
-Mafalda Ferreira
-Niclas Backström
+Filip Thörn 
+Henrik Lantz 
+Jacob Höglund 
+Jesper Boman 
+José Cerca 
+Mafalda Ferreira 
+Niclas Backström 
 
 
 ## Contributions and Support
