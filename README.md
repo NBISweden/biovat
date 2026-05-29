@@ -1,7 +1,7 @@
 # BioVAT
 
+![Nextflow](https://img.shields.io/badge/Nextflow-v26.04.3-brightgreen)
 [![Pixi Badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh)
-[![Nextflow](https://img.shields.io/badge/Nextflow-v26.04.3-brightgreen)]
 
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
@@ -12,6 +12,8 @@
 Nextflow pipeline for mapping, variant calling, data filtering 
 and downstream analyses of population-level whole genome 
 resequencing data. 
+
+[](assets/biovat_overview_application.png)
 
 <!-- TODO:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
@@ -89,4 +91,4 @@ see the [contributing guidelines](docs/CONTRIBUTING.md).
 
 An extensive list of references for the tools used by the 
 pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) 
-file.
+file. 
