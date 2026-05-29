@@ -7,7 +7,6 @@
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
-## Introduction
 
 `BioVAT` (Biodiversity Variant Analysis Toolkit) is a modular 
 Nextflow pipeline for mapping, variant calling, data filtering 
@@ -26,10 +25,10 @@ resequencing data.
 2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
 -->
 
+<!-- 
 ## Usage
 
-<!-- TODO: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
+TODO: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets. Explain what rows and columns represent. For instance (please edit as appropriate):
 
 First, prepare a samplesheet with your input data that looks as follows:
 
@@ -42,11 +41,9 @@ CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
 
 Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
 
--->
-
 Now, you can run the pipeline using:
 
-<!-- TODO: update the following command to include all required parameters for a minimal example -->
+TODO: update the following command to include all required parameters for a minimal example
 
 ```bash
 nextflow run biovat \
@@ -58,6 +55,8 @@ nextflow run biovat \
 > [!WARNING]
 > Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/running/run-pipelines#using-parameter-files).
 
+--> 
+
 ## Credits
 
 BioVAT was originally written by Verena Kutschera, Mahesh 
@@ -67,13 +66,13 @@ Lorena Ament, Per Unneberg, and Lucile Soler.
 We thank the following people for their extensive assistance 
 in the development of this pipeline:
 
-Filip Thörn 
-Henrik Lantz 
-Jacob Höglund 
-Jesper Boman 
-José Cerca 
-Mafalda Ferreira 
-Niclas Backström 
+Filip Thörn  
+Henrik Lantz  
+Jacob Höglund  
+Jesper Boman  
+José Cerca  
+Mafalda Ferreira  
+Niclas Backström  
 
 
 ## Contributions and Support
