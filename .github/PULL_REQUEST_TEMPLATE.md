@@ -27,4 +27,4 @@ Closes #
 - [ ] `CHANGELOG.md` is updated.
 - [ ] `README.md` is updated (including new tool citations and authors/contributors).
 - [ ] The documentation is updated.
-- [ ] The PR links to related Issues (Closes #_____)
+- [ ] The PR links to a related Issue (Closes #_____).
