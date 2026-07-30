@@ -1,30 +1,25 @@
 <!--
-Thank you for contributing to BioVAT!
+# BioVAT pull request
 
-Please fill in this template including the checklist below (delete whatever is not relevant).
+Many thanks for contributing to BioVAT!
+
+Please fill in the appropriate checklist below (delete whatever is not relevant).
 These are the most common things requested on pull requests (PRs).
+
+Remember that PRs should be made against the dev branch, unless you're preparing a pipeline release.
+
+Learn more about contributing: [CONTRIBUTING.md](https://github.com/NBISweden/BioVAT/tree/main/docs/CONTRIBUTING.md)
 -->
 
-## Description
-
-Please add a brief description of the pull request.
-
-## Related Issue
-
-Closes #
-
-## Additional Notes
-
-<!-- Any special considerations, dependencies, or context for reviewers -->
-
-## Checklist
+## PR checklist
 
 - [ ] This comment contains a description of changes (with reason).
-- [ ] You've made the PR against the dev branch (unless this is a pipeline release).
-- [ ] If you've added a new tool or subworkflow - have you followed the pipeline conventions in the [contribution docs](https://github.com/NBISweden/BioVAT/blob/main/docs/CONTRIBUTING.md)?
+- [ ] If you've fixed a bug or added code that should be tested, add tests!
+- [ ] If you've added a new tool - have you followed the pipeline conventions in the [contribution docs](https://github.com/NBISweden/BioVAT/tree/main/docs/CONTRIBUTING.md)
 - [ ] Make sure your code lints (`nf-core pipelines lint`).
-- [ ] If you've fixed a bug or added code that should be tested, add tests.
+- [ ] Ensure the test suite passes (`nextflow run . -profile test,docker --outdir <OUTDIR>`).
+- [ ] Check for unexpected warnings in debug mode (`nextflow run . -profile debug,test,docker --outdir <OUTDIR>`).
+- [ ] Usage Documentation in `docs/usage.md` is updated.
+- [ ] Output Documentation in `docs/output.md` is updated.
 - [ ] `CHANGELOG.md` is updated.
 - [ ] `README.md` is updated (including new tool citations and authors/contributors).
-- [ ] The documentation is updated.
-- [ ] The PR links to a related Issue (Closes #_____).
