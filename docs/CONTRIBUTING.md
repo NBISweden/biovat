@@ -5,11 +5,15 @@ markdownPlugin: checklist
 
 # `BioVAT`: Contributing guidelines
 
-Hi there!
-Thanks for taking an interest in improving BioVAT.
+Hi there! 
+Thanks for taking an interest in improving BioVAT. 
 
 This page describes the recommended way to contribute to BioVAT, 
-based on general recommendations for nf-core pipelines.
+based on general recommendations for nf-core pipelines, including: 
+
+- [Contribution quick start for BioVAT project members](#contribution-quick-start-for-biovat-project-members)
+- [Contribution quick start for external contributions](#contribution-quick-start-for-external-contributions)
+- [Pipeline contribution conventions](#pipeline-contribution-conventions)
 
 ## Contribution quick start for BioVAT project members
 
@@ -20,10 +24,12 @@ See the [nf-core/tools repository](https://github.com/nf-core/tools)
 for instructions.
 - [ ] Check whether a GitHub [issue](https://github.com/NBISweden/BioVAT/issues) 
 about your idea already exists. If an issue does not exist, 
-create one so that others are aware you are working on it.
+create one based on the [issue template](https://github.com/NBISweden/BioVAT/.github/ISSUE_TEMPLATE) 
+so that others are aware you are working on it. Tag the issue 
+with the relevant label and milestone and assign yourself to the issue. 
 - [ ] Create a branch from `dev` and make your changes following 
-[pipeline conventions](#pipeline-contribution-conventions) 
-(if applicable).
+[pipeline conventions](#pipeline-contribution-conventions) (if 
+applicable) and [our Nextflow best practice recommendations](https://nbisweden.github.io/Training-Tech-shorts/posts/2025-12-11-nextflow-best-practices/) 
 - [ ] To fix major bugs, name your branch `patch` and follow 
 the [patch release](#patch-release) process.
 - [ ] Update relevant documentation within the `docs/` folder, 
@@ -33,7 +39,8 @@ update `CITATIONS.md`.
 more information.
 - [ ] [Lint](#lint-tests) your code with nf-core/tools.
 - [ ] Submit a pull request (PR) against the `dev` branch 
-and request a review.
+using the [pull request template](https://github.com/NBISweden/BioVAT/.github/PULL_REQUEST_TEMPLATE.md) 
+and request a code review from one of the main BioVAT contributors. 
 
 If you are not used to this workflow with Git, see the 
 [GitHub documentation](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests) 
@@ -48,13 +55,15 @@ installed. See the [nf-core/tools repository](https://github.com/nf-core/tools)
 for instructions.
 - [ ] Check whether a GitHub [issue](https://github.com/NBISweden/BioVAT/issues) 
 about your idea already exists. If an issue does not exist, 
-create one so that others are aware you are working on it.
+create one based on the [issue template](https://github.com/NBISweden/BioVAT/.github/ISSUE_TEMPLATE) 
+so that others are aware you are working on it. Tag the issue 
+with the relevant label and assign yourself to the issue. 
 - [ ] [Fork](https://help.github.com/en/github/getting-started-with-github/fork-a-repo) 
 the [BioVAT repository](https://github.com/NBISweden/BioVAT) 
 to your GitHub account.
 - [ ] Create a branch on your forked repository and make your 
 changes following [pipeline conventions](#pipeline-contribution-conventions) 
-(if applicable).
+(if applicable) and [our Nextflow best practice recommendations](https://nbisweden.github.io/Training-Tech-shorts/posts/2025-12-11-nextflow-best-practices/) 
 - [ ] To fix major bugs, name your branch `patch` and follow 
 the [patch release](#patch-release) process.
 - [ ] Update relevant documentation within the `docs/` folder, 
@@ -174,8 +183,7 @@ images from the MultiQC report to `docs/output.md`.
 
 To update the minimum required Nextflow version, see the 
 [Nextflow version bumping](#nextflow-version-bumping) section 
-below. For more information about pipeline contributions, see 
-[BioVAT-specific contribution guidelines](#biovat-specific-contribution-guidelines). 
+below. 
 
 ### Channel naming schemes
 
@@ -225,24 +233,3 @@ required Nextflow version in the pipeline with:
 ```bash
 nf-core pipelines bump-version --nextflow . <min_nf_version>
 ```
-
-## BioVAT specific contribution guidelines
-
-<!-- TODO: Add any BioVAT specific contribution guidelines here, such as coding styles, procedures, checklists etc. -->
-
-### Issues 
-
-- Always assign issues to pipeline developers and to pull requests
-- Please use the issue template (to be added)
-- Use issue labels and milestones
-
-### Pull requests and code reviewing
-
-- The main branch is protected and expected to be stable. It will be only allowed to get pull requests from dev 
-- Please use pull requests and avoid direct merging of branches 
-- Always assign one of the main contributors to BioVAT for code review of your pull request
-- Please use the pull request template to describe your proposed changes (to be added)
-
-### Best practices
-
-- Please follow these best practice recommendations for Nextflow pipelines: https://nbisweden.github.io/Training-Tech-shorts/posts/2025-12-11-nextflow-best-practices/ 
