@@ -1,18 +1,9 @@
 repository_type: pipeline
 
-nf_core_version: 4.0.2
+nf_core_version: 4.0.3
 
 lint:
   files_unchanged:
-    - LICENSE
-    - .github/ISSUE_TEMPLATE/bug_report.yml
-    - .github/ISSUE_TEMPLATE/config.yml
-    - .github/ISSUE_TEMPLATE/feature_request.yml
-    - .github/PULL_REQUEST_TEMPLATE.md
-    - .github/workflows/branch.yml
-    - .github/workflows/linting_comment.yml
-    - .github/workflows/linting.yml
-    - .github/.dockstore.yml
     - docs/CONTRIBUTING.md
     - CODE_OF_CONDUCT.md
     - assets/nf-core-biovat_logo_light.png
@@ -22,18 +13,13 @@ lint:
     - .github/PULL_REQUEST_TEMPLATE.md
     - assets/email_template.txt
     - docs/README.md
+    - .prettierignore
   nextflow_config:
     - manifest.name
     - manifest.homePage
   multiqc_config:
     - report_comment
   files_exist:
-    - LICENSE
-    - .github/ISSUE_TEMPLATE/bug_report.yml
-    - .github/ISSUE_TEMPLATE/feature_request.yml
-    - .github/PULL_REQUEST_TEMPLATE.md
-    - .github/.dockstore.yml
-    - docs/CONTRIBUTING.md
     - conf/igenomes.config
     - conf/igenomes_ignored.config
     - CODE_OF_CONDUCT.md
@@ -43,24 +29,23 @@ lint:
     - .github/ISSUE_TEMPLATE/config.yml
     - .github/workflows/awstest.yml
     - .github/workflows/awsfulltest.yml
-  readme:
-    - nextflow_badge
+    - assets/email_template.html
+    - assets/sendmail_template.txt
+    - assets/email_template.txt
 
 template:
   org: NBISweden
   name: BioVAT
-  description: "BioVAT (BIOdiversity Variant Analysis Toolkit), a modular Nextflow
-    pipeline for population genomics analysis of non-model organisms "
-  author: "Verena Kutschera, Mahesh Binzer-Panchal, Cormac Kinsella, Andr\xE9 Soares,\
-    \ Jason Hill, Lorena Ament, Per Unneberg, Lucile Soler"
-  version: 0.0.1dev
+  description: BioVAT (BIOdiversity Variant Analysis Toolkit), a modular Nextflow
+    pipeline for population genomics analysis of non-model organisms
+  author: Verena E. Kutschera
+  version: 0.0.1
   force: true
   outdir: .
   skip_features:
-    - github
-    - license
     - igenomes
     - seqera_platform
     - codespaces
     - vscode
+    - email
   is_nfcore: false
