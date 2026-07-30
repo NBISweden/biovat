@@ -5,22 +5,35 @@ markdownPlugin: checklist
 
 # `BioVAT`: Contributing guidelines
 
+Hi there!
 Thanks for taking an interest in improving BioVAT.
 
 This page describes the recommended way to contribute to BioVAT, 
-based on general recommendations for nf-core pipelines. 
+based on general recommendations for nf-core pipelines.
 
 ## Contribution quick start for BioVAT project members
 
 To contribute code to the pipeline:
 
-- [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) for instructions.
-- [ ] Check whether a GitHub [issue](https://github.com/BioVAT/issues) about your idea already exists. If an issue does not exist, create one so that others are aware you are working on it.
-- [ ] Create a branch from `dev` and make your changes following [pipeline conventions](#pipeline-contribution-conventions) (if applicable).
-- [ ] Update relevant documentation within the `docs/` folder, use nf-core/tools to update `nextflow_schema.json`, and update `CITATIONS.md`.
-- [ ] Run and/or update tests. See [Testing](#testing) for more information.
+- [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. 
+See the [nf-core/tools repository](https://github.com/nf-core/tools) 
+for instructions.
+- [ ] Check whether a GitHub [issue](https://github.com/NBISweden/BioVAT/issues) 
+about your idea already exists. If an issue does not exist, 
+create one so that others are aware you are working on it.
+- [ ] Create a branch from `dev` and make your changes following 
+[pipeline conventions](#pipeline-contribution-conventions) 
+(if applicable).
+- [ ] To fix major bugs, name your branch `patch` and follow 
+the [patch release](#patch-release) process.
+- [ ] Update relevant documentation within the `docs/` folder, 
+use nf-core/tools to update `nextflow_schema.json`, and 
+update `CITATIONS.md`.
+- [ ] Run and/or update tests. See [Testing](#testing) for 
+more information.
 - [ ] [Lint](#lint-tests) your code with nf-core/tools.
-- [ ] Submit a pull request (PR) against the `dev` branch and request a review.
+- [ ] Submit a pull request (PR) against the `dev` branch 
+and request a review.
 
 If you are not used to this workflow with Git, see the 
 [GitHub documentation](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests) 
@@ -30,15 +43,28 @@ or [Git resources](https://try.github.io/) for more information.
 
 To contribute code to the pipeline:
 
-- [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) for instructions.
-- [ ] Check whether a GitHub [issue](https://github.com/BioVAT/issues) about your idea already exists. If an issue does not exist, create one so that others are aware you are working on it.
-- [ ] [Fork](https://help.github.com/en/github/getting-started-with-github/fork-a-repo) the [BioVAT repository](https://github.com/BioVAT) to your GitHub account.
-- [ ] Create a branch on your forked repository and make your changes following [pipeline conventions](#pipeline-contribution-conventions) (if applicable).
-- [ ] To fix major bugs, name your branch `patch` and follow the [patch release](#patch-release) process.
-- [ ] Update relevant documentation within the `docs/` folder, use nf-core/tools to update `nextflow_schema.json`, and update `CITATIONS.md`.
-- [ ] Run and/or update tests. See [Testing](#testing) for more information.
+- [ ] Ensure you have Nextflow, nf-core tools, and nf-test 
+installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) 
+for instructions.
+- [ ] Check whether a GitHub [issue](https://github.com/NBISweden/BioVAT/issues) 
+about your idea already exists. If an issue does not exist, 
+create one so that others are aware you are working on it.
+- [ ] [Fork](https://help.github.com/en/github/getting-started-with-github/fork-a-repo) 
+the [BioVAT repository](https://github.com/NBISweden/BioVAT) 
+to your GitHub account.
+- [ ] Create a branch on your forked repository and make your 
+changes following [pipeline conventions](#pipeline-contribution-conventions) 
+(if applicable).
+- [ ] To fix major bugs, name your branch `patch` and follow 
+the [patch release](#patch-release) process.
+- [ ] Update relevant documentation within the `docs/` folder, 
+use nf-core/tools to update `nextflow_schema.json`, and 
+update `CITATIONS.md`.
+- [ ] Run and/or update tests. See [Testing](#testing) for 
+more information.
 - [ ] [Lint](#lint-tests) your code with nf-core/tools.
-- [ ] Submit a pull request (PR) against the `dev` branch and request a review.
+- [ ] Submit a pull request (PR) against the `dev` branch 
+and request a review.
 
 If you are not used to this workflow with Git, see the 
 [GitHub documentation](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests) 
@@ -47,8 +73,8 @@ or [Git resources](https://try.github.io/) for more information.
 ## Testing
 
 Once you have made your changes, run the pipeline with nf-test 
-to test them locally.For additional information, use the `--verbose` 
-flag to view the Nextflow console log output. 
+to test them locally. For additional information, use the 
+`--verbose` flag to view the Nextflow console log output. 
 
 ```bash
 nf-test test --tag test --profile +docker --verbose
@@ -70,9 +96,8 @@ Two types of tests are typically run:
 
 ### Lint tests
 
-nf-core has a [set of guidelines](https://nf-co.re/docs/specifications/overview) 
-which all pipelines must follow. To enforce these, run 
-linting with nf-core/tools: 
+We are following [nf-core guidelines](https://nf-co.re/docs/specifications/overview). 
+To implement these, run linting with nf-core/tools: 
 
 ```bash
 nf-core pipelines lint <pipeline_directory>
@@ -85,13 +110,25 @@ linting tests, see
 
 ### Pipeline tests
 
-The BioVAT pipeline will be set up with a minimal set of 
-test data. GitHub Actions will run the pipeline on this data 
-to ensure it runs through and exits successfully.  
+The BioVAT pipeline is set up with a minimal set of 
+test data. GitHub Actions run the pipeline on this data 
+to ensure it runs through and exits successfully. 
 If there are any failures then the automated tests will fail. 
 These tests will be run with the latest available version of 
 Nextflow and the minimum required version specified in 
 the pipeline code. 
+
+### Patch release
+
+> [!WARNING]
+> Only in the unlikely event of a release that contains a critical bug.
+
+- [ ] Create a new branch `patch` on your fork based on 
+`upstream/main`.
+- [ ] Fix the bug and use nf-core/tools to bump the version 
+to the next semantic version, for example, `1.2.3` → `1.2.4`. 
+- [ ] Open a Pull Request from `patch` directly to `main` 
+with the changes. 
 
 ## Pipeline contribution conventions
 
@@ -101,29 +138,44 @@ more understandable for new contributors and to ensure quality.
 
 ### Add a new pipeline step
 
-To contribute a new step to the pipeline, follow the general 
-nf-core coding procedure. Please also refer to the 
-[pipeline-specific contribution guidelines](#pipeline-specific-contribution-guidelines): 
+To contribute a new step to the pipeline, follow these 
+guidelines: 
 
-- [ ] Define the corresponding [input channel](#channel-naming-schemes) into your new process from the expected previous process channel.
-- [ ] Install a module with nf-core/tools, or write a local module (see [default processes resource requirements](#default-processes-resource-requirements)), and add it to the target `<workflow>.nf`.
-- [ ] Define the output channel if needed. Mix the version output channel into `ch_versions` and relevant files into `ch_multiqc`.
-- [ ] Add new or updated parameters to `nextflow.config` with a [default value](#default-parameter-values).
-- [ ] Add new or updated parameters and relevant help text to `nextflow_schema.json` with [nf-core/tools](#default-parameter-values).
-- [ ] Add validation for relevant parameters to the pipeline utilisation section of `utils_nfcore_\_pipeline/main.nf` subworkflow.
-- [ ] Perform local tests to validate that the new code works as expected.
-  - [ ] If applicable, add a new test in the `tests` directory.
-- [ ] Update `usage.md`, `output.md`, and `citation.md` as appropriate.
-- [ ] [Lint](lint) the code with nf-core/tools.
+- [ ] Define the corresponding [input channel](#channel-naming-schemes) 
+into your new process from the expected previous process channel. 
+- [ ] Install a module with nf-core/tools, or write a local 
+module (see [default processes resource requirements](#default-processes-resource-requirements)), 
+and add it to the target `<workflow>.nf`. 
+- [ ] Define the output channel if needed. Mix the version 
+output channel into `ch_versions` and relevant files into 
+`ch_multiqc` (if applicable). 
+- [ ] Add new or updated parameters to `nextflow.config` 
+with a [default value](#default-parameter-values). 
+- [ ] Add new or updated parameters and relevant help text 
+to `nextflow_schema.json` with [nf-core/tools](#default-parameter-values). 
+- [ ] Add validation for relevant parameters to the pipeline 
+utilisation section of `utils_nfcore_\_pipeline/main.nf` 
+subworkflow. 
+- [ ] Perform local tests to validate that the new code 
+works as expected. 
+  - [ ] If applicable, add a new test in the `tests` 
+  directory. 
+- [ ] Update `usage.md`, `output.md`, and `citation.md` 
+as appropriate. 
+- [ ] [Lint](lint) the code with nf-core/tools. 
 - [ ] Update any diagrams or pipeline images as necessary.
-- [ ] Update MultiQC config `assets/multiqc_config.yml` so relevant suffixes, file name cleanup, and module plots are in the appropriate order.
-- [ ] If applicable, create a [MultiQC](https://seqera.io/multiqc/) module.
-- [ ] Add a description of the output files and, if relevant, images from the MultiQC report to `docs/output.md`.
+- [ ] Update MultiQC config `assets/multiqc_config.yml` so 
+relevant suffixes, file name cleanup, and module plots are 
+in the appropriate order if applicable. 
+- [ ] If applicable, create a [MultiQC](https://seqera.io/multiqc/) 
+module. 
+- [ ] Add a description of the output files and, if relevant, 
+images from the MultiQC report to `docs/output.md`. 
 
 To update the minimum required Nextflow version, see the 
 [Nextflow version bumping](#nextflow-version-bumping) section 
 below. For more information about pipeline contributions, see 
-[pipeline-specific contribution guidelines](#pipeline-specific-contribution-guidelines).
+[BioVAT-specific contribution guidelines](#biovat-specific-contribution-guidelines). 
 
 ### Channel naming schemes
 
