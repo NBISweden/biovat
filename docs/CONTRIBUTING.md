@@ -22,9 +22,9 @@ To contribute code to the pipeline:
 - [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. 
 See the [nf-core/tools repository](https://github.com/nf-core/tools) 
 for instructions.
-- [ ] Check whether a GitHub [issue](https://github.com/NBISweden/BioVAT/issues) 
+- [ ] Check whether a GitHub [issue](https://github.com/NBISweden/biovat/issues) 
 about your idea already exists. If an issue does not exist, 
-create one based on the [issue template](https://github.com/NBISweden/BioVAT/.github/ISSUE_TEMPLATE) 
+create one based on the [issue template](https://github.com/NBISweden/biovat/.github/ISSUE_TEMPLATE) 
 so that others are aware you are working on it. Tag the issue 
 with the relevant label and milestone and assign yourself to the issue. 
 - [ ] Create a branch from `dev` and make your changes following 
@@ -39,7 +39,7 @@ update `CITATIONS.md`.
 more information.
 - [ ] [Lint](#lint-tests) your code with nf-core/tools.
 - [ ] Submit a pull request (PR) against the `dev` branch 
-using the [pull request template](https://github.com/NBISweden/BioVAT/.github/PULL_REQUEST_TEMPLATE.md) 
+using the [pull request template](https://github.com/NBISweden/biovat/.github/PULL_REQUEST_TEMPLATE.md) 
 and request a code review from one of the main BioVAT contributors. 
 
 If you are not used to this workflow with Git, see the 
@@ -53,13 +53,13 @@ To contribute code to the pipeline:
 - [ ] Ensure you have Nextflow, nf-core tools, and nf-test 
 installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) 
 for instructions.
-- [ ] Check whether a GitHub [issue](https://github.com/NBISweden/BioVAT/issues) 
+- [ ] Check whether a GitHub [issue](https://github.com/NBISweden/biovat/issues) 
 about your idea already exists. If an issue does not exist, 
-create one based on the [issue template](https://github.com/NBISweden/BioVAT/.github/ISSUE_TEMPLATE) 
+create one based on the [issue template](https://github.com/NBISweden/biovat/.github/ISSUE_TEMPLATE) 
 so that others are aware you are working on it. Tag the issue 
 with the relevant label and assign yourself to the issue. 
 - [ ] [Fork](https://help.github.com/en/github/getting-started-with-github/fork-a-repo) 
-the [BioVAT repository](https://github.com/NBISweden/BioVAT) 
+the [BioVAT repository](https://github.com/NBISweden/biovat) 
 to your GitHub account.
 - [ ] Create a branch on your forked repository and make your 
 changes following [pipeline conventions](#pipeline-contribution-conventions) 

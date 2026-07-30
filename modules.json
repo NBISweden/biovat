@@ -1,6 +1,6 @@
 {
     "name": "BioVAT",
-    "homePage": "https://github.com/BioVAT",
+    "homePage": "https://github.com/NBISweden/biovat",
     "repos": {
         "https://github.com/nf-core/modules.git": {
             "modules": {
