@@ -8,13 +8,12 @@
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
-
 ## Introduction
 
-`BioVAT` (Biodiversity Variant Analysis Toolkit) is a modular 
-Nextflow pipeline for mapping, variant calling, data filtering 
-and downstream analyses of population-level whole genome 
-resequencing data. 
+`BioVAT` (Biodiversity Variant Analysis Toolkit) is a modular
+Nextflow pipeline for mapping, variant calling, data filtering
+and downstream analyses of population-level whole genome
+resequencing data.
 
 <p align="center">
   <img src="assets/biovat_overview_application.png" alt="BioVAT" width="500">
@@ -25,7 +24,7 @@ resequencing data.
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.
 
-First, prepare a samplesheet with your input data that looks 
+First, prepare a samplesheet with your input data that looks
 as follows:
 
 `samplesheet.csv`:
@@ -35,11 +34,11 @@ sample,fastq_1,fastq_2
 CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
 ```
 
-Each row represents a fastq file (single-end) or a pair of 
+Each row represents a fastq file (single-end) or a pair of
 fastq files (paired end).
 
-Next, create a parameter file for your run based on the example 
-file `assets/nf-params.yml` and fill out all relevant parameters. 
+Next, create a parameter file for your run based on the example
+file `assets/nf-params.yml` and fill out all relevant parameters.
 
 Now, you can run the pipeline using:
 
@@ -54,11 +53,11 @@ nextflow run main.nf \
 
 ## Credits
 
-BioVAT was originally written by Verena Kutschera, Mahesh 
-Binzer-Panchal, Cormac Kinsella, André Soares, Jason Hill, 
+BioVAT was originally written by Verena Kutschera, Mahesh
+Binzer-Panchal, Cormac Kinsella, André Soares, Jason Hill,
 Lorena Ament, Per Unneberg, and Lucile Soler.
 
-We thank the following people for their extensive assistance 
+We thank the following people for their extensive assistance
 in the development of this pipeline:
 
 Filip Thörn  
@@ -67,11 +66,11 @@ Jacob Höglund
 Jesper Boman  
 José Cerca  
 Mafalda Ferreira  
-Niclas Backström  
+Niclas Backström
 
 ## Contributions and Support
 
-If you would like to contribute to this pipeline, please see 
+If you would like to contribute to this pipeline, please see
 the [contributing guidelines](docs/CONTRIBUTING.md).
 
 ## Citations
@@ -81,12 +80,12 @@ the [contributing guidelines](docs/CONTRIBUTING.md).
 
 <!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
 
-An extensive list of references for the tools used by the 
-pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) 
+An extensive list of references for the tools used by the
+pipeline can be found in the [`CITATIONS.md`](CITATIONS.md)
 file.
 
-This pipeline uses code and infrastructure developed and 
-maintained by the [nf-core](https://nf-co.re) community, 
+This pipeline uses code and infrastructure developed and
+maintained by the [nf-core](https://nf-co.re) community,
 reused here under the [MIT license](https://github.com/nf-core/tools/blob/main/LICENSE).
 
 > **The nf-core framework for community-curated bioinformatics pipelines.**

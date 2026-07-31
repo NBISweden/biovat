@@ -3,7 +3,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##     This is an example parameter file to pass to the `-params-file` option
 ##     of nextflow run with the BioVAT pipeline.
-##      
+##
 ##     Uncomment lines with a single '#' if you want to pass the parameter to
 ##     the pipeline.
 ## -----------------------------------------------------------------------------
@@ -42,7 +42,6 @@ outdir: "results"
 ## -----------------------------------------------------------------------------
 # multiqc_title: null
 
-
 ## =============================================================================
 ## Institutional config options
 ## =============================================================================
@@ -51,15 +50,12 @@ outdir: "results"
 
 ## (6 hidden parameters are not shown)
 
-
-
 ## =============================================================================
 ## Generic options
 ## =============================================================================
 ## Less common options for the pipeline, typically set in a config file.
 
 ## (9 hidden parameters are not shown)
-
 
 ## -----------------------------------------------------------------------------
 ## multiqc_methods_description
@@ -94,5 +90,3 @@ outdir: "results"
 ##     Type: boolean
 ## -----------------------------------------------------------------------------
 # show_hidden: null
-
-
