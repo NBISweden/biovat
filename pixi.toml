@@ -1,5 +1,5 @@
 [workspace]
-name = "BioVAT"
+name = "biovat"
 version = "0.0.1"
 description = "A pipeline for population genomics analysis of non-model organisms"
 authors = [
