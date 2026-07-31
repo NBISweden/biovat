@@ -109,8 +109,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdit-py-plugins-0.6.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.6-hdb14827_0.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.3-h2a3209d_0.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.0.2-pyhdfd78af_1.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.6-h2a3209d_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.0.3-pyhdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-test-0.9.5-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-2.4.6-py314h2b28147_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openjdk-23.0.2-h53dfc1b_2.conda
@@ -282,8 +282,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdit-py-plugins-0.6.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/ncurses-6.6-hcc0dc9a_0.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.3-h2a3209d_0.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.0.2-pyhdfd78af_1.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.6-h2a3209d_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.0.3-pyhdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-test-0.9.5-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/numpy-2.4.6-py314h5af6b61_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/openjdk-23.0.2-h18c9476_2.conda
@@ -443,8 +443,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdit-py-plugins-0.6.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ncurses-6.6-h1d4f5a5_0.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.3-h2a3209d_0.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.0.2-pyhdfd78af_1.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.6-h2a3209d_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.0.3-pyhdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-test-0.9.5-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/numpy-2.4.6-py314hb79c6fa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/openjdk-23.0.2-hfb9339a_2.conda
@@ -2724,19 +2724,19 @@ packages:
   license: X11 AND BSD-3-Clause
   size: 805509
   timestamp: 1777423252320
-- conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.3-h2a3209d_0.conda
-  sha256: 90d0fbfc02f3cc2caa1a682f4c907592c6c696c3713221e0eaa14669c8575ab5
-  md5: 15c6bfd7bd9679a0b56362d5adb64783
+- conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.6-h2a3209d_0.conda
+  sha256: 4182f40edeebe27d01e23a9b2774cb52565079ad947bf2d8504214c5248a156b
+  md5: 30dd384c7c334c6fff49c3d3525ba554
   depends:
   - coreutils
   - curl
   - openjdk >=17,<=24
   license: Apache-2.0
-  size: 37852080
-  timestamp: 1779960580431
-- conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.0.2-pyhdfd78af_1.conda
-  sha256: a62019fbb74ba3bcb39ef037fb47b2e00a5bc1293b577468f1102137175e44cc
-  md5: 4ab387e9266b5d792bfa86e28ef4dda8
+  size: 37863668
+  timestamp: 1783624848374
+- conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.0.3-pyhdfd78af_0.conda
+  sha256: 2f7896b9db1c6eeb742bfb047caa7826b982fc99eb4581ba593e7ff64e525330
+  md5: 5f3aca9797f72f6ce3dad3adfc94b827
   depends:
   - click
   - filetype
@@ -2771,8 +2771,8 @@ packages:
   - trogon
   license: MIT
   license_family: MIT
-  size: 476065
-  timestamp: 1777930150340
+  size: 479469
+  timestamp: 1784900080428
 - conda: https://conda.anaconda.org/bioconda/noarch/nf-test-0.9.5-h2a3209d_0.conda
   sha256: a99f62b01c74b01854c01bdebe765110f4754e2245ec536df10a521ad96befd5
   md5: 394b91381c88e5c7df30b7e34fefd6e5
