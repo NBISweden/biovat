@@ -42,13 +42,13 @@ S6,S6_LIB6,illumina,AEG588A6_S6_L003_R1_001.fastq.gz,
 S6,S6_LIB7,illumina,AEG588A6_S6_L004_R1_001.fastq.gz,
 ```
 
-| Column        | Description                                                                                                                                                                            |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`      | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `sample_id`   | Custom and unique sample ID for different sequencing libraries/runs from the same sample. Spaces in sample IDs are automatically converted to underscores (`_`).                       |
-| `platform`    | Sequencing platform.                                                                                                                                                                   |
-| `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+| Column      | Description                                                                                                                                                                            |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sample`    | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
+| `sample_id` | Custom and unique sample ID for different sequencing libraries/runs from the same sample. Spaces in sample IDs are automatically converted to underscores (`_`).                       |
+| `platform`  | Sequencing platform.                                                                                                                                                                   |
+| `fastq_1`   | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+| `fastq_2`   | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
