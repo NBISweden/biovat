@@ -10,8 +10,20 @@
             "sample": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "errorMessage": "A unique sample ID (e.g. sequencing library ID, sample name plus lane number) must be provided and cannot contain spaces",
                 "meta": ["id"]
+            },
+            "sample_name": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "meta": ["sm"]
+            },
+            "platform": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Sequencing platform must be provided and cannot contain spaces",
+                "meta": ["pl"]
             },
             "fastq_1": {
                 "type": "string",
