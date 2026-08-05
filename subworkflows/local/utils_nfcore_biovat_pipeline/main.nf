@@ -104,8 +104,17 @@ workflow PIPELINE_INITIALISATION {
         }
         .set { ch_samplesheet }
 
+    // Create reference channel from input file provided through params.reference
+    channel.fromPath(params.reference, checkIfExists: true)
+        .map { fasta ->
+            def meta = [ id: fasta.baseName ]
+            return [ meta, fasta ]
+        }
+        .set { ch_reference }
+
     emit:
     samplesheet = ch_samplesheet
+    reference   = ch_reference
     versions    = ch_versions
 }
 
