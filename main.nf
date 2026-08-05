@@ -29,6 +29,7 @@ workflow NBISWEDEN_BIOVAT {
 
     take:
     samplesheet // channel: samplesheet read in from --input
+    reference   // channel: reference fasta read in from --reference
 
     main:
 
@@ -37,6 +38,10 @@ workflow NBISWEDEN_BIOVAT {
     //
     BIOVAT (
         samplesheet,
+        reference,
+        params.steps,
+        params.align_raw_reads,
+        params.sort_bam,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
@@ -73,7 +78,8 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     NBISWEDEN_BIOVAT (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.samplesheet,
+        PIPELINE_INITIALISATION.out.reference
     )
     //
     // SUBWORKFLOW: Run completion tasks

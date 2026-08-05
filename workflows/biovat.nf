@@ -9,6 +9,7 @@ include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,13 +20,34 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biov
 workflow BIOVAT {
 
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
+    ch_samplesheet  // channel: samplesheet read in from --input
+    reference       // channel: reference fasta read in from --reference
+    steps           // string: Comma-separated list of steps (subworkflows) to run
+    align_raw_reads // boolean: Whether to align raw reads (true) or trimmed reads (false)
+    sort_bam        // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
     multiqc_methods_description
     outdir
 
     main:
+
+    // Requested workflow steps
+    workflow_steps = steps.tokenize(",")
+
+    // Trimming placeholder
+    trimmed_reads = channel.empty() // placeholder for trimmed reads channel
+
+    // Align reads (raw or trimmed)
+    if ( 'align' in workflow_steps ) {
+        ALIGN_READS (
+            reference,
+            trimmed_reads,
+            ch_samplesheet,
+            align_raw_reads,
+            sort_bam
+        )
+    }
 
     def ch_versions = channel.empty()
     def ch_multiqc_files = channel.empty()
