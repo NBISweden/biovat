@@ -8,47 +8,55 @@
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row as shown in the examples below.
+You will need to create a samplesheet with information about 
+the samples you would like to analyse before running the 
+pipeline. Add it to the parameter file to specify its location 
+(an [example parameter file](../assets/nf-params.yml) has 
+been provided with the pipeline) or use this parameter. 
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-### Multiple runs of the same sample
+The samplesheet can have as many columns as you desire, 
+however, there is a strict requirement for the first 5 
+columns to match those defined in the table below. It has 
+to contain a header row as shown in the example below. 
 
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth, whereas a unique `sample_id` is assigned to each sequencing library/run from the same sample in column 2. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
+The `sample` identifiers have to be the same when you have 
+re-sequenced the same sample more than once e.g. to increase 
+sequencing depth. Sequencing library or run IDs and lane 
+numbers are specified in the columns `library_id` and `lane`. 
+Each combination of `sample`, `library_id` and `lane` has to 
+be unique. The pipeline will concatenate the raw reads for 
+each `sample before performing any downstream analysis. 
+
+A final samplesheet file consisting of paired-end data for 
+6 samples may look something like the one below. Sample `S1` 
+has been sequenced across three lanes and sample `S6` has been 
+sequenced twice. 
 
 ```csv title="samplesheet.csv"
-sample,sample_id,platform,fastq_1,fastq_2
-S1,S1_LANE2,illumina,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-S1,S1_LANE3,illumina,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-S1,S1_LANE4,illumina,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+sample,library_id,lane,platform,fastq_1,fastq_2
+S1,01,L002,illumina,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+S1,01,L003,illumina,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
+S1,01,L004,illumina,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+S2,02,L002,illumina,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
+S3,03,L002,illumina,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
+S4,04,L003,illumina,AEG588A4_S4_L003_R1_001.fastq.gz,AEG588A4_S4_L003_R2_001.fastq.gz,
+S5,05,L003,illumina,AEG588A5_S5_L003_R1_001.fastq.gz,AEG588A5_S5_L003_R2_001.fastq.gz,
+S6,06,L003,illumina,AEG588A6_S6_L003_R1_001.fastq.gz,AEG588A6_S6_L003_R2_001.fastq.gz,
+S6,07,L004,illumina,AEG588A6_S6_L004_R1_001.fastq.gz,AEG588A6_S6_L004_R2_001.fastq.gz,
 ```
 
-### Full samplesheet
-
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 5 columns to match those defined in the table below.
-
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `S6` has been sequenced twice.
-
-```csv title="samplesheet.csv"
-sample,sample_id,platform,fastq_1,fastq_2
-S1,S1_LIB1,illumina,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-S2,S2_LIB2,illumina,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-S3,S3_LIB3,illumina,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-S4,S4_LIB4,illumina,AEG588A4_S4_L003_R1_001.fastq.gz,
-S5,S4_LIB5,illumina,AEG588A5_S5_L003_R1_001.fastq.gz,
-S6,S6_LIB6,illumina,AEG588A6_S6_L003_R1_001.fastq.gz,
-S6,S6_LIB7,illumina,AEG588A6_S6_L004_R1_001.fastq.gz,
-```
-
-| Column      | Description                                                                                                                                                                            |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`    | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `sample_id` | Custom and unique sample ID for different sequencing libraries/runs from the same sample. Spaces in sample IDs are automatically converted to underscores (`_`).                       |
-| `platform`  | Sequencing platform.                                                                                                                                                                   |
-| `fastq_1`   | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2`   | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+| Column       | Description                                                                                                                 |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `sample`     | Unique sample identifier. This entry will be identical for multiple sequencing libraries/runs from the same sample          |
+| `library_id` | Unique sequencing library or run ID                                                                                         |
+| `lane`       | Lane number                                                                                                                 |
+| `platform`   | Sequencing platform                                                                                                         |
+| `fastq_1`    | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz"   |
+| `fastq_2`    | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz"   |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
