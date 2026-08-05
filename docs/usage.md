@@ -8,33 +8,33 @@
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about 
-the samples you would like to analyse before running the 
-pipeline. Add it to the parameter file to specify its location 
-(an [example parameter file](../assets/nf-params.yml) has 
-been provided with the pipeline) or use this parameter. 
+You will need to create a samplesheet with information about
+the samples you would like to analyse before running the
+pipeline. Add it to the parameter file to specify its location
+(an [example parameter file](../assets/nf-params.yml) has
+been provided with the pipeline) or use this parameter.
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-The samplesheet can have as many columns as you desire, 
-however, there is a strict requirement for the first 5 
-columns to match those defined in the table below. It has 
-to contain a header row as shown in the example below. 
+The samplesheet can have as many columns as you desire,
+however, there is a strict requirement for the first 5
+columns to match those defined in the table below. It has
+to contain a header row as shown in the example below.
 
-The `sample` identifiers have to be the same when you have 
-re-sequenced the same sample more than once e.g. to increase 
-sequencing depth. Sequencing library or run IDs and lane 
-numbers are specified in the columns `library_id` and `lane`. 
-Each combination of `sample`, `library_id` and `lane` has to 
-be unique. The pipeline will concatenate the raw reads for 
-each `sample before performing any downstream analysis. 
+The `sample` identifiers have to be the same when you have
+re-sequenced the same sample more than once e.g. to increase
+sequencing depth. Sequencing library or run IDs and lane
+numbers are specified in the columns `library_id` and `lane`.
+Each combination of `sample`, `library_id` and `lane` has to
+be unique. The pipeline will concatenate the raw reads for
+each `sample before performing any downstream analysis.
 
-A final samplesheet file consisting of paired-end data for 
-6 samples may look something like the one below. Sample `S1` 
-has been sequenced across three lanes and sample `S6` has been 
-sequenced twice. 
+A final samplesheet file consisting of paired-end data for
+6 samples may look something like the one below. Sample `S1`
+has been sequenced across three lanes and sample `S6` has been
+sequenced twice.
 
 ```csv title="samplesheet.csv"
 sample,library_id,lane,platform,fastq_1,fastq_2
@@ -49,14 +49,14 @@ S6,06,L003,illumina,AEG588A6_S6_L003_R1_001.fastq.gz,AEG588A6_S6_L003_R2_001.fas
 S6,07,L004,illumina,AEG588A6_S6_L004_R1_001.fastq.gz,AEG588A6_S6_L004_R2_001.fastq.gz,
 ```
 
-| Column       | Description                                                                                                                 |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `sample`     | Unique sample identifier. This entry will be identical for multiple sequencing libraries/runs from the same sample          |
-| `library_id` | Unique sequencing library or run ID                                                                                         |
-| `lane`       | Lane number                                                                                                                 |
-| `platform`   | Sequencing platform                                                                                                         |
-| `fastq_1`    | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz"   |
-| `fastq_2`    | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz"   |
+| Column       | Description                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `sample`     | Unique sample identifier. This entry will be identical for multiple sequencing libraries/runs from the same sample        |
+| `library_id` | Unique sequencing library or run ID                                                                                       |
+| `lane`       | Lane number                                                                                                               |
+| `platform`   | Sequencing platform                                                                                                       |
+| `fastq_1`    | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz" |
+| `fastq_2`    | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz" |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
