@@ -1,8 +1,8 @@
 [workspace]
-name = "biovat"
-version = "0.0.1"
+name        = "biovat"
+version     = "0.0.1"
 description = "A pipeline for population genomics analysis of non-model organisms"
-authors = [
+authors     = [
     "Verena Kutschera <verena.kutschera@nbis.se>",
     "Mahesh Binzer-Panchal <mahesh.binzer-panchal@nbis.se>",
     "Cormac Kinsella <cormac.kinsella@nbis.se>",
@@ -12,10 +12,20 @@ authors = [
     "Per Unneberg <per.unneberg@nbis.se>",
     "Lucile Soler <lucile.soler@nbis.se>"
 ]
-channels = ["conda-forge", "bioconda"]
-platforms = ["linux-64", "osx-64", "osx-arm64"]
+channels    = ["conda-forge", "bioconda"]
+platforms   = ["linux-64", "osx-64", "osx-arm64"]
 
 [dependencies]
 nextflow = ">=26.4.6,<27"
-nf-core = ">=4.0.3,<5"
-nf-test = ">=0.9.5,<0.10"
+nf-core  = ">=4.0.3,<5"
+nf-test  = ">=0.9.5,<0.10"
+
+[tasks]
+test             = { depends-on = ["test-docker"] }
+test-docker      = "nextflow main.nf -profile docker,test"
+test-singularity = "nextflow main.nf -profile singularity,test"
+test-conda       = "nextflow main.nf -profile conda,test"
+help             = "nextflow main.nf --help"
+
+[target.osx-arm64.tasks]
+test-docker      = "nextflow main.nf -profile docker,arm64,test"

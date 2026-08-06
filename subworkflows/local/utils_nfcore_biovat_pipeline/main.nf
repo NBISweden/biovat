@@ -80,12 +80,8 @@ workflow PIPELINE_INITIALISATION {
         nextflow_cli_args
     )
 
-    //
     // Create channel from input file provided through params.input
-    //
-
     def uniqueReadGroups = new HashSet<String>() // Initialise empty set for detecting duplicate read groups
-
     channel
         .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
         .map {
@@ -102,10 +98,18 @@ workflow PIPELINE_INITIALISATION {
                 }
         }
         .set { ch_samplesheet }
-    ch_samplesheet.view()
+
+    // Create reference channel from input file provided through params.reference
+    channel.value(file(params.reference, checkIfExists: true))
+        .map { fasta ->
+            def meta = [ id: fasta.baseName ]
+            return [ meta, fasta ]
+        }
+        .set { ch_reference }
 
     emit:
     samplesheet = ch_samplesheet
+    reference   = ch_reference
     versions    = ch_versions
 }
 

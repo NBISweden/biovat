@@ -1,0 +1,2 @@
+sample,library_id,lane,platform,fastq_1,fastq_2
+S03,1,7,illumina,./tests/data/S03_14_L7.BH252YCCXY.R1.fastq.gz,./tests/data/S03_14_L7.BH252YCCXY.R2.fastq.gz
