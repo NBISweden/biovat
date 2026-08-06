@@ -35,8 +35,9 @@ workflow BIOVAT {
     // Requested workflow steps
     workflow_steps = steps.tokenize(",")
 
-    // Trimming placeholder
-    trimmed_reads = channel.empty() // placeholder for trimmed reads channel
+    // Trim reads
+    trimmed_reads = channel.empty() // placeholder for trimmed reads channel (note: initialise this empty channel prior to the trim subworkflow, so that align inherits a value even if trim is not run)
+    // if ( 'trim' in workflow_steps ) { ... }
 
     // Align reads (raw or trimmed)
     if ( 'align' in workflow_steps ) {
@@ -47,6 +48,8 @@ workflow BIOVAT {
             align_raw_reads,
             sort_bam
         )
+        aligned_reads       = ALIGN_READS.out.aligned_reads
+        aligned_reads_index = ALIGN_READS.out.aligned_reads_index
     }
 
     def ch_versions = channel.empty()
