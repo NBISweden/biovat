@@ -6,9 +6,16 @@ nextflow_pipeline {
 
     test("-profile test") {
 
+        setup {
+            def resolved_samplesheet = new File("${launchDir}/samplesheet_resolved.csv")
+            resolved_samplesheet.text = "sample,library_id,lane,platform,fastq_1,fastq_2\n" +
+                "S03,1,7,illumina,${projectDir}/tests/data/S03_14_L7.BH252YCCXY.R1.fastq.gz,${projectDir}/tests/data/S03_14_L7.BH252YCCXY.R2.fastq.gz\n"
+        }
+
         when {
             params {
                 outdir = "$outputDir"
+                input  = "${launchDir}/samplesheet_resolved.csv"
             }
         }
 
