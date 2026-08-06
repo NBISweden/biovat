@@ -84,25 +84,25 @@ workflow PIPELINE_INITIALISATION {
     // Create channel from input file provided through params.input
     //
 
+    def uniqueReadGroups = new HashSet<String>() // Initialise empty set for detecting duplicate read groups
+
     channel
         .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
         .map {
             meta, fastq_1, fastq_2 ->
+                def key = "${meta.id}${meta.library}${meta.lane}"
+                if (!uniqueReadGroups.add(key)) {
+                    error ("Error: found a duplicate for sample '${meta.id}' in the samplesheet. Each row should have a unique combination of 'sample', 'library_id' and 'lane'.")
+                }
+                def read_group = "${meta.id}.${meta.library}.${meta.lane}".toString()
                 if (!fastq_2) {
-                    return [ meta.id, meta + [ single_end:true ], [ fastq_1 ] ]
+                    return [ meta + [ single_end:true,  read_group:read_group ], [ fastq_1 ] ]
                 } else {
-                    return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ] ]
+                    return [ meta + [ single_end:false, read_group:read_group ], [ fastq_1, fastq_2 ] ]
                 }
         }
-        .groupTuple()
-        .map { samplesheet ->
-            validateInputSamplesheet(samplesheet)
-        }
-        .map {
-            meta, fastqs ->
-                return [ meta, fastqs.flatten() ]
-        }
         .set { ch_samplesheet }
+    ch_samplesheet.view()
 
     emit:
     samplesheet = ch_samplesheet
@@ -144,7 +144,8 @@ workflow PIPELINE_COMPLETION {
 
 //
 // Validate channels from input samplesheet
-//
+// TODO: Not used anymore since no mixed experiments expected. Keep single-end option for
+// implementation of RAD-seq subworkflow. Keep this function as template for other tests.
 def validateInputSamplesheet(input) {
     def (metas, fastqs) = input[1..2]
 

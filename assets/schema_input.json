@@ -13,6 +13,24 @@
                 "errorMessage": "Sample name must be provided and cannot contain spaces",
                 "meta": ["id"]
             },
+            "library_id": {
+                "type": ["string", "integer"],
+                "pattern": "^\\S+$",
+                "errorMessage": "Sequencing library ID must be provided and cannot contain spaces",
+                "meta": ["library"]
+            },
+            "lane": {
+                "type": ["string", "integer"],
+                "pattern": "^\\S+$",
+                "errorMessage": "Lane number must be provided and cannot contain spaces",
+                "meta": ["lane"]
+            },
+            "platform": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Sequencing platform must be provided and cannot contain spaces",
+                "meta": ["pl"]
+            },
             "fastq_1": {
                 "type": "string",
                 "format": "file-path",
@@ -28,6 +46,6 @@
                 "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["sample", "library_id", "lane", "fastq_1"]
     }
 }
