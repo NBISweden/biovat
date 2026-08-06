@@ -24,6 +24,11 @@
                         "branch": "master",
                         "git_sha": "98403d15b0e50edae1f3fec5eae5e24982f1fade",
                         "installed_by": ["modules"]
+                    },
+                    "parabricks/fq2bam": {
+                        "branch": "master",
+                        "git_sha": "3e0ec6464725c64d81abe928e15a6750d5fdd272",
+                        "installed_by": ["modules"]
                     }
                 }
             },
