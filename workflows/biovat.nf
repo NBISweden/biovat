@@ -9,6 +9,7 @@ include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 
 /*
@@ -20,11 +21,14 @@ include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 workflow BIOVAT {
 
     take:
-    ch_samplesheet  // channel: samplesheet read in from --input
-    reference       // channel: reference fasta read in from --reference
-    steps           // string: Comma-separated list of steps (subworkflows) to run
-    align_raw_reads // boolean: Whether to align raw reads (true) or trimmed reads (false)
-    sort_bam        // boolean: Whether to sort the output BAM file
+    ch_samplesheet       // channel: samplesheet read in from --input
+    reference            // channel: reference fasta read in from --reference
+    steps                // string: Comma-separated list of steps (subworkflows) to run
+    discard_trimmed_pass // boolean: Whether not to write any reads that pass trimming thresholds to get fastp report only
+    save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds
+    save_merged          // boolean: Whether to save merged reads to a file
+    align_raw_reads      // boolean: Whether to align raw reads (true) or trimmed reads (false)
+    sort_bam             // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -35,9 +39,24 @@ workflow BIOVAT {
     // Requested workflow steps
     workflow_steps = steps.tokenize(",")
 
+    def trimmed_reads = channel.empty() // placeholder for trimmed reads channel (note: initialise this empty channel prior to the trim subworkflow, so that align inherits a value even if trim is not run)
+
     // Trim reads
-    trimmed_reads = channel.empty() // placeholder for trimmed reads channel (note: initialise this empty channel prior to the trim subworkflow, so that align inherits a value even if trim is not run)
-    // if ( 'trim' in workflow_steps ) { ... }
+    if ( 'trim' in workflow_steps ) {
+        // Create ch_reads from ch_samplesheet and params.adapter_fasta for TRIM_READS subworkflow
+        // channel: [ val(meta), path(reads), path(adapter_fasta) ]
+        def ch_adapter_fasta = params.adapter_fasta ? file(params.adapter_fasta, checkIfExists: true) : []
+        def ch_reads = ch_samplesheet
+            .map { meta, reads -> [ meta, reads, ch_adapter_fasta ] }
+
+        TRIM_READS (
+            ch_reads,
+            discard_trimmed_pass,
+            save_trimmed_fail,
+            save_merged
+        )
+        trimmed_reads = TRIM_READS.out.trimmed_reads
+    }
 
     // Align reads (raw or trimmed)
     if ( 'align' in workflow_steps ) {
