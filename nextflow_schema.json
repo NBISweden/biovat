@@ -32,7 +32,8 @@
                 },
                 "steps": {
                     "type": "string",
-                    "description": "Comma-separated list of steps (subworkflows) to run."
+                    "description": "Comma-separated list of steps (subworkflows) to run.",
+                    "default": "align"
                 },
                 "outdir": {
                     "type": "string",
@@ -67,6 +68,24 @@
                     "type": "boolean",
                     "description": "Sort the BAM output from BWA.",
                     "default": true
+                }
+            }
+        },
+        "gpu_acceleration_options": {
+            "title": "GPU acceleration options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "gpu_partition": {
+                    "type": "string",
+                    "default": "gpu",
+                    "description": "Name of the NVIDIA GPU partition on HPC system."
+                },
+                "gpu_resources": {
+                    "type": "string",
+                    "pattern": "^([a-zA-Z0-9]+:)?[1-9][0-9]*$",
+                    "description": "Request GPU resources. Defaults to '1'. Examples: '2' (2 GPUs), 'h100:2' (2 H100 GPUs)."
                 }
             }
         },
@@ -213,6 +232,9 @@
         },
         {
             "$ref": "#/$defs/alignment_options"
+        },
+        {
+            "$ref": "#/$defs/gpu_acceleration_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
