@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - Samplesheet schema enforces platform & (temporarily) fastq2
+- nf-test CI failures: missing pipeline snapshot, relative test-data paths not resolving under nf-test, and test-profile memory limit exceeding GitHub Actions runner capacity (#37)
+- Regenerated stale container/conda-lock configs and synced `linting.yml` with the nf-core template (#37)
+- Prettier formatting drift; excluded `pixi.lock` from prettier since its format is owned by pixi (#37)
 
 ### `Dependencies`
 
