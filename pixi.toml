@@ -24,6 +24,7 @@ nf-test  = ">=0.9.5,<0.10"
 test-docker      = "nextflow main.nf -profile docker,test"
 test-singularity = "nextflow main.nf -profile singularity,test"
 test-conda       = "nextflow main.nf -profile conda,test"
+lint             = "nf-core pipelines lint"
 help             = "nextflow main.nf --help"
 
 [target.osx-arm64.tasks]
