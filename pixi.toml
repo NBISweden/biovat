@@ -21,7 +21,6 @@ nf-core  = ">=4.0.3,<5"
 nf-test  = ">=0.9.5,<0.10"
 
 [tasks]
-test             = { depends-on = ["test-docker"] }
 test-docker      = "nextflow main.nf -profile docker,test"
 test-singularity = "nextflow main.nf -profile singularity,test"
 test-conda       = "nextflow main.nf -profile conda,test"
