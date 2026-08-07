@@ -24,6 +24,7 @@ workflow BIOVAT {
     reference       // channel: reference fasta read in from --reference
     steps           // string: Comma-separated list of steps (subworkflows) to run
     align_raw_reads // boolean: Whether to align raw reads (true) or trimmed reads (false)
+    aligner         // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam        // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
@@ -42,10 +43,11 @@ workflow BIOVAT {
     // Align reads (raw or trimmed)
     if ( 'align' in workflow_steps ) {
         ALIGN_READS (
-            reference,
-            trimmed_reads,
-            ch_samplesheet,
             align_raw_reads,
+            aligner,
+            reference,
+            ch_samplesheet,
+            trimmed_reads,
             sort_bam
         )
         aligned_reads       = ALIGN_READS.out.aligned_reads
