@@ -13,6 +13,7 @@ based on general recommendations for nf-core pipelines, including:
 
 - [Contribution quick start for BioVAT project members](#contribution-quick-start-for-biovat-project-members)
 - [Contribution quick start for external contributions](#contribution-quick-start-for-external-contributions)
+- [Architecture decisions](#architecture-decisions)
 - [Pipeline contribution conventions](#pipeline-contribution-conventions)
 
 ## Contribution quick start for BioVAT project members
@@ -78,6 +79,15 @@ To contribute code to the pipeline:
 If you are not used to this workflow with Git, see the
 [GitHub documentation](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests)
 or [Git resources](https://try.github.io/) for more information.
+
+## Architecture decisions
+
+Significant architectural or process decisions for this pipeline
+are recorded as GitHub issues labelled
+[`ADR`](https://github.com/NBISweden/biovat/issues?q=is%3Aissue+label%3AADR),
+using the [ADR issue template](../.github/ISSUE_TEMPLATE/adr.yml).
+See [#26](https://github.com/NBISweden/biovat/issues/26) for the
+discussion behind this convention.
 
 ## Testing
 
