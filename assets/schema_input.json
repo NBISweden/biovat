@@ -4,6 +4,7 @@
     "title": "BioVAT pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
+    "uniqueEntries": ["sample", "library_id", "lane"],
     "items": {
         "type": "object",
         "properties": {

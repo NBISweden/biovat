@@ -81,15 +81,12 @@ workflow PIPELINE_INITIALISATION {
     )
 
     // Create channel from input file provided through params.input
-    def uniqueReadGroups = new HashSet<String>() // Initialise empty set for detecting duplicate read groups
+    // Uniqueness of the sample/library_id/lane combination is enforced by
+    // the "uniqueEntries" key in assets/schema_input.json
     channel
         .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
         .map {
             meta, fastq_1, fastq_2 ->
-                def key = "${meta.id}${meta.library}${meta.lane}"
-                if (!uniqueReadGroups.add(key)) {
-                    error ("Error: found a duplicate for sample '${meta.id}' in the samplesheet. Each row should have a unique combination of 'sample', 'library_id' and 'lane'.")
-                }
                 def read_group = "${meta.id}.${meta.library}.${meta.lane}".toString()
                 if (!fastq_2) {
                     return [ meta + [ single_end:true,  read_group:read_group ], [ fastq_1 ] ]
