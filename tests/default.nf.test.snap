@@ -1,0 +1,88 @@
+{
+    "-profile test": {
+        "content": [
+            {
+                "BWAMEM3_INDEX": {
+                    "bwamem3": "0.3.0"
+                },
+                "BWAMEM3_MEM": {
+                    "bwamem3": "0.3.0",
+                    "samtools": "1.23.1"
+                },
+                "FASTQC": {
+                    "fastqc": "0.12.1"
+                },
+                "Workflow": {
+                    "NBISweden/biovat": "v0.0.1dev"
+                }
+            },
+            [
+                "bwamem3",
+                "bwamem3/S03.1.7.bam",
+                "bwamem3/S03.1.7.bam.csi",
+                "bwamem3/bwamem3",
+                "bwamem3/bwamem3/sumatran_rhino.fasta.0123",
+                "bwamem3/bwamem3/sumatran_rhino.fasta.amb",
+                "bwamem3/bwamem3/sumatran_rhino.fasta.ann",
+                "bwamem3/bwamem3/sumatran_rhino.fasta.bwt.2bit.64",
+                "bwamem3/bwamem3/sumatran_rhino.fasta.pac",
+                "fastqc",
+                "fastqc/S03_1_fastqc.html",
+                "fastqc/S03_1_fastqc.zip",
+                "fastqc/S03_2_fastqc.html",
+                "fastqc/S03_2_fastqc.zip",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/fastqc-status-check-heatmap.txt",
+                "multiqc/multiqc_data/fastqc_adapter_content_plot.txt",
+                "multiqc/multiqc_data/fastqc_per_base_n_content_plot.txt",
+                "multiqc/multiqc_data/fastqc_per_base_sequence_quality_plot.txt",
+                "multiqc/multiqc_data/fastqc_per_sequence_gc_content_plot_Counts.txt",
+                "multiqc/multiqc_data/fastqc_per_sequence_gc_content_plot_Percentages.txt",
+                "multiqc/multiqc_data/fastqc_per_sequence_quality_scores_plot.txt",
+                "multiqc/multiqc_data/fastqc_sequence_counts_plot.txt",
+                "multiqc/multiqc_data/fastqc_sequence_duplication_levels_plot.txt",
+                "multiqc/multiqc_data/fastqc_sequence_length_distribution_plot.txt",
+                "multiqc/multiqc_data/llms-full.txt",
+                "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc.parquet",
+                "multiqc/multiqc_data/multiqc_citations.txt",
+                "multiqc/multiqc_data/multiqc_data.json",
+                "multiqc/multiqc_data/multiqc_fastqc.txt",
+                "multiqc/multiqc_data/multiqc_general_stats.txt",
+                "multiqc/multiqc_data/multiqc_software_versions.txt",
+                "multiqc/multiqc_data/multiqc_sources.txt",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml"
+            ],
+            [
+                "S03.1.7.bam:md5,bd9ea6bf5c52783c47ce134c262adae0",
+                "S03.1.7.bam.csi:md5,d0fd5fcf8897efe8837a1a953b3e254f",
+                "sumatran_rhino.fasta.0123:md5,08588c41e10e61bf077f6f71129534e1",
+                "sumatran_rhino.fasta.amb:md5,0d4fa7bb04e6887eb836922b3be86ace",
+                "sumatran_rhino.fasta.ann:md5,ee16bda30a0b3eb04ab9c584cf6203f1",
+                "sumatran_rhino.fasta.bwt.2bit.64:md5,0cf271f0ff7a27514c6506fd11179899",
+                "sumatran_rhino.fasta.pac:md5,6251d0fd47b64e1f66f8026cc103e2a8",
+                "fastqc-status-check-heatmap.txt:md5,cf5b3eddb09e29a04e33340eeedf88c3",
+                "fastqc_adapter_content_plot.txt:md5,f927bea9a2eb0ac2b20d0d4402e801d8",
+                "fastqc_per_base_n_content_plot.txt:md5,f1abb174272d9a9fbec1ebb79df99c39",
+                "fastqc_per_base_sequence_quality_plot.txt:md5,b59ef78e967d896eed2a4248e36b6e9c",
+                "fastqc_per_sequence_gc_content_plot_Counts.txt:md5,62cc95ff8b8e04c2d784d9e09f773cc0",
+                "fastqc_per_sequence_gc_content_plot_Percentages.txt:md5,10ebddcc24818daad28b22bec109d085",
+                "fastqc_per_sequence_quality_scores_plot.txt:md5,40f19822fd499bc98f6149bdebbdec06",
+                "fastqc_sequence_counts_plot.txt:md5,0f2cfbacfde0c2bcc3b0ce163c294e9f",
+                "fastqc_sequence_duplication_levels_plot.txt:md5,89d4f62805f35c529157c67feda9e0b5",
+                "fastqc_sequence_length_distribution_plot.txt:md5,6fc9aafdd24457bf9f8c6746cd54cdd3",
+                "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
+                "multiqc_fastqc.txt:md5,4724d88a72fcbf115c0f6d4011aa415b",
+                "multiqc_general_stats.txt:md5,74ac983457708e86a7f08eccbe3bc158"
+            ]
+        ],
+        "timestamp": "2026-08-06T15:59:10.039662",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

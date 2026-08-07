@@ -37,7 +37,7 @@ reference: "tests/data/sumatran_rhino.fasta"
 ##     Comma-separated list of steps (subworkflows) to run.
 ##     Type: string
 ## -----------------------------------------------------------------------------
-steps: 'align'
+steps: "align"
 
 ## -----------------------------------------------------------------------------
 ## outdir
