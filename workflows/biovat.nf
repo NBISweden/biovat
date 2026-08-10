@@ -24,9 +24,6 @@ workflow BIOVAT {
     ch_samplesheet       // channel: samplesheet read in from --input
     reference            // channel: reference fasta read in from --reference
     steps                // string: Comma-separated list of steps (subworkflows) to run
-    discard_trimmed_pass // boolean: Whether not to write any reads that pass trimming thresholds to get fastp report only
-    save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds
-    save_merged          // boolean: Whether to save merged reads to a file
     align_raw_reads      // boolean: Whether to align raw reads (true) or trimmed reads (false)
     sort_bam             // boolean: Whether to sort the output BAM file
     multiqc_config
@@ -49,12 +46,8 @@ workflow BIOVAT {
         def ch_reads = ch_samplesheet
             .map { meta, reads -> [ meta, reads, ch_adapter_fasta ] }
 
-        TRIM_READS (
-            ch_reads,
-            discard_trimmed_pass,
-            save_trimmed_fail,
-            save_merged
-        )
+        // FASTP
+        TRIM_READS (ch_reads)
         trimmed_reads = TRIM_READS.out.trimmed_reads
     }
 
