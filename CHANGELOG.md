@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pixi tasks for testing & development
 - Initial test profile `conf/test.config`
 - Added `steps` param for overall control of modular execution
+- Trimming subworkflow using fastp
 
 ### `Fixed`
 
