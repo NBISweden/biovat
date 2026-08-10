@@ -93,7 +93,7 @@ discussion behind this convention.
 
 Once you have made your changes, run the pipeline with nf-test
 to test them locally. For additional information, use the
-`--verbose` flag to view the Nextflow console log output. 
+`--verbose` flag to view the Nextflow console log output.
 
 ```bash
 nf-test test tests/default.nf.test --profile=+docker
@@ -135,7 +135,7 @@ to ensure it runs through and exits successfully.
 If there are any failures then the automated tests will fail.
 These tests will be run with the latest available version of
 Nextflow and the minimum required version specified in
-the pipeline code. 
+the pipeline code.
 
 ### Patch release
 
