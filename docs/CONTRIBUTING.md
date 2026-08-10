@@ -125,7 +125,7 @@ to ensure it runs through and exits successfully.
 If there are any failures then the automated tests will fail.
 These tests will be run with the latest available version of
 Nextflow and the minimum required version specified in
-the pipeline code.
+the pipeline code. 
 
 ### Patch release
 
