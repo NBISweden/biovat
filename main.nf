@@ -40,7 +40,6 @@ workflow NBISWEDEN_BIOVAT {
         samplesheet,
         reference,
         params.steps,
-        params.align_raw_reads,
         params.aligner,
         params.sort_bam,
         params.multiqc_config,

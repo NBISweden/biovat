@@ -7,22 +7,17 @@ include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main
 workflow ALIGN_READS {
 
     take:
-    align_raw_reads // boolean: Whether to align raw reads (true) or trimmed reads (false)
     aligner         // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     reference       // channel: reference fasta read in from --reference
-    samplesheet     // channel: samplesheet read in from --input
-    trimmed_reads   // channel: trimmed reads
+    reads           // channel: reads to align
     sort_bam        // boolean: Whether to sort the output BAM file
 
     main:
-    // Define reads to be used for alignment
-    def reads_to_align = align_raw_reads ? samplesheet : trimmed_reads
-
     // Alignment
     if (aligner == 'bwa-mem3') {
         BWAMEM3_INDEX(reference)
         BWAMEM3_MEM(
-            reads_to_align,
+            reads,
             BWAMEM3_INDEX.out.index,
             reference,
             sort_bam
@@ -33,7 +28,7 @@ workflow ALIGN_READS {
         // Parabricks requires BWA v0.7.x indexes
         BWA_INDEX(reference)
         PARABRICKS_FQ2BAM(
-            reads_to_align,
+            reads,
             reference,
             BWA_INDEX.out.index,
             [[],[]], // intervals

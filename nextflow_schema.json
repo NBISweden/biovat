@@ -60,10 +60,6 @@
                     "enum": ["bwa-mem3", "parabricks"],
                     "description": "Alignment tool choice."
                 },
-                "align_raw_reads": {
-                    "type": "boolean",
-                    "description": "Align raw reads to the reference, instead of the default (trimmed reads)."
-                },
                 "sort_bam": {
                     "type": "boolean",
                     "description": "Sort the BAM output from BWA.",
