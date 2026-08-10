@@ -9,6 +9,9 @@
                     "bwamem3": "0.3.0",
                     "samtools": "1.23.1"
                 },
+                "FASTP": {
+                    "fastp": "1.3.6"
+                },
                 "FASTQC": {
                     "fastqc": "0.12.1"
                 },
@@ -26,6 +29,12 @@
                 "bwamem3/bwamem3/sumatran_rhino.fasta.ann",
                 "bwamem3/bwamem3/sumatran_rhino.fasta.bwt.2bit.64",
                 "bwamem3/bwamem3/sumatran_rhino.fasta.pac",
+                "fastp",
+                "fastp/S03.fastp.html",
+                "fastp/S03.fastp.json",
+                "fastp/S03.fastp.log",
+                "fastp/S03_R1.fastp.fastq.gz",
+                "fastp/S03_R2.fastp.fastq.gz",
                 "fastqc",
                 "fastqc/S03_1_fastqc.html",
                 "fastqc/S03_1_fastqc.zip",
@@ -57,13 +66,18 @@
                 "pipeline_info/biovat_software_mqc_versions.yml"
             ],
             [
-                "S03.1.7.bam:md5,bd9ea6bf5c52783c47ce134c262adae0",
-                "S03.1.7.bam.csi:md5,d0fd5fcf8897efe8837a1a953b3e254f",
+                "S03.1.7.bam:md5,6644300d4958a34106cd58c2166df5b7",
+                "S03.1.7.bam.csi:md5,6844a040f6f1a202eb75070b185248f2",
                 "sumatran_rhino.fasta.0123:md5,08588c41e10e61bf077f6f71129534e1",
                 "sumatran_rhino.fasta.amb:md5,0d4fa7bb04e6887eb836922b3be86ace",
                 "sumatran_rhino.fasta.ann:md5,ee16bda30a0b3eb04ab9c584cf6203f1",
                 "sumatran_rhino.fasta.bwt.2bit.64:md5,0cf271f0ff7a27514c6506fd11179899",
                 "sumatran_rhino.fasta.pac:md5,6251d0fd47b64e1f66f8026cc103e2a8",
+                "S03.fastp.html:md5,f343ce002dd61f1d53c1a04d22a32acd",
+                "S03.fastp.json:md5,e930927407e7227d4377e8f583cfe31c",
+                "S03.fastp.log:md5,58065ab59ee9ebb49cd486b7e4b16384",
+                "S03_R1.fastp.fastq.gz:md5,08a9a2f380958cc219e1ad81ed0357c8",
+                "S03_R2.fastp.fastq.gz:md5,0fb5d0e9b938df4bbe6cae932d099030",
                 "fastqc-status-check-heatmap.txt:md5,cf5b3eddb09e29a04e33340eeedf88c3",
                 "fastqc_adapter_content_plot.txt:md5,f927bea9a2eb0ac2b20d0d4402e801d8",
                 "fastqc_per_base_n_content_plot.txt:md5,f1abb174272d9a9fbec1ebb79df99c39",
@@ -79,7 +93,7 @@
                 "multiqc_general_stats.txt:md5,74ac983457708e86a7f08eccbe3bc158"
             ]
         ],
-        "timestamp": "2026-08-06T15:59:10.039662",
+        "timestamp": "2026-08-10T16:37:18.100618",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
