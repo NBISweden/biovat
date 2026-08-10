@@ -52,7 +52,7 @@
                 "adapter_fasta": {
                     "type": "string",
                     "description": "Path to FASTA file containing adapter sequences.",
-                    "default": "Null"
+                    "default": null
                 }
             }
         },
@@ -167,6 +167,10 @@
                     "description": "Custom logo file to supply to MultiQC. File name must also be set in the MultiQC config file",
                     "fa_icon": "fas fa-image",
                     "hidden": true
+                },
+                "max_multiqc_email_size": {
+                    "type": "string",
+                    "default": "25.MB"
                 },
                 "multiqc_methods_description": {
                     "type": "string",
