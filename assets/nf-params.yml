@@ -21,7 +21,7 @@
 ##     Type: string
 ##     Required
 ## -----------------------------------------------------------------------------
-input: "tests/data/samplesheet.csv"
+input: "assets/samplesheet.csv"
 
 ## -----------------------------------------------------------------------------
 ## reference
@@ -61,7 +61,7 @@ outdir: "results"
 ##     Path to FASTA file containing adapter sequences.
 ##     Type: string
 ## -----------------------------------------------------------------------------
-adapter_fasta: null
+# adapter_fasta: null
 
 ## =============================================================================
 ## Alignment options
@@ -75,7 +75,7 @@ adapter_fasta: null
 ##     reads).
 ##     Type: boolean
 ## -----------------------------------------------------------------------------
-align_raw_reads: false
+# align_raw_reads: false
 
 ## -----------------------------------------------------------------------------
 ## sort_bam
@@ -83,7 +83,7 @@ align_raw_reads: false
 ##     Sort the BAM output from BWA.
 ##     Type: boolean
 ## -----------------------------------------------------------------------------
-sort_bam: true
+# sort_bam: true
 
 ## =============================================================================
 ## help
