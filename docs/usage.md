@@ -55,10 +55,10 @@ Here, input and output options are specified, the pipeline steps are selected, a
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run NBISweden/biovat -params-file assets/nf-params.yml -profile docker
+nextflow run NBISweden/biovat -params-file assets/nf-params.yml -profile docker -r 0.0.1
 ```
 
-This will launch the pipeline with the `docker` configuration profile. Pipeline settings and parameters are applied as specified in `assets/nf-params.yml` as described above. See below for more information about profiles.
+This will launch the pipeline (version 0.0.1) with the `docker` configuration profile. Pipeline settings and parameters are applied as specified in `assets/nf-params.yml` as described above. See below for more information about profiles and reproducibility.
 
 Note that the pipeline will create the following files in your working directory:
 
