@@ -36,7 +36,7 @@ workflow BIOVAT {
     // Requested workflow steps
     workflow_steps = steps.tokenize(",")
 
-    def trimmed_reads = channel.empty() // placeholder for trimmed reads channel (note: initialise this empty channel prior to the trim subworkflow, so that align inherits a value even if trim is not run)
+    def trimmed_reads = channel.empty()
 
     // Trim reads
     if ( 'trim' in workflow_steps ) {
