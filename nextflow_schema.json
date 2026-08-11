@@ -78,7 +78,7 @@
                     "default": "gpu",
                     "description": "Name of the NVIDIA GPU partition on HPC system."
                 },
-                "gpu_resources": {
+                "gpu_gres": {
                     "type": "string",
                     "pattern": "^([a-zA-Z0-9]+:)?[1-9][0-9]*$",
                     "description": "Request GPU resources. Defaults to '1'. Examples: '2' (2 GPUs), 'h100:2' (2 H100 GPUs)."
