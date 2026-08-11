@@ -75,7 +75,7 @@ are defined.
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run main.nf -profile docker -params-file assets/nf-params.yml
+nextflow run NBISweden/biovat -params-file assets/nf-params.yml -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration
@@ -98,19 +98,7 @@ work                # Directory containing the nextflow working files
 
 ### Updating the pipeline
 
-If you run the following command, Nextflow automatically
-pulls the pipeline code from GitHub and stores it as a cached
-version.
-
-```bash
-nextflow run biovat -profile docker -params-file assets/nf-params.yml
-```
-
-When running the pipeline after this, it will always use the
-cached version if available - even if the pipeline has been
-updated since. To make sure that you're running the latest
-version of the pipeline, make sure that you regularly update
-the cached version of the pipeline:
+When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
 ```bash
 nextflow pull NBISweden/BioVAT
