@@ -13,9 +13,9 @@ workflow TRIM_READS {
     // Run fastp for read trimming
     FASTP (
         ch_reads,
-        false, // discard_trimmed_pass
-        false, // save_trimmed_fail
-        false  // save_merged
+        false, // discard_trimmed_pass: specify true to not write any reads that pass trimming thresholds. This can be used to use fastp for the output report only.
+        false, // save_trimmed_fail: specify true to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+        false  // save_merged: specify true to save all merged reads to a file ending in *.merged.fastq.gz
     )
 
     emit:
