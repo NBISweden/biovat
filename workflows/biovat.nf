@@ -22,6 +22,7 @@ workflow BIOVAT {
 
     take:
     ch_samplesheet       // channel: samplesheet read in from --input
+    adapter_fasta        // channel: adapter fasta file read in from --adapter_fasta
     reference            // channel: reference fasta read in from --reference
     steps                // string: Comma-separated list of steps (subworkflows) to run
     align_raw_reads      // boolean: Whether to align raw reads (true) or trimmed reads (false)
@@ -40,9 +41,9 @@ workflow BIOVAT {
 
     // Trim reads
     if ( 'trim' in workflow_steps ) {
-        // Create ch_reads from ch_samplesheet and params.adapter_fasta for TRIM_READS subworkflow
+        // Create ch_reads from ch_samplesheet and adapter_fasta for TRIM_READS subworkflow
         // channel: [ val(meta), path(reads), path(adapter_fasta) ]
-        def ch_adapter_fasta = params.adapter_fasta ? file(params.adapter_fasta, checkIfExists: true) : []
+        def ch_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
         def ch_reads = ch_samplesheet
             .map { meta, reads -> [ meta, reads, ch_adapter_fasta ] }
 
