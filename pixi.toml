@@ -30,10 +30,10 @@ help             = "nextflow main.nf --help"
 test-docker      = "nextflow main.nf -profile docker,arm64,test"
 
 
-[tasks.nf-format]
+[tasks.format]
 cmd         = "nextflow lint -format -harshil-alignment -spaces 4"
 description = "Run the Nextflow linter to format pipeline code"
 
-[tasks.nf-core-lint]
+[tasks.pipeline-lint]
 cmd         = "nf-core pipelines lint"
 description = "Run the nf-core pipeline linter"
