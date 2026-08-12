@@ -23,9 +23,9 @@ workflow BIOVAT {
     take:
     ch_samplesheet           // channel: samplesheet read in from --input
     adapter_fasta            // channel: adapter fasta file read in from --adapter_fasta
-    val_discard_trimmed_pass // Do not write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
-    val_save_trimmed_fail    // Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-    val_save_merged          // Save all merged reads to a file ending in *.merged.fastq.gz
+    val_discard_trimmed_pass // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
+    val_save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+    val_save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     reference                // channel: reference fasta read in from --reference
     steps                    // string: Comma-separated list of steps (subworkflows) to run
     align_raw_reads          // boolean: Whether to align raw reads (true) or trimmed reads (false)

@@ -51,8 +51,19 @@
             "properties": {
                 "adapter_fasta": {
                     "type": "string",
-                    "description": "Path to FASTA file containing adapter sequences.",
-                    "default": null
+                    "description": "Path to FASTA file containing adapter sequences."
+                },
+                "discard_trimmed_pass": {
+                    "type": "boolean",
+                    "description": "Write any reads that pass trimming thresholds. This can be used to use fastp for the output report only"
+                },
+                "save_trimmed_fail": {
+                    "type": "boolean",
+                    "description": "Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz"
+                },
+                "save_merged": {
+                    "type": "boolean",
+                    "description": "Save all merged reads to a file ending in *.merged.fastq.gz"
                 }
             }
         },
