@@ -53,7 +53,7 @@ description = "Show review status for all open PRs"
 cmd         = 'gh pr list --search "review-requested:@me"'
 description = "List open PRs waiting on your review"
 
-[tasks.issues-mine]
+[tasks.my-issues]
 cmd         = "gh issue list --assignee @me"
 description = "List open issues assigned to you"
 
