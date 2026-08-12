@@ -4,26 +4,32 @@
     "title": "BioVAT pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
-    "uniqueEntries": ["sample", "library_id", "lane"],
+    "uniqueEntries": ["sample", "library_id", "flowcell_id", "lane"],
     "items": {
         "type": "object",
         "properties": {
             "sample": {
                 "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "pattern": "^[^\\s.]+$",
+                "errorMessage": "Sample name must be provided, cannot contain spaces or full stops",
                 "meta": ["id"]
             },
             "library_id": {
                 "type": ["string", "integer"],
-                "pattern": "^\\S+$",
-                "errorMessage": "Sequencing library ID must be provided and cannot contain spaces",
+                "pattern": "^[^\\s.]+$",
+                "errorMessage": "Sequencing library ID must be provided, cannot contain spaces or full stops",
                 "meta": ["library"]
             },
+            "flowcell_id": {
+                "type": "string",
+                "pattern": "^[^\\s.]+$",
+                "errorMessage": "Flowcell ID must be provided, cannot contain spaces or full stops",
+                "meta": ["flowcell"]
+            },
             "lane": {
-                "type": ["string", "integer"],
-                "pattern": "^\\S+$",
-                "errorMessage": "Lane number must be provided and cannot contain spaces",
+                "type": "integer",
+                "pattern": "^\\d+$",
+                "errorMessage": "Lane number must be a positive integer",
                 "meta": ["lane"]
             },
             "platform": {

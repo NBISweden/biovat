@@ -33,8 +33,7 @@
                     "parabricks/fq2bam": {
                         "branch": "master",
                         "git_sha": "3e0ec6464725c64d81abe928e15a6750d5fdd272",
-                        "installed_by": ["modules"],
-                        "patch": "modules/nf-core/parabricks/fq2bam/parabricks-fq2bam.diff"
+                        "installed_by": ["modules"]
                     },
                     "samtools/index": {
                         "branch": "master",

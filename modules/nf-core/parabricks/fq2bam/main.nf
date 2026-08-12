@@ -37,9 +37,7 @@ process PARABRICKS_FQ2BAM {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    def readgroup_tags = "\"@RG\\tID:${meta.read_group}\\tSM:${meta.id}\\tLB:${meta.library}\\tPL:${meta.pl}\""
-
-    def in_fq_command = meta.single_end ? "--in-se-fq ${reads} ${readgroup_tags}" : "--in-fq ${reads} ${readgroup_tags}"
+    def in_fq_command = meta.single_end ? "--in-se-fq ${reads}" : "--in-fq ${reads}"
     def extension = "${output_fmt}"
 
     def known_sites_command = known_sites ? (known_sites instanceof List ? known_sites.collect { knownSite -> "--knownSites ${knownSite}" }.join(' ') : "--knownSites ${known_sites}") : ""

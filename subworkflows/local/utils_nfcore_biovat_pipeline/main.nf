@@ -87,7 +87,7 @@ workflow PIPELINE_INITIALISATION {
         .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
         .map {
             meta, fastq_1, fastq_2 ->
-                def read_group = "${meta.id}.${meta.library}.${meta.lane}".toString()
+                def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
                 if (!fastq_2) {
                     return [ meta + [ single_end:true,  read_group:read_group ], [ fastq_1 ] ]
                 } else {

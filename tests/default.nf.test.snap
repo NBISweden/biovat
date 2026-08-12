@@ -18,8 +18,8 @@
             },
             [
                 "bwamem3",
-                "bwamem3/S03.1.7.bam",
-                "bwamem3/S03.1.7.bam.csi",
+                "bwamem3/S03.1.BH252YCCXY.7.bam",
+                "bwamem3/S03.1.BH252YCCXY.7.bam.csi",
                 "bwamem3/bwamem3",
                 "bwamem3/bwamem3/sumatran_rhino.fasta.0123",
                 "bwamem3/bwamem3/sumatran_rhino.fasta.amb",
@@ -57,8 +57,8 @@
                 "pipeline_info/biovat_software_mqc_versions.yml"
             ],
             [
-                "S03.1.7.bam:md5,bd9ea6bf5c52783c47ce134c262adae0",
-                "S03.1.7.bam.csi:md5,d0fd5fcf8897efe8837a1a953b3e254f",
+                "S03.1.BH252YCCXY.7.bam:md5,1b714fe2e226c3cf9b97726e3aa1e588",
+                "S03.1.BH252YCCXY.7.bam.csi:md5,e250fcd15835027a7c2e73095e6c25cc",
                 "sumatran_rhino.fasta.0123:md5,08588c41e10e61bf077f6f71129534e1",
                 "sumatran_rhino.fasta.amb:md5,0d4fa7bb04e6887eb836922b3be86ace",
                 "sumatran_rhino.fasta.ann:md5,ee16bda30a0b3eb04ab9c584cf6203f1",
@@ -79,7 +79,7 @@
                 "multiqc_general_stats.txt:md5,74ac983457708e86a7f08eccbe3bc158"
             ]
         ],
-        "timestamp": "2026-08-06T15:59:10.039662",
+        "timestamp": "2026-08-12T15:52:44.865811167",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
