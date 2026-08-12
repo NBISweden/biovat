@@ -3,12 +3,12 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { RAW_READS_QC           } from '../subworkflows/local/raw_reads_qc/main'
 include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 
@@ -39,6 +39,19 @@ workflow BIOVAT {
 
     // Requested workflow steps
     workflow_steps = steps.tokenize(",")
+
+    def ch_versions = channel.empty()
+    def ch_multiqc_files = channel.empty()
+
+    // Raw reads quality checks
+    if ('read_qc' in workflow_steps) {
+        RAW_READS_QC (
+            ch_samplesheet,
+            multiqc_config,
+            multiqc_logo
+        )
+        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_raw_zip.map{ _meta, file -> file })
+    }
 
     def trimmed_reads = channel.empty()
 
@@ -72,14 +85,6 @@ workflow BIOVAT {
         aligned_reads       = ALIGN_READS.out.aligned_reads
         aligned_reads_index = ALIGN_READS.out.aligned_reads_index
     }
-
-    def ch_versions = channel.empty()
-    def ch_multiqc_files = channel.empty()
-    //
-    // MODULE: Run FastQC
-    //
-    FASTQC(ch_samplesheet)
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })
 
     //
     // Collate and save software versions
