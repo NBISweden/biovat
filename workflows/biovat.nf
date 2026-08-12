@@ -55,7 +55,7 @@ workflow BIOVAT {
             ch_reads,
             val_discard_trimmed_pass,
             val_save_trimmed_fail,
-            val_save_merged 
+            val_save_merged
         )
         trimmed_reads = TRIM_READS.out.trimmed_reads
     }
