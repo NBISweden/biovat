@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pixi tasks for testing & development
 - Initial test profile `conf/test.config`
 - Added `steps` param for overall control of modular execution
+- ADR issue template and CONTRIBUTING.md pointer documenting that architecture decisions are recorded as labelled GitHub issues (#39)
 
 ### `Fixed`
 
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - nf-test CI failures: missing pipeline snapshot, relative test-data paths not resolving under nf-test, and test-profile memory limit exceeding GitHub Actions runner capacity (#37)
 - Regenerated stale container/conda-lock configs and synced `linting.yml` with the nf-core template (#37)
 - Prettier formatting drift; excluded `pixi.lock` from prettier since its format is owned by pixi (#37)
+- Sample/library_id/lane uniqueness is now enforced via nf-schema's `uniqueEntries` keyword instead of custom dedup code (#43)
 
 ### `Dependencies`
 
