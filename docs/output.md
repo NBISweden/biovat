@@ -20,7 +20,17 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 ### Read trimming
 
-<!-- TODO: Add documentation on trimming subworkflow output -->
+<details markdown="1">
+<summary>Output files</summary>
+
+- `fastp/`
+  - `*.fastp.fastq.gz`: FastQ files with trimmed reads.
+  - `*.fastp.html` and `*.fastp.json`: FastP report containing quality metrics before and after trimming.
+  - `*.fastp.log`: FastP run log file.
+
+</details>
+
+[FastP](https://github.com/opengene/fastp) provides ultrafast all-in-one preprocessing and quality control for short reads (i.e. Illumina NovaSeq, MGI) in FastQ format. For further reading and documentation see the [FastP GitHub README](https://github.com/OpenGene/fastp/blob/master/README.md).
 
 ### Alignment
 
