@@ -21,12 +21,15 @@ include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 workflow BIOVAT {
 
     take:
-    ch_samplesheet       // channel: samplesheet read in from --input
-    adapter_fasta        // channel: adapter fasta file read in from --adapter_fasta
-    reference            // channel: reference fasta read in from --reference
-    steps                // string: Comma-separated list of steps (subworkflows) to run
-    align_raw_reads      // boolean: Whether to align raw reads (true) or trimmed reads (false)
-    sort_bam             // boolean: Whether to sort the output BAM file
+    ch_samplesheet           // channel: samplesheet read in from --input
+    adapter_fasta            // channel: adapter fasta file read in from --adapter_fasta
+    val_discard_trimmed_pass // Do not write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
+    val_save_trimmed_fail    // Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+    val_save_merged          // Save all merged reads to a file ending in *.merged.fastq.gz
+    reference                // channel: reference fasta read in from --reference
+    steps                    // string: Comma-separated list of steps (subworkflows) to run
+    align_raw_reads          // boolean: Whether to align raw reads (true) or trimmed reads (false)
+    sort_bam                 // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -48,7 +51,12 @@ workflow BIOVAT {
             .map { meta, reads -> [ meta, reads, ch_adapter_fasta ] }
 
         // FASTP
-        TRIM_READS (ch_reads)
+        TRIM_READS (
+            ch_reads,
+            val_discard_trimmed_pass,
+            val_save_trimmed_fail,
+            val_save_merged 
+        )
         trimmed_reads = TRIM_READS.out.trimmed_reads
     }
 
