@@ -47,8 +47,6 @@ workflow BIOVAT {
     if ('read_qc' in workflow_steps) {
         RAW_READS_QC (
             ch_samplesheet,
-            multiqc_config,
-            multiqc_logo
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_raw_zip.map{ _meta, file -> file })
     }
