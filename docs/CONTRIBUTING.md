@@ -111,7 +111,7 @@ To contribute a new step to the pipeline, follow these guidelines:
 - [ ] Define the corresponding [input channel](#channel-naming-schemes) into your new process from the expected previous process channel.
 - [ ] Install a module with nf-core/tools, or write a local module (see [default processes resource requirements](#default-processes-resource-requirements)), and add it to the target `<workflow>.nf`.
 - [ ] Define the output channel if needed. Mix relevant files into `ch_multiqc` (if applicable).
-- [ ] Add new or updated parameters to `nextflow.config` with a [default value](#default-parameter-values).
+- [ ] Add new or updated parameters to `nextflow.config` with a [default value](#default-parameter-values). Consider to prefix parameters with the tool name if they are tool-specific and exposed to the user.
 - [ ] Add new or updated parameters and relevant help text to `nextflow_schema.json` with [nf-core/tools](#default-parameter-values).
 - [ ] Add validation for relevant parameters to the pipeline utilisation section of `utils_nfcore_\_pipeline/main.nf` subworkflow.
 - [ ] Perform local tests to validate that the new code works as expected.
