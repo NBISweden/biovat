@@ -66,8 +66,6 @@
                 "pipeline_info/biovat_software_mqc_versions.yml"
             ],
             [
-                "S03.1.7.bam:md5,d115bf4c2f2623107741a0215c2b93e9",
-                "S03.1.7.bam.csi:md5,35f000f9585b87118a48a6ad39155ea8",
                 "sumatran_rhino.fasta.0123:md5,08588c41e10e61bf077f6f71129534e1",
                 "sumatran_rhino.fasta.amb:md5,0d4fa7bb04e6887eb836922b3be86ace",
                 "sumatran_rhino.fasta.ann:md5,ee16bda30a0b3eb04ab9c584cf6203f1",
@@ -91,7 +89,7 @@
                 "multiqc_general_stats.txt:md5,74ac983457708e86a7f08eccbe3bc158"
             ]
         ],
-        "timestamp": "2026-08-13T14:33:51.132081",
+        "timestamp": "2026-08-13T14:59:24.623223",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
