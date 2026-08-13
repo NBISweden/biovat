@@ -10,6 +10,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
 include { RAW_READS_QC           } from '../subworkflows/local/raw_reads_qc/main'
+include { TRIM_READS as FASTP_QC } from '../subworkflows/local/trim_reads/main'
 include { TRIMMED_READS_QC       } from '../subworkflows/local/trimmed_reads_qc/main'
 include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 
@@ -24,9 +25,9 @@ workflow BIOVAT {
     take:
     ch_samplesheet           // channel: samplesheet read in from --input
     adapter_fasta            // channel: adapter fasta file read in from --adapter_fasta
-    val_discard_trimmed_pass // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
-    val_save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-    val_save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
+    discard_trimmed_pass     // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
+    save_trimmed_fail        // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+    save_merged              // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     reference                // channel: reference fasta read in from --reference
     steps                    // string: Comma-separated list of steps (subworkflows) to run
     align_raw_reads          // boolean: Whether to align raw reads (true) or trimmed reads (false)
@@ -44,24 +45,25 @@ workflow BIOVAT {
     def ch_versions = channel.empty()
     def ch_multiqc_files = channel.empty()
 
+    // Create ch_reads from ch_samplesheet and adapter_fasta for TRIM_READS subworkflow
+    // channel: [ val(meta), path(reads), path(adapter_fasta) ]
+    def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
+    def ch_reads = ch_samplesheet
+        .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
+
     def trimmed_reads = channel.empty()
 
     // Trim reads
     if ( 'trim' in workflow_steps ) {
-        // Create ch_reads from ch_samplesheet and adapter_fasta for TRIM_READS subworkflow
-        // channel: [ val(meta), path(reads), path(adapter_fasta) ]
-        def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
-        def ch_reads = ch_samplesheet
-            .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
-
         TRIM_READS (
             ch_reads,
-            val_discard_trimmed_pass,
-            val_save_trimmed_fail,
-            val_save_merged
+            discard_trimmed_pass,
+            save_trimmed_fail,
+            save_merged
         )
         trimmed_reads    = TRIM_READS.out.trimmed_reads
 
+        // FastQC on trimmed reads
         if ( 'read_qc' in workflow_steps ) {
             TRIMMED_READS_QC (
                 trimmed_reads
@@ -78,7 +80,16 @@ workflow BIOVAT {
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_raw_zip.map{ _meta, file -> file })
 
-
+        // Run FASTP but only produce a report, do not write trimmed reads to file
+        if (discard_trimmed_pass) {
+            FASTP_QC (
+                ch_reads,
+                discard_trimmed_pass,
+                false,
+                false
+            )
+            ch_multiqc_files = ch_multiqc_files.mix(FASTP_QC.out.trimmed_json.map{ _meta, file -> file })
+        }
     }
 
     // Align reads (raw or trimmed)
