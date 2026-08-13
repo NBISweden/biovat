@@ -73,9 +73,7 @@
                 "sumatran_rhino.fasta.ann:md5,ee16bda30a0b3eb04ab9c584cf6203f1",
                 "sumatran_rhino.fasta.bwt.2bit.64:md5,0cf271f0ff7a27514c6506fd11179899",
                 "sumatran_rhino.fasta.pac:md5,6251d0fd47b64e1f66f8026cc103e2a8",
-                "S03.1.7.fastp.html:md5,5124204fc093b586225aa9cf708afe1b",
                 "S03.1.7.fastp.json:md5,49542bb78e1b3359aecb37cd729a1e01",
-                "S03.1.7.fastp.log:md5,4f4b35a66801dedeee0f12a6e61f7231",
                 "S03.1.7_R1.fastp.fastq.gz:md5,08a9a2f380958cc219e1ad81ed0357c8",
                 "S03.1.7_R2.fastp.fastq.gz:md5,0fb5d0e9b938df4bbe6cae932d099030",
                 "fastqc-status-check-heatmap.txt:md5,cf5b3eddb09e29a04e33340eeedf88c3",
@@ -93,7 +91,7 @@
                 "multiqc_general_stats.txt:md5,74ac983457708e86a7f08eccbe3bc158"
             ]
         ],
-        "timestamp": "2026-08-12T14:20:13.017283",
+        "timestamp": "2026-08-13T14:33:51.132081",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
