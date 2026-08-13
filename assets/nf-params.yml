@@ -35,10 +35,10 @@ reference: "tests/data/sumatran_rhino.fasta"
 ## steps
 ## -----------------------------------------------------------------------------
 ##     Comma-separated list of steps (subworkflows) to run.
-##     Available steps: trim, align
+##     Available steps: read_qc, trim, align
 ##     Type: string
 ## -----------------------------------------------------------------------------
-steps: "trim,align"
+steps: "read_qc,trim,align"
 
 ## -----------------------------------------------------------------------------
 ## outdir
@@ -62,6 +62,19 @@ outdir: "results"
 ##     Type: string
 ## -----------------------------------------------------------------------------
 # adapter_fasta: null
+
+## =============================================================================
+## Read quality check options
+## =============================================================================
+## Configure read quality check behavior.
+
+## -----------------------------------------------------------------------------
+## discard_trimmed_pass
+## -----------------------------------------------------------------------------
+##     Use FastP to generate a trimming output report when trimming is disabled.
+##     Type: boolean
+## -----------------------------------------------------------------------------
+# discard_trimmed_pass: false
 
 ## =============================================================================
 ## Alignment options
