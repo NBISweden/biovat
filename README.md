@@ -30,12 +30,12 @@ as follows:
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2
+SAMPLE_1,1,AEG588A1,2,illumina,/path/to/AEG588A1_S1_L002_R1_001.fastq.gz,/path/to/AEG588A1_S1_L002_R2_001.fastq.gz
 ```
 
-Each row represents a fastq file (single-end) or a pair of
-fastq files (paired end).
+Each row represents one paired-end FASTQ pair for a specific
+sample, library, flowcell, and lane.
 
 Next, create a parameter file for your run based on the example
 file `assets/nf-params.yml` and fill out all relevant parameters.

@@ -19,17 +19,19 @@ been provided with the pipeline) or use this parameter.
 ```
 
 The samplesheet can have as many columns as you desire,
-however, there is a strict requirement for the first 5
-columns to match those defined in the table below. It has
-to contain a header row as shown in the example below.
+however, it must contain the columns defined in the table
+below. It has to contain a header row as shown in the
+example below.
 
 The `sample` identifiers have to be the same when you have
 re-sequenced the same sample more than once e.g. to increase
-sequencing depth. Sequencing library or run IDs and lane
-numbers are specified in the columns `library_id` and `lane`.
-Each combination of `sample`, `library_id` and `lane` has to
-be unique. The pipeline will concatenate the raw reads for
-each `sample before performing any downstream analysis.
+sequencing depth. Sequencing library IDs, flowcell IDs, and
+lane numbers are specified in the columns `library_id`,
+`flowcell_id`, and `lane`. Each combination of `sample`,
+`library_id`, `flowcell_id`, and `lane` has to be unique.
+The pipeline currently expects paired-end input and will
+merge the reads for each `sample` before performing
+any downstream analysis.
 
 A final samplesheet file consisting of paired-end data for
 6 samples may look something like the one below. Sample `S1`
@@ -37,24 +39,25 @@ has been sequenced across three lanes and sample `S6` has been
 sequenced twice.
 
 ```csv title="samplesheet.csv"
-sample,library_id,lane,platform,fastq_1,fastq_2
-S1,01,L002,illumina,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-S1,01,L003,illumina,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-S1,01,L004,illumina,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
-S2,02,L002,illumina,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-S3,03,L002,illumina,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-S4,04,L003,illumina,AEG588A4_S4_L003_R1_001.fastq.gz,AEG588A4_S4_L003_R2_001.fastq.gz,
-S5,05,L003,illumina,AEG588A5_S5_L003_R1_001.fastq.gz,AEG588A5_S5_L003_R2_001.fastq.gz,
-S6,06,L003,illumina,AEG588A6_S6_L003_R1_001.fastq.gz,AEG588A6_S6_L003_R2_001.fastq.gz,
-S6,07,L004,illumina,AEG588A6_S6_L004_R1_001.fastq.gz,AEG588A6_S6_L004_R2_001.fastq.gz,
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2
+S1,1,AEG588A1,2,illumina,/data/AEG588A1_S1_L002_R1_001.fastq.gz,/data/AEG588A1_S1_L002_R2_001.fastq.gz
+S1,1,AEG588A1,3,illumina,/data/AEG588A1_S1_L003_R1_001.fastq.gz,/data/AEG588A1_S1_L003_R2_001.fastq.gz
+S1,1,AEG588A1,4,illumina,/data/AEG588A1_S1_L004_R1_001.fastq.gz,/data/AEG588A1_S1_L004_R2_001.fastq.gz
+S2,1,AEG588A2,2,illumina,/data/AEG588A2_S2_L002_R1_001.fastq.gz,/data/AEG588A2_S2_L002_R2_001.fastq.gz
+S3,1,AEG588A3,2,illumina,/data/AEG588A3_S3_L002_R1_001.fastq.gz,/data/AEG588A3_S3_L002_R2_001.fastq.gz
+S4,1,AEG588A4,3,illumina,/data/AEG588A4_S4_L003_R1_001.fastq.gz,/data/AEG588A4_S4_L003_R2_001.fastq.gz
+S5,1,AEG588A5,3,illumina,/data/AEG588A5_S5_L003_R1_001.fastq.gz,/data/AEG588A5_S5_L003_R2_001.fastq.gz
+S6,1,AEG588A6,3,illumina,/data/AEG588A6_S6_L003_R1_001.fastq.gz,/data/AEG588A6_S6_L003_R2_001.fastq.gz
+S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S6_L004_R2_001.fastq.gz
 ```
 
 | Column       | Description                                                                                                               |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `sample`     | Unique sample identifier. This entry will be identical for multiple sequencing libraries/runs from the same sample        |
-| `library_id` | Unique sequencing library or run ID                                                                                       |
-| `lane`       | Lane number                                                                                                               |
-| `platform`   | Sequencing platform                                                                                                       |
+| `sample`     | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample     |
+| `library_id` | Unique sequencing library identifier                                                                                      |
+| `flowcell_id`| Unique identifier/barcode of the flowcell used for this sample library                                                    |
+| `lane`       | The flow cell lane number as a positive integer                                                                           |
+| `platform`   | Sequencing platform with no spaces, for example `illumina`                                                                |
 | `fastq_1`    | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz" |
 | `fastq_2`    | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz" |
 
@@ -107,7 +110,7 @@ You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-c
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
 ```bash
-nextflow pull NBISweden/BioVAT
+nextflow pull NBISweden/biovat
 ```
 
 ### Reproducibility

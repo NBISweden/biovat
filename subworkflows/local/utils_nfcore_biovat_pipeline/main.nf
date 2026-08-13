@@ -81,7 +81,7 @@ workflow PIPELINE_INITIALISATION {
     )
 
     // Create channel from input file provided through params.input
-    // Uniqueness of the sample/library_id/lane combination is enforced by
+    // Uniqueness of the sample/library_id/flowcell_id/lane combination is enforced by
     // the "uniqueEntries" key in assets/schema_input.json
     channel
         .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
