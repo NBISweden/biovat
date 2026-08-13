@@ -46,9 +46,9 @@ workflow BIOVAT {
     if ( 'trim' in workflow_steps ) {
         // Create ch_reads from ch_samplesheet and adapter_fasta for TRIM_READS subworkflow
         // channel: [ val(meta), path(reads), path(adapter_fasta) ]
-        def ch_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
+        def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
         def ch_reads = ch_samplesheet
-            .map { meta, reads -> [ meta, reads, ch_adapter_fasta ] }
+            .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
 
         // FASTP
         TRIM_READS (
