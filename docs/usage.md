@@ -51,15 +51,15 @@ S6,1,AEG588A6,3,illumina,/data/AEG588A6_S6_L003_R1_001.fastq.gz,/data/AEG588A6_S
 S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S6_L004_R2_001.fastq.gz
 ```
 
-| Column       | Description                                                                                                               |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `sample`     | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample     |
-| `library_id` | Unique sequencing library identifier                                                                                      |
-| `flowcell_id`| Unique identifier/barcode of the flowcell used for this sample library                                                    |
-| `lane`       | The flow cell lane number as a positive integer                                                                           |
-| `platform`   | Sequencing platform with no spaces, for example `illumina`                                                                |
-| `fastq_1`    | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz" |
-| `fastq_2`    | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz" |
+| Column        | Description                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `sample`      | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample     |
+| `library_id`  | Unique sequencing library identifier                                                                                      |
+| `flowcell_id` | Unique identifier/barcode of the flowcell used for this sample library                                                    |
+| `lane`        | The flow cell lane number as a positive integer                                                                           |
+| `platform`    | Sequencing platform with no spaces, for example `illumina`                                                                |
+| `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz" |
+| `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz" |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
