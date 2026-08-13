@@ -33,7 +33,7 @@
                 "steps": {
                     "type": "string",
                     "description": "Comma-separated list of steps (subworkflows) to run.",
-                    "default": "trim,align"
+                    "default": "read_qc,trim,align"
                 },
                 "outdir": {
                     "type": "string",
