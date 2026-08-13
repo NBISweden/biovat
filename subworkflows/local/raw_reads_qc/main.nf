@@ -2,7 +2,7 @@
 // Raw read QC subworkflow
 //
 
-include { FASTQC  } from '../../../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_RAW  } from '../../../modules/nf-core/fastqc/main'
 
 workflow RAW_READS_QC {
 
@@ -11,12 +11,12 @@ workflow RAW_READS_QC {
 
     main:
     // FastQC of raw reads
-    FASTQC (
+    FASTQC_RAW (
         ch_reads
     )
 
     emit:
-    fastqc_raw_html  = FASTQC.out.html             // channel: [ val(meta), path(html) ]
-    fastqc_raw_zip   = FASTQC.out.zip              // channel: [ val(meta), path(zip) ]
+    fastqc_raw_html  = FASTQC_RAW.out.html             // channel: [ val(meta), path(html) ]
+    fastqc_raw_zip   = FASTQC_RAW.out.zip              // channel: [ val(meta), path(zip) ]
 
 }
