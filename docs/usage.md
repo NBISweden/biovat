@@ -166,6 +166,8 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
   - A generic configuration profile to enable [Wave](https://seqera.io/wave/) containers. Use together with one of the above (requires Nextflow ` 24.03.0-edge` or later).
 - `conda`
   - A generic configuration profile to be used with [Conda](https://conda.io/docs/). Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter, Charliecloud, or Apptainer.
+- `gpu`
+  - A generic configuration profile to enable GPU capable processes
 
 ### `-resume`
 
@@ -204,6 +206,33 @@ In most cases, you will only need to create a custom config as a one-off but if 
 See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information about creating your own configuration files.
 
 If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
+
+### GPU resource allocation
+
+For local GPU tests, apply the `gpu` profile. For GPU submissions to SLURM clusters, use the `gpu` profile and an institutional profile set up to handle GPU resource allocation.
+To request per-process GPU resources, provide a local configuration file on the command line. 
+
+Example:
+
+```bash
+nextflow run main.nf \
+  -profile gpu,uppmax \
+  --project <PROJECT> \
+  -params-file params.yaml \
+  -c assets/gpu_configuration.config
+```
+
+In `assets/gpu_configuration.config`:
+
+```nextflow
+process {
+    withName: 'PARABRICKS_FQ2BAM' {
+        accelerator = [ type: 'h100', request: 1 ]
+    }
+}
+```
+
+For other examples, [see the Uppmax documentation](https://github.com/nf-core/configs/blob/master/docs/uppmax.md#using-gpus-on-pelle)
 
 ## Running in the background
 
