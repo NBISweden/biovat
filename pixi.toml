@@ -37,3 +37,7 @@ description = "Run the Nextflow linter to format pipeline code"
 [tasks.pipeline-lint]
 cmd         = "nf-core pipelines lint"
 description = "Run the nf-core pipeline linter"
+
+[tasks.schema-build]
+cmd         = "nf-core pipelines schema build"
+description = "Build the pipeline schema"

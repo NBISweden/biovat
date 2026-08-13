@@ -67,19 +67,6 @@
                 }
             }
         },
-        "gpu_acceleration_options": {
-            "title": "GPU acceleration options",
-            "type": "object",
-            "description": "",
-            "default": "",
-            "properties": {
-                "gpu_gres": {
-                    "type": "string",
-                    "pattern": "^([a-zA-Z0-9]+:)?[1-9][0-9]*$",
-                    "description": "Request GPU resources. Defaults to '1'. Examples: '2' (2 GPUs), 'h100:2' (2 H100 GPUs)."
-                }
-            }
-        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -223,9 +210,6 @@
         },
         {
             "$ref": "#/$defs/alignment_options"
-        },
-        {
-            "$ref": "#/$defs/gpu_acceleration_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
