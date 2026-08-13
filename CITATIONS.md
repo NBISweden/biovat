@@ -10,6 +10,10 @@
 
 ## Pipeline tools
 
+- [FastP](https://github.com/opengene/fastp)
+
+> Chen S. fastp 1.0: An Ultra-Fast All-Round Tool for FASTQ Data Quality Control and Preprocessing. iMeta. 2025 4:e70078. doi:10.1002/imt2.70078
+
 - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 
 > Andrews, S. (2010). FastQC: A Quality Control Tool for High Throughput Sequence Data [Online].

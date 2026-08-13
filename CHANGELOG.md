@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- Created BioVAT with the [nf-core](https://nf-co.re/) template
 - Reference file channel
 - Alignment subworkflow using bwa-mem3, can be run either on raw or trimmed reads. Readgroup tagging is drawn from `meta`
 - Initial test data & samplesheet
 - pixi tasks for testing & development
 - Initial test profile `conf/test.config`
 - Added `steps` param for overall control of modular execution
+- Trimming subworkflow using fastp
 - ADR issue template and CONTRIBUTING.md pointer documenting that architecture decisions are recorded as labelled GitHub issues (#39)
 
 ### `Fixed`
@@ -27,15 +29,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - updated nf-core to 4.1.0
 - Updated the pixi lock file to v7
-
-## v0.0.1 - [date]
-
-Initial release of BioVAT, created with the [nf-core](https://nf-co.re/) template.
-
-### `Added`
-
-### `Fixed`
-
-### `Dependencies`
-
-### `Deprecated`

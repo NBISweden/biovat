@@ -12,9 +12,29 @@ The directories listed below will be created in the results directory after the 
 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
+- [Read trimming](#read-trimming) - Adapter and quality trimming of raw reads
+- [Alignment](#alignment) - Alignment of raw or trimmed reads
 - [FastQC](#fastqc) - Raw read QC
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
+
+### Read trimming
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `fastp/`
+  - `*.fastp.fastq.gz`: FastQ files with trimmed reads.
+  - `*.fastp.html` and `*.fastp.json`: FastP report containing quality metrics before and after trimming.
+  - `*.fastp.log`: FastP run log file.
+
+</details>
+
+[FastP](https://github.com/opengene/fastp) provides ultrafast all-in-one preprocessing and quality control for short reads (i.e. Illumina NovaSeq, MGI) in FastQ format. For further reading and documentation see the [FastP GitHub README](https://github.com/OpenGene/fastp/blob/master/README.md).
+
+### Alignment
+
+<!-- TODO: Add documentation on alignment subworkflow output -->
 
 ### FastQC
 
