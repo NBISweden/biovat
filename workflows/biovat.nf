@@ -8,8 +8,9 @@ include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { RAW_READS_QC           } from '../subworkflows/local/raw_reads_qc/main'
 include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
+include { RAW_READS_QC           } from '../subworkflows/local/raw_reads_qc/main'
+include { TRIMMED_READS_QC       } from '../subworkflows/local/trimmed_reads_qc/main'
 include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 
 /*
@@ -43,14 +44,6 @@ workflow BIOVAT {
     def ch_versions = channel.empty()
     def ch_multiqc_files = channel.empty()
 
-    // Raw reads quality checks
-    if ('read_qc' in workflow_steps) {
-        RAW_READS_QC (
-            ch_samplesheet,
-        )
-        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_raw_zip.map{ _meta, file -> file })
-    }
-
     def trimmed_reads = channel.empty()
 
     // Trim reads
@@ -61,14 +54,31 @@ workflow BIOVAT {
         def ch_reads = ch_samplesheet
             .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
 
-        // FASTP
         TRIM_READS (
             ch_reads,
             val_discard_trimmed_pass,
             val_save_trimmed_fail,
             val_save_merged
         )
-        trimmed_reads = TRIM_READS.out.trimmed_reads
+        trimmed_reads    = TRIM_READS.out.trimmed_reads
+
+        if ( 'read_qc' in workflow_steps ) {
+            TRIMMED_READS_QC (
+                trimmed_reads
+            )
+            ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
+            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_trimmed_zip.map{ _meta, file -> file })
+        }
+    }
+
+    // Raw reads quality checks
+    if ( 'read_qc' in workflow_steps ) {
+        RAW_READS_QC (
+            ch_samplesheet,
+        )
+        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_raw_zip.map{ _meta, file -> file })
+
+
     }
 
     // Align reads (raw or trimmed)
