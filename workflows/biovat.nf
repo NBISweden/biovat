@@ -25,7 +25,8 @@ workflow BIOVAT {
     take:
     ch_samplesheet       // channel: samplesheet read in from --input
     reference            // channel: reference fasta read in from --reference
-    steps                // string: Comma-separated list of steps (subworkflows) to run
+    enable_trim          // boolean: Whether to run the trimming stage
+    enable_align         // boolean: Whether to run the alignment stage
     adapter_fasta        // channel: adapter fasta file read in from --adapter_fasta
     discard_trimmed_pass // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
     save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
@@ -41,7 +42,6 @@ workflow BIOVAT {
 
     def ch_versions      = channel.empty()
     def ch_multiqc_files = channel.empty()
-    workflow_steps       = steps.tokenize(",") // Requested workflow steps
     reads_to_process     = ch_samplesheet      // Initialise reads_to_process channel with raw reads
 
     // If adapter path provided, add to reads for FASTP module
@@ -70,7 +70,8 @@ workflow BIOVAT {
     }
 
     // Trim reads
-    if ( 'trim' in workflow_steps ) {
+    if ( enable_trim ) {
+        // FASTP
         TRIM_READS (
             ch_reads_and_adapters,
             false, // discard_trimmed_pass must be false when running read trimming
@@ -90,7 +91,7 @@ workflow BIOVAT {
     }
 
     // Align reads
-    if ( 'align' in workflow_steps ) {
+    if ( enable_align ) {
         ALIGN_READS (
             aligner,
             reference,

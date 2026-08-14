@@ -39,7 +39,8 @@ workflow NBISWEDEN_BIOVAT {
     BIOVAT (
         samplesheet,
         reference,
-        params.steps,
+        params.enable_trim,
+        params.enable_align,
         params.adapter_fasta,
         params.discard_trimmed_pass,
         params.save_trimmed_fail,
