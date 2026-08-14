@@ -71,10 +71,6 @@
             "description": "",
             "default": "",
             "properties": {
-                "fastp_qc_report": {
-                    "type": "boolean",
-                    "description": "Use FastP for the output report only."
-                },
                 "adapter_fasta": {
                     "type": "string",
                     "description": "Path to FASTA file containing adapter sequences."
@@ -256,6 +252,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/raw_read_qc_options"
         },
         {
             "$ref": "#/$defs/trimming_options"
