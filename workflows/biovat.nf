@@ -24,13 +24,13 @@ workflow BIOVAT {
 
     take:
     ch_samplesheet           // channel: samplesheet read in from --input
-    adapter_fasta            // channel: adapter fasta file read in from --adapter_fasta
-    discard_trimmed_pass     // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
-    save_trimmed_fail        // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-    save_merged              // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     reference                // channel: reference fasta read in from --reference
     steps                    // string: Comma-separated list of steps (subworkflows) to run
-    align_raw_reads          // boolean: Whether to align raw reads (true) or trimmed reads (false)
+    adapter_fasta            // channel: adapter fasta file read in from --adapter_fasta
+    discard_trimmed_pass // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
+    save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+    save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
+    aligner                  // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam                 // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
@@ -93,13 +93,12 @@ workflow BIOVAT {
         }
     }
 
-    // Align reads (raw or trimmed)
+    // Align reads
     if ( 'align' in workflow_steps ) {
         ALIGN_READS (
+            aligner,
             reference,
-            trimmed_reads,
-            ch_samplesheet,
-            align_raw_reads,
+            reads_to_process,
             sort_bam
         )
         aligned_reads       = ALIGN_READS.out.aligned_reads
@@ -147,6 +146,7 @@ workflow BIOVAT {
         : file("${projectDir}/assets/biovat_methods_description.yml", checkIfExists: true)
     def ch_methods_description = channel.value(methodsDescriptionText(ch_multiqc_custom_methods_description))
     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml', sort: true))
+
     MULTIQC(
         ch_multiqc_files.flatten().collect().map { files ->
             [
@@ -161,8 +161,10 @@ workflow BIOVAT {
             ]
         }
     )
-    emit:multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
-    versions       = ch_versions                 // channel: [ path(versions.yml) ]
+
+    emit:
+    multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
+    versions       = ch_versions                                                   // channel: [ path(versions.yml) ]
 }
 
 /*

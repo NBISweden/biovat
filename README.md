@@ -26,11 +26,11 @@ First, prepare a samplesheet with your input data that looks as follows:
 `samplesheet.csv`:
 
 ```csv
-sample,library_id,lane,platform,fastq_1,fastq_2
-S1,01,L002,illumina,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2
+SAMPLE_1,1,AEG588A1,2,illumina,/path/to/AEG588A1_S1_L002_R1_001.fastq.gz,/path/to/AEG588A1_S1_L002_R2_001.fastq.gz
 ```
 
-Each row represents a pair of fastq files (paired end).
+Each row represents a set of paired-end FASTQ files generated from a specific sample library and run on a specific flowcell lane.
 
 Next, create a parameter file for your run based on the example file `assets/nf-params.yml` and fill out all relevant parameters.
 

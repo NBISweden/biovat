@@ -82,13 +82,12 @@ outdir: "results"
 ## Configure read alignment behavior.
 
 ## -----------------------------------------------------------------------------
-## align_raw_reads
+## aligner
 ## -----------------------------------------------------------------------------
-##     Align raw reads to the reference, instead of the default (trimmed
-##     reads).
-##     Type: boolean
+##     Alignment tool choice.
+##     Type: string
 ## -----------------------------------------------------------------------------
-# align_raw_reads: false
+# aligner: "bwa-mem3"
 
 ## -----------------------------------------------------------------------------
 ## sort_bam

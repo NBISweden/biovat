@@ -34,7 +34,18 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 ### Alignment
 
-<!-- TODO: Add documentation on alignment subworkflow output -->
+<details markdown="1">
+<summary>Output files</summary>
+
+- `bwamem3/`
+  - `*.bam`: BAM file produced when running the `bwa-mem3` aligner.
+  - `*.csi`: CSI index written alongside the `bwa-mem3` BAM output.
+- `parabricks/`
+  - `*.bam`: BAM file produced when running the `parabricks` aligner.
+- `samtools/`
+  - `*.csi`: CSI index generated from the Parabricks BAM output.
+
+</details>
 
 ### FastQC
 

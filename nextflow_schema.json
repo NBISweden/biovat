@@ -73,13 +73,15 @@
             "description": "",
             "default": "",
             "properties": {
-                "align_raw_reads": {
-                    "type": "boolean",
-                    "description": "Align raw reads to the reference, instead of the default (trimmed reads)."
+                "aligner": {
+                    "type": "string",
+                    "default": "bwa-mem3",
+                    "enum": ["bwa-mem3", "parabricks"],
+                    "description": "Alignment tool choice."
                 },
                 "sort_bam": {
                     "type": "boolean",
-                    "description": "Sort the BAM output from BWA.",
+                    "description": "Sort the BAM output from BWA or Parabricks.",
                     "default": true
                 }
             }

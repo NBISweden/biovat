@@ -16,16 +16,67 @@ channels    = ["conda-forge", "bioconda"]
 platforms   = ["linux-64", "osx-64", "osx-arm64"]
 
 [dependencies]
-nextflow = ">=26.4.6,<27"
-nf-core  = ">=4.0.3,<5"
-nf-test  = ">=0.9.5,<0.10"
+nextflow    = ">=26.4.6,<27"
+nf-core     = ">=4.0.3,<5"
+nf-test     = ">=0.9.5,<0.10"
+gh          = ">=2.97.0,<3"
 
-[tasks]
-test             = { depends-on = ["test-docker"] }
-test-docker      = "nextflow main.nf -profile docker,test"
-test-singularity = "nextflow main.nf -profile singularity,test"
-test-conda       = "nextflow main.nf -profile conda,test"
-help             = "nextflow main.nf --help"
+[tasks.test-docker]
+cmd         = "nextflow main.nf -profile docker,test"
+description = "Run the pipeline test profile with Docker"
 
-[target.osx-arm64.tasks]
-test-docker      = "nextflow main.nf -profile docker,arm64,test"
+[target.osx-arm64.tasks.test-docker]
+cmd         = "nextflow main.nf -profile docker,arm64,test"
+description = "Run the pipeline test profile with Docker (arm64)"
+
+[tasks.test-singularity]
+cmd         = "nextflow main.nf -profile singularity,test"
+description = "Run the pipeline test profile with Singularity"
+
+[tasks.test-conda]
+cmd         = "nextflow main.nf -profile conda,test"
+description = "Run the pipeline test profile with Conda"
+
+[tasks.help]
+cmd         = "nextflow main.nf --help"
+description = "Show the pipeline's command-line help"
+
+[tasks.prune]
+cmd         = "git fetch --prune && gh pr list --state merged --json headRefName -q '.[].headRefName' | xargs git branch -d 2>/dev/null || true"
+description = "Delete local branches for PRs already merged on GitHub"
+
+[tasks.pr-status]
+cmd         = "gh pr checks"
+description = "Show CI status of the pull request for the current branch"
+
+[tasks.review-status]
+cmd         = '''gh pr list --state open --json number,title,reviewDecision --jq '.[] | "\(.number)\t\(.reviewDecision)\t\(.title)"' '''
+description = "Show review status for all open PRs"
+
+[tasks.my-reviews]
+cmd         = 'gh pr list --search "review-requested:@me"'
+description = "List open PRs waiting on your review"
+
+[tasks.my-issues]
+cmd         = "gh issue list --assignee @me"
+description = "List open issues assigned to you"
+
+[tasks.pr-open]
+cmd         = "gh pr view --web"
+description = "Open the current branch's PR in the browser"
+
+[tasks.format]
+cmd         = "nextflow lint -format -harshil-alignment -spaces 4"
+description = "Run Nextflow formatter on target file(s). Usage: <cmd> <file(s)>"
+
+[tasks.lint-pipeline]
+cmd         = "nf-core pipelines lint"
+description = "Run the nf-core pipeline linter"
+
+[tasks.lint-prek]
+cmd         = "prek run --all-files --show-diff-on-failure --color=always"
+description = "Run prek on all files"
+
+[tasks.schema-build]
+cmd         = "nf-core pipelines schema build"
+description = "Build the pipeline schema"

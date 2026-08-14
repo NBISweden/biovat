@@ -10,6 +10,12 @@
 
 ## Pipeline tools
 
+- [BWA](https://bio-bwa.sourceforge.net/)
+
+> Li H, Durbin R. Fast and accurate short read alignment with Burrows-Wheeler transform. Bioinformatics. 2009 Jul 15;25(14):1754-1760. doi: 10.1093/bioinformatics/btp324. PubMed PMID: 19451168.
+
+- [BWA-MEM3](https://github.com/fg-labs/bwa-mem3)
+
 - [FastP](https://github.com/opengene/fastp)
 
 > Chen S. fastp 1.0: An Ultra-Fast All-Round Tool for FASTQ Data Quality Control and Preprocessing. iMeta. 2025 4:e70078. doi:10.1002/imt2.70078
@@ -21,6 +27,14 @@
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 
 > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
+
+- [NVIDIA Clara Parabricks](https://docs.nvidia.com/clara/parabricks/latest/index.html)
+
+> NVIDIA Corporation. NVIDIA Clara Parabricks documentation [Online]. Available from: https://docs.nvidia.com/clara/parabricks/latest/index.html
+
+- [Samtools](https://www.htslib.org/)
+
+> Li H, Handsaker B, Wysoker A, Fennell T, Ruan J, Homer N, Marth G, Abecasis G, Durbin R; 1000 Genome Project Data Processing Subgroup. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009 Aug 15;25(16):2078-2079. doi: 10.1093/bioinformatics/btp352. PubMed PMID: 19505943.
 
 ## Software packaging/containerisation tools
 
