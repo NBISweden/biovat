@@ -27,10 +27,12 @@ workflow BIOVAT {
     reference            // channel: reference fasta read in from --reference
     enable_trim          // boolean: Whether to run the trimming stage
     enable_align         // boolean: Whether to run the alignment stage
+    raw_reads_qc         // boolean: Whether to run quality checks on raw reads
     adapter_fasta        // channel: adapter fasta file read in from --adapter_fasta
     discard_trimmed_pass // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
     save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
+    trimmed_reads_qc     // boolean: Whether to run quality checks on trimmed reads
     aligner              // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam             // boolean: Whether to sort the output BAM file
     multiqc_config
@@ -50,14 +52,15 @@ workflow BIOVAT {
         .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
 
     // Raw reads quality checks
-    if ( 'read_qc' in workflow_steps ) {
+    if ( raw_reads_qc ) {
         RAW_READS_QC (
             reads_to_process,
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
 
         // Run FASTP but only produce a report, do not write trimmed reads to file
-        // TODO: If discard_trimmed_pass is true and trimming is enabled, FASTP is run twice. Implement a check: here, with nf-schema or in utils_nfcore_biovat_pipeline.
+        // TODO: If discard_trimmed_pass and enable_trim are set to true, FASTP is run twice. 
+        //       Implement a check here, with nf-schema or in utils_nfcore_biovat_pipeline.
         if (discard_trimmed_pass) {
             FASTP_QC (
                 ch_reads_and_adapters,
@@ -81,7 +84,7 @@ workflow BIOVAT {
         reads_to_process = TRIM_READS.out.trimmed_reads
 
         // FastQC on trimmed reads
-        if ( 'read_qc' in workflow_steps ) {
+        if (trimmed_reads_qc) {
             TRIMMED_READS_QC (
                 reads_to_process
             )

@@ -32,12 +32,12 @@
                 },
                 "enable_trim": {
                     "type": "boolean",
-                    "description": "Runs the subworkflow TRIM_READS",
+                    "description": "Run the subworkflows READ_QC and TRIM_READS.",
                     "default": true
                 },
                 "enable_align": {
                     "type": "boolean",
-                    "description": "Run the subworkflow ALIGN_READS",
+                    "description": "Run the subworkflow ALIGN_READS.",
                     "default": true
                 },
                 "outdir": {
@@ -54,6 +54,11 @@
             "description": "",
             "default": "",
             "properties": {
+                "raw_reads_qc": {
+                    "type": "boolean",
+                    "description": "Run FastQC and optionally FastP with discard_trimmed_pass on raw reads.",
+                    "default": true
+                },
                 "adapter_fasta": {
                     "type": "string",
                     "description": "Path to FASTA file containing adapter sequences."
@@ -69,6 +74,11 @@
                 "save_merged": {
                     "type": "boolean",
                     "description": "Save all merged reads to a file ending in *.merged.fastq.gz"
+                },
+                "trimmed_reads_qc": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Runs FastQC on trimmed reads."
                 }
             }
         },
