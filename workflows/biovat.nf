@@ -59,8 +59,8 @@ workflow BIOVAT {
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
 
         // Run FASTP but only produce a report, do not write trimmed reads to file
-        // TODO: If fastp_qc_report and enable_trim are set to true, FASTP is run twice. 
-        //       Implement a check so that it can only be run once here, with nf-schema 
+        // TODO: If fastp_qc_report and enable_trim are set to true, FASTP is run twice.
+        //       Implement a check so that it can only be run once here, with nf-schema
         //       or in utils_nfcore_biovat_pipeline.
         if (fastp_qc_report) {
             FASTP_QC (

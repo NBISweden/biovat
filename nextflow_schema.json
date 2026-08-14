@@ -62,8 +62,8 @@
                 "fastp_qc_report": {
                     "type": "boolean",
                     "description": "Run FastP for the output report only."
-                },
-            },
+                }
+            }
         },
         "trimming_options": {
             "title": "Read trimming options",
