@@ -43,7 +43,7 @@ workflow NBISWEDEN_BIOVAT {
         params.enable_align,
         params.raw_reads_qc,
         params.adapter_fasta,
-        params.discard_trimmed_pass,
+        params.fastp_report,
         params.save_trimmed_fail,
         params.save_merged,
         params.trimmed_reads_qc,

@@ -76,12 +76,12 @@ outdir: "results"
 # raw_reads_qc: true
 
 ## -----------------------------------------------------------------------------
-## discard_trimmed_pass
+## fastp_report
 ## -----------------------------------------------------------------------------
-##     Use FastP to generate an output report when trimming is disabled.
+##     Run FastP to generate an output report even when trimming is disabled.
 ##     Type: boolean
 ## -----------------------------------------------------------------------------
-# discard_trimmed_pass: false
+# fastp_report: false
 
 ## =============================================================================
 ## Trimming options

@@ -63,9 +63,9 @@
                     "type": "string",
                     "description": "Path to FASTA file containing adapter sequences."
                 },
-                "discard_trimmed_pass": {
+                "fastp_report": {
                     "type": "boolean",
-                    "description": "Write any reads that pass trimming thresholds. This can be used to use fastp for the output report only"
+                    "description": "Use FastP for the output report only."
                 },
                 "save_trimmed_fail": {
                     "type": "boolean",
