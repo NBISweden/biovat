@@ -3,16 +3,16 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
-include { RAW_READS_QC           } from '../subworkflows/local/raw_reads_qc/main'
-include { TRIM_READS as FASTP_QC } from '../subworkflows/local/trim_reads/main'
-include { TRIMMED_READS_QC       } from '../subworkflows/local/trimmed_reads_qc/main'
-include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap            } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc        } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
+include { READ_QC as RAW_READS_QC     } from '../subworkflows/local/read_qc/main'
+include { TRIM_READS as FASTP_QC      } from '../subworkflows/local/trim_reads/main'
+include { READ_QC as TRIMMED_READS_QC } from '../subworkflows/local/read_qc/main'
+include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,15 +23,15 @@ include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 workflow BIOVAT {
 
     take:
-    ch_samplesheet           // channel: samplesheet read in from --input
-    reference                // channel: reference fasta read in from --reference
-    steps                    // string: Comma-separated list of steps (subworkflows) to run
-    adapter_fasta            // channel: adapter fasta file read in from --adapter_fasta
+    ch_samplesheet       // channel: samplesheet read in from --input
+    reference            // channel: reference fasta read in from --reference
+    steps                // string: Comma-separated list of steps (subworkflows) to run
+    adapter_fasta        // channel: adapter fasta file read in from --adapter_fasta
     discard_trimmed_pass // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
     save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
-    aligner                  // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    sort_bam                 // boolean: Whether to sort the output BAM file
+    aligner              // string: Aligner to use for read alignment (e.g. bwa, parabricks)
+    sort_bam             // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -69,7 +69,7 @@ workflow BIOVAT {
                 trimmed_reads
             )
             ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
-            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_trimmed_zip.map{ _meta, file -> file })
+            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
         }
     }
 
@@ -78,10 +78,10 @@ workflow BIOVAT {
         RAW_READS_QC (
             ch_samplesheet,
         )
-        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_raw_zip.map{ _meta, file -> file })
+        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
 
         // Run FASTP but only produce a report, do not write trimmed reads to file
-        // TODO: If discard_trimmed_pass is true and trim is in workflow_steps, FASTP is run twice. Implement a check here, with nf-schema or in utils_nfcore_biovat_pipeline.
+        // TODO: If discard_trimmed_pass is true and trimming is enabled, FASTP is run twice. Implement a check: here, with nf-schema or in utils_nfcore_biovat_pipeline.
         if (discard_trimmed_pass) {
             FASTP_QC (
                 ch_reads,
