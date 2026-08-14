@@ -22,13 +22,13 @@ workflow BIOVAT {
 
     take:
     ch_samplesheet           // channel: samplesheet read in from --input
+    reference                // channel: reference fasta read in from --reference
+    steps                    // string: Comma-separated list of steps (subworkflows) to run
     adapter_fasta            // channel: adapter fasta file read in from --adapter_fasta
     val_discard_trimmed_pass // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
     val_save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     val_save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
-    reference                // channel: reference fasta read in from --reference
-    steps                    // string: Comma-separated list of steps (subworkflows) to run
-    align_raw_reads          // boolean: Whether to align raw reads (true) or trimmed reads (false)
+    aligner                  // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam                 // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
@@ -37,44 +37,41 @@ workflow BIOVAT {
 
     main:
 
-    // Requested workflow steps
-    workflow_steps = steps.tokenize(",")
-
-    def trimmed_reads = channel.empty()
+    def ch_versions      = channel.empty()
+    def ch_multiqc_files = channel.empty()
+    workflow_steps       = steps.tokenize(",") // Requested workflow steps
+    reads_to_process     = ch_samplesheet      // Initialise reads_to_process channel with raw reads
 
     // Trim reads
     if ( 'trim' in workflow_steps ) {
-        // Create ch_reads from ch_samplesheet and adapter_fasta for TRIM_READS subworkflow
-        // channel: [ val(meta), path(reads), path(adapter_fasta) ]
-        def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
-        def ch_reads = ch_samplesheet
+        // If adapter path provided, add to reads for TRIM_READS subworkflow
+        def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
+        def ch_reads_and_adapters = reads_to_process
             .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
 
         // FASTP
         TRIM_READS (
-            ch_reads,
+            ch_reads_and_adapters,
             val_discard_trimmed_pass,
             val_save_trimmed_fail,
             val_save_merged
         )
-        trimmed_reads = TRIM_READS.out.trimmed_reads
+        reads_to_process = TRIM_READS.out.trimmed_reads
     }
 
-    // Align reads (raw or trimmed)
+    // Align reads
     if ( 'align' in workflow_steps ) {
         ALIGN_READS (
+            aligner,
             reference,
-            trimmed_reads,
-            ch_samplesheet,
-            align_raw_reads,
+            reads_to_process,
             sort_bam
         )
         aligned_reads       = ALIGN_READS.out.aligned_reads
         aligned_reads_index = ALIGN_READS.out.aligned_reads_index
     }
 
-    def ch_versions = channel.empty()
-    def ch_multiqc_files = channel.empty()
+
     //
     // MODULE: Run FastQC
     //
@@ -122,6 +119,7 @@ workflow BIOVAT {
         : file("${projectDir}/assets/biovat_methods_description.yml", checkIfExists: true)
     def ch_methods_description = channel.value(methodsDescriptionText(ch_multiqc_custom_methods_description))
     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml', sort: true))
+
     MULTIQC(
         ch_multiqc_files.flatten().collect().map { files ->
             [
@@ -136,8 +134,10 @@ workflow BIOVAT {
             ]
         }
     )
-    emit:multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
-    versions       = ch_versions                 // channel: [ path(versions.yml) ]
+
+    emit:
+    multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
+    versions       = ch_versions                                                   // channel: [ path(versions.yml) ]
 }
 
 /*

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created BioVAT with the [nf-core](https://nf-co.re/) template
 - Reference file channel
 - Alignment subworkflow using bwa-mem3, can be run either on raw or trimmed reads. Readgroup tagging is drawn from `meta`
+- Parabricks `fq2bam` alignment, matches bwamem3 output (sorted, read group tagged, csi indexed)
 - Initial test data & samplesheet
 - pixi tasks for testing & development
 - Initial test profile `conf/test.config`

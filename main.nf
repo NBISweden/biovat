@@ -38,13 +38,13 @@ workflow NBISWEDEN_BIOVAT {
     //
     BIOVAT (
         samplesheet,
+        reference,
+        params.steps,
         params.adapter_fasta,
         params.discard_trimmed_pass,
         params.save_trimmed_fail,
         params.save_merged,
-        reference,
-        params.steps,
-        params.align_raw_reads,
+        params.aligner,
         params.sort_bam,
         params.multiqc_config,
         params.multiqc_logo,
