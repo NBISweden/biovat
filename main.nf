@@ -12,16 +12,59 @@
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
 include { BIOVAT  } from './workflows/biovat'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Global default params (typed), used in scripts and configs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+params {
+
+    // Input options
+    input                       : String
+    reference                   : String
+
+    // Workflow stage gating options
+    enable_trim                 : Boolean = true
+    enable_align                : Boolean = true
+
+    // Read trimming options
+    adapter_fasta               : String? = null
+    discard_trimmed_pass        : Boolean = false
+    save_trimmed_fail           : Boolean = false
+    save_merged                 : Boolean = false
+
+    // Alignment options
+    aligner                     : String  = 'bwa-mem3'
+    sort_bam                    : Boolean = true
+
+    // MultiQC options
+    multiqc_config              : String? = null
+    multiqc_logo                : String? = null
+    multiqc_methods_description : String? = null
+
+    // Boilerplate options
+    outdir                      : String
+    monochrome_logs             : Boolean = false
+    help                        : Boolean = false
+    help_full                   : Boolean = false
+    show_hidden                 : Boolean = false
+    version                     : Boolean = false
+    pipelines_testdata_base_path: String  = 'https://raw.githubusercontent.com/nf-core/test-datasets/'
+
+    // Schema validation default options
+    validate_params             : Boolean = true
+
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
