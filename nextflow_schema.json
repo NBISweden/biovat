@@ -81,7 +81,7 @@
                 },
                 "sort_bam": {
                     "type": "boolean",
-                    "description": "Sort the BAM output from BWA.",
+                    "description": "Sort the BAM output from BWA or Parabricks.",
                     "default": true
                 }
             }
