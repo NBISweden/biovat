@@ -10,7 +10,7 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": ["input", "steps", "outdir"],
             "properties": {
                 "input": {
                     "type": "string",
@@ -33,18 +33,37 @@
                 "steps": {
                     "type": "string",
                     "description": "Comma-separated list of steps (subworkflows) to run.",
-                    "default": "align"
+                    "default": "trim,align"
                 },
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
-                },
-                "multiqc_title": {
+                }
+            }
+        },
+        "trimming_options": {
+            "title": "Read trimming options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "adapter_fasta": {
                     "type": "string",
-                    "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
-                    "fa_icon": "fas fa-file-signature"
+                    "description": "Path to FASTA file containing adapter sequences."
+                },
+                "discard_trimmed_pass": {
+                    "type": "boolean",
+                    "description": "Write any reads that pass trimming thresholds. This can be used to use fastp for the output report only"
+                },
+                "save_trimmed_fail": {
+                    "type": "boolean",
+                    "description": "Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz"
+                },
+                "save_merged": {
+                    "type": "boolean",
+                    "description": "Save all merged reads to a file ending in *.merged.fastq.gz"
                 }
             }
         },
@@ -137,18 +156,16 @@
                     "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
                     "hidden": true
                 },
-                "max_multiqc_email_size": {
-                    "type": "string",
-                    "description": "File size limit when attaching MultiQC reports to summary emails.",
-                    "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
-                    "default": "25.MB",
-                    "fa_icon": "fas fa-file-upload",
-                    "hidden": true
-                },
                 "monochrome_logs": {
                     "type": "boolean",
                     "description": "Do not use coloured log outputs.",
                     "fa_icon": "fas fa-palette",
+                    "hidden": true
+                },
+                "multiqc_title": {
+                    "type": "string",
+                    "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
+                    "fa_icon": "fas fa-file-signature",
                     "hidden": true
                 },
                 "multiqc_config": {
@@ -164,10 +181,15 @@
                     "fa_icon": "fas fa-image",
                     "hidden": true
                 },
+                "max_multiqc_email_size": {
+                    "type": "string",
+                    "default": "25.MB"
+                },
                 "multiqc_methods_description": {
                     "type": "string",
                     "description": "Custom MultiQC yaml file containing HTML including a methods description.",
-                    "fa_icon": "fas fa-cog"
+                    "fa_icon": "fas fa-cog",
+                    "hidden": true
                 },
                 "validate_params": {
                     "type": "boolean",
@@ -207,6 +229,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/trimming_options"
         },
         {
             "$ref": "#/$defs/alignment_options"

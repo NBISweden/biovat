@@ -8,35 +8,18 @@
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about
-the samples you would like to analyse before running the
-pipeline. Add it to the parameter file to specify its location
-(an [example parameter file](../assets/nf-params.yml) has
-been provided with the pipeline) or use this parameter.
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Add it to the parameter file to specify its location (an [example parameter file](../assets/nf-params.yml) has been provided with the pipeline) or use this parameter.
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-The samplesheet can have as many columns as you desire,
-however, it must contain the columns defined in the table
-below. It has to contain a header row as shown in the
-example below.
+The samplesheet can have as many columns as you desire, however, it must contain the columns defined in the table below. It has to contain a header row as shown in the example below.
 
-The `sample` identifiers have to be the same when you have
-re-sequenced the same sample more than once e.g. to increase
-sequencing depth. Sequencing library IDs, flowcell IDs, and
-lane numbers are specified in the columns `library_id`,
-`flowcell_id`, and `lane`. Each combination of `sample`,
-`library_id`, `flowcell_id`, and `lane` has to be unique.
-The pipeline currently expects paired-end input and will
-merge the reads for each `sample` before performing
-any downstream analysis.
+The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. Sequencing library IDs, flowcell IDs, and lane numbers are specified in the columns `library_id`,
+`flowcell_id`, and `lane`. Each combination of `sample`, `library_id`, `flowcell_id`, and `lane` has to be unique. Raw or trimmed reads belonging to the same sample will be merged prior to any analysis downstream of alignment, such as variant calling.
 
-A final samplesheet file consisting of paired-end data for
-6 samples may look something like the one below. Sample `S1`
-has been sequenced across three lanes and sample `S6` has been
-sequenced twice.
+A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. Sample `S1` has been sequenced across three lanes and sample `S6` has been sequenced twice.
 
 ```csv title="samplesheet.csv"
 sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2
@@ -63,47 +46,33 @@ S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
+## Configuring the pipeline
+
+Pipeline settings and parameters can be provided on the commandline but for better reproducibility and documentation, an example parameter file is provided in `assets/nf-params.yml`.
+
+Here, input and output options are specified, the pipeline steps are selected, and step- and tool-specific parameters are defined.
+
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run biovat --input ./samplesheet.csv --outdir ./results  -profile docker
+nextflow run NBISweden/biovat -params-file assets/nf-params.yml -profile docker -r 0.0.1
 ```
 
-This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
+This will launch the pipeline (version 0.0.1) with the `docker` configuration profile. Pipeline settings and parameters are applied as specified in `assets/nf-params.yml` as described above. See below for more information about profiles and reproducibility.
 
 Note that the pipeline will create the following files in your working directory:
 
 ```bash
 work                # Directory containing the nextflow working files
-<OUTDIR>            # Finished results in specified location (defined with --outdir)
+<OUTDIR>            # Finished results in specified location (defined via outdir in nf-params.yml)
 .nextflow_log       # Log file from Nextflow
 # Other nextflow hidden files, eg. history of pipeline runs and old logs.
 ```
 
-If you wish to repeatedly use the same parameters for multiple runs, rather than specifying each flag in the command, you can specify these in a params file.
-
-Pipeline settings can be provided in a `yaml` or `json` file via `-params-file <file>`.
-
 > [!WARNING]
 > Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/running/run-pipelines#configuring-pipelines), other infrastructural tweaks (such as output directories), or module arguments (args).
-
-The above pipeline run specified with a params file in yaml format:
-
-```bash
-nextflow run biovat -profile docker -params-file params.yaml
-```
-
-with:
-
-```yaml title="params.yaml"
-input: './samplesheet.csv'
-outdir: './results/'
-<...>
-```
-
-You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
 
 ### Updating the pipeline
 

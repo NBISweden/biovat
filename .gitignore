@@ -11,5 +11,5 @@ null/
 .lineage/
 .nf-test.log
 .pixi/
-.nf-test/*
+.nf-test/
 .vscode/
