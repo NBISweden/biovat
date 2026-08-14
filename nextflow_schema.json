@@ -32,7 +32,7 @@
                 },
                 "enable_trim": {
                     "type": "boolean",
-                    "description": "Run the trimming stage.",
+                    "description": "Runs the subworkflow TRIM_READS",
                     "default": true
                 },
                 "enable_align": {
