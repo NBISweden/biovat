@@ -48,7 +48,7 @@ An [example samplesheet](../assets/samplesheet.csv) has been provided with the p
 
 ## Configuring the pipeline
 
-Pipeline settings and parameters can be provided on the commandline but for better reproducibility and documentation, an example parameter file is provided in `assets/nf-params.yml`.
+Pipeline settings and parameters can be provided on the command-line but for better reproducibility and documentation, an example parameter file is provided in `assets/nf-params.yml`.
 
 Here, input and output options are specified, the pipeline steps are selected, and step- and tool-specific parameters are defined.
 

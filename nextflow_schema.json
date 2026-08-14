@@ -10,7 +10,7 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "steps", "outdir"],
+            "required": ["input", "outdir"],
             "properties": {
                 "input": {
                     "type": "string",
@@ -30,10 +30,15 @@
                     "description": "Path to reference genome FASTA file.",
                     "help_text": "Provide a reference genome FASTA file against which reads will be aligned."
                 },
-                "steps": {
-                    "type": "string",
-                    "description": "Comma-separated list of steps (subworkflows) to run.",
-                    "default": "trim,align"
+                "enable_trim": {
+                    "type": "boolean",
+                    "description": "Runs the subworkflow TRIM_READS",
+                    "default": true
+                },
+                "enable_align": {
+                    "type": "boolean",
+                    "description": "Run the subworkflow ALIGN_READS",
+                    "default": true
                 },
                 "outdir": {
                     "type": "string",
