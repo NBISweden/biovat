@@ -44,30 +44,10 @@ workflow BIOVAT {
     workflow_steps       = steps.tokenize(",") // Requested workflow steps
     reads_to_process     = ch_samplesheet      // Initialise reads_to_process channel with raw reads
 
-    // If adapter path provided, add to reads for TRIM_READS subworkflow
+    // If adapter path provided, add to reads for FASTP module
     def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
     def ch_reads_and_adapters = reads_to_process
         .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
-
-    // Trim reads
-    if ( 'trim' in workflow_steps ) {
-        TRIM_READS (
-            ch_reads_and_adapters,
-            false, // discard_trimmed_pass must be false when running read trimming
-            save_trimmed_fail,
-            save_merged
-        )
-        reads_to_process = TRIM_READS.out.trimmed_reads
-
-        // FastQC on trimmed reads
-        if ( 'read_qc' in workflow_steps ) {
-            TRIMMED_READS_QC (
-                reads_to_process
-            )
-            ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
-            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
-        }
-    }
 
     // Raw reads quality checks
     if ( 'read_qc' in workflow_steps ) {
@@ -86,6 +66,26 @@ workflow BIOVAT {
                 false
             )
             ch_multiqc_files = ch_multiqc_files.mix(FASTP_QC.out.trimmed_json.map{ _meta, file -> file })
+        }
+    }
+
+    // Trim reads
+    if ( 'trim' in workflow_steps ) {
+        TRIM_READS (
+            ch_reads_and_adapters,
+            false, // discard_trimmed_pass must be false when running read trimming
+            save_trimmed_fail,
+            save_merged
+        )
+        reads_to_process = TRIM_READS.out.trimmed_reads
+
+        // FastQC on trimmed reads
+        if ( 'read_qc' in workflow_steps ) {
+            TRIMMED_READS_QC (
+                reads_to_process
+            )
+            ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
+            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
         }
     }
 
