@@ -69,9 +69,13 @@ description = "Open the current branch's PR in the browser"
 cmd         = "nextflow lint -format -harshil-alignment -spaces 4"
 description = "Run Nextflow formatter on target file(s). Usage: <cmd> <file(s)>"
 
-[tasks.pipeline-lint]
+[tasks.lint-pipeline]
 cmd         = "nf-core pipelines lint"
 description = "Run the nf-core pipeline linter"
+
+[tasks.lint-prek]
+cmd         = "prek run --all-files --show-diff-on-failure --color=always"
+description = "Run prek on all files"
 
 [tasks.schema-build]
 cmd         = "nf-core pipelines schema build"

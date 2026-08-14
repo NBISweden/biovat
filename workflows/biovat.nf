@@ -44,7 +44,7 @@ workflow BIOVAT {
 
     // Trim reads
     if ( 'trim' in workflow_steps ) {
-        // If adapter path provided, add to reads for TRIM_READS subworkflow 
+        // If adapter path provided, add to reads for TRIM_READS subworkflow
         def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
         def ch_reads_and_adapters = reads_to_process
             .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }

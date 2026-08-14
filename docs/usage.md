@@ -179,7 +179,7 @@ If you have any questions or issues please send us a message on [Slack](https://
 ### GPU resource allocation
 
 For local GPU tests, apply the `gpu` profile. For GPU submissions to SLURM clusters, use the `gpu` profile and an institutional profile set up to handle GPU resource allocation.
-To request per-process GPU resources, provide a local configuration file on the command line. 
+To request per-process GPU resources, provide a local configuration file on the command line.
 
 Example:
 
