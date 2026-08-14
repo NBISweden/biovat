@@ -37,7 +37,7 @@
                 },
                 "enable_align": {
                     "type": "boolean",
-                    "description": "Run the alignment stage.",
+                    "description": "Run the subworkflow ALIGN_READS",
                     "default": true
                 },
                 "outdir": {
