@@ -25,11 +25,11 @@ workflow BIOVAT {
     take:
     ch_samplesheet       // channel: samplesheet read in from --input
     reference            // channel: reference fasta read in from --reference
+    enable_raw_reads_qc  // boolean: Whether to run quality checks on raw reads
     enable_trim          // boolean: Whether to run the trimming stage
     enable_align         // boolean: Whether to run the alignment stage
-    raw_reads_qc         // boolean: Whether to run quality checks on raw reads
     adapter_fasta        // channel: adapter fasta file read in from --adapter_fasta
-    fastp_report         // boolean: Run FastP to generate an output report even when trimming is disabled
+    fastp_qc_report      // boolean: Run FastP to generate an output report even when trimming is disabled
     save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     trimmed_reads_qc     // boolean: Whether to run quality checks on trimmed reads
@@ -52,16 +52,17 @@ workflow BIOVAT {
         .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
 
     // Raw reads quality checks
-    if ( raw_reads_qc ) {
+    if ( enable_raw_reads_qc ) {
         RAW_READS_QC (
             reads_to_process,
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
 
         // Run FASTP but only produce a report, do not write trimmed reads to file
-        // TODO: If fastp_report and enable_trim are set to true, FASTP is run twice. 
-        //       Implement a check here, with nf-schema or in utils_nfcore_biovat_pipeline.
-        if (fastp_report) {
+        // TODO: If fastp_qc_report and enable_trim are set to true, FASTP is run twice. 
+        //       Implement a check so that it can only be run once here, with nf-schema 
+        //       or in utils_nfcore_biovat_pipeline.
+        if (fastp_qc_report) {
             FASTP_QC (
                 ch_reads_and_adapters,
                 true, // discard_trimmed_pass must be set to true if only a report should be produced

@@ -39,11 +39,11 @@ workflow NBISWEDEN_BIOVAT {
     BIOVAT (
         samplesheet,
         reference,
+        params.enable_raw_reads_qc,
         params.enable_trim,
         params.enable_align,
-        params.raw_reads_qc,
         params.adapter_fasta,
-        params.fastp_report,
+        params.fastp_qc_report,
         params.save_trimmed_fail,
         params.save_merged,
         params.trimmed_reads_qc,

@@ -30,6 +30,11 @@
                     "description": "Path to reference genome FASTA file.",
                     "help_text": "Provide a reference genome FASTA file against which reads will be aligned."
                 },
+                "enable_raw_reads_qc": {
+                    "type": "boolean",
+                    "description": "Run FastQC and optionally FastP with discard_trimmed_pass on raw reads.",
+                    "default": true
+                },
                 "enable_trim": {
                     "type": "boolean",
                     "description": "Run the subworkflows READ_QC and TRIM_READS.",
@@ -48,24 +53,31 @@
                 }
             }
         },
+        "raw_read_qc_options": {
+            "title": "Raw read quality check options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "fastp_qc_report": {
+                    "type": "boolean",
+                    "description": "Run FastP for the output report only."
+                },
+            },
+        },
         "trimming_options": {
             "title": "Read trimming options",
             "type": "object",
             "description": "",
             "default": "",
             "properties": {
-                "raw_reads_qc": {
+                "fastp_qc_report": {
                     "type": "boolean",
-                    "description": "Run FastQC and optionally FastP with discard_trimmed_pass on raw reads.",
-                    "default": true
+                    "description": "Use FastP for the output report only."
                 },
                 "adapter_fasta": {
                     "type": "string",
                     "description": "Path to FASTA file containing adapter sequences."
-                },
-                "fastp_report": {
-                    "type": "boolean",
-                    "description": "Use FastP for the output report only."
                 },
                 "save_trimmed_fail": {
                     "type": "boolean",
