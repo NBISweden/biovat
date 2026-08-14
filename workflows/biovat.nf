@@ -39,34 +39,30 @@ workflow BIOVAT {
 
     main:
 
-    // Requested workflow steps
-    workflow_steps = steps.tokenize(",")
-
-    def ch_versions = channel.empty()
+    def ch_versions      = channel.empty()
     def ch_multiqc_files = channel.empty()
+    workflow_steps       = steps.tokenize(",") // Requested workflow steps
+    reads_to_process     = ch_samplesheet      // Initialise reads_to_process channel with raw reads
 
-    // Create ch_reads from ch_samplesheet and adapter_fasta for TRIM_READS subworkflow
-    // channel: [ val(meta), path(reads), path(adapter_fasta) ]
+    // If adapter path provided, add to reads for TRIM_READS subworkflow
     def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
-    def ch_reads = ch_samplesheet
+    def ch_reads_and_adapters = reads_to_process
         .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
-
-    def trimmed_reads = channel.empty()
 
     // Trim reads
     if ( 'trim' in workflow_steps ) {
         TRIM_READS (
-            ch_reads,
+            ch_reads_and_adapters,
             false, // discard_trimmed_pass must be false when running read trimming
             save_trimmed_fail,
             save_merged
         )
-        trimmed_reads    = TRIM_READS.out.trimmed_reads
+        reads_to_process = TRIM_READS.out.trimmed_reads
 
         // FastQC on trimmed reads
         if ( 'read_qc' in workflow_steps ) {
             TRIMMED_READS_QC (
-                trimmed_reads
+                reads_to_process
             )
             ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
             ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
@@ -76,7 +72,7 @@ workflow BIOVAT {
     // Raw reads quality checks
     if ( 'read_qc' in workflow_steps ) {
         RAW_READS_QC (
-            ch_samplesheet,
+            reads_to_process,
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
 
@@ -84,7 +80,7 @@ workflow BIOVAT {
         // TODO: If discard_trimmed_pass is true and trimming is enabled, FASTP is run twice. Implement a check: here, with nf-schema or in utils_nfcore_biovat_pipeline.
         if (discard_trimmed_pass) {
             FASTP_QC (
-                ch_reads,
+                ch_reads_and_adapters,
                 true, // discard_trimmed_pass must be set to true if FastP report desired
                 false,
                 false
