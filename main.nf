@@ -30,14 +30,18 @@ params {
     reference                   : String
 
     // Workflow stage gating options
+    enable_raw_reads_qc         : Boolean
     enable_trim                 : Boolean
     enable_align                : Boolean
 
+    // Raw read quality check options
+    fastp_qc_report             : Boolean
+
     // Read trimming options
     adapter_fasta               : String
-    discard_trimmed_pass        : Boolean
     save_trimmed_fail           : Boolean
     save_merged                 : Boolean
+    trimmed_reads_qc            : Boolean
 
     // Alignment options
     aligner                     : String
