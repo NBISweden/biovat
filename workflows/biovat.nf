@@ -10,6 +10,7 @@ include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfco
 include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { RAW_READ_QC                 } from '../subworkflows/local/raw_read_qc/main'
 include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
+include { TRIMMED_READ_QC             } from '../subworkflows/local/enable_trimmed_read_qc/main'
 include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 
 /*
@@ -21,18 +22,18 @@ include { ALIGN_READS                 } from '../subworkflows/local/align_reads/
 workflow BIOVAT {
 
     take:
-    ch_samplesheet       // channel: samplesheet read in from --input
-    reference            // channel: reference fasta read in from --reference
-    enable_raw_read_qc   // boolean: Whether to run quality checks on raw reads
-    enable_trim          // boolean: Whether to run the trimming stage
-    enable_align         // boolean: Whether to run the alignment stage
-    adapter_fasta        // channel: adapter fasta file read in from --adapter_fasta
-    fastp_qc_report      // boolean: Run FastP to generate an output report even when trimming is disabled
-    save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-    save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
-    trimmed_read_qc     // boolean: Whether to run quality checks on trimmed reads
-    aligner              // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    sort_bam             // boolean: Whether to sort the output BAM file
+    ch_samplesheet         // channel: samplesheet read in from --input
+    reference              // channel: reference fasta read in from --reference
+    enable_raw_read_qc     // boolean: Whether to run quality checks on raw reads
+    enable_trim            // boolean: Whether to run the trimming stage
+    enable_trimmed_read_qc // boolean: Whether to run quality checks on trimmed reads
+    enable_align           // boolean: Whether to run the alignment stage
+    adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
+    fastp_qc_report        // boolean: Run FastP to generate an output report even when trimming is disabled
+    save_trimmed_fail      // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+    save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
+    aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
+    sort_bam               // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -78,12 +79,12 @@ workflow BIOVAT {
         reads_to_process = TRIM_READS.out.trimmed_reads
 
         // Trimmed read quality checks
-        if (trimmed_read_qc) {
-        //     TRIMMED_READS_QC (
-        //         reads_to_process
-        //    )
-                ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
-        //     ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
+        if ( enable_trimmed_read_qc ) {
+            TRIMMED_READ_QC (
+                reads_to_process
+            )
+            ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
+            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
         }
     }
 
