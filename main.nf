@@ -18,45 +18,59 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biov
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Global default params (typed), used in scripts and configs
+    Global default params (typed)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 params {
+
+    // NOTE: define param types here, and param defaults in nextflow.config
 
     // Input options
     input                       : String
     reference                   : String
 
     // Workflow stage gating options
-    enable_trim                 : Boolean = true
-    enable_align                : Boolean = true
+    enable_trim                 : Boolean
+    enable_align                : Boolean
 
     // Read trimming options
-    adapter_fasta               : String? = null
-    discard_trimmed_pass        : Boolean = false
-    save_trimmed_fail           : Boolean = false
-    save_merged                 : Boolean = false
+    adapter_fasta               : String
+    discard_trimmed_pass        : Boolean
+    save_trimmed_fail           : Boolean
+    save_merged                 : Boolean
 
     // Alignment options
-    aligner                     : String  = 'bwa-mem3'
-    sort_bam                    : Boolean = true
+    aligner                     : String
+    sort_bam                    : Boolean
 
     // MultiQC options
-    multiqc_config              : String? = null
-    multiqc_logo                : String? = null
-    multiqc_methods_description : String? = null
+    multiqc_config              : String
+    multiqc_title               : String
+    multiqc_logo                : String
+    max_multiqc_email_size      : String
+    multiqc_methods_description : String
 
     // Boilerplate options
     outdir                      : String
-    monochrome_logs             : Boolean = false
-    help                        : Boolean = false
-    help_full                   : Boolean = false
-    show_hidden                 : Boolean = false
-    version                     : Boolean = false
-    pipelines_testdata_base_path: String  = 'https://raw.githubusercontent.com/nf-core/test-datasets/'
+    publish_dir_mode            : String
+    monochrome_logs             : Boolean
+    help                        : Boolean
+    help_full                   : Boolean
+    show_hidden                 : Boolean
+    version                     : Boolean
+    pipelines_testdata_base_path: String
+    trace_report_suffix         : String
+
+    // Config options
+    config_profile_name         : String
+    config_profile_description  : String
+    custom_config_version       : String
+    custom_config_base          : String
+    config_profile_contact      : String
+    config_profile_url          : String
 
     // Schema validation default options
-    validate_params             : Boolean = true
+    validate_params             : Boolean
 
 }
 
