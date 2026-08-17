@@ -10,7 +10,7 @@ include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfco
 include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { RAW_READ_QC                 } from '../subworkflows/local/raw_read_qc/main'
 include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
-include { TRIMMED_READ_QC             } from '../subworkflows/local/enable_trimmed_read_qc/main'
+include { TRIMMED_READ_QC             } from '../subworkflows/local/trimmed_read_qc/main'
 include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 
 /*
@@ -84,7 +84,7 @@ workflow BIOVAT {
                 reads_to_process
             )
             ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
-            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
+            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
         }
     }
 
