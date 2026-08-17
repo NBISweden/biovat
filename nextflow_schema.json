@@ -64,7 +64,7 @@
             "description": "",
             "default": "",
             "properties": {
-                "fastp_qc_report": {
+                "fastp_report": {
                     "type": "boolean",
                     "description": "Run FastP for the output report only."
                 }

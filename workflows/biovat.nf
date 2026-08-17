@@ -29,7 +29,7 @@ workflow BIOVAT {
     enable_trimmed_read_qc // boolean: Whether to run quality checks on trimmed reads
     enable_align           // boolean: Whether to run the alignment stage
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
-    fastp_qc_report        // boolean: Run FastP to generate an output report even when trimming is disabled
+    fastp_report           // boolean: Run FastP to generate an output report even when trimming is disabled
     save_trimmed_fail      // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
@@ -54,15 +54,15 @@ workflow BIOVAT {
     if ( enable_raw_read_qc ) {
         RAW_READ_QC (
             reads_to_process,
-            fastp_qc_report
+            fastp_report
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
 
         // Run FASTP but only produce a report, do not write trimmed reads to file
-        // TODO: If fastp_qc_report and enable_trim are set to true, FASTP is run twice.
+        // TODO: If fastp_report and enable_trim are set to true, FASTP is run twice.
         //       Implement a check so that it can only be run once here, with nf-schema
         //       or in utils_nfcore_biovat_pipeline.
-        if (fastp_qc_report) {
+        if (fastp_report) {
             ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.trimmed_json.map{ _meta, file -> file })
         }
     }

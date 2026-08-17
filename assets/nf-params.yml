@@ -84,12 +84,12 @@ outdir: "results"
 ## Configure read quality check behavior.
 
 ## -----------------------------------------------------------------------------
-## fastp_qc_report
+## fastp_report
 ## -----------------------------------------------------------------------------
 ##     Run FastP to generate an output report even when trimming is disabled.
 ##     Type: boolean
 ## -----------------------------------------------------------------------------
-# fastp_qc_report: false
+# fastp_report: false
 
 ## =============================================================================
 ## Trimming options
