@@ -12,16 +12,73 @@
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
 include { BIOVAT  } from './workflows/biovat'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Global default params (typed)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+params {
+
+    // NOTE: define param types here, and param defaults in nextflow.config
+
+    // Input options
+    input                       : String
+    reference                   : String
+
+    // Workflow stage gating options
+    enable_trim                 : Boolean
+    enable_align                : Boolean
+
+    // Read trimming options
+    adapter_fasta               : String
+    discard_trimmed_pass        : Boolean
+    save_trimmed_fail           : Boolean
+    save_merged                 : Boolean
+
+    // Alignment options
+    aligner                     : String
+    sort_bam                    : Boolean
+
+    // MultiQC options
+    multiqc_config              : String
+    multiqc_title               : String
+    multiqc_logo                : String
+    max_multiqc_email_size      : String
+    multiqc_methods_description : String
+
+    // Boilerplate options
+    outdir                      : String
+    publish_dir_mode            : String
+    monochrome_logs             : Boolean
+    help                        : Boolean
+    help_full                   : Boolean
+    show_hidden                 : Boolean
+    version                     : Boolean
+    pipelines_testdata_base_path: String
+    trace_report_suffix         : String
+
+    // Config options
+    config_profile_name         : String
+    config_profile_description  : String
+    custom_config_version       : String
+    custom_config_base          : String
+    config_profile_contact      : String
+    config_profile_url          : String
+
+    // Schema validation default options
+    validate_params             : Boolean
+
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
