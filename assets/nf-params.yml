@@ -37,12 +37,12 @@ reference: "tests/data/sumatran_rhino.fasta"
 ## Define which stages of the pipeline should be run.
 
 ## -----------------------------------------------------------------------------
-## enable_raw_reads_qc
+## enable_raw_read_qc
 ## -----------------------------------------------------------------------------
 ##     Run quality checks on raw reads.
 ##     Type: boolean
 ## -----------------------------------------------------------------------------
-# enable_raw_reads_qc: true
+# enable_raw_read_qc: true
 
 ## -----------------------------------------------------------------------------
 ## enable_trim
@@ -97,12 +97,12 @@ outdir: "results"
 # adapter_fasta: null
 
 ## -----------------------------------------------------------------------------
-## trimmed_reads_qc
+## trimmed_read_qc
 ## -----------------------------------------------------------------------------
 ##     Run FastQC on trimmed reads.
 ##     Type: boolean
 ## -----------------------------------------------------------------------------
-# trimmed_reads_qc: true
+# trimmed_read_qc: true
 
 ## =============================================================================
 ## Alignment options

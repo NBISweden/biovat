@@ -30,7 +30,7 @@ params {
     reference                   : String
 
     // Workflow stage gating options
-    enable_raw_reads_qc         : Boolean
+    enable_raw_read_qc         : Boolean
     enable_trim                 : Boolean
     enable_align                : Boolean
 
@@ -41,7 +41,7 @@ params {
     adapter_fasta               : String
     save_trimmed_fail           : Boolean
     save_merged                 : Boolean
-    trimmed_reads_qc            : Boolean
+    trimmed_read_qc            : Boolean
 
     // Alignment options
     aligner                     : String
@@ -101,14 +101,14 @@ workflow NBISWEDEN_BIOVAT {
     BIOVAT (
         samplesheet,
         reference,
-        params.enable_raw_reads_qc,
+        params.enable_raw_read_qc,
         params.enable_trim,
         params.enable_align,
         params.adapter_fasta,
         params.fastp_qc_report,
         params.save_trimmed_fail,
         params.save_merged,
-        params.trimmed_reads_qc,
+        params.trimmed_read_qc,
         params.aligner,
         params.sort_bam,
         params.multiqc_config,

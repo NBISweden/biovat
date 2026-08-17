@@ -8,10 +8,8 @@ include { paramsSummaryMap            } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc        } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { RAW_READ_QC                 } from '../subworkflows/local/raw_read_qc/main'
 include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
-include { READ_QC as RAW_READS_QC     } from '../subworkflows/local/read_qc/main'
-include { TRIM_READS as FASTP_QC      } from '../subworkflows/local/trim_reads/main'
-include { READ_QC as TRIMMED_READS_QC } from '../subworkflows/local/read_qc/main'
 include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 
 /*
@@ -25,14 +23,14 @@ workflow BIOVAT {
     take:
     ch_samplesheet       // channel: samplesheet read in from --input
     reference            // channel: reference fasta read in from --reference
-    enable_raw_reads_qc  // boolean: Whether to run quality checks on raw reads
+    enable_raw_read_qc   // boolean: Whether to run quality checks on raw reads
     enable_trim          // boolean: Whether to run the trimming stage
     enable_align         // boolean: Whether to run the alignment stage
     adapter_fasta        // channel: adapter fasta file read in from --adapter_fasta
     fastp_qc_report      // boolean: Run FastP to generate an output report even when trimming is disabled
     save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
-    trimmed_reads_qc     // boolean: Whether to run quality checks on trimmed reads
+    trimmed_read_qc     // boolean: Whether to run quality checks on trimmed reads
     aligner              // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam             // boolean: Whether to sort the output BAM file
     multiqc_config
@@ -51,25 +49,20 @@ workflow BIOVAT {
     def ch_reads_and_adapters = reads_to_process
         .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
 
-    // Raw reads quality checks
-    if ( enable_raw_reads_qc ) {
-        RAW_READS_QC (
+    // Raw read quality checks
+    if ( enable_raw_read_qc ) {
+        RAW_READ_QC (
             reads_to_process,
+            fastp_qc_report
         )
-        ch_multiqc_files = ch_multiqc_files.mix(RAW_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
+        ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
 
         // Run FASTP but only produce a report, do not write trimmed reads to file
         // TODO: If fastp_qc_report and enable_trim are set to true, FASTP is run twice.
         //       Implement a check so that it can only be run once here, with nf-schema
         //       or in utils_nfcore_biovat_pipeline.
         if (fastp_qc_report) {
-            FASTP_QC (
-                ch_reads_and_adapters,
-                true, // discard_trimmed_pass must be set to true if only a report should be produced
-                false,
-                false
-            )
-            ch_multiqc_files = ch_multiqc_files.mix(FASTP_QC.out.trimmed_json.map{ _meta, file -> file })
+            ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.trimmed_json.map{ _meta, file -> file })
         }
     }
 
@@ -84,13 +77,13 @@ workflow BIOVAT {
         )
         reads_to_process = TRIM_READS.out.trimmed_reads
 
-        // FastQC on trimmed reads
-        if (trimmed_reads_qc) {
-            TRIMMED_READS_QC (
-                reads_to_process
-            )
-            ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
-            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
+        // Trimmed read quality checks
+        if (trimmed_read_qc) {
+        //     TRIMMED_READS_QC (
+        //         reads_to_process
+        //    )
+                ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
+        //     ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READS_QC.out.fastqc_zip.map{ _meta, file -> file })
         }
     }
 
