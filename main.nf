@@ -62,6 +62,7 @@ params {
     help_full                   : Boolean
     show_hidden                 : Boolean
     version                     : Boolean
+    modules_testdata_base_path  : String
     pipelines_testdata_base_path: String
     trace_report_suffix         : String
 
