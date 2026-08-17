@@ -55,7 +55,7 @@ enable_trim: true
 ## -----------------------------------------------------------------------------
 ## enable_trimmed_read_qc
 ## -----------------------------------------------------------------------------
-##     Run FastQC on trimmed reads and include with FastP results in MultiQC.
+##     Run additional quality checks on trimmed reads.
 ##     Type: boolean
 ## -----------------------------------------------------------------------------
 enable_trimmed_read_qc: true

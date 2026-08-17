@@ -77,13 +77,13 @@ workflow BIOVAT {
             save_merged
         )
         reads_to_process = TRIM_READS.out.trimmed_reads
+        ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
 
-        // Trimmed read quality checks
+        // Additional read quality checks after trimming
         if ( enable_trimmed_read_qc ) {
             TRIMMED_READ_QC (
                 reads_to_process
             )
-            ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
             ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
         }
     }
