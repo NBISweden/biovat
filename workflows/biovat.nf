@@ -53,7 +53,7 @@ workflow BIOVAT {
     // Raw read quality checks
     if ( enable_raw_read_qc ) {
         RAW_READ_QC (
-            reads_to_process,
+            ch_reads_and_adapters,
             fastp_report
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
