@@ -9,6 +9,19 @@ report_section_order:
   "NBISweden-biovat-summary":
     order: -1002
 
+module_order:
+  - fastqc:
+      name: "FastQC (raw)"
+      anchor: "fastqc_raw"
+      path_filters:
+        - "*_raw_*_fastqc.zip"
+  - fastp
+  - fastqc:
+      name: "FastQC (trimmed)"
+      anchor: "fastqc_trimmed"
+      path_filters:
+        - "*_trimmed_*_fastqc.zip"
+
 export_plots: true
 
 disable_version_detection: true
