@@ -41,7 +41,7 @@ params {
     adapter_fasta               : String
     save_trimmed_fail           : Boolean
     save_merged                 : Boolean
-    enable_trimmed_read_qc      : Boolean
+    trimmed_read_qc             : Boolean
 
     // Alignment options
     aligner                     : String
@@ -103,12 +103,12 @@ workflow NBISWEDEN_BIOVAT {
         reference,
         params.enable_raw_read_qc,
         params.enable_trim,
-        params.enable_trimmed_read_qc,
         params.enable_align,
         params.adapter_fasta,
         params.fastp_report,
         params.save_trimmed_fail,
         params.save_merged,
+        params.trimmed_read_qc,
         params.aligner,
         params.sort_bam,
         params.multiqc_config,

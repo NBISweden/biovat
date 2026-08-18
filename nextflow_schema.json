@@ -40,11 +40,6 @@
                     "description": "Run the subworkflow TRIM_READS.",
                     "default": true
                 },
-                "enable_trimmed_read_qc": {
-                    "type": "boolean",
-                    "description": "Run the subworkflow TRIMMED_READ_QC.",
-                    "default": true
-                },
                 "enable_align": {
                     "type": "boolean",
                     "description": "Run the subworkflow ALIGN_READS.",
@@ -87,6 +82,11 @@
                 "save_merged": {
                     "type": "boolean",
                     "description": "Save all merged reads to a file ending in *.merged.fastq.gz."
+                },
+                "trimmed_read_qc": {
+                    "type": "boolean",
+                    "description": "Run the subworkflow TRIMMED_READ_QC.",
+                    "default": true
                 }
             }
         },
