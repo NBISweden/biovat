@@ -1,6 +1,6 @@
 name: Run nf-test
 on:
-  pull_request:
+  pull_request: {}
   release:
     types: [published]
   workflow_dispatch:
