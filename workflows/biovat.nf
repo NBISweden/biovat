@@ -1,8 +1,3 @@
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -11,12 +6,6 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
 
 workflow BIOVAT {
 
@@ -40,12 +29,12 @@ workflow BIOVAT {
 
     def ch_versions      = channel.empty()
     def ch_multiqc_files = channel.empty()
-    reads_to_process     = ch_samplesheet      // Initialise reads_to_process channel with raw reads
+    reads_to_process     = ch_samplesheet
 
     // Trim reads
     outputs_trim_reads = channel.empty()
     if ( enable_trim ) {
-        // If adapter path provided, add to reads for TRIM_READS subworkflow
+        // FASTP takes reads + adapters (if provided)
         def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
         def ch_reads_and_adapters = reads_to_process
             .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
@@ -56,16 +45,17 @@ workflow BIOVAT {
             val_save_trimmed_fail,
             val_save_merged
         )
+        reads_to_process   = TRIM_READS.out.fastq
         outputs_trim_reads = TRIM_READS.out.fastq
             .mix(TRIM_READS.out.json)
             .mix(TRIM_READS.out.html)
             .mix(TRIM_READS.out.trim_log)
             .mix(TRIM_READS.out.reads_fail)
             .mix(TRIM_READS.out.reads_merged)
-        reads_to_process   = TRIM_READS.out.fastq
     }
 
     // Align reads
+    outputs_align_reads     = channel.empty()
     if ( enable_align ) {
         ALIGN_READS (
             aligner,
@@ -75,6 +65,8 @@ workflow BIOVAT {
         )
         aligned_reads       = ALIGN_READS.out.aligned_reads
         aligned_reads_index = ALIGN_READS.out.aligned_reads_index
+        outputs_align_reads = ALIGN_READS.out.aligned_reads
+            .mix(ALIGN_READS.out.aligned_reads_index)
     }
 
 
@@ -91,7 +83,6 @@ workflow BIOVAT {
             versions_file: entry instanceof Path
             versions_tuple: true
         }
-
     def topic_versions_string = topic_versions.versions_tuple
         .map { process, tool, version ->
             [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
@@ -101,7 +92,6 @@ workflow BIOVAT {
             tool_versions.unique().sort()
             "${process}:\n${tool_versions.join('\n')}"
         }
-
     def ch_collated_versions = softwareVersionsToYAML(ch_versions.mix(topic_versions.versions_file))
         .mix(topic_versions_string)
         .collectFile(
@@ -135,16 +125,13 @@ workflow BIOVAT {
             ]
         }
     )
+    outputs_multiqc = MULTIQC.out.report
+        .mix(MULTIQC.out.data)
+        .mix(MULTIQC.out.plots)
 
     emit:
-    outputs_trim_reads = outputs_trim_reads
-    multiqc_data       = MULTIQC.out.data
-    multiqc_plots      = MULTIQC.out.plots
-    multiqc_report     = MULTIQC.out.report// TODO: CMK suggestion: pass the channel directly, as we're only calling multiqc once. Removed pattern: .map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
-}
+    outputs_trim_reads  = outputs_trim_reads
+    outputs_align_reads = outputs_align_reads
+    outputs_multiqc     = outputs_multiqc
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+}
