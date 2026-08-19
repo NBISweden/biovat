@@ -78,9 +78,7 @@ workflow BIOVAT {
     FASTQC(ch_samplesheet)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })
 
-    //
     // Collate and save software versions
-    //
     def topic_versions = channel.topic("versions")
         .distinct()
         .branch { entry ->
@@ -107,19 +105,16 @@ workflow BIOVAT {
             newLine: true
         )
 
-    //
-    // MODULE: MultiQC
-    //
-    ch_multiqc_files = ch_multiqc_files.mix(ch_collated_versions)
-    def ch_summary_params = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
-    def ch_workflow_summary = channel.value(paramsSummaryMultiqc(ch_summary_params))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+    // MultiQC
+    ch_multiqc_files                          = ch_multiqc_files.mix(ch_collated_versions)
+    def ch_summary_params                     = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
+    def ch_workflow_summary                   = channel.value(paramsSummaryMultiqc(ch_summary_params))
+    ch_multiqc_files                          = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     def ch_multiqc_custom_methods_description = multiqc_methods_description
         ? file(multiqc_methods_description, checkIfExists: true)
         : file("${projectDir}/assets/biovat_methods_description.yml", checkIfExists: true)
-    def ch_methods_description = channel.value(methodsDescriptionText(ch_multiqc_custom_methods_description))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml', sort: true))
-
+    def ch_methods_description                = channel.value(methodsDescriptionText(ch_multiqc_custom_methods_description))
+    ch_multiqc_files                          = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml', sort: true))
     MULTIQC(
         ch_multiqc_files.flatten().collect().map { files ->
             [
@@ -136,8 +131,9 @@ workflow BIOVAT {
     )
 
     emit:
-    multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
-    versions       = ch_versions                                                   // channel: [ path(versions.yml) ]
+    multiqc_data   = MULTIQC.out.data
+    multiqc_plots  = MULTIQC.out.plots
+    multiqc_report = MULTIQC.out.report// TODO: CMK suggestion: pass the channel directly, as we're only calling multiqc once. Removed pattern: .map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
 }
 
 /*

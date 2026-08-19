@@ -79,9 +79,7 @@ params {
     NAMED WORKFLOWS FOR PIPELINE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-//
 // WORKFLOW: Run main analysis pipeline depending on type of input
-//
 workflow NBISWEDEN_BIOVAT {
 
     take:
@@ -89,10 +87,7 @@ workflow NBISWEDEN_BIOVAT {
     reference   // channel: reference fasta read in from --reference
 
     main:
-
-    //
     // WORKFLOW: Run pipeline
-    //
     BIOVAT (
         samplesheet,
         reference,
@@ -109,21 +104,23 @@ workflow NBISWEDEN_BIOVAT {
         params.multiqc_methods_description,
         params.outdir,
     )
+
     emit:
+    multiqc_data   = BIOVAT.out.multiqc_data
+    multiqc_plots  = BIOVAT.out.multiqc_plots
     multiqc_report = BIOVAT.out.multiqc_report // channel: /path/to/multiqc_report.html
+
 }
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
 workflow {
 
     main:
-    //
     // SUBWORKFLOW: Run initialisation tasks
-    //
     PIPELINE_INITIALISATION (
         params.version,
         params.validate_params,
@@ -136,23 +133,36 @@ workflow {
         params.show_hidden
     )
 
-    //
     // WORKFLOW: Run main workflow
-    //
     NBISWEDEN_BIOVAT (
         PIPELINE_INITIALISATION.out.samplesheet,
         PIPELINE_INITIALISATION.out.reference
     )
-    //
+
     // SUBWORKFLOW: Run completion tasks
-    //
     PIPELINE_COMPLETION (
         params.monochrome_logs,
     )
+
+    // Publish workflow outputs
+    publish:
+
+    // MultiQC
+    multiqc_data   = NBISWEDEN_BIOVAT.out.multiqc_data
+    multiqc_plots  = NBISWEDEN_BIOVAT.out.multiqc_plots
+    multiqc_report = NBISWEDEN_BIOVAT.out.multiqc_report
+
 }
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+output {
+    // MultiQC
+    multiqc_data {
+        path 'multiqc'
+    }
+    multiqc_plots {
+        path 'multiqc'
+    }
+    multiqc_report {
+        path 'multiqc'
+    }
+}
