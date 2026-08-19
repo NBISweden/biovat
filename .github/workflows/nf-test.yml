@@ -25,10 +25,10 @@ jobs:
     outputs:
       run_tests: ${{ steps.filter.outputs.run_tests }}
     steps:
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
-          predicate-quantifier: "some"
+          predicate-quantifier: 'some-with-excludes'
           filters: |
             run_tests:
               - '**'
