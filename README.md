@@ -1,5 +1,7 @@
 # NBISweden/biovat
 
+Test edit, nf-test CI test should not be triggered
+
 [![GitHub Actions CI Status](https://github.com/NBISweden/biovat/actions/workflows/nf-test.yml/badge.svg)](https://github.com/NBISweden/biovat/actions/workflows/nf-test.yml)
 [![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
 
