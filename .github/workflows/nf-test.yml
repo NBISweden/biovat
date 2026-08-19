@@ -19,8 +19,29 @@ env:
   NXF_SINGULARITY_LIBRARYDIR: ${{ github.workspace }}/.singularity
 
 jobs:
+  # Filters doc-only changes here (not via paths-ignore) so confirm-pass still runs and CI doesn't hang
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run_tests: ${{ steps.filter.outputs.run_tests }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          predicate-quantifier: 'some-with-excludes'
+          filters: |
+            run_tests:
+              - '**'
+              - '!docs/**'
+              - '!**/meta.yml'
+              - '!**/*.md'
+              - '!**/*.png'
+              - '!**/*.svg'
+
   nf-test-changes:
     name: nf-test-changes
+    needs: [changes]
+    if: needs.changes.outputs.run_tests == 'true'
     runs-on: # use GitHub runners
       - "ubuntu-latest"
     outputs:
