@@ -106,9 +106,10 @@ workflow NBISWEDEN_BIOVAT {
     )
 
     emit:
-    multiqc_data   = BIOVAT.out.multiqc_data
-    multiqc_plots  = BIOVAT.out.multiqc_plots
-    multiqc_report = BIOVAT.out.multiqc_report // channel: /path/to/multiqc_report.html
+    outputs_trim_reads = BIOVAT.out.outputs_trim_reads
+    multiqc_data       = BIOVAT.out.multiqc_data
+    multiqc_plots      = BIOVAT.out.multiqc_plots
+    multiqc_report     = BIOVAT.out.multiqc_report // channel: /path/to/multiqc_report.html
 
 }
 
@@ -147,14 +148,22 @@ workflow {
     // Publish workflow outputs
     publish:
 
+    // TRIM_READS
+    outputs_trim_reads = NBISWEDEN_BIOVAT.out.outputs_trim_reads
+
     // MultiQC
-    multiqc_data   = NBISWEDEN_BIOVAT.out.multiqc_data
-    multiqc_plots  = NBISWEDEN_BIOVAT.out.multiqc_plots
-    multiqc_report = NBISWEDEN_BIOVAT.out.multiqc_report
+    multiqc_data       = NBISWEDEN_BIOVAT.out.multiqc_data
+    multiqc_plots      = NBISWEDEN_BIOVAT.out.multiqc_plots
+    multiqc_report     = NBISWEDEN_BIOVAT.out.multiqc_report
 
 }
 
 output {
+
+    // TRIM_READS
+    outputs_trim_reads {
+        path '02_read_trimming'
+    }
     // MultiQC
     multiqc_data {
         path 'multiqc'

@@ -22,11 +22,10 @@ workflow TRIM_READS {
     )
 
     emit:
-    trimmed_reads        = FASTP.out.reads         // channel: [ val(meta), path(reads) ]
-    trimmed_json         = FASTP.out.json          // channel: [ val(meta), path(json) ]
-    trimmed_html         = FASTP.out.html          // channel: [ val(meta), path(html) ]
-    trimmed_log          = FASTP.out.log           // channel: [ val(meta), path(log) ]
-    trimmed_reads_fail   = FASTP.out.reads_fail    // channel: [ val(meta), path(fastq.gz) ]
-    trimmed_reads_merged = FASTP.out.reads_merged  // channel: [ val(meta), path(fastq.gz) ]
-
+    fastq        = FASTP.out.reads
+    json         = FASTP.out.json
+    html         = FASTP.out.html
+    trim_log     = FASTP.out.log
+    reads_fail   = FASTP.out.reads_fail
+    reads_merged = FASTP.out.reads_merged
 }
