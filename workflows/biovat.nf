@@ -60,7 +60,6 @@ workflow BIOVAT {
         // FASTP
         TRIM_READS (
             ch_reads_and_adapters,
-            false, // discard_trimmed_pass must be false when running read trimming
             save_trimmed_fail,
             save_merged
         )
