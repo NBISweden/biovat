@@ -10,7 +10,6 @@ include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfco
 include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { RAW_READ_QC                 } from '../subworkflows/local/raw_read_qc/main'
 include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
-include { TRIMMED_READ_QC             } from '../subworkflows/local/trimmed_read_qc/main'
 include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 
 /*
@@ -30,7 +29,6 @@ workflow BIOVAT {
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
     save_trimmed_fail      // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
-    trimmed_read_qc        // boolean: Whether to run quality checks on trimmed reads
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam               // boolean: Whether to sort the output BAM file
     multiqc_config
@@ -58,7 +56,7 @@ workflow BIOVAT {
         def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
         def ch_reads_and_adapters = reads_to_process
             .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
-        
+
         // FASTP
         TRIM_READS (
             ch_reads_and_adapters,
@@ -68,14 +66,6 @@ workflow BIOVAT {
         )
         reads_to_process = TRIM_READS.out.trimmed_reads
         ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map{ _meta, file -> file })
-
-        // Additional read quality checks after trimming
-        if ( trimmed_read_qc ) {
-            TRIMMED_READ_QC (
-                reads_to_process
-            )
-            ch_multiqc_files = ch_multiqc_files.mix(TRIMMED_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
-        }
     }
 
     // Align reads
