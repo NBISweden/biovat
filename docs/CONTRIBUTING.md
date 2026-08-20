@@ -135,6 +135,7 @@ Use the following naming schemes for channels to make the channel flow easier to
 ### Default parameter values
 
 Parameters should be initialised and defined with default values within the `params` scope in `nextflow.config`.
+Separately, they should have their type defined in `main.nf` ([see here for the ADR](https://github.com/NBISweden/biovat/issues/61)).
 They should also be documented in the pipeline JSON schema.
 
 To update `nextflow_schema.json`, run:
