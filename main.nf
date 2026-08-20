@@ -34,9 +34,6 @@ params {
     enable_trim                 : Boolean
     enable_align                : Boolean
 
-    // Raw read quality check options
-    fastp_report                : Boolean
-
     // Read trimming options
     adapter_fasta               : String
     save_trimmed_fail           : Boolean
@@ -105,7 +102,6 @@ workflow NBISWEDEN_BIOVAT {
         params.enable_trim,
         params.enable_align,
         params.adapter_fasta,
-        params.fastp_report,
         params.save_trimmed_fail,
         params.save_merged,
         params.trimmed_read_qc,

@@ -53,18 +53,6 @@
                 }
             }
         },
-        "raw_read_qc_options": {
-            "title": "Raw read quality check options",
-            "type": "object",
-            "description": "",
-            "default": "",
-            "properties": {
-                "fastp_report": {
-                    "type": "boolean",
-                    "description": "Run FastP for the output report only."
-                }
-            }
-        },
         "trimming_options": {
             "title": "Read trimming options",
             "type": "object",
@@ -260,9 +248,6 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
-        },
-        {
-            "$ref": "#/$defs/raw_read_qc_options"
         },
         {
             "$ref": "#/$defs/trimming_options"

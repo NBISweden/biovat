@@ -28,7 +28,6 @@ workflow BIOVAT {
     enable_trim            // boolean: Whether to run the trimming stage
     enable_align           // boolean: Whether to run the alignment stage
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
-    fastp_report           // boolean: Run FastP to generate an output report even when trimming is disabled
     save_trimmed_fail      // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     trimmed_read_qc        // boolean: Whether to run quality checks on trimmed reads
@@ -45,30 +44,21 @@ workflow BIOVAT {
     def ch_multiqc_files = channel.empty()
     reads_to_process     = ch_samplesheet      // Initialise reads_to_process channel with raw reads
 
-    // If adapter path provided, add to reads for FASTP module
-    def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
-    def ch_reads_and_adapters = reads_to_process
-        .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
-
     // Raw read quality checks
     if ( enable_raw_read_qc ) {
         RAW_READ_QC (
-            ch_reads_and_adapters,
-            fastp_report
+            reads_to_process,
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
-
-        // Run FASTP but only produce a report, do not write trimmed reads to file
-        // TODO: If fastp_report and enable_trim are set to true, FASTP is run twice.
-        //       Implement a check so that it can only be run once here, with nf-schema
-        //       or in utils_nfcore_biovat_pipeline.
-        if (fastp_report) {
-            ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.fastp_json.map{ _meta, file -> file })
-        }
     }
 
     // Trim reads
     if ( enable_trim ) {
+        // If adapter path provided, add to reads for FASTP module
+        def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
+        def ch_reads_and_adapters = reads_to_process
+            .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
+        
         // FASTP
         TRIM_READS (
             ch_reads_and_adapters,
