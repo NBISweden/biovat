@@ -16,9 +16,10 @@ Learn more about contributing: [CONTRIBUTING.md](https://github.com/NBISweden/bi
 - [ ] This comment contains a description of changes (with reason).
 - [ ] If you've fixed a bug or added code that should be tested, add tests!
 - [ ] If you've added a new tool - have you followed the pipeline conventions in the [contribution docs](https://github.com/NBISweden/biovat/tree/main/docs/CONTRIBUTING.md)
-- [ ] Make sure your code lints (`nf-core pipelines lint`).
-- [ ] Ensure the test suite passes (`nextflow run . -profile test,docker --outdir <OUTDIR>`).
-- [ ] Check for unexpected warnings in debug mode (`nextflow run . -profile debug,test,docker --outdir <OUTDIR>`).
+- [ ] For a new parameter, the type is defined in `main.nf`, the default in `nextflow.config`, and it is added to `nextflow_schema.json`
+- [ ] Make sure your code lints (`pixi run nf-core pipelines lint`).
+- [ ] Ensure the test suite passes (`pixi run nf-test test tests/default.nf.test --profile +docker`).
+- [ ] Check for unexpected warnings in debug mode (`pixi run nextflow main.nf -profile debug,test,docker`).
 - [ ] Usage Documentation in `docs/usage.md` is updated.
 - [ ] Output Documentation in `docs/output.md` is updated.
 - [ ] `CHANGELOG.md` is updated.
