@@ -19,7 +19,7 @@ workflow RAW_READ_QC {
         ch_reads
     )
 
-    ch_trimmed_json = Channel.empty()
+    ch_fastp_json = Channel.empty()
     if (fastp_report) {
         // Create a fastp output report without running the trimming
         FASTP_REPORT (
@@ -28,12 +28,12 @@ workflow RAW_READ_QC {
             false,
             false
         )
-        ch_trimmed_json = FASTP_REPORT.out.json
+        ch_fastp_json = FASTP_REPORT.out.json
     }
 
     emit:
     fastqc_html  = FASTQC_RAW.out.html             // channel: [ val(meta), path(html) ]
     fastqc_zip   = FASTQC_RAW.out.zip              // channel: [ val(meta), path(zip) ]
-    trimmed_json = ch_trimmed_json                 // channel: [ val(meta), path(json) ]
+    fastp_json   = ch_fastp_json                   // channel: [ val(meta), path(json) ]
 
 }

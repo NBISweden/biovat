@@ -63,7 +63,7 @@ workflow BIOVAT {
         //       Implement a check so that it can only be run once here, with nf-schema
         //       or in utils_nfcore_biovat_pipeline.
         if (fastp_report) {
-            ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.trimmed_json.map{ _meta, file -> file })
+            ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.fastp_json.map{ _meta, file -> file })
         }
     }
 
@@ -77,7 +77,7 @@ workflow BIOVAT {
             save_merged
         )
         reads_to_process = TRIM_READS.out.trimmed_reads
-        ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.trimmed_json.map{ _meta, file -> file })
+        ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map{ _meta, file -> file })
 
         // Additional read quality checks after trimming
         if ( trimmed_read_qc ) {
