@@ -32,7 +32,7 @@
                 },
                 "enable_raw_read_qc": {
                     "type": "boolean",
-                    "description": "Run the subworkflow RAW_READ_QC.",
+                    "description": "Run the subworkflow READ_QC.",
                     "default": true
                 },
                 "enable_trim": {

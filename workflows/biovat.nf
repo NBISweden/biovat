@@ -8,7 +8,7 @@ include { paramsSummaryMap            } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc        } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { RAW_READ_QC                 } from '../subworkflows/local/raw_read_qc/main'
+include { READ_QC as RAW_READ_QC      } from '../subworkflows/local/read_qc/main'
 include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 

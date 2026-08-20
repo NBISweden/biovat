@@ -17,8 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added stage specific boolean params for overall control of modular execution
 - Trimming subworkflow using fastp
 - ADR issue template and CONTRIBUTING.md pointer documenting that architecture decisions are recorded as labelled GitHub issues (#39)
-- Raw read quality check subworkflow using FastQC and fastp added as raw_read_qc stage
-- Trimmed read quality check subworkflow using FastQC added under trimming stage
+- Raw read quality check subworkflow using FastQC added as raw_read_qc stage
 
 ### `Fixed`
 
