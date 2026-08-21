@@ -36,7 +36,6 @@ nextflow_pipeline {
                     // Unstable content checks handled by dedicated plugins
                     // BAMs: use nft-bam to validate stable hash on alignments, ignoring header
                     bam("$outputDir/03_read_alignment/S03.1.BH252YCCXY.7.bam").getReadsMD5(),
-                    // FASTQs:
                 ).match() }
             )
         }
