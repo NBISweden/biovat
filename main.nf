@@ -130,7 +130,7 @@ workflow {
 
 output {
 
-    // RAW_READ_QC
+    // READ_QC
     outputs_raw_read_qc {
         path '01_raw_read_qc'
     }

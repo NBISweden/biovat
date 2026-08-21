@@ -8,7 +8,7 @@ include { paramsSummaryMap            } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc        } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { READ_QC as RAW_READ_QC      } from '../subworkflows/local/read_qc/main'
+include { READ_QC                     } from '../subworkflows/local/read_qc/main'
 include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 
@@ -39,12 +39,12 @@ workflow BIOVAT {
     // Raw read quality checks
     outputs_raw_read_qc     = channel.empty()
     if ( enable_raw_read_qc ) {
-        RAW_READ_QC (
+        READ_QC (
             reads_to_process,
         )
-        ch_multiqc_files    = ch_multiqc_files.mix(RAW_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
-        outputs_raw_read_qc = RAW_READ_QC.out.fastqc_zip
-            .mix(RAW_READ_QC.out.fastqc_html)
+        ch_multiqc_files    = ch_multiqc_files.mix(READ_QC.out.fastqc_zip.map{ _meta, file -> file })
+        outputs_raw_read_qc = READ_QC.out.fastqc_zip
+            .mix(READ_QC.out.fastqc_html)
     }
 
     // Trim reads
