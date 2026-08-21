@@ -22,19 +22,19 @@ nf-test     = ">=0.9.5,<0.10"
 gh          = ">=2.97.0,<3"
 
 [tasks.test-docker]
-cmd         = "nextflow main.nf -profile docker,test"
+cmd         = "nextflow main.nf -profile docker,test -output-format none"
 description = "Run the pipeline test profile with Docker"
 
 [target.osx-arm64.tasks.test-docker]
-cmd         = "nextflow main.nf -profile docker,arm64,test"
+cmd         = "nextflow main.nf -profile docker,arm64,test -output-format none"
 description = "Run the pipeline test profile with Docker (arm64)"
 
 [tasks.test-singularity]
-cmd         = "nextflow main.nf -profile singularity,test"
+cmd         = "nextflow main.nf -profile singularity,test -output-format none"
 description = "Run the pipeline test profile with Singularity"
 
 [tasks.test-conda]
-cmd         = "nextflow main.nf -profile conda,test"
+cmd         = "nextflow main.nf -profile conda,test -output-format none"
 description = "Run the pipeline test profile with Conda"
 
 [tasks.help]

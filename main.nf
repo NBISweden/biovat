@@ -7,23 +7,12 @@
 ----------------------------------------------------------------------------------------
 */
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
 include { BIOVAT  } from './workflows/biovat'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Global default params (typed)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+// Global default parameters: define param types here, and defaults in nextflow.config
 params {
-
-    // NOTE: define param types here, and param defaults in nextflow.config
 
     // Input options
     input                       : String
@@ -74,14 +63,7 @@ params {
 
 }
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    NAMED WORKFLOWS FOR PIPELINE
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-//
-// WORKFLOW: Run main analysis pipeline depending on type of input
-//
+// Main analysis pipeline
 workflow NBISWEDEN_BIOVAT {
 
     take:
@@ -89,10 +71,6 @@ workflow NBISWEDEN_BIOVAT {
     reference   // channel: reference fasta read in from --reference
 
     main:
-
-    //
-    // WORKFLOW: Run pipeline
-    //
     BIOVAT (
         samplesheet,
         reference,
@@ -109,21 +87,18 @@ workflow NBISWEDEN_BIOVAT {
         params.multiqc_methods_description,
         params.outdir,
     )
-    emit:
-    multiqc_report = BIOVAT.out.multiqc_report // channel: /path/to/multiqc_report.html
-}
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
 
+    emit:
+    outputs_trim_reads  = BIOVAT.out.outputs_trim_reads
+    outputs_align_reads = BIOVAT.out.outputs_align_reads
+    outputs_multiqc     = BIOVAT.out.outputs_multiqc
+
+}
+
+// Entry workflow
 workflow {
 
     main:
-    //
-    // SUBWORKFLOW: Run initialisation tasks
-    //
     PIPELINE_INITIALISATION (
         params.version,
         params.validate_params,
@@ -135,24 +110,34 @@ workflow {
         params.help_full,
         params.show_hidden
     )
-
-    //
-    // WORKFLOW: Run main workflow
-    //
     NBISWEDEN_BIOVAT (
         PIPELINE_INITIALISATION.out.samplesheet,
         PIPELINE_INITIALISATION.out.reference
     )
-    //
-    // SUBWORKFLOW: Run completion tasks
-    //
     PIPELINE_COMPLETION (
         params.monochrome_logs,
     )
+
+    publish:
+    outputs_trim_reads  = NBISWEDEN_BIOVAT.out.outputs_trim_reads
+    outputs_align_reads = NBISWEDEN_BIOVAT.out.outputs_align_reads
+    outputs_multiqc     = NBISWEDEN_BIOVAT.out.outputs_multiqc
+
 }
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+output {
+
+    // TRIM_READS
+    outputs_trim_reads {
+        path '02_read_trimming'
+    }
+    // ALIGN_READS
+    outputs_align_reads {
+        path '03_read_alignment'
+    }
+    // MultiQC
+    outputs_multiqc {
+        path 'multiqc'
+    }
+
+}
