@@ -90,6 +90,7 @@ workflow NBISWEDEN_BIOVAT {
     )
 
     emit:
+    outputs_raw_read_qc = BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads  = BIOVAT.out.outputs_trim_reads
     outputs_align_reads = BIOVAT.out.outputs_align_reads
     outputs_multiqc     = BIOVAT.out.outputs_multiqc
