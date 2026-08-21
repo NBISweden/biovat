@@ -19,12 +19,12 @@ params {
     reference                   : String
 
     // Workflow stage gating options
+    enable_raw_read_qc          : Boolean
     enable_trim                 : Boolean
     enable_align                : Boolean
 
     // Read trimming options
     adapter_fasta               : String
-    discard_trimmed_pass        : Boolean
     save_trimmed_fail           : Boolean
     save_merged                 : Boolean
 
@@ -47,6 +47,7 @@ params {
     help_full                   : Boolean
     show_hidden                 : Boolean
     version                     : Boolean
+    modules_testdata_base_path  : String
     pipelines_testdata_base_path: String
     trace_report_suffix         : String
 
@@ -74,10 +75,10 @@ workflow NBISWEDEN_BIOVAT {
     BIOVAT (
         samplesheet,
         reference,
+        params.enable_raw_read_qc,
         params.enable_trim,
         params.enable_align,
         params.adapter_fasta,
-        params.discard_trimmed_pass,
         params.save_trimmed_fail,
         params.save_merged,
         params.aligner,
@@ -89,6 +90,7 @@ workflow NBISWEDEN_BIOVAT {
     )
 
     emit:
+    outputs_raw_read_qc = BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads  = BIOVAT.out.outputs_trim_reads
     outputs_align_reads = BIOVAT.out.outputs_align_reads
     outputs_multiqc     = BIOVAT.out.outputs_multiqc
@@ -119,6 +121,7 @@ workflow {
     )
 
     publish:
+    outputs_raw_read_qc = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads  = NBISWEDEN_BIOVAT.out.outputs_trim_reads
     outputs_align_reads = NBISWEDEN_BIOVAT.out.outputs_align_reads
     outputs_multiqc     = NBISWEDEN_BIOVAT.out.outputs_multiqc
@@ -127,6 +130,10 @@ workflow {
 
 output {
 
+    // READ_QC
+    outputs_raw_read_qc {
+        path '01_raw_read_qc'
+    }
     // TRIM_READS
     outputs_trim_reads {
         path '02_read_trimming'

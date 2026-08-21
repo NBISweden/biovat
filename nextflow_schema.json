@@ -30,14 +30,19 @@
                     "description": "Path to reference genome FASTA file.",
                     "help_text": "Provide a reference genome FASTA file against which reads will be aligned."
                 },
+                "enable_raw_read_qc": {
+                    "type": "boolean",
+                    "description": "Run the subworkflow READ_QC.",
+                    "default": true
+                },
                 "enable_trim": {
                     "type": "boolean",
-                    "description": "Runs the subworkflow TRIM_READS",
+                    "description": "Run the subworkflow TRIM_READS.",
                     "default": true
                 },
                 "enable_align": {
                     "type": "boolean",
-                    "description": "Run the subworkflow ALIGN_READS",
+                    "description": "Run the subworkflow ALIGN_READS.",
                     "default": true
                 },
                 "outdir": {
@@ -58,17 +63,13 @@
                     "type": "string",
                     "description": "Path to FASTA file containing adapter sequences."
                 },
-                "discard_trimmed_pass": {
-                    "type": "boolean",
-                    "description": "Write any reads that pass trimming thresholds. This can be used to use fastp for the output report only"
-                },
                 "save_trimmed_fail": {
                     "type": "boolean",
-                    "description": "Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz"
+                    "description": "Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz."
                 },
                 "save_merged": {
                     "type": "boolean",
-                    "description": "Save all merged reads to a file ending in *.merged.fastq.gz"
+                    "description": "Save all merged reads to a file ending in *.merged.fastq.gz."
                 }
             }
         },
@@ -188,7 +189,8 @@
                 },
                 "max_multiqc_email_size": {
                     "type": "string",
-                    "default": "25.MB"
+                    "default": "25.MB",
+                    "hidden": true
                 },
                 "multiqc_methods_description": {
                     "type": "string",
@@ -202,6 +204,13 @@
                     "default": true,
                     "fa_icon": "fas fa-check-square",
                     "hidden": true
+                },
+                "modules_testdata_base_path": {
+                    "type": "string",
+                    "default": "https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/modules/data/",
+                    "description": "Base URL or local path to location of modules test dataset files",
+                    "hidden": true,
+                    "fa_icon": "far fa-check-circle"
                 },
                 "pipelines_testdata_base_path": {
                     "type": "string",

@@ -1,25 +1,30 @@
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
-include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap            } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc        } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { READ_QC                     } from '../subworkflows/local/read_qc/main'
+include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
+include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 
 workflow BIOVAT {
 
     take:
-    ch_samplesheet           // channel: samplesheet read in from --input
-    reference                // channel: reference fasta read in from --reference
-    enable_trim              // boolean: Whether to run the trimming stage
-    enable_align             // boolean: Whether to run the alignment stage
-    adapter_fasta            // channel: adapter fasta file read in from --adapter_fasta
-    val_discard_trimmed_pass // boolean: Whether to write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
-    val_save_trimmed_fail    // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-    val_save_merged          // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
-    aligner                  // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    sort_bam                 // boolean: Whether to sort the output BAM file
+    ch_samplesheet         // channel: samplesheet read in from --input
+    reference              // channel: reference fasta read in from --reference
+    enable_raw_read_qc     // boolean: Whether to run quality checks on raw reads
+    enable_trim            // boolean: Whether to run the trimming stage
+    enable_align           // boolean: Whether to run the alignment stage
+    adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
+    save_trimmed_fail      // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+    save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
+    aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
+    sort_bam               // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -27,12 +32,23 @@ workflow BIOVAT {
 
     main:
 
-    def ch_versions      = channel.empty()
-    def ch_multiqc_files = channel.empty()
-    reads_to_process     = ch_samplesheet
+    def ch_versions         = channel.empty()
+    def ch_multiqc_files    = channel.empty()
+    reads_to_process        = ch_samplesheet
+
+    // Raw read quality checks
+    outputs_raw_read_qc     = channel.empty()
+    if ( enable_raw_read_qc ) {
+        READ_QC (
+            reads_to_process,
+        )
+        ch_multiqc_files    = ch_multiqc_files.mix(READ_QC.out.fastqc_zip.map{ _meta, file -> file })
+        outputs_raw_read_qc = READ_QC.out.fastqc_zip
+            .mix(READ_QC.out.fastqc_html)
+    }
 
     // Trim reads
-    outputs_trim_reads = channel.empty()
+    outputs_trim_reads      = channel.empty()
     if ( enable_trim ) {
         // FASTP takes reads + adapters (if provided)
         def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
@@ -41,17 +57,16 @@ workflow BIOVAT {
         // FASTP
         TRIM_READS (
             ch_reads_and_adapters,
-            val_discard_trimmed_pass,
-            val_save_trimmed_fail,
-            val_save_merged
+            save_trimmed_fail,
+            save_merged
         )
-        reads_to_process   = TRIM_READS.out.fastq
-        outputs_trim_reads = TRIM_READS.out.fastq
-            .mix(TRIM_READS.out.json)
-            .mix(TRIM_READS.out.html)
-            .mix(TRIM_READS.out.trim_log)
-            .mix(TRIM_READS.out.reads_fail)
-            .mix(TRIM_READS.out.reads_merged)
+        reads_to_process    = TRIM_READS.out.trimmed_reads
+        outputs_trim_reads  = TRIM_READS.out.trimmed_reads
+            .mix(TRIM_READS.out.fastp_json)
+            .mix(TRIM_READS.out.fastp_html)
+            .mix(TRIM_READS.out.fastp_log)
+            .mix(TRIM_READS.out.trimmed_reads_fail)
+            .mix(TRIM_READS.out.trimmed_reads_merged)
     }
 
     // Align reads
@@ -68,13 +83,6 @@ workflow BIOVAT {
         outputs_align_reads = ALIGN_READS.out.aligned_reads
             .mix(ALIGN_READS.out.aligned_reads_index)
     }
-
-
-    //
-    // MODULE: Run FastQC
-    //
-    FASTQC(ch_samplesheet)
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })
 
     // Collate and save software versions
     def topic_versions = channel.topic("versions")
@@ -130,6 +138,7 @@ workflow BIOVAT {
         .mix(MULTIQC.out.plots)
 
     emit:
+    outputs_raw_read_qc = outputs_raw_read_qc
     outputs_trim_reads  = outputs_trim_reads
     outputs_align_reads = outputs_align_reads
     outputs_multiqc     = outputs_multiqc

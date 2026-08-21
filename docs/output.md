@@ -10,13 +10,26 @@ The directories listed below will be created in the results directory after the 
 
 ## Pipeline overview
 
-The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
+The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following stages:
 
+- [Raw read quality checks](#raw-read-qc) - Raw read QC
 - [Read trimming](#read-trimming) - Adapter and quality trimming of raw reads
 - [Alignment](#alignment) - Alignment of raw or trimmed reads
-- [FastQC](#fastqc) - Raw read QC
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
+
+### Raw read QC
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `fastqc/`
+  - `*_fastqc.html`: FastQC report containing quality metrics.
+  - `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
+
+</details>
+
+[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your sequenced reads. It provides information about the quality score distribution across your reads, per base sequence content (%A/T/G/C), adapter contamination and overrepresented sequences. For further reading and documentation see the [FastQC help pages](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
 
 ### Read trimming
 
@@ -46,19 +59,6 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
   - `*.csi`: CSI index generated from the Parabricks BAM output.
 
 </details>
-
-### FastQC
-
-<details markdown="1">
-<summary>Output files</summary>
-
-- `fastqc/`
-  - `*_fastqc.html`: FastQC report containing quality metrics.
-  - `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
-
-</details>
-
-[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your sequenced reads. It provides information about the quality score distribution across your reads, per base sequence content (%A/T/G/C), adapter contamination and overrepresented sequences. For further reading and documentation see the [FastQC help pages](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
 
 ### MultiQC
 
