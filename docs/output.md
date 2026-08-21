@@ -51,10 +51,10 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <summary>Output files</summary>
 
 - `bwamem3/`
-  - `*.bam`: BAM file produced when running the `bwa-mem3` aligner.
+  - `*.bam`: BAM file produced when running the `bwa-mem3` aligner (sorted and read-group tagged).
   - `*.csi`: CSI index written alongside the `bwa-mem3` BAM output.
 - `parabricks/`
-  - `*.bam`: BAM file produced when running the `parabricks` aligner.
+  - `*.bam`: BAM file produced when running the `parabricks` aligner (sorted and read-group tagged).
 - `samtools/`
   - `*.csi`: CSI index generated from the Parabricks BAM output.
 
