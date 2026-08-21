@@ -157,7 +157,7 @@
                     "type": "string",
                     "default": "copy",
                     "description": "Method used to save pipeline results to output directory.",
-                    "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
+                    "help_text": "The Nextflow output block specifies which intermediate files should be saved to the output directory. This option sets the mode directive used for publishing these files. See [Nextflow docs](https://docs.seqera.io/nextflow/workflow#output-directives) for details.",
                     "fa_icon": "fas fa-copy",
                     "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
                     "hidden": true

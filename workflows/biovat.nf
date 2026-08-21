@@ -12,12 +12,6 @@ include { READ_QC as RAW_READ_QC      } from '../subworkflows/local/read_qc/main
 include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
 workflow BIOVAT {
 
     take:
@@ -40,7 +34,7 @@ workflow BIOVAT {
 
     def ch_versions      = channel.empty()
     def ch_multiqc_files = channel.empty()
-    reads_to_process     = ch_samplesheet      // Initialise reads_to_process channel with raw reads
+    reads_to_process     = ch_samplesheet
 
     // Raw read quality checks
     if ( enable_raw_read_qc ) {
@@ -51,23 +45,29 @@ workflow BIOVAT {
     }
 
     // Trim reads
+    outputs_trim_reads = channel.empty()
     if ( enable_trim ) {
-        // If adapter path provided, add to reads for FASTP module
-        def path_adapter_fasta = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
+        // FASTP takes reads + adapters (if provided)
+        def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
         def ch_reads_and_adapters = reads_to_process
             .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
-
         // FASTP
         TRIM_READS (
             ch_reads_and_adapters,
             save_trimmed_fail,
             save_merged
         )
-        reads_to_process = TRIM_READS.out.trimmed_reads
-        ch_multiqc_files = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map{ _meta, file -> file })
+        reads_to_process   = TRIM_READS.out.fastq
+        outputs_trim_reads = TRIM_READS.out.fastq
+            .mix(TRIM_READS.out.json)
+            .mix(TRIM_READS.out.html)
+            .mix(TRIM_READS.out.trim_log)
+            .mix(TRIM_READS.out.reads_fail)
+            .mix(TRIM_READS.out.reads_merged)
     }
 
     // Align reads
+    outputs_align_reads     = channel.empty()
     if ( enable_align ) {
         ALIGN_READS (
             aligner,
@@ -77,18 +77,17 @@ workflow BIOVAT {
         )
         aligned_reads       = ALIGN_READS.out.aligned_reads
         aligned_reads_index = ALIGN_READS.out.aligned_reads_index
+        outputs_align_reads = ALIGN_READS.out.aligned_reads
+            .mix(ALIGN_READS.out.aligned_reads_index)
     }
 
-    //
     // Collate and save software versions
-    //
     def topic_versions = channel.topic("versions")
         .distinct()
         .branch { entry ->
             versions_file: entry instanceof Path
             versions_tuple: true
         }
-
     def topic_versions_string = topic_versions.versions_tuple
         .map { process, tool, version ->
             [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
@@ -98,7 +97,6 @@ workflow BIOVAT {
             tool_versions.unique().sort()
             "${process}:\n${tool_versions.join('\n')}"
         }
-
     def ch_collated_versions = softwareVersionsToYAML(ch_versions.mix(topic_versions.versions_file))
         .mix(topic_versions_string)
         .collectFile(
@@ -108,19 +106,16 @@ workflow BIOVAT {
             newLine: true
         )
 
-    //
-    // MODULE: MultiQC
-    //
-    ch_multiqc_files = ch_multiqc_files.mix(ch_collated_versions)
-    def ch_summary_params = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
-    def ch_workflow_summary = channel.value(paramsSummaryMultiqc(ch_summary_params))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+    // MultiQC
+    ch_multiqc_files                          = ch_multiqc_files.mix(ch_collated_versions)
+    def ch_summary_params                     = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
+    def ch_workflow_summary                   = channel.value(paramsSummaryMultiqc(ch_summary_params))
+    ch_multiqc_files                          = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     def ch_multiqc_custom_methods_description = multiqc_methods_description
         ? file(multiqc_methods_description, checkIfExists: true)
         : file("${projectDir}/assets/biovat_methods_description.yml", checkIfExists: true)
-    def ch_methods_description = channel.value(methodsDescriptionText(ch_multiqc_custom_methods_description))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml', sort: true))
-
+    def ch_methods_description                = channel.value(methodsDescriptionText(ch_multiqc_custom_methods_description))
+    ch_multiqc_files                          = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml', sort: true))
     MULTIQC(
         ch_multiqc_files.flatten().collect().map { files ->
             [
@@ -135,14 +130,13 @@ workflow BIOVAT {
             ]
         }
     )
+    outputs_multiqc = MULTIQC.out.report
+        .mix(MULTIQC.out.data)
+        .mix(MULTIQC.out.plots)
 
     emit:
-    multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
-    versions       = ch_versions                                                   // channel: [ path(versions.yml) ]
-}
+    outputs_trim_reads  = outputs_trim_reads
+    outputs_align_reads = outputs_align_reads
+    outputs_multiqc     = outputs_multiqc
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+}
