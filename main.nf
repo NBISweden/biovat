@@ -120,6 +120,7 @@ workflow {
     )
 
     publish:
+    outputs_raw_read_qc = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads  = NBISWEDEN_BIOVAT.out.outputs_trim_reads
     outputs_align_reads = NBISWEDEN_BIOVAT.out.outputs_align_reads
     outputs_multiqc     = NBISWEDEN_BIOVAT.out.outputs_multiqc
@@ -128,6 +129,10 @@ workflow {
 
 output {
 
+    // RAW_READ_QC
+    outputs_raw_read_qc {
+        path '01_raw_read_qc'
+    }
     // TRIM_READS
     outputs_trim_reads {
         path '02_read_trimming'

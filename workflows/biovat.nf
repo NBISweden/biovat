@@ -37,11 +37,14 @@ workflow BIOVAT {
     reads_to_process     = ch_samplesheet
 
     // Raw read quality checks
+    outputs_raw_read_qc = channel.empty()
     if ( enable_raw_read_qc ) {
         RAW_READ_QC (
             reads_to_process,
         )
         ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
+        outputs_raw_read_qc = RAW_READ_QC.out.fastqc_zip
+            .mix(RAW_READ_QC.out.fastqc_html)
     }
 
     // Trim reads
@@ -135,6 +138,7 @@ workflow BIOVAT {
         .mix(MULTIQC.out.plots)
 
     emit:
+    outputs_raw_read_qc = outputs_raw_read_qc
     outputs_trim_reads  = outputs_trim_reads
     outputs_align_reads = outputs_align_reads
     outputs_multiqc     = outputs_multiqc
