@@ -60,15 +60,9 @@
                 "pipeline_info/biovat_software_mqc_versions.yml"
             ],
             [
-                "S03.1.BH252YCCXY.7_1_fastqc.html:md5,f74c4d28ef9b2e018d2d651a4bcc72ef",
-                "S03.1.BH252YCCXY.7_1_fastqc.zip:md5,9380c769be604f42346f0f2710e49923",
-                "S03.1.BH252YCCXY.7_2_fastqc.html:md5,92015219d9c88cd535b7415062157856",
-                "S03.1.BH252YCCXY.7_2_fastqc.zip:md5,8f983e8033a3926b3b03529998ec9857",
                 "S03.1.BH252YCCXY.7.fastp.json:md5,12729a40bf43fc850023ebf6e04e5c7a",
                 "S03.1.BH252YCCXY.7_R1.fastp.fastq.gz:md5,08a9a2f380958cc219e1ad81ed0357c8",
                 "S03.1.BH252YCCXY.7_R2.fastp.fastq.gz:md5,0fb5d0e9b938df4bbe6cae932d099030",
-                "S03.1.BH252YCCXY.7.bam:md5,4dba0cfe2b8822be296406ff39a455e9",
-                "S03.1.BH252YCCXY.7.bam.csi:md5,4a98f4aac5ac5c0f714fcdf9fd1c56db",
                 "fastqc-status-check-heatmap.txt:md5,6d463b820f923f15bf88a195dd74bfdf",
                 "fastqc_adapter_content_plot.txt:md5,edf754393ad528e62b3ae67e2df558a3",
                 "fastqc_per_base_n_content_plot.txt:md5,0fb6ed9037f1fef7e1b483e5934a6b6f",
@@ -84,7 +78,7 @@
                 "multiqc_general_stats.txt:md5,82e61a35c476d355219d12b804847af1"
             ]
         ],
-        "timestamp": "2026-08-21T15:36:07.562868",
+        "timestamp": "2026-08-21T15:42:17.314611",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
