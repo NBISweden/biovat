@@ -32,23 +32,23 @@ workflow BIOVAT {
 
     main:
 
-    def ch_versions      = channel.empty()
-    def ch_multiqc_files = channel.empty()
-    reads_to_process     = ch_samplesheet
+    def ch_versions         = channel.empty()
+    def ch_multiqc_files    = channel.empty()
+    reads_to_process        = ch_samplesheet
 
     // Raw read quality checks
-    outputs_raw_read_qc = channel.empty()
+    outputs_raw_read_qc     = channel.empty()
     if ( enable_raw_read_qc ) {
         RAW_READ_QC (
             reads_to_process,
         )
-        ch_multiqc_files = ch_multiqc_files.mix(RAW_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
+        ch_multiqc_files    = ch_multiqc_files.mix(RAW_READ_QC.out.fastqc_zip.map{ _meta, file -> file })
         outputs_raw_read_qc = RAW_READ_QC.out.fastqc_zip
             .mix(RAW_READ_QC.out.fastqc_html)
     }
 
     // Trim reads
-    outputs_trim_reads = channel.empty()
+    outputs_trim_reads      = channel.empty()
     if ( enable_trim ) {
         // FASTP takes reads + adapters (if provided)
         def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
@@ -60,13 +60,13 @@ workflow BIOVAT {
             save_trimmed_fail,
             save_merged
         )
-        reads_to_process   = TRIM_READS.out.fastq
-        outputs_trim_reads = TRIM_READS.out.fastq
-            .mix(TRIM_READS.out.json)
-            .mix(TRIM_READS.out.html)
-            .mix(TRIM_READS.out.trim_log)
-            .mix(TRIM_READS.out.reads_fail)
-            .mix(TRIM_READS.out.reads_merged)
+        reads_to_process    = TRIM_READS.out.trimmed_reads
+        outputs_trim_reads  = TRIM_READS.out.trimmed_reads
+            .mix(TRIM_READS.out.fastp_json)
+            .mix(TRIM_READS.out.fastp_html)
+            .mix(TRIM_READS.out.fastp_log)
+            .mix(TRIM_READS.out.trimmed_reads_fail)
+            .mix(TRIM_READS.out.trimmed_reads_merged)
     }
 
     // Align reads
