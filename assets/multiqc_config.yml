@@ -11,13 +11,17 @@ report_section_order:
 
 module_order:
 - fastqc:
-    name: "FastQC (raw read quality)"
+    name: "FastQC: raw read quality"
     anchor: "fastqc_raw"
 - fastp:
-    name: "fastp (read trimming/filtering)"
+    name: "fastp: read trimming/filtering"
     anchor: "fastp"
 - samtools:
-    name: "Samtools flagstat"
+    name: "flagstat: summary BAM metrics"
+    anchor: "samtools_flagstat"
+- riker:
+    name: "Riker: detailed BAM metrics"
+    anchor: "riker"
 
 custom_plot_config:
   general_stats_table:

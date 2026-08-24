@@ -29,7 +29,6 @@ workflow BIOVAT {
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam               // boolean: Whether to sort the output BAM file
     enable_bamqc_riker     // boolean: Whether to run RIKER for BAM QC
-    enable_bamqc_rustqc    // boolean: Whether to run RUSTQC for BAM QC
     enable_bamqc_qualimap  // boolean: Whether to run QUALIMAP for BAM QC
     multiqc_config
     multiqc_logo
@@ -53,8 +52,7 @@ workflow BIOVAT {
             reads_to_process,
         )
         ch_multiqc_files    = ch_multiqc_files.mix(READ_QC.out.fastqc_zip.map{ _meta, file -> file })
-        outputs_raw_read_qc = READ_QC.out.fastqc_zip
-            .mix(READ_QC.out.fastqc_html)
+        outputs_raw_read_qc = READ_QC.out.fastqc_zip.mix(READ_QC.out.fastqc_html)
     }
 
     // Trim reads
@@ -73,11 +71,13 @@ workflow BIOVAT {
         reads_to_process    = TRIM_READS.out.trimmed_reads
         ch_multiqc_files    = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map{ _meta, file -> file })
         outputs_trim_reads  = TRIM_READS.out.trimmed_reads
-            .mix(TRIM_READS.out.fastp_json)
-            .mix(TRIM_READS.out.fastp_html)
-            .mix(TRIM_READS.out.fastp_log)
-            .mix(TRIM_READS.out.trimmed_reads_fail)
-            .mix(TRIM_READS.out.trimmed_reads_merged)
+            .mix(
+                TRIM_READS.out.fastp_json,
+                TRIM_READS.out.fastp_html,
+                TRIM_READS.out.fastp_log,
+                TRIM_READS.out.trimmed_reads_fail,
+                TRIM_READS.out.trimmed_reads_merged
+            )
     }
 
     // Align reads
@@ -91,8 +91,7 @@ workflow BIOVAT {
         )
         aligned_reads       = ALIGN_READS.out.aligned_reads
         aligned_reads_index = ALIGN_READS.out.aligned_reads_index
-        outputs_align_reads = ALIGN_READS.out.aligned_reads
-            .mix(ALIGN_READS.out.aligned_reads_index)
+        outputs_align_reads = ALIGN_READS.out.aligned_reads.mix(ALIGN_READS.out.aligned_reads_index)
     }
 
     // BAM quality checks
@@ -104,11 +103,15 @@ workflow BIOVAT {
             reference,
             REFERENCE_UTILS.out.reference_fai,
             enable_bamqc_riker,
-            enable_bamqc_rustqc,
             enable_bamqc_qualimap
         )
-        ch_multiqc_files    = ch_multiqc_files.mix(BAM_QC.out.flagstat.map{ _meta, file -> file })
-        outputs_bam_qc      = BAM_QC.out.flagstat
+        ch_multiqc_files    = ch_multiqc_files
+            .mix(
+                BAM_QC.out.flagstat.map{ _meta, file -> file },
+                BAM_QC.out.riker_outputs.map{ _meta, file -> file }
+            )
+        outputs_flagstat    = BAM_QC.out.flagstat
+        outputs_riker       = BAM_QC.out.riker_outputs
     }
 
     // Collate and save software versions
@@ -168,7 +171,8 @@ workflow BIOVAT {
     outputs_raw_read_qc = outputs_raw_read_qc
     outputs_trim_reads  = outputs_trim_reads
     outputs_align_reads = outputs_align_reads
-    outputs_bam_qc      = outputs_bam_qc
+    outputs_flagstat    = outputs_flagstat
+    outputs_riker       = outputs_riker
     outputs_multiqc     = outputs_multiqc
 
 }
