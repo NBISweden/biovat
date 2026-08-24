@@ -8,6 +8,7 @@ include { paramsSummaryMap            } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc        } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { REFERENCE_UTILS             } from '../subworkflows/local/utils_reference'
 include { READ_QC                     } from '../subworkflows/local/read_qc/main'
 include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
@@ -35,6 +36,11 @@ workflow BIOVAT {
     def ch_versions         = channel.empty()
     def ch_multiqc_files    = channel.empty()
     reads_to_process        = ch_samplesheet
+
+    // Reference utilities
+    if ( params.reference ) {
+        REFERENCE_UTILS(reference)
+    }
 
     // Raw read quality checks
     outputs_raw_read_qc     = channel.empty()
