@@ -22,6 +22,7 @@ params {
     enable_raw_read_qc          : Boolean
     enable_trim                 : Boolean
     enable_align                : Boolean
+    enable_bam_qc               : Boolean
 
     // Read trimming options
     adapter_fasta               : String
@@ -31,6 +32,11 @@ params {
     // Alignment options
     aligner                     : String
     sort_bam                    : Boolean
+
+    // BAM QC options
+    enable_bamqc_riker          : Boolean
+    enable_bamqc_rustqc         : Boolean
+    enable_bamqc_qualimap       : Boolean
 
     // MultiQC options
     multiqc_config              : String
@@ -78,11 +84,15 @@ workflow NBISWEDEN_BIOVAT {
         params.enable_raw_read_qc,
         params.enable_trim,
         params.enable_align,
+        params.enable_bam_qc,
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,
         params.aligner,
         params.sort_bam,
+        params.enable_bamqc_riker,
+        params.enable_bamqc_rustqc,
+        params.enable_bamqc_qualimap,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
@@ -93,6 +103,7 @@ workflow NBISWEDEN_BIOVAT {
     outputs_raw_read_qc = BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads  = BIOVAT.out.outputs_trim_reads
     outputs_align_reads = BIOVAT.out.outputs_align_reads
+    outputs_bam_qc      = BIOVAT.out.outputs_bam_qc
     outputs_multiqc     = BIOVAT.out.outputs_multiqc
 
 }
@@ -124,6 +135,7 @@ workflow {
     outputs_raw_read_qc = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads  = NBISWEDEN_BIOVAT.out.outputs_trim_reads
     outputs_align_reads = NBISWEDEN_BIOVAT.out.outputs_align_reads
+    outputs_bam_qc      = NBISWEDEN_BIOVAT.out.outputs_bam_qc
     outputs_multiqc     = NBISWEDEN_BIOVAT.out.outputs_multiqc
 
 }
@@ -141,6 +153,10 @@ output {
     // ALIGN_READS
     outputs_align_reads {
         path '03_read_alignment'
+    }
+    // BAM_QC
+    outputs_bam_qc {
+        path '04_bam_qc'
     }
     // MultiQC
     outputs_multiqc {
