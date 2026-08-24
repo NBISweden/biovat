@@ -203,6 +203,19 @@ process {
 
 For other examples, [see the Uppmax documentation](https://github.com/nf-core/configs/blob/master/docs/uppmax.md#using-gpus-on-pelle)
 
+The pipeline only requests GPUs by setting the `accelerator` directive (via the `gpu` profile, or your own config as above) — it does not set container runtime flags such as `--gpus all` (Docker) or `--nv` (Singularity/Apptainer) itself. Those are provided by whichever layer actually knows the execution environment:
+
+- On an institutional profile (e.g. `uppmax`), the profile supplies the correct container flags for its own infrastructure automatically.
+- Without an institutional profile (e.g. plain `-profile docker` on your own machine), add the flag yourself via `containerOptions` in a local config file:
+
+  ```nextflow
+  process {
+      withLabel: process_gpu {
+          containerOptions = '--gpus all'
+      }
+  }
+  ```
+
 ## Running in the background
 
 Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished.
