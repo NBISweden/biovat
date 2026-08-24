@@ -211,10 +211,12 @@ The pipeline only requests GPUs by setting the `accelerator` directive (via the 
   ```nextflow
   process {
       withLabel: process_gpu {
-          containerOptions = '--gpus all'
+          containerOptions = { task.accelerator ? '--gpus all' : null }
       }
   }
   ```
+
+  Checking `task.accelerator` keeps the flag in sync with any per-process override — for example if you set `accelerator = null` on a specific process (via `withName`) to run it on CPU only, `containerOptions` won't add `--gpus all` for that process either.
 
 ## Running in the background
 
