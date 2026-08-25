@@ -8,7 +8,7 @@ workflow REFERENCE_UTILS {
     main:
     SAMTOOLS_FAIDX(
         reference.map { meta, fasta -> [ meta, fasta, [] ] },
-        true // Create sizes file 
+        true // Create sizes file
     )
 
     emit:
