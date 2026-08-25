@@ -95,7 +95,9 @@ workflow BIOVAT {
     }
 
     // BAM quality checks
-    outputs_bam_qc          = channel.empty()
+    outputs_flagstat          = channel.empty()
+    outputs_riker             = channel.empty()
+    outputs_qualimap          = channel.empty()
     if ( enable_bam_qc ) {
         BAM_QC (
             aligned_reads,
@@ -107,11 +109,13 @@ workflow BIOVAT {
         )
         ch_multiqc_files    = ch_multiqc_files
             .mix(
-                BAM_QC.out.flagstat.map{ _meta, file -> file },
-                BAM_QC.out.riker_outputs.map{ _meta, file -> file }
+                BAM_QC.out.flagstat_outputs.map{ _meta, file -> file },
+                BAM_QC.out.riker_outputs.map{ _meta, file -> file },
+                BAM_QC.out.qualimap_outputs.map{ _meta, file -> file }
             )
-        outputs_flagstat    = BAM_QC.out.flagstat
+        outputs_flagstat    = BAM_QC.out.flagstat_outputs
         outputs_riker       = BAM_QC.out.riker_outputs
+        outputs_qualimap    = BAM_QC.out.qualimap_outputs
     }
 
     // Collate and save software versions
@@ -173,6 +177,7 @@ workflow BIOVAT {
     outputs_align_reads = outputs_align_reads
     outputs_flagstat    = outputs_flagstat
     outputs_riker       = outputs_riker
+    outputs_qualimap    = outputs_qualimap
     outputs_multiqc     = outputs_multiqc
 
 }

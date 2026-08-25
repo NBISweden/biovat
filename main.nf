@@ -103,6 +103,7 @@ workflow NBISWEDEN_BIOVAT {
     outputs_align_reads = BIOVAT.out.outputs_align_reads
     outputs_flagstat    = BIOVAT.out.outputs_flagstat
     outputs_riker       = BIOVAT.out.outputs_riker
+    outputs_qualimap    = BIOVAT.out.outputs_qualimap
     outputs_multiqc     = BIOVAT.out.outputs_multiqc
 
 }
@@ -136,6 +137,7 @@ workflow {
     outputs_align_reads = NBISWEDEN_BIOVAT.out.outputs_align_reads
     outputs_flagstat    = NBISWEDEN_BIOVAT.out.outputs_flagstat
     outputs_riker       = NBISWEDEN_BIOVAT.out.outputs_riker
+    outputs_qualimap    = NBISWEDEN_BIOVAT.out.outputs_qualimap
     outputs_multiqc     = NBISWEDEN_BIOVAT.out.outputs_multiqc
 
 }
@@ -160,6 +162,9 @@ output {
     }
     outputs_riker {
         path '04_bam_qc/riker'
+    }
+    outputs_qualimap {
+        path '04_bam_qc/qualimap'
     }
     // MultiQC
     outputs_multiqc {

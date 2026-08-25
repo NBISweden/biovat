@@ -20,9 +20,9 @@ workflow BAM_QC {
     SAMTOOLS_FLAGSTAT(ch_reads_and_index)
 
     // RIKER
-    riker_outputs          = channel.empty()
+    riker_outputs = channel.empty()
     if ( enable_bamqc_riker ) {
-        def ch_riker_input = ch_reads_and_index // TODO: Potentially support optional inputs
+        def ch_riker_input = ch_reads_and_index // TODO: Potentially support optional inputs, except RNA-seq specific.
             .map { meta, bam, index ->
                 [
                     meta, bam, index,
@@ -66,15 +66,18 @@ workflow BAM_QC {
     }
 
     // QUALIMAP
+    qualimap_outputs = channel.empty()
     if ( enable_bamqc_qualimap ) {
         QUALIMAP_BAMQC(
             aligned_reads,
             []         //  TODO: Potentially support optional input (gff file)
         )
+        qualimap_outputs = QUALIMAP_BAMQC.out.results
     }
 
     emit:
-    flagstat      = SAMTOOLS_FLAGSTAT.out.flagstat
-    riker_outputs = riker_outputs
+    flagstat_outputs = SAMTOOLS_FLAGSTAT.out.flagstat
+    riker_outputs    = riker_outputs
+    qualimap_outputs = qualimap_outputs
 
 }

@@ -22,6 +22,9 @@ module_order:
 - riker:
     name: "Riker: detailed BAM metrics"
     anchor: "riker"
+- qualimap:
+    name: "Qualimap: detailed BAM metrics"
+    anchor: "qualimap"
 
 custom_plot_config:
   general_stats_table:
