@@ -120,14 +120,10 @@
                 "S03.1.BH252YCCXY.7_R1.fastp.fastq.gz:md5,08a9a2f380958cc219e1ad81ed0357c8",
                 "S03.1.BH252YCCXY.7_R2.fastp.fastq.gz:md5,0fb5d0e9b938df4bbe6cae932d099030",
                 "S03.1.BH252YCCXY.7.alignment-metrics.txt:md5,49b7e8f5d3da86058bfe1a867f57202a",
-                "S03.1.BH252YCCXY.7.base-distribution-by-cycle.pdf:md5,a2e2a0e4032dc9f549e03e5a0167b407",
                 "S03.1.BH252YCCXY.7.base-distribution-by-cycle.txt:md5,da896105b33b06b9300adc8d30795cdd",
-                "S03.1.BH252YCCXY.7.isize-histogram.pdf:md5,ae12f232611b8bfa90e0b4752388a26e",
                 "S03.1.BH252YCCXY.7.isize-histogram.txt:md5,6f21a41168fb53892d97fa3ce5837db9",
                 "S03.1.BH252YCCXY.7.isize-metrics.txt:md5,8dc406880fee15d6fe3a46b2d5859980",
-                "S03.1.BH252YCCXY.7.mean-quality-by-cycle.pdf:md5,14b9a1a9181dd73aa2bb82d3e6daadea",
                 "S03.1.BH252YCCXY.7.mean-quality-by-cycle.txt:md5,2783972626ad26911dabd3c460f1c519",
-                "S03.1.BH252YCCXY.7.quality-score-distribution.pdf:md5,c62f7de5e103c352e018a42ce43ace23",
                 "S03.1.BH252YCCXY.7.quality-score-distribution.txt:md5,051245104cff70196e10e56c7cf0d1ba",
                 "S03.1.BH252YCCXY.7.flagstat:md5,b36af106cbf08791bcba8194edd2ae48",
                 "fastp-insert-size-plot.txt:md5,e88389a65806fb66b42955888fc31669",
@@ -179,7 +175,7 @@
             ],
             "b5aa2fc8b9ebf4e5322219b24d613ea4"
         ],
-        "timestamp": "2026-08-25T08:41:31.752848979",
+        "timestamp": "2026-08-25T08:49:46.24417797",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
