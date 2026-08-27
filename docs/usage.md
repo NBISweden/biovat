@@ -178,8 +178,7 @@ If you have any questions or issues please send us a message on [Slack](https://
 
 ### GPU resource allocation
 
-For local GPU tests, apply the `gpu` profile and add the container runtime flag yourself (see below). For GPU submissions to SLURM clusters, use the `gpu` profile together with an institutional profile set up to handle cluster-specific GPU resource allocation and container flags.
-To request per-process GPU resources, provide a local configuration file on the command line.
+Apply the `gpu` profile to request GPUs; for SLURM submissions, combine it with an institutional profile (e.g. `uppmax`). To request per-process GPU resources, provide a local configuration file on the command line.
 
 Example:
 
@@ -203,22 +202,15 @@ process {
 
 For other examples, [see the Uppmax documentation](https://github.com/nf-core/configs/blob/master/docs/uppmax.md#using-gpus-on-pelle)
 
-The pipeline only requests GPUs by setting the `accelerator` directive (via the `gpu` profile, or your own config as above) — unlike the nf-core template default, it does not set container runtime flags such as `--gpus all` (Docker) or `--nv` (Singularity/Apptainer) itself. Those flags are engine-wide and can't be gated on `task.accelerator`, so setting them here would apply to every process — including non-GPU ones scheduled onto nodes without a GPU container runtime, as happens on biovat's target SLURM clusters (Arrhenius, Dardel, Pelle).
+The `gpu` profile only sets the `accelerator` directive. Container runtime flags (`--gpus all` for Docker, `--nv` for Singularity/Apptainer) are left to whichever layer knows the execution environment: an institutional profile (e.g. `uppmax`, see Pelle's setup linked above), or your own local config, gated on `task.accelerator`:
 
-Container flags are instead provided by whichever layer actually knows the execution environment:
-
-- On an institutional profile (e.g. `uppmax`), the profile supplies the correct container flags for its own infrastructure automatically, gated on `task.accelerator` (see Pelle's setup, linked above).
-- Without an institutional profile (e.g. plain `-profile gpu,docker` on your own machine), add the flag yourself via `containerOptions` in a local config file:
-
-  ```nextflow
-  process {
-      withLabel: process_gpu {
-          containerOptions = { task.accelerator ? '--gpus all' : null }
-      }
-  }
-  ```
-
-  Checking `task.accelerator` keeps the flag in sync with any per-process override — for example if you set `accelerator = null` on a specific process (via `withName`) to run it on CPU only, `containerOptions` won't add `--gpus all` for that process either.
+```nextflow
+process {
+    withLabel: process_gpu {
+        containerOptions = { task.accelerator ? '--gpus all' : null }
+    }
+}
+```
 
 ## Running in the background
 
