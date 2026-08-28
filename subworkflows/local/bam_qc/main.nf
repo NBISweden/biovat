@@ -14,7 +14,7 @@ workflow BAM_QC {
 
     main:
     def ch_reads_and_index   = aligned_reads.join(aligned_reads_index)
-    def ch_reference_and_fai = reference.join(reference_fai)
+    def ch_reference_and_fai = reference.join(reference_fai).collect()
 
     // SAMTOOLS_FLAGSTAT
     SAMTOOLS_FLAGSTAT(ch_reads_and_index)
