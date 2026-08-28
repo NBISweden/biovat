@@ -202,12 +202,22 @@ process {
 
 For other examples, [see the Uppmax documentation](https://github.com/nf-core/configs/blob/master/docs/uppmax.md#using-gpus-on-pelle)
 
-The `gpu` profile only sets the `accelerator` directive. Container runtime flags (`--gpus all` for Docker, `--nv` for Singularity/Apptainer) are left to whichever layer knows the execution environment: an institutional profile (e.g. `uppmax`, see Pelle's setup linked above), or your own local config, gated on `task.accelerator`:
+The `gpu` profile only sets the `accelerator` directive. Container runtime flags (`--gpus all` for Docker, `--nv` for Singularity/Apptainer) are left to whichever layer knows the execution environment: an institutional profile (e.g. `uppmax`, see Pelle's setup linked above), or your own local config, gated on `task.accelerator` and `workflow.containerEngine`:
 
 ```nextflow
 process {
     withLabel: process_gpu {
-        containerOptions = { task.accelerator ? '--gpus all' : null }
+        containerOptions = {
+            if (task.accelerator) {
+                if (workflow.containerEngine in ['singularity', 'apptainer']) {
+                    '--nv'
+                } else if (workflow.containerEngine == 'docker') {
+                    '--gpus all'
+                } else {
+                    null
+                }
+            }
+        }
     }
 }
 ```
