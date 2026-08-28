@@ -178,8 +178,7 @@ If you have any questions or issues please send us a message on [Slack](https://
 
 ### GPU resource allocation
 
-For local GPU tests, apply the `gpu` profile. For GPU submissions to SLURM clusters, use the `gpu` profile and an institutional profile set up to handle GPU resource allocation.
-To request per-process GPU resources, provide a local configuration file on the command line.
+Apply the `gpu` profile to request GPUs; for SLURM submissions, combine it with an institutional profile (e.g. `uppmax`). To request per-process GPU resources, provide a local configuration file on the command line.
 
 Example:
 
@@ -202,6 +201,26 @@ process {
 ```
 
 For other examples, [see the Uppmax documentation](https://github.com/nf-core/configs/blob/master/docs/uppmax.md#using-gpus-on-pelle)
+
+The `gpu` profile only sets the `accelerator` directive. Container runtime flags (`--gpus all` for Docker, `--nv` for Singularity/Apptainer) are left to whichever layer knows the execution environment: an institutional profile (e.g. `uppmax`, see Pelle's setup linked above), or your own local config, gated on `task.accelerator` and `workflow.containerEngine`:
+
+```nextflow
+process {
+    withLabel: process_gpu {
+        containerOptions = {
+            if (task.accelerator) {
+                if (workflow.containerEngine in ['singularity', 'apptainer']) {
+                    '--nv'
+                } else if (workflow.containerEngine == 'docker') {
+                    '--gpus all'
+                } else {
+                    null
+                }
+            }
+        }
+    }
+}
+```
 
 ## Running in the background
 
