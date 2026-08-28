@@ -28,8 +28,8 @@ workflow BIOVAT {
     save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam               // boolean: Whether to sort the output BAM file
-    enable_bamqc_riker     // boolean: Whether to run RIKER for BAM QC
-    enable_bamqc_qualimap  // boolean: Whether to run QUALIMAP for BAM QC
+    enable_riker           // boolean: Whether to run RIKER for BAM QC
+    enable_qualimap        // boolean: Whether to run QUALIMAP for BAM QC
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -41,8 +41,9 @@ workflow BIOVAT {
     reads_to_process        = ch_samplesheet
 
     // Reference utilities
-    if ( params.reference ) {
+    if ( params.reference && enable_align ) {
         REFERENCE_UTILS(reference)
+        ch_reference_and_fai = REFERENCE_UTILS.out.ch_reference_and_fai
     }
 
     // Raw read quality checks
@@ -81,41 +82,27 @@ workflow BIOVAT {
     }
 
     // Align reads
-    outputs_align_reads     = channel.empty()
+    outputs_align_reads      = channel.empty()
+    outputs_library_flagstat = channel.empty()
+    outputs_library_riker    = channel.empty()
+    outputs_library_qualimap = channel.empty()
     if ( enable_align ) {
         ALIGN_READS (
             aligner,
-            reference,
+            ch_reference_and_fai,
             reads_to_process,
-            sort_bam
+            sort_bam,
+            enable_bam_qc,
+            enable_riker,
+            enable_qualimap,
+            ch_multiqc_files
         )
-        aligned_reads       = ALIGN_READS.out.aligned_reads
-        aligned_reads_index = ALIGN_READS.out.aligned_reads_index
-        outputs_align_reads = ALIGN_READS.out.aligned_reads.mix(ALIGN_READS.out.aligned_reads_index)
-    }
-
-    // BAM quality checks
-    outputs_flagstat          = channel.empty()
-    outputs_riker             = channel.empty()
-    outputs_qualimap          = channel.empty()
-    if ( enable_bam_qc ) {
-        BAM_QC (
-            aligned_reads,
-            aligned_reads_index,
-            reference,
-            REFERENCE_UTILS.out.reference_fai,
-            enable_bamqc_riker,
-            enable_bamqc_qualimap
-        )
-        ch_multiqc_files    = ch_multiqc_files
-            .mix(
-                BAM_QC.out.flagstat_outputs.map{ _meta, file -> file },
-                BAM_QC.out.riker_outputs.map{ _meta, file -> file },
-                BAM_QC.out.qualimap_outputs.map{ _meta, file -> file }
-            )
-        outputs_flagstat    = BAM_QC.out.flagstat_outputs
-        outputs_riker       = BAM_QC.out.riker_outputs
-        outputs_qualimap    = BAM_QC.out.qualimap_outputs
+        ch_alignment_and_index   = ALIGN_READS.out.ch_alignment_and_index
+        ch_multiqc_files         = ALIGN_READS.out.ch_multiqc_files
+        outputs_align_reads      = ALIGN_READS.out.ch_alignment_and_index
+        outputs_library_flagstat = ALIGN_READS.out.outputs_library_flagstat
+        outputs_library_riker    = ALIGN_READS.out.outputs_library_riker
+        outputs_library_qualimap = ALIGN_READS.out.outputs_library_qualimap
     }
 
     // Collate and save software versions
@@ -172,12 +159,12 @@ workflow BIOVAT {
         .mix(MULTIQC.out.plots)
 
     emit:
-    outputs_raw_read_qc = outputs_raw_read_qc
-    outputs_trim_reads  = outputs_trim_reads
-    outputs_align_reads = outputs_align_reads
-    outputs_flagstat    = outputs_flagstat
-    outputs_riker       = outputs_riker
-    outputs_qualimap    = outputs_qualimap
-    outputs_multiqc     = outputs_multiqc
+    outputs_raw_read_qc      = outputs_raw_read_qc
+    outputs_trim_reads       = outputs_trim_reads
+    outputs_align_reads      = outputs_align_reads
+    outputs_library_flagstat = outputs_library_flagstat
+    outputs_library_riker    = outputs_library_riker
+    outputs_library_qualimap = outputs_library_qualimap
+    outputs_multiqc          = outputs_multiqc
 
 }

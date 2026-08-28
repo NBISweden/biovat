@@ -9,7 +9,7 @@ multiqc/multiqc_data/llms-full.txt
 multiqc/multiqc_plots/{svg,pdf,png}/*.{svg,pdf,png}
 multiqc/multiqc_report.html
 pipeline_info/*.{html,json,txt,yml}
-01_raw_read_qc/*_fastqc.{html,zip}
+01_input/**/*_fastqc.{html,zip}
 02_read_trimming/*.fastp.{html,log}
 03_read_alignment/*.{bam,bam.csi}
-04_bam_qc/riker/*.{pdf}
+**/bam_qc/riker/*.{pdf}

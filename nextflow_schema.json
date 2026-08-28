@@ -56,6 +56,16 @@
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
                 }
+            },
+            "if": {
+                "properties": {
+                    "enable_align": {
+                        "const": true
+                    }
+                }
+            },
+            "then": {
+                "required": ["reference"]
             }
         },
         "trimming_options": {
@@ -103,12 +113,12 @@
             "description": "",
             "default": "",
             "properties": {
-                "enable_bamqc_riker": {
+                "enable_riker": {
                     "type": "boolean",
                     "default": true,
                     "description": "Run Riker during the BAM QC subworkflow"
                 },
-                "enable_bamqc_qualimap": {
+                "enable_qualimap": {
                     "type": "boolean",
                     "description": "Run Qualimap during the BAM QC subworkflow"
                 }

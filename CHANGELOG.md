@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - Created BioVAT with the [nf-core](https://nf-co.re/) template
-- Reference file channel
+- Reference file channel (optional input)
 - Alignment subworkflow using bwa-mem3, can be run either on raw or trimmed reads. Readgroup tagging is drawn from `meta`
 - Parabricks `fq2bam` alignment, matches bwamem3 output (sorted, read group tagged, csi indexed)
 - Initial test data & samplesheet
@@ -31,7 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prettier formatting drift; excluded `pixi.lock` from prettier since its format is owned by pixi (#37)
 - Sample/library_id/flowcell/lane uniqueness is now enforced via nf-schema's `uniqueEntries` keyword instead of custom dedup code (#43)
 - Experimental: switches to typed params
-- Reference input was a required input, now optional
 
 ### `Dependencies`
 

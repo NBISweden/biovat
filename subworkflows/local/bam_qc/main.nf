@@ -5,24 +5,19 @@ include { QUALIMAP_BAMQC    } from '../../../modules/nf-core/qualimap/bamqc/main
 workflow BAM_QC {
 
     take:
-    aligned_reads         // channel: aligned reads to perform QC on
-    aligned_reads_index   // channel: index of aligned reads
-    reference             // channel: reference fasta read in from --reference
-    reference_fai         // channel: reference fasta fai index created by REFERENCE_UTILS
-    enable_bamqc_riker    // boolean: Whether to run RIKER for BAM QC
-    enable_bamqc_qualimap // boolean: Whether to run QUALIMAP for BAM QC
+    ch_alignment_and_index   // channel: aligned reads and their indices to perform QC on
+    ch_reference_and_fai     // channel: reference fasta and fai index
+    enable_riker             // boolean: Whether to run RIKER for BAM QC
+    enable_qualimap          // boolean: Whether to run QUALIMAP for BAM QC
 
     main:
-    def ch_reads_and_index   = aligned_reads.join(aligned_reads_index)
-    def ch_reference_and_fai = reference.join(reference_fai).collect()
-
     // SAMTOOLS_FLAGSTAT
-    SAMTOOLS_FLAGSTAT(ch_reads_and_index)
+    SAMTOOLS_FLAGSTAT(ch_alignment_and_index)
 
     // RIKER
     riker_outputs = channel.empty()
-    if ( enable_bamqc_riker ) {
-        def ch_riker_input = ch_reads_and_index // TODO: Potentially support optional inputs, except RNA-seq specific.
+    if ( enable_riker ) {
+        def ch_riker_input = ch_alignment_and_index // TODO: Potentially support optional inputs, except RNA-seq specific.
             .map { meta, bam, index ->
                 [
                     meta, bam, index,
@@ -41,35 +36,15 @@ workflow BAM_QC {
             ch_riker_input,
             ch_reference_and_fai
         )
-        riker_outputs = RIKER_MULTI.out.alignment_metrics.mix(
-            RIKER_MULTI.out.base_dist,
-            RIKER_MULTI.out.error_indel,
-            RIKER_MULTI.out.error_mismatch,
-            RIKER_MULTI.out.error_overlap,
-            RIKER_MULTI.out.gcbias_detail,
-            RIKER_MULTI.out.gcbias_summary,
-            RIKER_MULTI.out.hybcap_metrics,
-            RIKER_MULTI.out.hybcap_per_base,
-            RIKER_MULTI.out.hybcap_per_target,
-            RIKER_MULTI.out.isize_histogram,
-            RIKER_MULTI.out.isize_metrics,
-            RIKER_MULTI.out.mean_qual,
-            RIKER_MULTI.out.pdf,
-            RIKER_MULTI.out.qual_dist,
-            RIKER_MULTI.out.rna_biotype,
-            RIKER_MULTI.out.rna_insert_size_histogram,
-            RIKER_MULTI.out.rna_insert_size,
-            RIKER_MULTI.out.rna_metrics,
-            RIKER_MULTI.out.wgs_coverage,
-            RIKER_MULTI.out.wgs_metrics
-        )
+        riker_outputs = (RIKER_MULTI.out - RIKER_MULTI.out.versions_riker)
+            .inject(channel.empty()) { acc, ch -> acc.mix(ch) }
     }
 
     // QUALIMAP
     qualimap_outputs = channel.empty()
-    if ( enable_bamqc_qualimap ) {
+    if ( enable_qualimap ) {
         QUALIMAP_BAMQC(
-            aligned_reads,
+            ch_alignment_and_index.map { meta, bam, _index -> [ meta, bam ] },
             []         //  TODO: Potentially support optional input (gff file)
         )
         qualimap_outputs = QUALIMAP_BAMQC.out.results

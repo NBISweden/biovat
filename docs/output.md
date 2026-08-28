@@ -8,11 +8,14 @@ The directories listed below will be created in the results directory after the 
 
 ```
 results/
-├── 01_raw_read_qc
+├── 01_input
+│   └── reads
 ├── 02_read_trimming
 ├── 03_read_alignment
-├── 04_bam_qc
+│   └── bam_qc
 ├── multiqc
+│   ├── multiqc_data
+│   └── multiqc_plots
 └── pipeline_info
 ```
 
@@ -32,7 +35,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <details markdown="1">
 <summary>Output files</summary>
 
-- `01_raw_read_qc/`
+- `01_input/reads/fastqc`
   - `*_fastqc.html`: FastQC report containing quality metrics.
   - `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
 
@@ -67,10 +70,12 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 ### BAM QC
 
+BAM QC executes at several workflow stages. The outputs will in `bam_qc`, nested under the respective stage results directory. For example, BAM QC on the library alignments:
+
 <details markdown="1">
 <summary>Output files</summary>
 
-- `04_bam_qc/`
+- `03_read_alignment/bam_qc`
   - `qualimap/`
     - `<sample_name>/`
       - `genome_results.txt`: summary text file.

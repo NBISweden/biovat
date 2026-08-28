@@ -10,9 +10,10 @@ workflow REFERENCE_UTILS {
         reference.map { meta, fasta -> [ meta, fasta, [] ] },
         true // Create sizes file
     )
+    ch_reference_and_fai = reference.join(SAMTOOLS_FAIDX.out.fai).collect()
 
     emit:
-    reference_fai   = SAMTOOLS_FAIDX.out.fai
-    reference_sizes = SAMTOOLS_FAIDX.out.sizes
+    ch_reference_and_fai = ch_reference_and_fai
+    ch_reference_sizes   = SAMTOOLS_FAIDX.out.sizes
 
 }
