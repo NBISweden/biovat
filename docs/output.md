@@ -8,7 +8,7 @@ The directories listed below will be created in the results directory after the 
 
 ```
 results/
-├── 01_input
+├── 01_input_checks
 │   └── reads
 ├── 02_read_trimming
 ├── 03_read_alignment
