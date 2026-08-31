@@ -32,7 +32,10 @@ nextflow_pipeline {
                     // All stable path name, with a relative path
                     stable_path,
                     // All files with stable contents
-                    stable_content
+                    stable_content,
+                    // Unstable content checks handled by dedicated plugins
+                    // BAMs: use nft-bam to validate stable hash on alignments, ignoring header
+                    bam("$outputDir/03_read_alignment/S03.1.BH252YCCXY.7.bam").getReadsMD5(),
                 ).match() }
             )
         }

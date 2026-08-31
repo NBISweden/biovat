@@ -76,9 +76,10 @@
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
                 "multiqc_fastqc.txt:md5,40b38603b50fb32588c662b358308204",
                 "multiqc_general_stats.txt:md5,82e61a35c476d355219d12b804847af1"
-            ]
+            ],
+            "7d8bc061e5ed084d699685c56bc9134d"
         ],
-        "timestamp": "2026-08-21T15:42:17.314611",
+        "timestamp": "2026-08-21T20:30:59.686704803",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
