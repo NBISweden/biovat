@@ -6,7 +6,18 @@ This document describes the output produced by the pipeline. Most of the plots a
 
 The directories listed below will be created in the results directory after the pipeline has finished. All paths are relative to the top-level results directory.
 
-<!-- TODO: list results directory structure once more mature -->
+```
+results/
+├── 01_input_checks
+│   └── reads
+├── 02_read_trimming
+├── 03_read_alignment
+│   └── bam_qc
+├── multiqc
+│   ├── multiqc_data
+│   └── multiqc_plots
+└── pipeline_info
+```
 
 ## Pipeline overview
 
@@ -15,6 +26,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Raw read quality checks](#raw-read-qc) - Raw read QC
 - [Read trimming](#read-trimming) - Adapter and quality trimming of raw reads
 - [Alignment](#alignment) - Alignment of raw or trimmed reads
+- [BAM quality checks](#bam-qc) - BAM QC
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
@@ -23,9 +35,11 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <details markdown="1">
 <summary>Output files</summary>
 
-- `fastqc/`
-  - `*_fastqc.html`: FastQC report containing quality metrics.
-  - `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
+- `01_input_checks/`
+  - `reads/`
+    - `fastqc/`
+      - `*_fastqc.html`: FastQC report containing quality metrics.
+      - `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
 
 </details>
 
@@ -36,7 +50,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <details markdown="1">
 <summary>Output files</summary>
 
-- `fastp/`
+- `02_read_trimming/`
   - `*.fastp.fastq.gz`: FastQ files with trimmed reads.
   - `*.fastp.html` and `*.fastp.json`: FastP report containing quality metrics before and after trimming.
   - `*.fastp.log`: FastP run log file.
@@ -50,13 +64,34 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <details markdown="1">
 <summary>Output files</summary>
 
-- `bwamem3/`
-  - `*.bam`: BAM file produced when running the `bwa-mem3` aligner.
-  - `*.csi`: CSI index written alongside the `bwa-mem3` BAM output.
-- `parabricks/`
-  - `*.bam`: BAM file produced when running the `parabricks` aligner.
-- `samtools/`
-  - `*.csi`: CSI index generated from the Parabricks BAM output.
+- `03_read_alignment/`
+  - `*.bam`: BAM file produced when running either the `bwa-mem3` or `parabricks` aligner (sorted and read-group tagged).
+  - `*.csi`: CSI index written alongside the BAM output.
+
+</details>
+
+### BAM QC
+
+BAM QC executes at several workflow stages. The outputs will be in `bam_qc`, nested under the respective stage results directory. For example, BAM QC on the library alignments:
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `03_read_alignment/bam_qc`
+  - `qualimap/`
+    - `<sample_name>/`
+      - `genome_results.txt`: summary text file.
+      - `qualimapReport.html`: a standalone HTML file that can be viewed in your web browser.
+      - `css/`, `images_qualimapReport/`, `raw_data_qualimapReport/`: accessory files, standalone data and image files.
+  - `riker/`
+    - `*.alignment-metrics.txt`: alignment metrics.
+    - `*.base-distribution-by-cycle.{pdf,txt}`: base distribution across reads.
+    - `*.isize-histogram.{pdf,txt}`: insert size histogram data and image.
+    - `*.isize-metrics.txt`: insert size summary table.
+    - `*.mean-quality-by-cycle.{pdf,txt}`: quality distribution across reads.
+    - `*.quality-score-distribution.{pdf,txt}`: sample quality distribution summary.
+  - `samtools_flagstat/`
+    - `*.flagstat`: samtools flagstat report per sample.
 
 </details>
 
@@ -66,9 +101,9 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <summary>Output files</summary>
 
 - `multiqc/`
-  - `multiqc_report.html`: a standalone HTML file that can be viewed in your web browser.
   - `multiqc_data/`: directory containing parsed statistics from the different tools used in the pipeline.
   - `multiqc_plots/`: directory containing static images from the report in various formats.
+  - `multiqc_report.html`: a standalone HTML file that can be viewed in your web browser.
 
 </details>
 

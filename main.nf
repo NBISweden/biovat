@@ -22,6 +22,7 @@ params {
     enable_raw_read_qc          : Boolean
     enable_trim                 : Boolean
     enable_align                : Boolean
+    enable_bam_qc               : Boolean
 
     // Read trimming options
     adapter_fasta               : String
@@ -31,6 +32,10 @@ params {
     // Alignment options
     aligner                     : String
     sort_bam                    : Boolean
+
+    // BAM QC options
+    enable_riker                : Boolean
+    enable_qualimap             : Boolean
 
     // MultiQC options
     multiqc_config              : String
@@ -78,11 +83,14 @@ workflow NBISWEDEN_BIOVAT {
         params.enable_raw_read_qc,
         params.enable_trim,
         params.enable_align,
+        params.enable_bam_qc,
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,
         params.aligner,
         params.sort_bam,
+        params.enable_riker,
+        params.enable_qualimap,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
@@ -90,10 +98,13 @@ workflow NBISWEDEN_BIOVAT {
     )
 
     emit:
-    outputs_raw_read_qc = BIOVAT.out.outputs_raw_read_qc
-    outputs_trim_reads  = BIOVAT.out.outputs_trim_reads
-    outputs_align_reads = BIOVAT.out.outputs_align_reads
-    outputs_multiqc     = BIOVAT.out.outputs_multiqc
+    outputs_raw_read_qc      = BIOVAT.out.outputs_raw_read_qc
+    outputs_trim_reads       = BIOVAT.out.outputs_trim_reads
+    outputs_align_reads      = BIOVAT.out.outputs_align_reads
+    outputs_library_flagstat = BIOVAT.out.outputs_library_flagstat
+    outputs_library_riker    = BIOVAT.out.outputs_library_riker
+    outputs_library_qualimap = BIOVAT.out.outputs_library_qualimap
+    outputs_multiqc          = BIOVAT.out.outputs_multiqc
 
 }
 
@@ -121,10 +132,13 @@ workflow {
     )
 
     publish:
-    outputs_raw_read_qc = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
-    outputs_trim_reads  = NBISWEDEN_BIOVAT.out.outputs_trim_reads
-    outputs_align_reads = NBISWEDEN_BIOVAT.out.outputs_align_reads
-    outputs_multiqc     = NBISWEDEN_BIOVAT.out.outputs_multiqc
+    outputs_raw_read_qc      = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
+    outputs_trim_reads       = NBISWEDEN_BIOVAT.out.outputs_trim_reads
+    outputs_align_reads      = NBISWEDEN_BIOVAT.out.outputs_align_reads
+    outputs_library_flagstat = NBISWEDEN_BIOVAT.out.outputs_library_flagstat
+    outputs_library_riker    = NBISWEDEN_BIOVAT.out.outputs_library_riker
+    outputs_library_qualimap = NBISWEDEN_BIOVAT.out.outputs_library_qualimap
+    outputs_multiqc          = NBISWEDEN_BIOVAT.out.outputs_multiqc
 
 }
 
@@ -132,7 +146,7 @@ output {
 
     // READ_QC
     outputs_raw_read_qc {
-        path '01_raw_read_qc'
+        path '01_input_checks/reads/fastqc'
     }
     // TRIM_READS
     outputs_trim_reads {
@@ -141,6 +155,16 @@ output {
     // ALIGN_READS
     outputs_align_reads {
         path '03_read_alignment'
+    }
+    // BAM_QC
+    outputs_library_flagstat {
+        path '03_read_alignment/bam_qc/samtools_flagstat'
+    }
+    outputs_library_riker {
+        path '03_read_alignment/bam_qc/riker'
+    }
+    outputs_library_qualimap {
+        path '03_read_alignment/bam_qc/qualimap'
     }
     // MultiQC
     outputs_multiqc {

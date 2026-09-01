@@ -32,6 +32,14 @@
 
 > NVIDIA Corporation. NVIDIA Clara Parabricks documentation [Online]. Available from: https://docs.nvidia.com/clara/parabricks/latest/index.html
 
+- [Qualimap](http://qualimap.bioinfo.cipf.es/)
+
+> Okonechnikov K, Conesa A, Garcia-Alcalde F. Qualimap 2: advanced multi-sample quality control for high-throughput sequencing data. Bioinformatics. 2016 Jan 15;32(2):292-294. doi: 10.1093/bioinformatics/btv566.
+
+- [RIKER](https://github.com/fulcrumgenomics/riker)
+
+> Fulcrum Genomics. RIKER: Fast Rust CLI toolkit for sequencing QC metrics [Online]. Available from: https://github.com/fulcrumgenomics/riker
+
 - [Samtools](https://www.htslib.org/)
 
 > Li H, Handsaker B, Wysoker A, Fennell T, Ruan J, Homer N, Marth G, Abecasis G, Durbin R; 1000 Genome Project Data Processing Subgroup. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009 Aug 15;25(16):2078-2079. doi: 10.1093/bioinformatics/btp352. PubMed PMID: 19505943.
