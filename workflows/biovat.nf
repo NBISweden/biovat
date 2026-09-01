@@ -41,7 +41,7 @@ workflow BIOVAT {
     reads_to_process        = ch_samplesheet
 
     // Reference utilities
-    ch_reference_and_fai = channel.empty()
+    ch_reference_and_fai    = channel.empty()
     if ( params.reference && enable_align ) {
         REFERENCE_UTILS(reference)
         ch_reference_and_fai = REFERENCE_UTILS.out.ch_reference_and_fai
@@ -72,14 +72,7 @@ workflow BIOVAT {
         )
         reads_to_process    = TRIM_READS.out.trimmed_reads
         ch_multiqc_files    = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map{ _meta, file -> file })
-        outputs_trim_reads  = TRIM_READS.out.trimmed_reads
-            .mix(
-                TRIM_READS.out.fastp_json,
-                TRIM_READS.out.fastp_html,
-                TRIM_READS.out.fastp_log,
-                TRIM_READS.out.trimmed_reads_fail,
-                TRIM_READS.out.trimmed_reads_merged
-            )
+        outputs_trim_reads  = TRIM_READS.out.mix()
     }
 
     // Align reads
