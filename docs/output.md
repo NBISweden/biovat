@@ -72,7 +72,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 ### BAM QC
 
-BAM QC executes at several workflow stages. The outputs will in `bam_qc`, nested under the respective stage results directory. For example, BAM QC on the library alignments:
+BAM QC executes at several workflow stages. The outputs will be in `bam_qc`, nested under the respective stage results directory. For example, BAM QC on the library alignments:
 
 <details markdown="1">
 <summary>Output files</summary>
