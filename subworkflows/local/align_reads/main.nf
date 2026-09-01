@@ -9,7 +9,7 @@ workflow ALIGN_READS {
 
     take:
     aligner               // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    ch_reference_and_fai  // channel: reference fasta and fai index
+    ch_reference_and_fai  // value channel: reference fasta and fai index
     reads                 // channel: reads to align
     sort_bam              // boolean: Whether to sort the output BAM file
     enable_bam_qc         // boolean: Whether to run quality checks on BAM files

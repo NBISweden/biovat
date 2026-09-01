@@ -13,7 +13,7 @@ workflow REFERENCE_UTILS {
     ch_reference_and_fai = reference.join(SAMTOOLS_FAIDX.out.fai).collect()
 
     emit:
-    ch_reference_and_fai = ch_reference_and_fai
+    ch_reference_and_fai = ch_reference_and_fai // value channel: <Map> meta, <Path> fasta, <Path> fai
     ch_reference_sizes   = SAMTOOLS_FAIDX.out.sizes
 
 }
