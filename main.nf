@@ -88,10 +88,17 @@ workflow NBISWEDEN_BIOVAT {
         riker      : params.enable_riker,
         qualimap   : params.enable_qualimap
     ]
+
+    // Derived requirements map
+    def requires = [
+        fai: enable.align && enable.bam_qc && enable.riker
+    ]
+
     BIOVAT (
         samplesheet,
         reference,
         enable,
+        requires,
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,

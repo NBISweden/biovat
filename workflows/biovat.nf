@@ -19,7 +19,8 @@ workflow BIOVAT {
     take:
     ch_samplesheet         // channel: samplesheet read in from --input
     reference              // channel: reference fasta read in from --reference
-    enable                 // map: gating flags (raw_read_qc, trim, align, bam_qc, riker, qualimap)
+    enable                 // map: stage/tool gating flags (raw_read_qc, trim, align, bam_qc, riker, qualimap)
+    requires               // map: object defining state-dependency relationships
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
     save_trimmed_fail      // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
@@ -37,9 +38,10 @@ workflow BIOVAT {
 
     // Reference utilities
     ch_reference_and_fai = channel.empty()
-    if ( params.reference && enable.align ) {
+    if ( params.reference ) {
         REFERENCE_UTILS(
-            reference
+            reference,
+            requires
         )
         ch_reference_and_fai = REFERENCE_UTILS.out.ch_reference_and_fai
     }
