@@ -41,6 +41,7 @@ workflow BIOVAT {
     reads_to_process        = ch_samplesheet
 
     // Reference utilities
+    ch_reference_and_fai = channel.empty()
     if ( params.reference && enable_align ) {
         REFERENCE_UTILS(reference)
         ch_reference_and_fai = REFERENCE_UTILS.out.ch_reference_and_fai
