@@ -146,7 +146,7 @@ output {
 
     // READ_QC
     outputs_raw_read_qc {
-        path '01_input/reads/fastqc'
+        path '01_input_checks/reads/fastqc'
     }
     // TRIM_READS
     outputs_trim_reads {
