@@ -3,76 +3,72 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap            } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc        } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText      } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { REFERENCE_UTILS             } from '../subworkflows/local/utils_reference'
-include { READ_QC                     } from '../subworkflows/local/read_qc/main'
-include { TRIM_READS                  } from '../subworkflows/local/trim_reads/main'
-include { ALIGN_READS                 } from '../subworkflows/local/align_reads/main'
-include { BAM_QC                      } from '../subworkflows/local/bam_qc/main'
+include { MULTIQC                } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { REFERENCE_UTILS        } from '../subworkflows/local/utils_reference'
+include { READ_QC                } from '../subworkflows/local/read_qc/main'
+include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
+include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
+include { BAM_QC                 } from '../subworkflows/local/bam_qc/main'
 
 workflow BIOVAT {
 
     take:
     ch_samplesheet         // channel: samplesheet read in from --input
     reference              // channel: reference fasta read in from --reference
-    enable_raw_read_qc     // boolean: Whether to run quality checks on raw reads
-    enable_trim            // boolean: Whether to run the trimming stage
-    enable_align           // boolean: Whether to run the alignment stage
-    enable_bam_qc          // boolean: Whether to run quality checks on BAM files
+    enable                 // map: gating flags (raw_read_qc, trim, align, bam_qc, riker, qualimap)
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
     save_trimmed_fail      // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
     save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     sort_bam               // boolean: Whether to sort the output BAM file
-    enable_riker           // boolean: Whether to run RIKER for BAM QC
-    enable_qualimap        // boolean: Whether to run QUALIMAP for BAM QC
     multiqc_config
     multiqc_logo
     multiqc_methods_description
     outdir
 
     main:
-    def ch_versions         = channel.empty()
-    def ch_multiqc_files    = channel.empty()
-    reads_to_process        = ch_samplesheet
+    def ch_versions      = channel.empty()
+    def ch_multiqc_files = channel.empty()
+    reads_to_process     = ch_samplesheet
 
     // Reference utilities
-    ch_reference_and_fai    = channel.empty()
-    if ( params.reference && enable_align ) {
-        REFERENCE_UTILS(reference)
+    ch_reference_and_fai = channel.empty()
+    if ( params.reference && enable.align ) {
+        REFERENCE_UTILS(
+            reference
+        )
         ch_reference_and_fai = REFERENCE_UTILS.out.ch_reference_and_fai
     }
 
     // Raw read quality checks
-    outputs_raw_read_qc     = channel.empty()
-    if ( enable_raw_read_qc ) {
-        READ_QC (
-            reads_to_process,
+    outputs_raw_read_qc = channel.empty()
+    if ( enable.raw_read_qc ) {
+        READ_QC(
+            reads_to_process
         )
-        ch_multiqc_files    = ch_multiqc_files.mix(READ_QC.out.fastqc_zip.map{ _meta, file -> file })
+        ch_multiqc_files    = ch_multiqc_files.mix(READ_QC.out.fastqc_zip.map { _meta, file -> file })
         outputs_raw_read_qc = READ_QC.out.fastqc_zip.mix(READ_QC.out.fastqc_html)
     }
 
     // Trim reads
-    outputs_trim_reads      = channel.empty()
-    if ( enable_trim ) {
+    outputs_trim_reads = channel.empty()
+    if ( enable.trim ) {
         // FASTP takes reads + adapters (if provided)
         def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
-        def ch_reads_and_adapters = reads_to_process
-            .map { meta, reads -> [ meta, reads, path_adapter_fasta ] }
+        def ch_reads_and_adapters = reads_to_process.map { meta, reads -> [meta, reads, path_adapter_fasta] }
         // FASTP
-        TRIM_READS (
+        TRIM_READS(
             ch_reads_and_adapters,
             save_trimmed_fail,
             save_merged
         )
-        reads_to_process    = TRIM_READS.out.trimmed_reads
-        ch_multiqc_files    = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map{ _meta, file -> file })
-        outputs_trim_reads  = TRIM_READS.out.mix()
+        reads_to_process   = TRIM_READS.out.trimmed_reads
+        ch_multiqc_files   = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map { _meta, file -> file })
+        outputs_trim_reads = TRIM_READS.out.mix()
     }
 
     // Align reads
@@ -80,15 +76,13 @@ workflow BIOVAT {
     outputs_library_flagstat = channel.empty()
     outputs_library_riker    = channel.empty()
     outputs_library_qualimap = channel.empty()
-    if ( enable_align ) {
-        ALIGN_READS (
+    if ( enable.align ) {
+        ALIGN_READS(
             aligner,
             ch_reference_and_fai,
             reads_to_process,
             sort_bam,
-            enable_bam_qc,
-            enable_riker,
-            enable_qualimap,
+            enable,
             ch_multiqc_files
         )
         ch_alignment_and_index   = ALIGN_READS.out.ch_alignment_and_index
