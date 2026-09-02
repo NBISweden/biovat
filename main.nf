@@ -81,10 +81,17 @@ workflow NBISWEDEN_BIOVAT {
     def enable = params.findAll { k, v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
     ]
+
+    // Derived requirements map
+    def requires = [
+        fai: enable.align && enable.bam_qc && enable.riker
+    ]
+
     BIOVAT (
         samplesheet,
         reference,
         enable,
+        requires,
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,
