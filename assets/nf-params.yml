@@ -4,7 +4,7 @@
 ##     This is an example parameter file provide custom parameters to BioVAT.
 ##
 ##     Uncomment lines with a single '#' if you want to pass the parameter to
-##     the pipeline and edit/add the parameters below as needed. 
+##     the pipeline and edit/add the parameters below as needed.
 ##
 ##     Provide the file to nextflow using the '-params-file' option, e.g.:
 ##     $ nextflow main.nf -profile <PROFILES> -params-file nf-params.yml
@@ -17,19 +17,20 @@
 ## Input/output options
 ## =============================================================================
 
-input:              "assets/samplesheet.csv"          # Path to comma-separated file containing information about the samples
-reference:          "tests/data/sumatran_rhino.fasta" # Path to reference genome FASTA file
-outdir:             "results"                         # The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.
+input: "assets/samplesheet.csv" # Path to comma-separated file containing information about the samples
+reference: "tests/data/sumatran_rhino.fasta" # Path to reference genome FASTA file
+outdir: "results" # The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.
 # publish_dir_mode:   "copy"                            # How to publish results to the output directory (accepted: copy, symlink, move, rellink, link, copyNoFollow). Default: copy
 
 ## =============================================================================
 ## Workflow stages
 ## =============================================================================
 
-enable_raw_read_qc: true                              # Boolean: run quality checks on raw reads
-enable_trim:        true                              # Boolean: run read trimming
-enable_align:       true                              # Boolean: align reads to reference genome
-enable_bam_qc:      true                              # Boolean: run quality checks on BAM files
+enable_raw_read_qc: true # Boolean: run quality checks on raw reads
+enable_trim: true # Boolean: run read trimming
+enable_align: true # Boolean: align reads to reference genome
+enable_bam_qc: true # Boolean: run quality checks on BAM files
+
 
 ## =============================================================================
 ## Read trimming options
