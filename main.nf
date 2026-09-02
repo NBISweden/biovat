@@ -78,15 +78,8 @@ workflow NBISWEDEN_BIOVAT {
 
     main:
     // Gating parameters, passed as a single map
-    def enable = [
-        // Stages
-        raw_read_qc: params.enable_raw_read_qc,
-        trim       : params.enable_trim,
-        align      : params.enable_align,
-        bam_qc     : params.enable_bam_qc,
-        // Tools
-        riker      : params.enable_riker,
-        qualimap   : params.enable_qualimap
+    def enable = params.findAll { k, v -> k.startsWith('enable_') }
+        .collectEntries { k, v -> [(k - 'enable_'): v] }
     ]
     BIOVAT (
         samplesheet,
