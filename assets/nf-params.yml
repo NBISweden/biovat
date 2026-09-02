@@ -1,130 +1,52 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##     BioVAT 0.0.1
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##     This is an example parameter file to pass to the `-params-file` option
-##     of nextflow run with the BioVAT pipeline.
+##     This is an example parameter file provide custom parameters to BioVAT.
 ##
 ##     Uncomment lines with a single '#' if you want to pass the parameter to
-##     the pipeline.
+##     the pipeline and edit/add the parameters below as needed. 
+##
+##     Provide the file to nextflow using the '-params-file' option, e.g.:
+##     $ nextflow main.nf -profile <PROFILES> -params-file nf-params.yml
+##
+##     For a full list of available parameters and their defaults, run:
+##     $ pixi run help
 ## -----------------------------------------------------------------------------
 
 ## =============================================================================
 ## Input/output options
 ## =============================================================================
-## Define where the pipeline should find input data and save output data.
 
-## -----------------------------------------------------------------------------
-## input
-## -----------------------------------------------------------------------------
-##     Path to comma-separated file containing information about the samples
-##     in the experiment.
-##     Type: string
-##     Required
-## -----------------------------------------------------------------------------
-input: "assets/samplesheet.csv"
-
-## -----------------------------------------------------------------------------
-## reference
-## -----------------------------------------------------------------------------
-##     Path to reference genome FASTA file.
-##     Type: string
-## -----------------------------------------------------------------------------
-reference: "tests/data/sumatran_rhino.fasta"
+input:              "assets/samplesheet.csv"          # Path to comma-separated file containing information about the samples
+reference:          "tests/data/sumatran_rhino.fasta" # Path to reference genome FASTA file
+outdir:             "results"                         # The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.
+# publish_dir_mode:   "copy"                            # How to publish results to the output directory (accepted: copy, symlink, move, rellink, link, copyNoFollow). Default: copy
 
 ## =============================================================================
-## Workflow stage gating options
+## Workflow stages
 ## =============================================================================
-## Define which stages of the pipeline should be run.
 
-## -----------------------------------------------------------------------------
-## enable_raw_read_qc
-## -----------------------------------------------------------------------------
-##     Run quality checks on raw reads.
-##     Type: boolean
-## -----------------------------------------------------------------------------
-enable_raw_read_qc: true
-
-## -----------------------------------------------------------------------------
-## enable_trim
-## -----------------------------------------------------------------------------
-##     Run the trimming stage.
-##     Type: boolean
-## -----------------------------------------------------------------------------
-enable_trim: true
-
-## -----------------------------------------------------------------------------
-## enable_align
-## -----------------------------------------------------------------------------
-##     Run the alignment stage.
-##     Type: boolean
-## -----------------------------------------------------------------------------
-enable_align: true
-
-## -----------------------------------------------------------------------------
-## outdir
-## -----------------------------------------------------------------------------
-##     The output directory where the results will be saved. You have to use
-##     absolute paths to storage on Cloud infrastructure.
-##     Type: string
-##     Required
-## -----------------------------------------------------------------------------
-outdir: "results"
+enable_raw_read_qc: true                              # Boolean: run quality checks on raw reads
+enable_trim:        true                              # Boolean: run read trimming
+enable_align:       true                              # Boolean: align reads to reference genome
+enable_bam_qc:      true                              # Boolean: run quality checks on BAM files
 
 ## =============================================================================
-## Trimming options
+## Read trimming options
 ## =============================================================================
-## Configure read trimming behavior.
 
-## -----------------------------------------------------------------------------
-## adapter_fasta
-## -----------------------------------------------------------------------------
-##     Path to FASTA file containing adapter sequences.
-##     Type: string
-## -----------------------------------------------------------------------------
-# adapter_fasta: null
+# adapter_fasta:      null                              # Path to FASTA file containing adapter sequences
 
 ## =============================================================================
 ## Alignment options
 ## =============================================================================
-## Configure read alignment behavior.
 
-## -----------------------------------------------------------------------------
-## aligner
-## -----------------------------------------------------------------------------
-##     Alignment tool choice.
-##     Type: string
-## -----------------------------------------------------------------------------
-# aligner: "bwa-mem3"
-
-## -----------------------------------------------------------------------------
-## sort_bam
-## -----------------------------------------------------------------------------
-##     Sort the BAM output from BWA.
-##     Type: boolean
-## -----------------------------------------------------------------------------
-# sort_bam: true
+# aligner:           "bwa-mem3"                         # Alignment tool choice (accepted: bwa-mem3, parabricks). Default: bwa-mem3
+# sort_bam:          true                               # Boolean: sort the BAM output from BWA. Default: true
 
 ## =============================================================================
-## help
+## BAM quality check options
 ## =============================================================================
-##     Display the help message.
-##     Type: ['boolean', 'string']
-## -----------------------------------------------------------------------------
-# help: null
 
-## -----------------------------------------------------------------------------
-## help_full
-## -----------------------------------------------------------------------------
-##     Display the full detailed help message.
-##     Type: boolean
-## -----------------------------------------------------------------------------
-# help_full: null
-
-## -----------------------------------------------------------------------------
-## show_hidden
-## -----------------------------------------------------------------------------
-##     Display hidden parameters in the help message (only works when --help
-##     or --help_full are provided).
-##     Type: boolean
-## -----------------------------------------------------------------------------
-# show_hidden: null
+# enable_riker:      true                               # Boolean: run Riker during the BAM QC subworkflow. Default: true
+# enable_qualimap:   false                              # Boolean: run Qualimap during the BAM QC subworkflow. Default: false
