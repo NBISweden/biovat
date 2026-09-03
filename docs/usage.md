@@ -52,6 +52,12 @@ Pipeline settings and parameters can be provided on the command-line but for bet
 
 Here, input and output options are specified, the pipeline stages are selected, and stage- and tool-specific parameters are defined.
 
+For a full list of available parameters and their defaults, run:
+
+```bash
+nextflow main.nf --help
+```
+
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
