@@ -36,7 +36,7 @@ enable_bam_qc: true # Boolean: run quality checks on BAM files
 ## Read trimming options
 ## =============================================================================
 
-# adapter_fasta:      null                              # Path to FASTA file containing adapter sequences
+# adapter_fasta: /path/to/custom_adapters.fasta
 
 ## =============================================================================
 ## Alignment options
