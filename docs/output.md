@@ -83,9 +83,9 @@ Alignment QC executes at several workflow stages. The outputs will be in the dir
   - `qc/`
     - `qualimap/`
       - `<sample_name>/`
-      - `genome_results.txt`: summary text file.
-      - `qualimapReport.html`: a standalone HTML file that can be viewed in your web browser.
-      - `css/`, `images_qualimapReport/`, `raw_data_qualimapReport/`: accessory files, standalone data and image files.
+        - `genome_results.txt`: summary text file.
+        - `qualimapReport.html`: a standalone HTML file that can be viewed in your web browser.
+        - `css/`, `images_qualimapReport/`, `raw_data_qualimapReport/`: accessory files, standalone data and image files.
     - `riker/`
       - `*.alignment-metrics.txt`: alignment metrics.
       - `*.base-distribution-by-cycle.{pdf,txt}`: base distribution across reads.
