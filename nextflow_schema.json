@@ -56,16 +56,6 @@
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
                 }
-            },
-            "if": {
-                "properties": {
-                    "enable_align": {
-                        "const": true
-                    }
-                }
-            },
-            "then": {
-                "required": ["reference"]
             }
         },
         "trimming_options": {
@@ -108,20 +98,6 @@
                 "enable_cram_format": {
                     "type": "boolean",
                     "description": "Output alignments in CRAM format instead of BAM."
-                }
-            },
-            "if": {
-                "properties": {
-                    "enable_cram_format": {
-                        "const": true
-                    }
-                }
-            },
-            "then": {
-                "properties": {
-                    "enable_qualimap": {
-                        "const": false
-                    }
                 }
             }
         },
