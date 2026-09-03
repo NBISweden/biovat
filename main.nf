@@ -80,7 +80,7 @@ workflow NBISWEDEN_BIOVAT {
     // Gating parameters, passed as a single map
     def enable = params.findAll { k, v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
-    ]
+
     BIOVAT (
         samplesheet,
         reference,
