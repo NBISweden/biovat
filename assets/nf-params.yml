@@ -43,7 +43,7 @@ enable_bam_qc: true # Boolean: run quality checks on BAM files
 ## =============================================================================
 
 # aligner: "parabricks"      # Default: bwa-mem3
-# sort_bam:          true                               # Boolean: sort the BAM output from BWA. Default: true
+# sort_bam:          false                               # Boolean: sort the BAM output from BWA-mem3/parabricks. Default: true
 
 ## =============================================================================
 ## BAM quality check options
