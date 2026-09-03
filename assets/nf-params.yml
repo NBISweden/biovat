@@ -31,6 +31,7 @@ enable_trim: true # Boolean: run read trimming
 enable_align: true # Boolean: align reads to reference genome
 enable_bam_qc: true # Boolean: run quality checks on BAM files
 
+
 ## =============================================================================
 ## Read trimming options
 ## =============================================================================
