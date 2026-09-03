@@ -22,16 +22,17 @@ params {
     enable_raw_read_qc          : Boolean
     enable_trim                 : Boolean
     enable_align                : Boolean
-    enable_bam_qc               : Boolean
+    enable_align_qc             : Boolean
 
     // Read trimming options
     adapter_fasta               : String
-    save_trimmed_fail           : Boolean
-    save_merged                 : Boolean
+    enable_save_trimmed_fail    : Boolean
+    enable_save_merged          : Boolean
 
     // Alignment options
     aligner                     : String
-    sort_bam                    : Boolean
+    enable_sort_alignments      : Boolean
+    enable_cram_format          : Boolean
 
     // BAM QC options
     enable_riker                : Boolean
@@ -86,14 +87,11 @@ workflow NBISWEDEN_BIOVAT {
         reference,
         enable,
         params.adapter_fasta,
-        params.save_trimmed_fail,
-        params.save_merged,
         params.aligner,
-        params.sort_bam,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
-        params.outdir,
+        params.outdir
     )
 
     emit:
@@ -155,15 +153,15 @@ output {
     outputs_align_reads {
         path '03_read_alignment'
     }
-    // BAM_QC
+    // ALIGNMENT_QC: library level
     outputs_library_flagstat {
-        path '03_read_alignment/bam_qc/samtools_flagstat'
+        path '03_read_alignment/qc/samtools_flagstat'
     }
     outputs_library_riker {
-        path '03_read_alignment/bam_qc/riker'
+        path '03_read_alignment/qc/riker'
     }
     outputs_library_qualimap {
-        path '03_read_alignment/bam_qc/qualimap'
+        path '03_read_alignment/qc/qualimap'
     }
     // MultiQC
     outputs_multiqc {

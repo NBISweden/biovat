@@ -3,7 +3,7 @@ include { BWAMEM3_MEM       } from '../../../modules/nf-core/bwamem3/mem/main'
 include { BWA_INDEX         } from '../../../modules/nf-core/bwa/index/main'
 include { PARABRICKS_FQ2BAM } from '../../../modules/nf-core/parabricks/fq2bam/main'
 include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
-include { BAM_QC            } from '../bam_qc/main'
+include { ALIGNMENT_QC      } from '../alignment_qc/main'
 
 workflow ALIGN_READS {
 
@@ -11,7 +11,6 @@ workflow ALIGN_READS {
     aligner               // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     ch_reference_and_fai  // value channel: reference fasta and fai index
     reads                 // channel: reads to align
-    sort_bam              // boolean: Whether to sort the output BAM file
     enable                // map: stage/tool gating flags
     ch_multiqc_files      // channel: MultiQC files
 
@@ -25,7 +24,7 @@ workflow ALIGN_READS {
             reads,
             BWAMEM3_INDEX.out.index,
             reference,
-            sort_bam
+            enable.sort_alignments
         )
         ch_alignment_and_index = BWAMEM3_MEM.out.aligned.join(BWAMEM3_MEM.out.index)
     } else if ( aligner == 'parabricks' ) {
@@ -37,31 +36,31 @@ workflow ALIGN_READS {
             BWA_INDEX.out.index,
             [[],[]], // intervals
             [[],[]], // known_sites
-            'bam'    // output_fmt
+            enable.cram_format ? 'cram' : 'bam'
         )
         SAMTOOLS_INDEX(PARABRICKS_FQ2BAM.out.bam)
         ch_alignment_and_index = PARABRICKS_FQ2BAM.out.bam.join(SAMTOOLS_INDEX.out.index)
     }
 
-    // ALIGN_READS:BAM_QC
+    // ALIGN_READS:ALIGNMENT_QC
     outputs_library_flagstat = channel.empty()
     outputs_library_riker    = channel.empty()
     outputs_library_qualimap = channel.empty()
-    if ( enable.bam_qc ) {
-        BAM_QC(
+    if ( enable.align_qc ) {
+        ALIGNMENT_QC(
             ch_alignment_and_index,
             ch_reference_and_fai,
             enable
         )
         ch_multiqc_files = ch_multiqc_files
             .mix(
-                BAM_QC.out.flagstat_outputs.map{ _meta, file -> file },
-                BAM_QC.out.riker_outputs.map{ _meta, file -> file },
-                BAM_QC.out.qualimap_outputs.map{ _meta, file -> file }
+                ALIGNMENT_QC.out.flagstat_outputs.map{ _meta, file -> file },
+                ALIGNMENT_QC.out.riker_outputs.map{ _meta, file -> file },
+                ALIGNMENT_QC.out.qualimap_outputs.map{ _meta, file -> file }
             )
-        outputs_library_flagstat = BAM_QC.out.flagstat_outputs
-        outputs_library_riker    = BAM_QC.out.riker_outputs
-        outputs_library_qualimap = BAM_QC.out.qualimap_outputs
+        outputs_library_flagstat = ALIGNMENT_QC.out.flagstat_outputs
+        outputs_library_riker    = ALIGNMENT_QC.out.riker_outputs
+        outputs_library_qualimap = ALIGNMENT_QC.out.qualimap_outputs
     }
 
     emit:

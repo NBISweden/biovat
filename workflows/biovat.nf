@@ -12,19 +12,15 @@ include { REFERENCE_UTILS        } from '../subworkflows/local/utils_reference'
 include { READ_QC                } from '../subworkflows/local/read_qc/main'
 include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
-include { BAM_QC                 } from '../subworkflows/local/bam_qc/main'
 
 workflow BIOVAT {
 
     take:
     ch_samplesheet         // channel: samplesheet read in from --input
     reference              // channel: reference fasta read in from --reference
-    enable                 // map: gating flags (raw_read_qc, trim, align, bam_qc, riker, qualimap)
+    enable                 // map: gating flags
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
-    save_trimmed_fail      // boolean: Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-    save_merged            // boolean: Whether to save all merged reads to a file ending in *.merged.fastq.gz
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    sort_bam               // boolean: Whether to sort the output BAM file
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -63,8 +59,7 @@ workflow BIOVAT {
         // FASTP
         TRIM_READS(
             ch_reads_and_adapters,
-            save_trimmed_fail,
-            save_merged
+            enable
         )
         reads_to_process   = TRIM_READS.out.trimmed_reads
         ch_multiqc_files   = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map { _meta, file -> file })
@@ -81,7 +76,6 @@ workflow BIOVAT {
             aligner,
             ch_reference_and_fai,
             reads_to_process,
-            sort_bam,
             enable,
             ch_multiqc_files
         )

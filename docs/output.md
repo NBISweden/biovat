@@ -12,7 +12,7 @@ results/
 │   └── reads
 ├── 02_read_trimming
 ├── 03_read_alignment
-│   └── bam_qc
+│   └── qc
 ├── multiqc
 │   ├── multiqc_data
 │   └── multiqc_plots
@@ -26,7 +26,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Raw read quality checks](#raw-read-qc) - Raw read QC
 - [Read trimming](#read-trimming) - Adapter and quality trimming of raw reads
 - [Alignment](#alignment) - Alignment of raw or trimmed reads
-- [BAM quality checks](#bam-qc) - BAM QC
+- [Alignment quality checks](#Alignment-qc) - BAM/CRAM alignment QC
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
@@ -68,30 +68,33 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
   - `*.bam`: BAM file produced when running either the `bwa-mem3` or `parabricks` aligner (sorted and read-group tagged).
   - `*.csi`: CSI index written alongside the BAM output.
 
+Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
+
 </details>
 
-### BAM QC
+### Alignment QC
 
-BAM QC executes at several workflow stages. The outputs will be in `bam_qc`, nested under the respective stage results directory. For example, BAM QC on the library alignments:
+Alignment QC executes at several workflow stages. The outputs will be in the directory `qc`, nested under the respective stage results directory. For example, alignment QC on the library alignments:
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `03_read_alignment/bam_qc`
-  - `qualimap/`
-    - `<sample_name>/`
-      - `genome_results.txt`: summary text file.
-      - `qualimapReport.html`: a standalone HTML file that can be viewed in your web browser.
-      - `css/`, `images_qualimapReport/`, `raw_data_qualimapReport/`: accessory files, standalone data and image files.
-  - `riker/`
-    - `*.alignment-metrics.txt`: alignment metrics.
-    - `*.base-distribution-by-cycle.{pdf,txt}`: base distribution across reads.
-    - `*.isize-histogram.{pdf,txt}`: insert size histogram data and image.
-    - `*.isize-metrics.txt`: insert size summary table.
-    - `*.mean-quality-by-cycle.{pdf,txt}`: quality distribution across reads.
-    - `*.quality-score-distribution.{pdf,txt}`: sample quality distribution summary.
-  - `samtools_flagstat/`
-    - `*.flagstat`: samtools flagstat report per sample.
+- `03_read_alignment/`
+  - `qc/`
+    - `qualimap/`
+        - `<sample_name>/`
+        - `genome_results.txt`: summary text file.
+        - `qualimapReport.html`: a standalone HTML file that can be viewed in your web browser.
+        - `css/`, `images_qualimapReport/`, `raw_data_qualimapReport/`: accessory files, standalone data and image files.
+    - `riker/`
+        - `*.alignment-metrics.txt`: alignment metrics.
+        - `*.base-distribution-by-cycle.{pdf,txt}`: base distribution across reads.
+        - `*.isize-histogram.{pdf,txt}`: insert size histogram data and image.
+        - `*.isize-metrics.txt`: insert size summary table.
+        - `*.mean-quality-by-cycle.{pdf,txt}`: quality distribution across reads.
+        - `*.quality-score-distribution.{pdf,txt}`: sample quality distribution summary.
+    - `samtools_flagstat/`
+        - `*.flagstat`: samtools flagstat report per sample.
 
 </details>
 
