@@ -35,6 +35,11 @@
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"]
                     },
+                    "freebayes": {
+                        "branch": "master",
+                        "git_sha": "6fd0d62609c3a24b08c9df3df45857f974efc7ad",
+                        "installed_by": ["modules"]
+                    },
                     "multiqc": {
                         "branch": "master",
                         "git_sha": "98403d15b0e50edae1f3fec5eae5e24982f1fade",
