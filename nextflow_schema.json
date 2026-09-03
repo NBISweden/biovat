@@ -30,31 +30,31 @@
                     "description": "Path to reference genome FASTA file.",
                     "help_text": "Provide a reference genome FASTA file against which reads will be aligned."
                 },
-                "enable_raw_read_qc": {
-                    "type": "boolean",
-                    "description": "Run the subworkflow READ_QC.",
-                    "default": true
-                },
-                "enable_trim": {
-                    "type": "boolean",
-                    "description": "Run the subworkflow TRIM_READS.",
-                    "default": true
-                },
-                "enable_align": {
-                    "type": "boolean",
-                    "description": "Run the subworkflow ALIGN_READS.",
-                    "default": true
-                },
-                "enable_align_qc": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Run the subworkflow ALIGNMENT_QC."
-                },
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
+                },
+                "enable_raw_read_qc": {
+                    "type": "boolean",
+                    "description": "Run quality checks on raw reads.",
+                    "default": true
+                },
+                "enable_trim": {
+                    "type": "boolean",
+                    "description": "Run read trimming.",
+                    "default": true
+                },
+                "enable_align": {
+                    "type": "boolean",
+                    "description": "Align reads to reference genome.",
+                    "default": true
+                },
+                "enable_align_qc": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run quality checks on alignment files (BAM/CRAM)."
                 }
             }
         },
