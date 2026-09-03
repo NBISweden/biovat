@@ -82,19 +82,19 @@ Alignment QC executes at several workflow stages. The outputs will be in the dir
 - `03_read_alignment/`
   - `qc/`
     - `qualimap/`
-        - `<sample_name>/`
-        - `genome_results.txt`: summary text file.
-        - `qualimapReport.html`: a standalone HTML file that can be viewed in your web browser.
-        - `css/`, `images_qualimapReport/`, `raw_data_qualimapReport/`: accessory files, standalone data and image files.
+      - `<sample_name>/`
+      - `genome_results.txt`: summary text file.
+      - `qualimapReport.html`: a standalone HTML file that can be viewed in your web browser.
+      - `css/`, `images_qualimapReport/`, `raw_data_qualimapReport/`: accessory files, standalone data and image files.
     - `riker/`
-        - `*.alignment-metrics.txt`: alignment metrics.
-        - `*.base-distribution-by-cycle.{pdf,txt}`: base distribution across reads.
-        - `*.isize-histogram.{pdf,txt}`: insert size histogram data and image.
-        - `*.isize-metrics.txt`: insert size summary table.
-        - `*.mean-quality-by-cycle.{pdf,txt}`: quality distribution across reads.
-        - `*.quality-score-distribution.{pdf,txt}`: sample quality distribution summary.
+      - `*.alignment-metrics.txt`: alignment metrics.
+      - `*.base-distribution-by-cycle.{pdf,txt}`: base distribution across reads.
+      - `*.isize-histogram.{pdf,txt}`: insert size histogram data and image.
+      - `*.isize-metrics.txt`: insert size summary table.
+      - `*.mean-quality-by-cycle.{pdf,txt}`: quality distribution across reads.
+      - `*.quality-score-distribution.{pdf,txt}`: sample quality distribution summary.
     - `samtools_flagstat/`
-        - `*.flagstat`: samtools flagstat report per sample.
+      - `*.flagstat`: samtools flagstat report per sample.
 
 </details>
 
