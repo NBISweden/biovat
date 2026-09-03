@@ -107,8 +107,21 @@
                 },
                 "enable_cram_format": {
                     "type": "boolean",
-                    "description": "Output alignments in CRAM format instead of BAM.",
-                    "default": false
+                    "description": "Output alignments in CRAM format instead of BAM."
+                }
+            },
+            "if": {
+                "properties": {
+                    "enable_cram_format": {
+                        "const": true
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "enable_qualimap": {
+                        "const": false
+                    }
                 }
             }
         },
@@ -121,11 +134,11 @@
                 "enable_riker": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Run Riker during the alignment QC subworkflow"
+                    "description": "Run Riker during the alignment QC subworkflow."
                 },
                 "enable_qualimap": {
                     "type": "boolean",
-                    "description": "Run Qualimap during the alignment QC subworkflow"
+                    "description": "Run Qualimap during the alignment QC subworkflow. Not compatible with '--enable_cram_format'."
                 }
             }
         },
