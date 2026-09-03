@@ -12,9 +12,7 @@ workflow ALIGN_READS {
     ch_reference_and_fai  // value channel: reference fasta and fai index
     reads                 // channel: reads to align
     sort_bam              // boolean: Whether to sort the output BAM file
-    enable_bam_qc         // boolean: Whether to run quality checks on BAM files
-    enable_riker          // boolean: Whether to run RIKER for BAM
-    enable_qualimap       // boolean: Whether to run QUALIMAP for BAM QC
+    enable                // map: stage/tool gating flags
     ch_multiqc_files      // channel: MultiQC files
 
     main:
@@ -49,12 +47,11 @@ workflow ALIGN_READS {
     outputs_library_flagstat = channel.empty()
     outputs_library_riker    = channel.empty()
     outputs_library_qualimap = channel.empty()
-    if ( enable_bam_qc ) {
+    if ( enable.bam_qc ) {
         BAM_QC(
             ch_alignment_and_index,
             ch_reference_and_fai,
-            enable_riker,
-            enable_qualimap
+            enable
         )
         ch_multiqc_files = ch_multiqc_files
             .mix(

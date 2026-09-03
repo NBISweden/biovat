@@ -111,9 +111,9 @@ To contribute a new step to the pipeline, follow these guidelines:
 - [ ] Define the corresponding [input channel](#channel-naming-schemes) into your new process from the expected previous process channel.
 - [ ] Install a module with nf-core/tools, or write a local module (see [default processes resource requirements](#default-processes-resource-requirements)), and add it to the target `<workflow>.nf`.
 - [ ] Define the output channel if needed. Mix relevant files into `ch_multiqc` (if applicable).
-- [ ] Add new or updated parameters to `nextflow.config` with a [default value](#default-parameter-values). Prefix parameters with the tool name if they are tool-specific and exposed to the user.
-- [ ] Add new or updated parameters to `main.nf`, defining their type.
-- [ ] Add new or updated parameters and relevant help text to `nextflow_schema.json` with [nf-core/tools](#default-parameter-values).
+- [ ] Add new or updated parameters to `nextflow.config` with a [default value](#parameters). Prefix parameters with the tool name if they are tool-specific and exposed to the user. Prefix with `enable_` if they are booleans used to gate a stage or tool.
+- [ ] Add new or updated parameters to `main.nf`, defining their [type](#parameters).
+- [ ] Add new or updated parameters and relevant help text to `nextflow_schema.json` with [nf-core/tools](#parameters).
 - [ ] Add validation for relevant parameters to the pipeline utilisation section of `utils_nfcore_\_pipeline/main.nf` subworkflow.
 - [ ] Perform local tests to validate that the new code works as expected.
 - [ ] If applicable, add a new test in the `tests` directory.
@@ -132,19 +132,15 @@ Use the following naming schemes for channels to make the channel flow easier to
 - Initial process channel: `ch_output_from_<process>`
 - Intermediate and terminal channels: `ch_<previousprocess>_for_<nextprocess>`
 
-### Default parameter values
+### Parameters
 
-Parameters should be initialised and defined with default values within the `params` scope in `nextflow.config`.
-Separately, they should have their type defined in `main.nf` ([see here for the ADR](https://github.com/NBISweden/biovat/issues/61)).
-They should also be documented in the pipeline JSON schema.
+Parameters should have their default values defined within the `params` scope in `nextflow.config`, e.g.: `aligner = 'bwa-mem3'`.
 
-To update `nextflow_schema.json`, run:
+In addition, they should have their type defined in the `params` block in `main.nf` ([see here for the ADR](https://github.com/NBISweden/biovat/issues/61)), e.g.: `aligner: String`.
 
-```bash
-nf-core pipelines schema build
-```
+Finally, they should also be documented in the pipeline `nextflow_schema.json`. To update this automatically, run `nf-core pipelines schema build`.
 
-The schema builder interface that loads in your browser should automatically update the defaults in the parameter documentation.
+Boolean parameters used to enable or disable stages or tools must be prefixed with `enable_`, for example, `enable_align`. The pipeline automatically groups these parameters into a map called `enable`, where each key is the parameter name with the `enable_` prefix removed. For example, the value of the parameter `enable_align` becomes accessible in scripts via `enable.align`.
 
 ### Default processes resource requirements
 

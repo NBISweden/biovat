@@ -7,8 +7,7 @@ workflow BAM_QC {
     take:
     ch_alignment_and_index   // channel: aligned reads and their indices to perform QC on
     ch_reference_and_fai     // channel: reference fasta and fai index
-    enable_riker             // boolean: Whether to run RIKER for BAM QC
-    enable_qualimap          // boolean: Whether to run QUALIMAP for BAM QC
+    enable                   // map: stage/tool gating flags
 
     main:
     // SAMTOOLS_FLAGSTAT
@@ -16,7 +15,7 @@ workflow BAM_QC {
 
     // RIKER
     riker_outputs = channel.empty()
-    if ( enable_riker ) {
+    if ( enable.riker ) {
         def ch_riker_input = ch_alignment_and_index // TODO: Potentially support optional inputs, except RNA-seq specific.
             .map { meta, bam, index ->
                 [
@@ -42,7 +41,7 @@ workflow BAM_QC {
 
     // QUALIMAP
     qualimap_outputs = channel.empty()
-    if ( enable_qualimap ) {
+    if ( enable.qualimap ) {
         QUALIMAP_BAMQC(
             ch_alignment_and_index.map { meta, bam, _index -> [ meta, bam ] },
             []         //  TODO: Potentially support optional input (gff file)

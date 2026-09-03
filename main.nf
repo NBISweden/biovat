@@ -7,7 +7,7 @@
 ----------------------------------------------------------------------------------------
 */
 
-include { BIOVAT  } from './workflows/biovat'
+include { BIOVAT                  } from './workflows/biovat'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 
@@ -77,20 +77,19 @@ workflow NBISWEDEN_BIOVAT {
     reference   // channel: reference fasta read in from --reference
 
     main:
+    // Gating parameters, passed as a single map
+    def enable = params.findAll { k, v -> k.startsWith('enable_') }
+        .collectEntries { k, v -> [(k - 'enable_'): v] }
+
     BIOVAT (
         samplesheet,
         reference,
-        params.enable_raw_read_qc,
-        params.enable_trim,
-        params.enable_align,
-        params.enable_bam_qc,
+        enable,
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,
         params.aligner,
         params.sort_bam,
-        params.enable_riker,
-        params.enable_qualimap,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
