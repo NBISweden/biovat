@@ -55,6 +55,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Run quality checks on alignment files (BAM/CRAM)."
+                },
+                "enable_merge": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Merge alignments at the sample level."
                 }
             }
         },
