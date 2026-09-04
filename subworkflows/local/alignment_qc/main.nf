@@ -2,7 +2,7 @@ include { SAMTOOLS_FLAGSTAT } from '../../../modules/nf-core/samtools/flagstat/m
 include { RIKER_MULTI       } from '../../../modules/nf-core/riker/multi/main'
 include { QUALIMAP_BAMQC    } from '../../../modules/nf-core/qualimap/bamqc/main'
 
-workflow BAM_QC {
+workflow ALIGNMENT_QC {
 
     take:
     ch_alignment_and_index   // channel: aligned reads and their indices to perform QC on
@@ -17,9 +17,9 @@ workflow BAM_QC {
     riker_outputs = channel.empty()
     if ( enable.riker ) {
         def ch_riker_input = ch_alignment_and_index // TODO: Potentially support optional inputs, except RNA-seq specific.
-            .map { meta, bam, index ->
+            .map { meta, alignment, index ->
                 [
-                    meta, bam, index,
+                    meta, alignment, index,
                     [], // path: error_vcf
                     [], // path: error_vcf_idx
                     [], // path: error_intervals
@@ -43,7 +43,7 @@ workflow BAM_QC {
     qualimap_outputs = channel.empty()
     if ( enable.qualimap ) {
         QUALIMAP_BAMQC(
-            ch_alignment_and_index.map { meta, bam, _index -> [ meta, bam ] },
+            ch_alignment_and_index.map { meta, alignment, _index -> [ meta, alignment ] },
             []         //  TODO: Potentially support optional input (gff file)
         )
         qualimap_outputs = QUALIMAP_BAMQC.out.results

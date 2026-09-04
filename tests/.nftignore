@@ -12,4 +12,5 @@ pipeline_info/*.{html,json,txt,yml}
 01_input_checks/**/*_fastqc.{html,zip}
 02_read_trimming/*.fastp.{html,log}
 03_read_alignment/*.{bam,bam.csi}
-**/bam_qc/riker/*.{pdf}
+04_merged_samples/*.{bam,bam.csi}
+**/qc/riker/*.{pdf}

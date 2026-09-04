@@ -7,17 +7,16 @@ include { FASTP } from '../../../modules/nf-core/fastp/main'
 workflow TRIM_READS {
 
     take:
-    ch_reads                 // channel: [ val(meta), path(reads), path(adapter_fasta) ]
-    val_save_trimmed_fail    // Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-    val_save_merged          // Save all merged reads to a file ending in *.merged.fastq.gz
+    ch_reads   // channel: [ val(meta), path(reads), path(adapter_fasta) ]
+    enable     // map: stage/tool gating flags
 
     main:
     // Run fastp for read trimming
     FASTP (
         ch_reads,
         false,                 // Never write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
-        val_save_trimmed_fail, // Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-        val_save_merged        // Whether to save all merged reads to a file ending in *.merged.fastq.gz
+        enable.save_trimmed_fail, // Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+        enable.save_merged        // Whether to save all merged reads to a file ending in *.merged.fastq.gz
     )
 
     emit:

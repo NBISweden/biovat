@@ -51,21 +51,16 @@
                     "description": "Align reads to reference genome.",
                     "default": true
                 },
-                "enable_bam_qc": {
+                "enable_align_qc": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Run quality checks on BAM files."
+                    "description": "Run quality checks on alignment files (BAM/CRAM)."
+                },
+                "enable_merge": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Merge alignments at the sample level."
                 }
-            },
-            "if": {
-                "properties": {
-                    "enable_align": {
-                        "const": true
-                    }
-                }
-            },
-            "then": {
-                "required": ["reference"]
             }
         },
         "trimming_options": {
@@ -78,11 +73,11 @@
                     "type": "string",
                     "description": "Path to FASTA file containing adapter sequences."
                 },
-                "save_trimmed_fail": {
+                "enable_save_trimmed_fail": {
                     "type": "boolean",
                     "description": "Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz."
                 },
-                "save_merged": {
+                "enable_save_merged": {
                     "type": "boolean",
                     "description": "Save all merged reads to a file ending in *.merged.fastq.gz."
                 }
@@ -100,15 +95,19 @@
                     "enum": ["bwa-mem3", "parabricks"],
                     "description": "Alignment tool choice."
                 },
-                "sort_bam": {
+                "enable_sort_alignments": {
                     "type": "boolean",
-                    "description": "Sort the BAM output from BWA or Parabricks.",
+                    "description": "Sort the BAM/CRAM output from BWA or Parabricks.",
                     "default": true
+                },
+                "enable_cram_format": {
+                    "type": "boolean",
+                    "description": "Output alignments in CRAM format instead of BAM."
                 }
             }
         },
-        "bam_qc_options": {
-            "title": "BAM QC options",
+        "alignment_qc_options": {
+            "title": "Alignment QC options",
             "type": "object",
             "description": "",
             "default": "",
@@ -116,11 +115,11 @@
                 "enable_riker": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Run Riker during the BAM QC subworkflow"
+                    "description": "Run Riker during the alignment QC subworkflow."
                 },
                 "enable_qualimap": {
                     "type": "boolean",
-                    "description": "Run Qualimap during the BAM QC subworkflow"
+                    "description": "Run Qualimap during the alignment QC subworkflow. Not compatible with '--enable_cram_format'."
                 }
             }
         },
@@ -283,7 +282,7 @@
             "$ref": "#/$defs/alignment_options"
         },
         {
-            "$ref": "#/$defs/bam_qc_options"
+            "$ref": "#/$defs/alignment_qc_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

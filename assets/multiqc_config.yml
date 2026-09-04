@@ -17,14 +17,35 @@ module_order:
       name: "fastp: read trimming/filtering"
       anchor: "fastp"
   - samtools:
-      name: "flagstat: summary BAM metrics"
-      anchor: "samtools_flagstat"
+      name: "flagstat: library alignment metrics"
+      anchor: "samtools_flagstat_library"
+      path_filters:
+        - "*library_*"
   - riker:
-      name: "Riker: detailed BAM metrics"
-      anchor: "riker"
+      name: "Riker: library alignment metrics"
+      anchor: "riker_library"
+      path_filters:
+        - "*library_*"
   - qualimap:
-      name: "Qualimap: detailed BAM metrics"
-      anchor: "qualimap"
+      name: "Qualimap: library alignment metrics"
+      anchor: "qualimap_library"
+      path_filters:
+        - "*library_*"
+  - samtools:
+      name: "flagstat: sample alignment metrics"
+      anchor: "samtools_flagstat_sample"
+      path_filters:
+        - "*sample_*"
+  - riker:
+      name: "Riker: sample alignment metrics"
+      anchor: "riker_sample"
+      path_filters:
+        - "*sample_*"
+  - qualimap:
+      name: "Qualimap: sample alignment metrics"
+      anchor: "qualimap_sample"
+      path_filters:
+        - "*sample_*"
 
 custom_plot_config:
   general_stats_table:

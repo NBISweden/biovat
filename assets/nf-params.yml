@@ -29,8 +29,7 @@ outdir: "results" # The output directory where the results will be saved. You ha
 enable_raw_read_qc: true # Boolean: run quality checks on raw reads
 enable_trim: true # Boolean: run read trimming
 enable_align: true # Boolean: align reads to reference genome
-enable_bam_qc: true # Boolean: run quality checks on BAM files
-
+enable_align_qc: true # Boolean: run quality checks on alignment files (BAM/CRAM)
 
 ## =============================================================================
 ## Read trimming options
@@ -43,7 +42,8 @@ enable_bam_qc: true # Boolean: run quality checks on BAM files
 ## =============================================================================
 
 # aligner: "parabricks" # Default: bwa-mem3
-# sort_bam: false # Boolean: sort the BAM output from BWA-mem3/parabricks. Default: true
+# enable_sort_alignments: false # Boolean: sort the BAM output from BWA-mem3/parabricks. Default: true
+# enable_cram_format: true # Boolean: output alignments in CRAM format instead of BAM. Default: false
 
 ## =============================================================================
 ## BAM quality check options
