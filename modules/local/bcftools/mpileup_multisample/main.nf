@@ -43,11 +43,12 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     bcftools \\
         mpileup \\
         --fasta-ref ${fasta} \\
+        --output-type u \\
         ${args} \\
         ${bam} \\
         ${intervals_mpileup_cmd} \\
         ${mpileup} \\
-        | bcftools call --output-type v ${args2} ${intervals_call_cmd} \\
+        | bcftools call --output-type u ${args2} ${intervals_call_cmd} \\
         | bcftools reheader --samples sample_name.list \\
         | bcftools view --output-file ${prefix}.vcf.gz --output-type z ${args3}
 
