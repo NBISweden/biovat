@@ -99,7 +99,7 @@ workflow BIOVAT {
     outputs_sample_flagstat      = channel.empty()
     outputs_sample_riker         = channel.empty()
     outputs_sample_qualimap      = channel.empty()
-    if ( enable.merge ) {
+    if ( requires.merge ) {
         MERGE_LIBRARIES(
             ch_library_alignments_indexed,
             ch_reference_and_optional_fai,
