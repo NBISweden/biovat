@@ -34,7 +34,8 @@ workflow MERGE_LIBRARIES {
     // Merge alignments
     SAMTOOLS_MERGE(
         ch_alignments.for_merge,
-        ch_reference_for_merge
+        ch_reference_for_merge,
+        enable.cram_format ? 'crai' : 'csi'
     )
 
     // Join merged alignments with their indexes, then re-mix with singletons
