@@ -5,10 +5,10 @@ include { QUALIMAP_BAMQC    } from '../../../modules/nf-core/qualimap/bamqc/main
 workflow ALIGNMENT_QC {
 
     take:
-    ch_alignment_and_index   // channel: aligned reads and their indices to perform QC on
-    ch_reference_and_fai     // channel: reference fasta and fai index
-    enable                   // map: stage/tool gating flags
-    level                    // string: QC level, used as the output prefix ('library'/'sample')
+    ch_alignment_and_index        // channel: aligned reads and their indices to perform QC on
+    ch_reference_and_optional_fai // channel: reference fasta and (optional) fai index
+    enable                        // map: stage/tool gating flags
+    level                         // string: QC level, used as the output prefix ('library'/'sample')
 
     main:
     // Tag each record with a level-scoped prefix so a single modules.config selector covers every call site
@@ -42,7 +42,7 @@ workflow ALIGNMENT_QC {
             }
         RIKER_MULTI(
             ch_riker_input,
-            ch_reference_and_fai
+            ch_reference_and_optional_fai
         )
         riker_outputs = (RIKER_MULTI.out - RIKER_MULTI.out.versions_riker)
             .inject(channel.empty()) { acc, ch -> acc.mix(ch) }

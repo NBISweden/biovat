@@ -87,10 +87,21 @@ workflow NBISWEDEN_BIOVAT {
     def enable = params.findAll { k, v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
 
+    // ALIGNMENT_QC only runs when its parent stage is also enabled.
+    def align_qc_active = enable.align_qc && (enable.align || enable.merge || enable.mark_duplicates)
+
+    // Internal dependency relationships, passed as a single map
+    def requires = [
+        // .fai is used for certain CRAM processes, and unconditionally by riker
+        fai: (enable.cram_format && (enable.merge || enable.mark_duplicates))
+            || (align_qc_active && enable.riker)
+    ]
+
     BIOVAT (
         samplesheet,
         reference,
         enable,
+        requires,
         params.adapter_fasta,
         params.aligner,
         params.duplicate_marker,

@@ -4,15 +4,20 @@ workflow REFERENCE_UTILS {
 
     take:
     reference
+    requires
 
     main:
-    SAMTOOLS_FAIDX(
-        reference.map { meta, fasta -> [ meta, fasta, [] ] },
-        false // Create sizes file
-    )
-    ch_reference_and_fai = reference.join(SAMTOOLS_FAIDX.out.fai).collect()
+    if ( requires.fai ) {
+        SAMTOOLS_FAIDX(
+            reference.map { meta, fasta -> [ meta, fasta, [] ] },
+            false // Create sizes file
+        )
+        ch_reference_and_optional_fai = reference.join(SAMTOOLS_FAIDX.out.fai).collect()
+    } else {
+        ch_reference_and_optional_fai = reference.map { meta, fasta -> [ meta, fasta, [] ] }.collect()
+    }
 
     emit:
-    ch_reference_and_fai = ch_reference_and_fai // value channel: <Map> meta, <Path> fasta, <Path> fai
+    ch_reference_and_optional_fai = ch_reference_and_optional_fai
 
 }

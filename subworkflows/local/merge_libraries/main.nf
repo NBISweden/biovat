@@ -4,8 +4,8 @@ include { ALIGNMENT_QC   } from '../alignment_qc/main'
 workflow MERGE_LIBRARIES {
 
     take:
-    ch_library_alignments_indexed  // channel: aligned reads and index files
-    ch_reference_and_fai           // channel: reference fasta and fai index
+    ch_library_alignments_indexed // channel: aligned reads and index files
+    ch_reference_and_optional_fai // channel: reference fasta and (optional) fai index
     enable
     ch_multiqc_files
 
@@ -28,7 +28,7 @@ workflow MERGE_LIBRARIES {
 
     // Reference: shape the input channel based on alignment format
     ch_reference_for_merge = enable.cram_format
-        ? ch_reference_and_fai.map { meta, fasta, fai -> [ meta, fasta, fai, [] ] }
+        ? ch_reference_and_optional_fai.map { meta, fasta, fai -> [ meta, fasta, fai, [] ] }
         : [ [], [], [], [] ] // else BAM
 
     // Merge alignments
@@ -51,7 +51,7 @@ workflow MERGE_LIBRARIES {
     if ( enable.align_qc ) {
         ALIGNMENT_QC(
             ch_sample_alignments_indexed,
-            ch_reference_and_fai,
+            ch_reference_and_optional_fai,
             enable,
             'sample'
         )
