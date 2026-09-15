@@ -21,6 +21,7 @@ workflow BIOVAT {
     ch_samplesheet         // channel: samplesheet read in from --input
     reference              // channel: reference fasta read in from --reference
     enable                 // map: gating flags
+    requires               // map: defines internal dependency relationships
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     duplicate_marker       // string: Duplicate marking tool to use (e.g. picard, samtools)
@@ -35,12 +36,13 @@ workflow BIOVAT {
     reads_to_process     = ch_samplesheet
 
     // Reference utilities
-    ch_reference_and_fai = channel.empty()
-    if ( params.reference && (enable.align || enable.merge || enable.align_qc) ) {
+    ch_reference_and_optional_fai = channel.empty()
+    if ( params.reference ) {
         REFERENCE_UTILS(
-            reference
+            reference,
+            requires
         )
-        ch_reference_and_fai = REFERENCE_UTILS.out.ch_reference_and_fai
+        ch_reference_and_optional_fai = REFERENCE_UTILS.out.ch_reference_and_optional_fai
     }
 
     // Raw read quality checks
@@ -78,7 +80,7 @@ workflow BIOVAT {
     if ( enable.align ) {
         ALIGN_READS(
             aligner,
-            ch_reference_and_fai,
+            ch_reference_and_optional_fai,
             reads_to_process,
             enable,
             ch_multiqc_files
@@ -97,10 +99,10 @@ workflow BIOVAT {
     outputs_sample_flagstat      = channel.empty()
     outputs_sample_riker         = channel.empty()
     outputs_sample_qualimap      = channel.empty()
-    if ( enable.merge ) {
+    if ( requires.merge ) {
         MERGE_LIBRARIES(
             ch_library_alignments_indexed,
-            ch_reference_and_fai,
+            ch_reference_and_optional_fai,
             enable,
             ch_multiqc_files
         )
@@ -122,7 +124,7 @@ workflow BIOVAT {
         MARK_DUPLICATES(
             duplicate_marker,
             ch_sample_alignments_indexed,
-            ch_reference_and_fai,
+            ch_reference_and_optional_fai,
             ch_multiqc_files,
             enable
         )

@@ -162,7 +162,7 @@ def validationError(message) {
 
 def validateInputParameters() {
 
-    def enable = params.findAll { k, v -> k.startsWith('enable_') }
+    def enable = params.findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
 
     // If align is requested, a reference must be provided
@@ -179,8 +179,7 @@ def validateInputParameters() {
         'raw_read_qc': [],
         'trim': [],
         'align': [],
-        'merge': ['align'],
-        'mark_duplicates': ['merge'],
+        'mark_duplicates': ['align'],
     ]
     stage_dependencies.each { step, dependencies ->
         if (enable[step]) {
