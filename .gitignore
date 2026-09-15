@@ -2,7 +2,7 @@
 work/
 data/
 !tests/data/
-results/
+results*/
 .DS_Store
 testing/
 testing*
