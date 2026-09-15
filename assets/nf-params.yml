@@ -18,7 +18,7 @@
 ## =============================================================================
 
 input: "assets/samplesheet.csv" # Path to comma-separated file containing information about the samples
-reference: "tests/data/sumatran_rhino/sumatran_rhino.fasta" # Path to reference genome FASTA file
+reference: "tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta" # Path to reference genome FASTA file
 outdir: "results" # The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.
 # publish_dir_mode:   "copy"                            # How to publish results to the output directory (accepted: copy, symlink, move, rellink, link, copyNoFollow). Default: copy
 
