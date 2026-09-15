@@ -23,7 +23,6 @@ params {
     enable_trim                 : Boolean
     enable_align                : Boolean
     enable_align_qc             : Boolean
-    enable_merge                : Boolean
     enable_mark_duplicates      : Boolean
 
     // Read trimming options
@@ -84,13 +83,28 @@ workflow NBISWEDEN_BIOVAT {
 
     main:
     // Gating parameters, passed as a single map
-    def enable = params.findAll { k, v -> k.startsWith('enable_') }
+    def enable = params.findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
+
+    // 'requires' is a map of internal dependency relationships
+    def requires = [
+        // MERGE_LIBRARIES is triggered when a downstream consumer needs sample-level alignments
+        merge: enable.mark_duplicates
+    ]
+
+    // ALIGNMENT_QC runs when a parent stage is also enabled
+    // requires.merge acts as an umbrella for all sample-level stages
+    def align_qc_active = enable.align_qc && (enable.align || requires.merge)
+
+    // .fai is used for certain CRAM processes, and unconditionally by riker
+    requires.fai = (enable.cram_format && requires.merge)
+        || (align_qc_active && enable.riker)
 
     BIOVAT (
         samplesheet,
         reference,
         enable,
+        requires,
         params.adapter_fasta,
         params.aligner,
         params.duplicate_marker,

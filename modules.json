@@ -52,7 +52,7 @@
                     },
                     "riker/multi": {
                         "branch": "master",
-                        "git_sha": "da4b4aa519d032c6689cb7d27c6dda496f657989",
+                        "git_sha": "6ef220fd9252b42fb3c50348bbdbcb6246730686",
                         "installed_by": ["modules"]
                     },
                     "samtools/faidx": {
@@ -72,7 +72,7 @@
                     },
                     "samtools/merge": {
                         "branch": "master",
-                        "git_sha": "9339809fcb90af8a8b7051e6cd914894d5c52002",
+                        "git_sha": "8fd5fe1c1e410ea530995d243bf49cd91e401d87",
                         "installed_by": ["modules"]
                     },
                     "samtools/sormadup": {
