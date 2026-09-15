@@ -140,7 +140,7 @@ In addition, they should have their type defined in the `params` block in `main.
 
 Finally, they should also be documented in the pipeline `nextflow_schema.json`. To update this automatically, run `nf-core pipelines schema build`.
 
-Boolean parameters used to enable or disable stages or tools must be prefixed with `enable_`, for example, `enable_align`. The pipeline automatically groups these parameters into a map called `enable`, where each key is the parameter name with the `enable_` prefix removed. For example, the value of the parameter `enable_align` becomes accessible in scripts via `enable.align`.
+Boolean parameters used to enable/disable stages, tools, or tool behaviours must be prefixed with `enable_`, for example, `enable_align`. The pipeline automatically groups these parameters into a map called `enable`, where each key is the parameter name with the `enable_` prefix removed. For example, the value of the parameter `enable_align` becomes accessible in scripts via `enable.align`.
 
 ### Default processes resource requirements
 

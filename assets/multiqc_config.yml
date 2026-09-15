@@ -17,14 +17,60 @@ module_order:
       name: "fastp: read trimming/filtering"
       anchor: "fastp"
   - samtools:
-      name: "flagstat: summary BAM metrics"
-      anchor: "samtools_flagstat"
+      name: "flagstat: library alignment metrics"
+      anchor: "samtools_flagstat_library"
+      path_filters:
+        - "*library_*"
   - riker:
-      name: "Riker: detailed BAM metrics"
-      anchor: "riker"
+      name: "Riker: library alignment metrics"
+      anchor: "riker_library"
+      path_filters:
+        - "*library_*"
   - qualimap:
-      name: "Qualimap: detailed BAM metrics"
-      anchor: "qualimap"
+      name: "Qualimap: library alignment metrics"
+      anchor: "qualimap_library"
+      path_filters:
+        - "*library_*"
+  - samtools:
+      name: "flagstat: sample alignment metrics"
+      anchor: "samtools_flagstat_sample"
+      path_filters:
+        - "*sample_*"
+  - riker:
+      name: "Riker: sample alignment metrics"
+      anchor: "riker_sample"
+      path_filters:
+        - "*sample_*"
+  - qualimap:
+      name: "Qualimap: sample alignment metrics"
+      anchor: "qualimap_sample"
+      path_filters:
+        - "*sample_*"
+  - picard:
+      name: "Picard: duplicate marking metrics"
+      anchor: "picard_markduplicates"
+      path_filters:
+        - "*_markdup*"
+  - samtools:
+      name: "Samtools markdup: duplicate marking metrics"
+      anchor: "samtools_markdup"
+      path_filters:
+        - "*_markdup*"
+  - samtools:
+      name: "flagstat: duplicate-marked alignment metrics"
+      anchor: "samtools_flagstat_markdup"
+      path_filters:
+        - "*markdup_*"
+  - riker:
+      name: "Riker: duplicate-marked alignment metrics"
+      anchor: "riker_markdup"
+      path_filters:
+        - "*markdup_*"
+  - qualimap:
+      name: "Qualimap: duplicate-marked alignment metrics"
+      anchor: "qualimap_markdup"
+      path_filters:
+        - "*markdup_*"
 
 custom_plot_config:
   general_stats_table:
@@ -38,3 +84,13 @@ custom_plot_config:
 export_plots: true
 
 disable_version_detection: true
+
+# MultiQC v1.35 ships a broken samtools/markdup_txt search pattern that checks for
+# the literal substring "^COMMAND:" instead of anchoring a regex, so real
+# `samtools markdup` output (which starts with "COMMAND:", no caret) never matches.
+sp:
+  samtools/markdup_txt:
+    contents:
+      - "COMMAND:"
+      - "samtools markdup"
+    num_lines: 2

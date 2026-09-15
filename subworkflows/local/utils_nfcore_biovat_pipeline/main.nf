@@ -53,8 +53,12 @@ workflow PIPELINE_INITIALISATION {
     // Validate parameters and generate parameter summary to stdout
     //
 
-    def before_text = ""
-    def after_text = ""
+    def before_text = """\033[0;92mnbisweden/biovat ${workflow.manifest.version}\033[0m
+
+    """
+
+    def after_text = """Log issues or questions at: \033[0;92m${workflow.manifest.homePage}/issues\033[0m
+    """
     if (monochrome_logs) {
         before_text = before_text.replaceAll(/\033\[[0-9;]*m/, '')
     }
@@ -79,6 +83,9 @@ workflow PIPELINE_INITIALISATION {
     UTILS_NFCORE_PIPELINE (
         nextflow_cli_args
     )
+
+    // Validation pipeline parameters
+    validateInputParameters()
 
     // Create channel from input file provided through params.input
     // Uniqueness of the sample/library_id/flowcell_id/lane combination is enforced by
@@ -146,6 +153,46 @@ workflow PIPELINE_COMPLETION {
 */
 
 //
+// Custom validation of input parameters (e.g. dependent/exclusive params)
+//
+
+def validationError(message) {
+    error "\033[0;91mERROR\033[0m: ${message}"
+}
+
+def validateInputParameters() {
+
+    def enable = params.findAll { k, v -> k.startsWith('enable_') }
+        .collectEntries { k, v -> [(k - 'enable_'): v] }
+
+    // If align is requested, a reference must be provided
+    if ( enable.align && !params.reference ) {
+        validationError("Alignment cannot be run without a reference FASTA file.")
+    }
+    // If CRAM format is requested, qualimap cannot be run
+    if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
+        validationError("Qualimap cannot be run when CRAM format is enabled.")
+    }
+
+    // Stage dependency map
+    def stage_dependencies = [
+        'raw_read_qc': [],
+        'trim': [],
+        'align': [],
+        'merge': ['align'],
+        'mark_duplicates': ['merge'],
+    ]
+    stage_dependencies.each { step, dependencies ->
+        if (enable[step]) {
+            dependencies.each { dependency ->
+                if (!enable[dependency]) {
+                    validationError("The '${step}' stage requires the '${dependency}' stage to be enabled.")
+                }
+            }
+        }
+    }
+}
+
 // Validate channels from input samplesheet
 // TODO: Not used anymore since no mixed experiments expected. Keep single-end option for
 // implementation of RAD-seq subworkflow. Keep this function as template for other tests.
@@ -160,6 +207,7 @@ def validateInputSamplesheet(input) {
 
     return [ metas[0], fastqs ]
 }
+
 //
 // Generate methods description for MultiQC
 //

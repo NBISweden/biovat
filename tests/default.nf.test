@@ -29,6 +29,12 @@ nextflow_pipeline {
             def stable_path = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}', 'multiqc/multiqc_plots', 'multiqc/multiqc_plots/**'])
             // stable_content: All files in ${params.outdir}/ with stable content
             def stable_content = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
+            // bam_read_md5s: any BAM file in ${params.outdir}
+            def outdir_path = file(params.outdir).toPath()
+            def bam_read_md5s = getAllFilesFromDir(params.outdir)
+                .findAll { f -> f.toString().endsWith('.bam') }
+                .sort { f -> f.toString() }
+                .collect { f -> "${outdir_path.relativize(f.toPath())}:${bam(f.toString()).getReadsMD5()}" }
             assert workflow.success
             assertAll(
                 { assert snapshot(
@@ -39,13 +45,8 @@ nextflow_pipeline {
                     // All files with stable contents
                     stable_content,
                     // Unstable content checks handled by dedicated plugins
-                    // BAMs: use nft-bam to validate stable hash on alignments, ignoring header
-                    bam("$outputDir/03_read_alignment/PUN-R-ELF.1.SRR9309791.1.bam").getReadsMD5(),
-                    bam("$outputDir/03_read_alignment/PUN-R-JMC.1.SRR9309467.1.bam").getReadsMD5(),
-                    bam("$outputDir/03_read_alignment/PUN-R-MT.1.SRR9309470.1.bam").getReadsMD5(),
-                    bam("$outputDir/03_read_alignment/PUN-Y-BCRD.1.SRR9309788.1.bam").getReadsMD5(),
-                    bam("$outputDir/03_read_alignment/PUN-Y-INJ.1.SRR9309790.1.bam").getReadsMD5(),
-                    bam("$outputDir/03_read_alignment/PUN-Y-LO.1.SRR9309469.1.bam").getReadsMD5(),
+                    // BAMs: use nft-bam to validate stable hashes on all alignments, ignoring headers
+                    bam_read_md5s,
                 ).match() }
             )
         }

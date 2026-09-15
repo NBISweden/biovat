@@ -22,20 +22,26 @@ params {
     enable_raw_read_qc          : Boolean
     enable_trim                 : Boolean
     enable_align                : Boolean
-    enable_bam_qc               : Boolean
+    enable_align_qc             : Boolean
+    enable_merge                : Boolean
+    enable_mark_duplicates      : Boolean
 
     // Read trimming options
     adapter_fasta               : String
-    save_trimmed_fail           : Boolean
-    save_merged                 : Boolean
+    enable_save_trimmed_fail    : Boolean
+    enable_save_merged          : Boolean
 
     // Alignment options
     aligner                     : String
-    sort_bam                    : Boolean
+    enable_cram_format          : Boolean
 
-    // BAM QC options
+    // Alignment QC options
     enable_riker                : Boolean
     enable_qualimap             : Boolean
+
+    // Duplicate marking options
+    duplicate_marker            : String
+    enable_remove_duplicates    : Boolean
 
     // MultiQC options
     multiqc_config              : String
@@ -86,24 +92,30 @@ workflow NBISWEDEN_BIOVAT {
         reference,
         enable,
         params.adapter_fasta,
-        params.save_trimmed_fail,
-        params.save_merged,
         params.aligner,
-        params.sort_bam,
+        params.duplicate_marker,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
-        params.outdir,
+        params.outdir
     )
 
     emit:
-    outputs_raw_read_qc      = BIOVAT.out.outputs_raw_read_qc
-    outputs_trim_reads       = BIOVAT.out.outputs_trim_reads
-    outputs_align_reads      = BIOVAT.out.outputs_align_reads
-    outputs_library_flagstat = BIOVAT.out.outputs_library_flagstat
-    outputs_library_riker    = BIOVAT.out.outputs_library_riker
-    outputs_library_qualimap = BIOVAT.out.outputs_library_qualimap
-    outputs_multiqc          = BIOVAT.out.outputs_multiqc
+    outputs_raw_read_qc              = BIOVAT.out.outputs_raw_read_qc
+    outputs_trim_reads               = BIOVAT.out.outputs_trim_reads
+    outputs_library_alignments       = BIOVAT.out.outputs_library_alignments
+    outputs_library_flagstat         = BIOVAT.out.outputs_library_flagstat
+    outputs_library_riker            = BIOVAT.out.outputs_library_riker
+    outputs_library_qualimap         = BIOVAT.out.outputs_library_qualimap
+    outputs_sample_alignments        = BIOVAT.out.outputs_sample_alignments
+    outputs_sample_flagstat          = BIOVAT.out.outputs_sample_flagstat
+    outputs_sample_riker             = BIOVAT.out.outputs_sample_riker
+    outputs_sample_qualimap          = BIOVAT.out.outputs_sample_qualimap
+    outputs_mark_duplicates          = BIOVAT.out.outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat = BIOVAT.out.outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker    = BIOVAT.out.outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap = BIOVAT.out.outputs_mark_duplicates_qualimap
+    outputs_multiqc                  = BIOVAT.out.outputs_multiqc
 
 }
 
@@ -131,13 +143,21 @@ workflow {
     )
 
     publish:
-    outputs_raw_read_qc      = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
-    outputs_trim_reads       = NBISWEDEN_BIOVAT.out.outputs_trim_reads
-    outputs_align_reads      = NBISWEDEN_BIOVAT.out.outputs_align_reads
-    outputs_library_flagstat = NBISWEDEN_BIOVAT.out.outputs_library_flagstat
-    outputs_library_riker    = NBISWEDEN_BIOVAT.out.outputs_library_riker
-    outputs_library_qualimap = NBISWEDEN_BIOVAT.out.outputs_library_qualimap
-    outputs_multiqc          = NBISWEDEN_BIOVAT.out.outputs_multiqc
+    outputs_raw_read_qc              = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
+    outputs_trim_reads               = NBISWEDEN_BIOVAT.out.outputs_trim_reads
+    outputs_library_alignments       = NBISWEDEN_BIOVAT.out.outputs_library_alignments
+    outputs_library_flagstat         = NBISWEDEN_BIOVAT.out.outputs_library_flagstat
+    outputs_library_riker            = NBISWEDEN_BIOVAT.out.outputs_library_riker
+    outputs_library_qualimap         = NBISWEDEN_BIOVAT.out.outputs_library_qualimap
+    outputs_sample_alignments        = NBISWEDEN_BIOVAT.out.outputs_sample_alignments
+    outputs_sample_flagstat          = NBISWEDEN_BIOVAT.out.outputs_sample_flagstat
+    outputs_sample_riker             = NBISWEDEN_BIOVAT.out.outputs_sample_riker
+    outputs_sample_qualimap          = NBISWEDEN_BIOVAT.out.outputs_sample_qualimap
+    outputs_mark_duplicates          = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker    = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_qualimap
+    outputs_multiqc                  = NBISWEDEN_BIOVAT.out.outputs_multiqc
 
 }
 
@@ -152,18 +172,47 @@ output {
         path '02_read_trimming'
     }
     // ALIGN_READS
-    outputs_align_reads {
+    outputs_library_alignments {
         path '03_read_alignment'
     }
-    // BAM_QC
     outputs_library_flagstat {
-        path '03_read_alignment/bam_qc/samtools_flagstat'
+        path '03_read_alignment/qc/samtools_flagstat'
     }
     outputs_library_riker {
-        path '03_read_alignment/bam_qc/riker'
+        path '03_read_alignment/qc/riker'
     }
     outputs_library_qualimap {
-        path '03_read_alignment/bam_qc/qualimap'
+        path '03_read_alignment/qc/qualimap'
+    }
+    // MERGE_LIBRARIES
+    outputs_sample_alignments {
+        path { meta, alignment, index ->
+            // Renames singletons, includes platform to avoid file name collisions
+            alignment >> "04_merged_samples/${meta.id}_${meta.pl}.${alignment.extension}"
+            index     >> "04_merged_samples/${meta.id}_${meta.pl}.${alignment.extension}.${index.extension}"
+        }
+    }
+    outputs_sample_flagstat {
+        path '04_merged_samples/qc/samtools_flagstat'
+    }
+    outputs_sample_riker {
+        path '04_merged_samples/qc/riker'
+    }
+    outputs_sample_qualimap {
+        path '04_merged_samples/qc/qualimap'
+    }
+    // MARK_DUPLICATES
+    outputs_mark_duplicates {
+        path '05_duplicate_processed'
+    }
+    outputs_mark_duplicates_flagstat {
+        path '05_duplicate_processed/qc/samtools_flagstat'
+    }
+    outputs_mark_duplicates_riker {
+        path '05_duplicate_processed/qc/riker'
+    }
+    outputs_mark_duplicates_qualimap {
+        path '05_duplicate_processed/qc/qualimap'
     }
     // MultiQC
     outputs_multiqc {
