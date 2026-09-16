@@ -1,6 +1,6 @@
 # Monkeyflower data set
 
-Reference sequence and unmapped bam files from study "Widespread selection and gene flow shape the genomic landscape during a radiation of monkeyflowers" by Stankowski et al, PLoS Biology, 2019.
+Reference sequence and fastq files with read data from study "Widespread selection and gene flow shape the genomic landscape during a radiation of monkeyflowers" by Stankowski et al, PLoS Biology, 2019.
 
 The tiny monkeyflower data set was downloaded from https://github.com/NBISweden/pgip-data/tree/main/data/monkeyflower/tiny. This github repository contains reference sequence and read data for 37 monkeyflower individuals for the region LG4:12,000,000-12,100,000.
 
