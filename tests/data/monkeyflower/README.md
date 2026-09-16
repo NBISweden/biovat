@@ -14,3 +14,5 @@ For testing, six samples of the subspecies Diplacus puniceus were selected, repr
 | SRS4979223 | SRR9309467 | Diplacus puniceus | PUN-JMC19-2016  | JMC          | PUN-R-JMC    | ssp. puniceus, red     | 32.7373  | -116.9541 | 93.8            | 19.06      |
 | SRS4979222 | SRR9309469 | Diplacus puniceus | PUN-LO4-2016    | LO           | PUN-Y-LO     | ssp. puniceus, yellow  | 32.6767  | -116.3312 | 93.4            | 18.04      |
 | SRS4979221 | SRR9309470 | Diplacus puniceus | PUN-MT10-2016   | MT           | PUN-R-MT     | ssp. puniceus, red     | 32.821   | -117.0618 | 93.7            | 20.85      |
+
+Note that sample PUN-LO4-2016 (PUN-Y-LO) was duplicated in the samplesheet to be able to test sample merging.
