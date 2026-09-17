@@ -37,6 +37,7 @@ enable_align_qc: true # Boolean: run quality checks on alignment files (BAM/CRAM
 ## Alignment processing
 enable_mark_duplicates: true # Boolean: mark or remove duplicate reads in alignment files (BAM/CRAM)
 
+
 ## =============================================================================
 ## Options and software parameters
 ## =============================================================================
