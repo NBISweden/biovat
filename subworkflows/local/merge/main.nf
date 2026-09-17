@@ -1,24 +1,23 @@
 include { SAMTOOLS_MERGE } from '../../../modules/nf-core/samtools/merge/main'
 include { ALIGNMENT_QC   } from '../alignment_qc/main'
 
-workflow MERGE_LANES {
+workflow MERGE {
 
     take:
-    ch_lane_alignments_indexed    // channel: aligned reads and index files, one entry per lane/flowcell
+    ch_alignments_indexed         // channel: aligned reads and index files to merge
     ch_reference_and_optional_fai // channel: reference fasta and (optional) fai index
-    enable
-    ch_multiqc_files
+    enable                        // map: stage/tool gating flags
+    ch_multiqc_files              // channel: MultiQC files
+    level                         // string: merge level, controls grouping and QC prefix ('library'/'sample')
 
     main:
-    // Alignments: group on sample + library, branch to enable merge skipping (singleton lanes)
-    ch_alignments = ch_lane_alignments_indexed
+    // Group on the requested level, branch to enable merge skipping (singletons)
+    ch_alignments = ch_alignments_indexed
         .map { meta, alignment, index ->
-            def library_meta = [
-                id: meta.id,
-                library: meta.library,
-                pl: meta.pl
-            ]
-            return [ library_meta, alignment, index ]
+            def group_meta = level == 'library'
+                ? [ id: meta.id, library: meta.library, pl: meta.pl ]
+                : [ id: meta.id, pl: meta.pl ]
+            return [ group_meta, alignment, index ]
         }
         .groupTuple()
         .branch { meta, alignments, indexes ->
@@ -40,21 +39,21 @@ workflow MERGE_LANES {
     )
 
     // Join merged alignments with their indexes, then re-mix with singletons
-    ch_library_alignments_indexed = SAMTOOLS_MERGE.out.cram
+    ch_merged_alignments_indexed = SAMTOOLS_MERGE.out.cram
         .mix(SAMTOOLS_MERGE.out.bam)
         .join(SAMTOOLS_MERGE.out.index)
         .mix(ch_alignments.skip_merge)
 
-    // MERGE_LANES:ALIGNMENT_QC
-    outputs_library_flagstat = channel.empty()
-    outputs_library_riker    = channel.empty()
-    outputs_library_qualimap = channel.empty()
+    // MERGE:ALIGNMENT_QC
+    outputs_flagstat = channel.empty()
+    outputs_riker    = channel.empty()
+    outputs_qualimap = channel.empty()
     if ( enable.align_qc ) {
         ALIGNMENT_QC(
-            ch_library_alignments_indexed,
+            ch_merged_alignments_indexed,
             ch_reference_and_optional_fai,
             enable,
-            'library'
+            level
         )
         ch_multiqc_files = ch_multiqc_files
             .mix(
@@ -62,16 +61,16 @@ workflow MERGE_LANES {
                 ALIGNMENT_QC.out.riker_outputs.map{ _meta, file -> file },
                 ALIGNMENT_QC.out.qualimap_outputs.map{ _meta, file -> file }
             )
-        outputs_library_flagstat = ALIGNMENT_QC.out.flagstat_outputs
-        outputs_library_riker    = ALIGNMENT_QC.out.riker_outputs
-        outputs_library_qualimap = ALIGNMENT_QC.out.qualimap_outputs
+        outputs_flagstat = ALIGNMENT_QC.out.flagstat_outputs
+        outputs_riker    = ALIGNMENT_QC.out.riker_outputs
+        outputs_qualimap = ALIGNMENT_QC.out.qualimap_outputs
     }
 
     emit:
-    ch_library_alignments_indexed
+    ch_merged_alignments_indexed
     ch_multiqc_files
-    outputs_library_flagstat
-    outputs_library_riker
-    outputs_library_qualimap
+    outputs_flagstat
+    outputs_riker
+    outputs_qualimap
 
 }

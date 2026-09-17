@@ -3,18 +3,18 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { REFERENCE_UTILS        } from '../subworkflows/local/utils_reference'
-include { READ_QC                } from '../subworkflows/local/read_qc/main'
-include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
-include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
-include { MERGE_LANES            } from '../subworkflows/local/merge_lanes/main'
-include { MARK_DUPLICATES        } from '../subworkflows/local/mark_duplicates/main'
-include { MERGE_LIBRARIES        } from '../subworkflows/local/merge_libraries/main'
+include { MULTIQC                  } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap         } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc     } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText   } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { REFERENCE_UTILS          } from '../subworkflows/local/utils_reference'
+include { READ_QC                  } from '../subworkflows/local/read_qc/main'
+include { TRIM_READS               } from '../subworkflows/local/trim_reads/main'
+include { ALIGN_READS              } from '../subworkflows/local/align_reads/main'
+include { MERGE as MERGE_LANES     } from '../subworkflows/local/merge/main'
+include { MARK_DUPLICATES          } from '../subworkflows/local/mark_duplicates/main'
+include { MERGE as MERGE_LIBRARIES } from '../subworkflows/local/merge/main'
 
 workflow BIOVAT {
 
@@ -105,14 +105,15 @@ workflow BIOVAT {
             ch_lane_alignments_indexed,
             ch_reference_and_optional_fai,
             enable,
-            ch_multiqc_files
+            ch_multiqc_files,
+            'library'
         )
-        ch_library_alignments_indexed = MERGE_LANES.out.ch_library_alignments_indexed
+        ch_library_alignments_indexed = MERGE_LANES.out.ch_merged_alignments_indexed
         ch_multiqc_files              = MERGE_LANES.out.ch_multiqc_files
         outputs_merge_lanes           = ch_library_alignments_indexed
-        outputs_merge_lanes_flagstat  = MERGE_LANES.out.outputs_library_flagstat
-        outputs_merge_lanes_riker     = MERGE_LANES.out.outputs_library_riker
-        outputs_merge_lanes_qualimap  = MERGE_LANES.out.outputs_library_qualimap
+        outputs_merge_lanes_flagstat  = MERGE_LANES.out.outputs_flagstat
+        outputs_merge_lanes_riker     = MERGE_LANES.out.outputs_riker
+        outputs_merge_lanes_qualimap  = MERGE_LANES.out.outputs_qualimap
     }
 
     // Deduplicate library alignments
@@ -149,14 +150,15 @@ workflow BIOVAT {
             ch_from_markdups_alignments_indexed,
             ch_reference_and_optional_fai,
             enable,
-            ch_multiqc_files
+            ch_multiqc_files,
+            'sample'
         )
-        ch_sample_alignments_indexed = MERGE_LIBRARIES.out.ch_sample_alignments_indexed
+        ch_sample_alignments_indexed = MERGE_LIBRARIES.out.ch_merged_alignments_indexed
         ch_multiqc_files             = MERGE_LIBRARIES.out.ch_multiqc_files
         outputs_sample_alignments    = ch_sample_alignments_indexed
-        outputs_sample_flagstat      = MERGE_LIBRARIES.out.outputs_sample_flagstat
-        outputs_sample_riker         = MERGE_LIBRARIES.out.outputs_sample_riker
-        outputs_sample_qualimap      = MERGE_LIBRARIES.out.outputs_sample_qualimap
+        outputs_sample_flagstat      = MERGE_LIBRARIES.out.outputs_flagstat
+        outputs_sample_riker         = MERGE_LIBRARIES.out.outputs_riker
+        outputs_sample_qualimap      = MERGE_LIBRARIES.out.outputs_qualimap
     }
 
     // Collate and save software versions
