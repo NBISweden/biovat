@@ -12,8 +12,9 @@ include { REFERENCE_UTILS        } from '../subworkflows/local/utils_reference'
 include { READ_QC                } from '../subworkflows/local/read_qc/main'
 include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
-include { MERGE_LIBRARIES        } from '../subworkflows/local/merge_libraries/main'
+include { MERGE_LANES            } from '../subworkflows/local/merge_lanes/main'
 include { MARK_DUPLICATES        } from '../subworkflows/local/mark_duplicates/main'
+include { MERGE_LIBRARIES        } from '../subworkflows/local/merge_libraries/main'
 
 workflow BIOVAT {
 
@@ -72,11 +73,11 @@ workflow BIOVAT {
     }
 
     // Align reads
-    ch_library_alignments_indexed = channel.empty()
-    outputs_library_alignments    = channel.empty()
-    outputs_library_flagstat      = channel.empty()
-    outputs_library_riker         = channel.empty()
-    outputs_library_qualimap      = channel.empty()
+    ch_lane_alignments_indexed = channel.empty()
+    outputs_library_alignments = channel.empty()
+    outputs_library_flagstat   = channel.empty()
+    outputs_library_riker      = channel.empty()
+    outputs_library_qualimap   = channel.empty()
     if ( enable.align ) {
         ALIGN_READS(
             aligner,
@@ -85,36 +86,36 @@ workflow BIOVAT {
             enable,
             ch_multiqc_files
         )
-        ch_library_alignments_indexed = ALIGN_READS.out.ch_library_alignments_indexed
-        ch_multiqc_files              = ALIGN_READS.out.ch_multiqc_files
-        outputs_library_alignments    = ch_library_alignments_indexed
-        outputs_library_flagstat      = ALIGN_READS.out.outputs_library_flagstat
-        outputs_library_riker         = ALIGN_READS.out.outputs_library_riker
-        outputs_library_qualimap      = ALIGN_READS.out.outputs_library_qualimap
+        ch_lane_alignments_indexed = ALIGN_READS.out.ch_lane_alignments_indexed
+        ch_multiqc_files           = ALIGN_READS.out.ch_multiqc_files
+        outputs_library_alignments = ch_lane_alignments_indexed
+        outputs_library_flagstat   = ALIGN_READS.out.outputs_library_flagstat
+        outputs_library_riker      = ALIGN_READS.out.outputs_library_riker
+        outputs_library_qualimap   = ALIGN_READS.out.outputs_library_qualimap
     }
 
-    // Merge sample alignments
-    ch_sample_alignments_indexed = channel.empty()
-    outputs_sample_alignments    = channel.empty()
-    outputs_sample_flagstat      = channel.empty()
-    outputs_sample_riker         = channel.empty()
-    outputs_sample_qualimap      = channel.empty()
+    // Merge lane alignments to library level
+    ch_library_alignments_indexed = channel.empty()
+    outputs_merge_lanes           = channel.empty()
+    outputs_merge_lanes_flagstat  = channel.empty()
+    outputs_merge_lanes_riker     = channel.empty()
+    outputs_merge_lanes_qualimap  = channel.empty()
     if ( requires.merge ) {
-        MERGE_LIBRARIES(
-            ch_library_alignments_indexed,
+        MERGE_LANES(
+            ch_lane_alignments_indexed,
             ch_reference_and_optional_fai,
             enable,
             ch_multiqc_files
         )
-        ch_sample_alignments_indexed = MERGE_LIBRARIES.out.ch_sample_alignments_indexed
-        ch_multiqc_files             = MERGE_LIBRARIES.out.ch_multiqc_files
-        outputs_sample_alignments    = ch_sample_alignments_indexed
-        outputs_sample_flagstat      = MERGE_LIBRARIES.out.outputs_sample_flagstat
-        outputs_sample_riker         = MERGE_LIBRARIES.out.outputs_sample_riker
-        outputs_sample_qualimap      = MERGE_LIBRARIES.out.outputs_sample_qualimap
+        ch_library_alignments_indexed = MERGE_LANES.out.ch_library_alignments_indexed
+        ch_multiqc_files              = MERGE_LANES.out.ch_multiqc_files
+        outputs_merge_lanes           = ch_library_alignments_indexed
+        outputs_merge_lanes_flagstat  = MERGE_LANES.out.outputs_library_flagstat
+        outputs_merge_lanes_riker     = MERGE_LANES.out.outputs_library_riker
+        outputs_merge_lanes_qualimap  = MERGE_LANES.out.outputs_library_qualimap
     }
 
-    // Deduplicate sample alignments
+    // Deduplicate library alignments
     ch_from_markdups_alignments_indexed = channel.empty()
     outputs_mark_duplicates             = channel.empty()
     outputs_mark_duplicates_flagstat    = channel.empty()
@@ -123,7 +124,7 @@ workflow BIOVAT {
     if ( enable.mark_duplicates ) {
         MARK_DUPLICATES(
             duplicate_marker,
-            ch_sample_alignments_indexed,
+            ch_library_alignments_indexed,
             ch_reference_and_optional_fai,
             ch_multiqc_files,
             enable
@@ -135,6 +136,27 @@ workflow BIOVAT {
         outputs_mark_duplicates_flagstat    = MARK_DUPLICATES.out.outputs_mark_duplicates_flagstat
         outputs_mark_duplicates_riker       = MARK_DUPLICATES.out.outputs_mark_duplicates_riker
         outputs_mark_duplicates_qualimap    = MARK_DUPLICATES.out.outputs_mark_duplicates_qualimap
+    }
+
+    // Merge deduplicated library alignments to sample level
+    ch_sample_alignments_indexed = channel.empty()
+    outputs_sample_alignments    = channel.empty()
+    outputs_sample_flagstat      = channel.empty()
+    outputs_sample_riker         = channel.empty()
+    outputs_sample_qualimap      = channel.empty()
+    if ( requires.merge ) {
+        MERGE_LIBRARIES(
+            ch_from_markdups_alignments_indexed,
+            ch_reference_and_optional_fai,
+            enable,
+            ch_multiqc_files
+        )
+        ch_sample_alignments_indexed = MERGE_LIBRARIES.out.ch_sample_alignments_indexed
+        ch_multiqc_files             = MERGE_LIBRARIES.out.ch_multiqc_files
+        outputs_sample_alignments    = ch_sample_alignments_indexed
+        outputs_sample_flagstat      = MERGE_LIBRARIES.out.outputs_sample_flagstat
+        outputs_sample_riker         = MERGE_LIBRARIES.out.outputs_sample_riker
+        outputs_sample_qualimap      = MERGE_LIBRARIES.out.outputs_sample_qualimap
     }
 
     // Collate and save software versions
@@ -197,14 +219,18 @@ workflow BIOVAT {
     outputs_library_flagstat         = outputs_library_flagstat
     outputs_library_riker            = outputs_library_riker
     outputs_library_qualimap         = outputs_library_qualimap
-    outputs_sample_alignments        = outputs_sample_alignments
-    outputs_sample_flagstat          = outputs_sample_flagstat
-    outputs_sample_riker             = outputs_sample_riker
-    outputs_sample_qualimap          = outputs_sample_qualimap
+    outputs_merge_lanes              = outputs_merge_lanes
+    outputs_merge_lanes_flagstat     = outputs_merge_lanes_flagstat
+    outputs_merge_lanes_riker        = outputs_merge_lanes_riker
+    outputs_merge_lanes_qualimap     = outputs_merge_lanes_qualimap
     outputs_mark_duplicates          = outputs_mark_duplicates
     outputs_mark_duplicates_flagstat = outputs_mark_duplicates_flagstat
     outputs_mark_duplicates_riker    = outputs_mark_duplicates_riker
     outputs_mark_duplicates_qualimap = outputs_mark_duplicates_qualimap
+    outputs_sample_alignments        = outputs_sample_alignments
+    outputs_sample_flagstat          = outputs_sample_flagstat
+    outputs_sample_riker             = outputs_sample_riker
+    outputs_sample_qualimap          = outputs_sample_qualimap
     outputs_multiqc                  = outputs_multiqc
 
 }

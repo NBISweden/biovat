@@ -13,9 +13,11 @@ results/
 ├── 02_read_trimming
 ├── 03_read_alignment
 │   └── qc
-├── 04_merged_samples
+├── 04_merged_libraries
 │   └── qc
 ├── 05_duplicate_processed
+│   └── qc
+├── 06_merged_samples
 │   └── qc
 ├── multiqc
 │   ├── multiqc_data
@@ -31,8 +33,9 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Read trimming](#read-trimming) - Adapter and quality trimming of raw reads
 - [Alignment](#alignment) - Alignment of raw or trimmed reads
 - [Alignment quality checks](#alignment-qc) - BAM/CRAM alignment QC
-- [Merging](#merging) - Merging is an internal processing step triggered if any downstream sample-level operations are requested
-- [Deduplication](#deduplication) - Duplicates are marked or removed from alignments
+- [Merging lanes](#merging-lanes) - Lane/flowcell alignments are merged to library level; an internal processing step triggered if deduplication is requested
+- [Deduplication](#deduplication) - Duplicates are marked or removed from library-level alignments
+- [Merging libraries](#merging-libraries) - Deduplicated library alignments are merged to sample level
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
@@ -104,13 +107,13 @@ Alignment QC executes at several workflow stages. The outputs will be in the dir
 
 </details>
 
-### Merging
+### Merging lanes
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `04_merged_samples/`
-  - `*.bam`: Merged alignment files at the sample level.
+- `04_merged_libraries/`
+  - `*.bam`: Merged alignment files at the library level (lanes/flowcells for the same sample and library merged together).
   - `*.bam.csi`: Index file.
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
@@ -123,9 +126,22 @@ Running with `--enable_cram_format` will produce `.cram` and `.crai` files inste
 <summary>Output files</summary>
 
 - `05_duplicate_processed/`
-  - `*_markdup.bam`: Alignment files with duplicates marked (or removed, if `--enable_remove_duplicates` is set).
+  - `*_markdup.bam`: Library-level alignment files with duplicates marked (or removed, if `--enable_remove_duplicates` is set).
   - `*_markdup.bam.csi`: Index file.
   - `*_markdup.metrics.txt`: Duplicate marking metrics.
+
+Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
+
+</details>
+
+### Merging libraries
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `06_merged_samples/`
+  - `*.bam`: Deduplicated alignment files merged at the sample level (libraries for the same sample merged together).
+  - `*.bam.csi`: Index file.
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
 
