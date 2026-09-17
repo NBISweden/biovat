@@ -85,6 +85,8 @@ Running with `--enable_cram_format` will produce `.cram` and `.crai` files inste
 
 Alignment QC executes at several workflow stages. The outputs will be in the directory `qc`, nested under the respective stage results directory. For example, alignment QC on the library alignments:
 
+At the two merging stages (`04_merged_libraries`, `06_merged_samples`), QC only runs for samples/libraries where an actual merge took place (i.e. more than one lane or library was combined). Where nothing was merged, the passed-through alignment is byte-identical to the one already QC'd at the previous stage, so no QC subfolder entry is produced for it there — see the QC output from the preceding stage instead.
+
 <details markdown="1">
 <summary>Output files</summary>
 
