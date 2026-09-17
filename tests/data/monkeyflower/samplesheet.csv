@@ -1,0 +1,8 @@
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2
+PUN-R-ELF,1,SRR9309791,1,illumina,./tests/data/monkeyflower/PUN-R-ELF_R1.fastq.gz,./tests/data/monkeyflower/PUN-R-ELF_R2.fastq.gz
+PUN-R-JMC,1,SRR9309467,1,illumina,./tests/data/monkeyflower/PUN-R-JMC_R1.fastq.gz,./tests/data/monkeyflower/PUN-R-JMC_R2.fastq.gz
+PUN-R-MT,1,SRR9309470,1,illumina,./tests/data/monkeyflower/PUN-R-MT_R1.fastq.gz,./tests/data/monkeyflower/PUN-R-MT_R2.fastq.gz
+PUN-Y-BCRD,1,SRR9309788,1,illumina,./tests/data/monkeyflower/PUN-Y-BCRD_R1.fastq.gz,./tests/data/monkeyflower/PUN-Y-BCRD_R2.fastq.gz
+PUN-Y-INJ,1,SRR9309790,1,illumina,./tests/data/monkeyflower/PUN-Y-INJ_R1.fastq.gz,./tests/data/monkeyflower/PUN-Y-INJ_R2.fastq.gz
+PUN-Y-LO,1,SRR9309469,1,illumina,./tests/data/monkeyflower/PUN-Y-LO_R1.fastq.gz,./tests/data/monkeyflower/PUN-Y-LO_R2.fastq.gz
+PUN-Y-LO,2,SRR9309469,1,illumina,./tests/data/monkeyflower/PUN-Y-LO_R1.fastq.gz,./tests/data/monkeyflower/PUN-Y-LO_R2.fastq.gz
