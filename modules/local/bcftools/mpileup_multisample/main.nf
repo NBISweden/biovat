@@ -31,7 +31,7 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     def mpileup = save_mpileup ? "| tee ${prefix}.mpileup" : ""
     def bgzip_mpileup = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
     def intervals_cmd = intervals ? "-T ${intervals}" : ""
-    def sample_names = meta.samples.collect { "\"${it}\"" }.join(' ')
+    def sample_names = meta.samples.collect { sample -> "\"${sample}\"" }.join(' ')
     """
     printf '%s\\n' ${sample_names} > sample_name.list
 
@@ -55,7 +55,6 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.bcftools_stats.txt
     echo "" | gzip > ${prefix}.vcf.gz
     touch ${prefix}.vcf.gz.tbi
     echo "" | gzip > ${prefix}.mpileup.gz
