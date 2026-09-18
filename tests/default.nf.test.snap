@@ -845,8 +845,7 @@
                 "markdup_PUN-Y-BCRD_illumina.flagstat:md5,2ab81dd22f19fe583632e30e4797dc8e",
                 "markdup_PUN-Y-INJ_illumina.flagstat:md5,42db6dc18b5c1285f40f0e7fdaf4ddde",
                 "markdup_PUN-Y-LO_illumina.flagstat:md5,c5eb0adb719b6db98371c232aac35227",
-                "all_samples.vcf.gz:md5,d2d5d96043b9378c402c799f59cd8506",
-                "all_samples.vcf.gz.tbi:md5,a0db8d594951fe13bef62d027f286d16",
+                "all_samples.vcf.gz.tbi:md5,50d7197a92dc7e9507bf3a98da8801d8",
                 "fastp-insert-size-plot.txt:md5,69c4ffe4aca65b8239318885080f09a3",
                 "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,ea4d50a9c578f835b5a868c6825cefd7",
                 "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,07cca42c9122287ddafa92df261243e0",
@@ -982,7 +981,7 @@
                 "05_duplicate_processed/PUN-Y-LO_illumina_markdup.bam:168344b2d9c69e56933e3c9c988011b5"
             ]
         ],
-        "timestamp": "2026-09-18T17:34:41.756005",
+        "timestamp": "2026-09-18T19:43:34.298319",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
