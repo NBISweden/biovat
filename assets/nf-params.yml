@@ -20,34 +20,46 @@
 input: "assets/samplesheet.csv" # Path to comma-separated file containing information about the samples
 reference: "tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta" # Path to reference genome FASTA file
 outdir: "results" # The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.
-# publish_dir_mode:   "copy"                            # How to publish results to the output directory (accepted: copy, symlink, move, rellink, link, copyNoFollow). Default: copy
+# publish_dir_mode: "copy" # How to publish results to the output directory (accepted: copy, symlink, move, rellink, link, copyNoFollow). Default: copy
 
 ## =============================================================================
 ## Workflow stages
 ## =============================================================================
 
+## Input data quality checks
 enable_raw_read_qc: true # Boolean: run quality checks on raw reads
+
+## Read trimming and alignment
 enable_trim: true # Boolean: run read trimming
 enable_align: true # Boolean: align reads to reference genome
 enable_align_qc: true # Boolean: run quality checks on alignment files (BAM/CRAM)
 
+## Alignment processing
+enable_mark_duplicates: true # Boolean: mark or remove duplicate reads in alignment files (BAM/CRAM)
+
 
 ## =============================================================================
-## Read trimming options
+## Options and software parameters
 ## =============================================================================
 
-# adapter_fasta: /path/to/custom_adapters.fasta
+## Input data quality checks
 
-## =============================================================================
-## Alignment options
-## =============================================================================
+## Read trimming
+# adapter_fasta: "/path/to/custom_adapters.fasta"
 
+## Read trimming and alignment
+
+## Alignment
 # aligner: "parabricks" # Default: bwa-mem3
 # enable_cram_format: true # Boolean: output alignments in CRAM format instead of BAM. Default: false
 
-## =============================================================================
-## BAM quality check options
-## =============================================================================
+## Alignment quality checks
 
-# enable_riker: true # Boolean: run Riker during the BAM QC subworkflow. Default: true
-# enable_qualimap: false # Boolean: run Qualimap during the BAM QC subworkflow. Default: false
+# enable_riker: true # Boolean: run Riker during the alignment QC subworkflow. Default: true
+# enable_qualimap: false # Boolean: run Qualimap during the alignment QC subworkflow. Default: false
+
+## Alignment processing
+
+## Duplicate marking
+# duplicate_marker: "picard" # Default: picard
+# enable_remove_duplicates: false # Boolean: remove duplicate reads instead of marking them. Default: false
