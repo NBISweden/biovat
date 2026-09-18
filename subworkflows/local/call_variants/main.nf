@@ -2,30 +2,46 @@
 // Variant calling subworkflow
 //
 
-include { BCFTOOLS_MPILEUP } from '../modules/nf-core/bcftools/mpileup/main'
-include { FREEBAYES } from '../modules/nf-core/freebayes/main'
+include { BCFTOOLS_MPILEUP_MULTISAMPLE } from '../../../modules/local/bcftools/mpileup_multisample/main'
 
 
 workflow CALL_VARIANTS {
 
     take:
     variant_caller
-    ch_alignment_and_index // CRAM/BAM files from PROCESS_ALIGNMENTS subworkflow or user-provided
-    ch_reference_and_fai   // value channel: reference fasta and fai index
-    enable                 // enable user-provided BAM qc, enable split genome, enable vcf.gz to bcf
-    ch_multiqc_files       // channel: MultiQC files
+    ch_alignment_and_index
+    ch_reference_and_fai
+    enable
+    ch_multiqc_files
 
     main:
-    // TODO: add option to run BAM_QC on user-provided BAM files
-
     // TODO: add option to split genome into chromosomes or chunks for parallelization
 
+    // Group all samples into a single joint call
+    // TODO: provide option for dataset name to replace 'all_samples'
+    ch_joint_alignments = ch_alignment_and_index
+        .map { meta, alignment, index -> [ 'all_samples', meta.id, alignment, index ] }
+        .groupTuple()
+        .map { group, samples, alignments, indexes ->
+            [ [ id: group, samples: samples ], alignments, indexes ]
+        }
+
     // Call variants with four alternative variant callers
-    // TODO: add option to run variant calling on user-provided BAM files or a mix of BAM files from BioVAT and user
+    outputs_variant_calls = channel.empty()
+    outputs_mpileup       = channel.empty()
+    if ( variant_caller == 'bcftools' ) {
+        BCFTOOLS_MPILEUP_MULTISAMPLE(
+            ch_joint_alignments,
+            ch_reference_and_fai,
+            [], // intervals
+            enable.save_mpileup
+        )
+        outputs_variant_calls = BCFTOOLS_MPILEUP_MULTISAMPLE.out.vcf
+            .mix(BCFTOOLS_MPILEUP_MULTISAMPLE.out.index)
+        outputs_mpileup       = BCFTOOLS_MPILEUP_MULTISAMPLE.out.mpileup
+    }
 
-    // TODO: add bcftools mpileup/call
-
-    // TODO: add freeBayes
+    // TODO: add bcftools mpileup/call per sample calling and merging/joint genotyping
 
     // TODO: add GATK4 haplotype caller and genotype gvcfs
 
@@ -38,8 +54,8 @@ workflow CALL_VARIANTS {
     // TODO: add option to convert `*.vcf.gz` to `*.bcf`
 
     emit:
-    // vcf plus index
-    // bcf plus index
-    // bcftools stats output
+    outputs_variant_calls // channel: [ meta, *.vcf.gz ] and [ meta, *.tbi/csi ]
+    outputs_mpileup       // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
+    ch_multiqc_files
 
 }
