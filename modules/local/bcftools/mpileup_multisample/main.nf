@@ -9,15 +9,14 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         : 'community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a'}"
 
     input:
-    // meta.population: group id used for tag/prefix; meta.samples: sample names in the same order as `bam`, used to rename VCF columns
-    tuple val(meta), path(bam, arity: '1..*'), path(intervals_mpileup, stageAs: 'mpileup_intervals/*'), path(intervals_call, stageAs: 'call_intervals/*')
+    tuple val(meta), path(bams), path(indexes)
     tuple val(meta2), path(fasta), path(fai)
+    path(intervals)
     val save_mpileup
 
     output:
     tuple val(meta), path("*vcf.gz"), emit: vcf
     tuple val(meta), path("*.{tbi,csi}"), emit: index, optional: true
-    tuple val(meta), path("*stats.txt"), emit: stats
     tuple val(meta), path("*.mpileup.gz"), emit: mpileup, optional: true
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version | sed '1!d; s/^.*bcftools //'"), topic: versions, emit: versions_bcftools
 
@@ -28,14 +27,10 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def args3 = task.ext.args3 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.population}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def mpileup = save_mpileup ? "| tee ${prefix}.mpileup" : ""
     def bgzip_mpileup = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
-    def intervals_mpileup_cmd = intervals_mpileup ? "-T ${intervals_mpileup}" : ""
-    def intervals_call_cmd = intervals_call ? "-T ${intervals_call}" : ""
-    if (meta.samples.size() != bam.size()) {
-        error "BCFTOOLS_MPILEUP_MULTISAMPLE (${meta.population}): meta.samples (${meta.samples.size()}) must match the number of bam files (${bam.size()})"
-    }
+    def intervals_cmd = intervals ? "-T ${intervals}" : ""
     def sample_names = meta.samples.collect { "\"${it}\"" }.join(' ')
     """
     printf '%s\\n' ${sample_names} > sample_name.list
@@ -45,10 +40,10 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         --fasta-ref ${fasta} \\
         --output-type u \\
         ${args} \\
-        ${bam} \\
-        ${intervals_mpileup_cmd} \\
+        ${bams} \\
+        ${intervals_cmd} \\
         ${mpileup} \\
-        | bcftools call --output-type u ${args2} ${intervals_call_cmd} \\
+        | bcftools call --output-type b ${args2} ${intervals_cmd} \\
         | bcftools reheader --samples sample_name.list \\
         | bcftools view --output-file ${prefix}.vcf.gz --output-type z ${args3}
 
@@ -58,7 +53,7 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.population}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.bcftools_stats.txt
     echo "" | gzip > ${prefix}.vcf.gz
