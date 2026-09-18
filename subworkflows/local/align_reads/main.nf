@@ -26,7 +26,7 @@ workflow ALIGN_READS {
             reference,
             true // Enforce sorting of BAM/CRAM
         )
-        ch_library_alignments_indexed = BWAMEM3_MEM.out.aligned.join(BWAMEM3_MEM.out.index)
+        ch_lane_alignments_indexed = BWAMEM3_MEM.out.aligned.join(BWAMEM3_MEM.out.index)
     } else if ( aligner == 'parabricks' ) {
         // Parabricks requires BWA v0.7.x indexes
         BWA_INDEX(reference)
@@ -39,7 +39,7 @@ workflow ALIGN_READS {
             enable.cram_format ? 'cram' : 'bam'
         )
         SAMTOOLS_INDEX(PARABRICKS_FQ2BAM.out.bam)
-        ch_library_alignments_indexed = PARABRICKS_FQ2BAM.out.bam.join(SAMTOOLS_INDEX.out.index)
+        ch_lane_alignments_indexed = PARABRICKS_FQ2BAM.out.bam.join(SAMTOOLS_INDEX.out.index)
     }
 
     // ALIGN_READS:ALIGNMENT_QC
@@ -48,10 +48,10 @@ workflow ALIGN_READS {
     outputs_library_qualimap = channel.empty()
     if ( enable.align_qc ) {
         ALIGNMENT_QC(
-            ch_library_alignments_indexed,
+            ch_lane_alignments_indexed,
             ch_reference_and_optional_fai,
             enable,
-            'library'
+            'lane'
         )
         ch_multiqc_files = ch_multiqc_files
             .mix(
@@ -65,7 +65,7 @@ workflow ALIGN_READS {
     }
 
     emit:
-    ch_library_alignments_indexed    // channel: <Map> meta, <Path> bam, <Path> csi
+    ch_lane_alignments_indexed    // channel: <Map> meta, <Path> bam, <Path> csi
     outputs_library_flagstat
     outputs_library_riker
     outputs_library_qualimap

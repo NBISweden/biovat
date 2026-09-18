@@ -17,7 +17,7 @@ You will need to create a samplesheet with information about the samples you wou
 The samplesheet can have as many columns as you desire, however, it must contain the columns defined in the table below. It has to contain a header row as shown in the example below.
 
 The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. Sequencing library IDs, flowcell IDs, and lane numbers are specified in the columns `library_id`,
-`flowcell_id`, and `lane`. Each combination of `sample`, `library_id`, `flowcell_id`, and `lane` has to be unique. Raw or trimmed reads belonging to the same sample will be merged prior to any analysis downstream of alignment, such as variant calling.
+`flowcell_id`, and `lane`. Each combination of `sample`, `library_id`, `flowcell_id`, and `lane` has to be unique. When deduplication is enabled, alignments belonging to the same sample and library are first merged across lanes/flowcells, deduplicated, and then merged again across libraries to give one alignment per sample, ready for any analysis downstream of alignment, such as variant calling.
 
 A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. Sample `S1` has been sequenced across three lanes and sample `S6` has been sequenced twice.
 
