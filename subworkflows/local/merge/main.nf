@@ -46,8 +46,7 @@ workflow MERGE {
         .mix(ch_alignments.skip_merge)
 
     // MERGE:ALIGNMENT_QC — only for alignments that were actually merged; a skipped singleton is
-    // byte-identical to the pre-merge alignment already QC'd upstream, so re-QCing it here would
-    // just duplicate that work and that report section.
+    // byte-identical to the pre-merge alignment already QC'd upstream
     outputs_flagstat = channel.empty()
     outputs_riker    = channel.empty()
     outputs_qualimap = channel.empty()

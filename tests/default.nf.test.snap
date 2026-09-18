@@ -717,20 +717,6 @@
                 "lane_PUN-Y-LO.1.SRR9309469.1.flagstat:md5,7d1ed807ab387a6afa08de34875a973d",
                 "lane_PUN-Y-LO.2.SRR9309469.1.flagstat:md5,7d1ed807ab387a6afa08de34875a973d",
                 "lane_PUN-Y-LO.2.SRR9309470.3.flagstat:md5,7d1ed807ab387a6afa08de34875a973d",
-                "PUN-R-ELF_1_illumina.bam:md5,908e6995f2fed87311a470728d924966",
-                "PUN-R-ELF_1_illumina.bam.csi:md5,27170e68bca79bc189659cb5f9eb6c58",
-                "PUN-R-JMC_1_illumina.bam:md5,ec8c0c79154ae00abddce28859305236",
-                "PUN-R-JMC_1_illumina.bam.csi:md5,4ef04f4ba9914b2ae8f6e2f6505f127f",
-                "PUN-R-MT_1_illumina.bam:md5,d08705c501be8e7248df7fecba385a21",
-                "PUN-R-MT_1_illumina.bam.csi:md5,59a6e8f9eab7d26e803dbcf5fa5dd5a2",
-                "PUN-Y-BCRD_1_illumina.bam:md5,7a7aa3ebc6aa747aff963a52fa59b9bb",
-                "PUN-Y-BCRD_1_illumina.bam.csi:md5,9999e0f266f98d8ac21cc79e8f8d7f4e",
-                "PUN-Y-INJ_1_illumina.bam:md5,ef9a03c399b99f1d528251fd6b397f39",
-                "PUN-Y-INJ_1_illumina.bam.csi:md5,7260ce5bfbc0cdf0ce5d652229dc9387",
-                "PUN-Y-LO_1_illumina.bam:md5,fcb5a26d3d66d334e3aca26ec2f6cb75",
-                "PUN-Y-LO_1_illumina.bam.csi:md5,94b16f066cd421b83df22bbe7749b60f",
-                "PUN-Y-LO_2_illumina.bam:md5,a81046e4d2d62a5b88ab2dc7f0150d91",
-                "PUN-Y-LO_2_illumina.bam.csi:md5,b21502b99ddff39cf2709f49bbd2a313",
                 "library_PUN-Y-LO_2_illumina.alignment-metrics.txt:md5,88cc6155d9b33f881592ec05ee8e8108",
                 "library_PUN-Y-LO_2_illumina.base-distribution-by-cycle.txt:md5,2434ced610b985bbdca1d2d9950dfbe7",
                 "library_PUN-Y-LO_2_illumina.gcbias-detail.txt:md5,e73298ade8088ed645e58c11917a3a27",
@@ -819,18 +805,6 @@
                 "markdup_PUN-Y-INJ_1_illumina.flagstat:md5,42db6dc18b5c1285f40f0e7fdaf4ddde",
                 "markdup_PUN-Y-LO_1_illumina.flagstat:md5,7b6a0a5dc8198c4d997ffbbac7907b04",
                 "markdup_PUN-Y-LO_2_illumina.flagstat:md5,3854ceac121e352290b8f9e6d522f608",
-                "PUN-R-ELF_illumina.bam:md5,bb8ecfadc5ce34b68a69d303edbcb0b5",
-                "PUN-R-ELF_illumina.bam.csi:md5,2ee5219ecc0f0654c76bc4bf64e099e6",
-                "PUN-R-JMC_illumina.bam:md5,c83e0afd63c11126c5c15af6736e8a20",
-                "PUN-R-JMC_illumina.bam.csi:md5,abb288e2f01a31996a5bf227488d216a",
-                "PUN-R-MT_illumina.bam:md5,78b3ba2c46b6bcd6d30ea5da8876ed74",
-                "PUN-R-MT_illumina.bam.csi:md5,493bd66cdcf7347e6dad928554cd9635",
-                "PUN-Y-BCRD_illumina.bam:md5,15bd8a81ba8fd91817aa82c0ca7cf2ac",
-                "PUN-Y-BCRD_illumina.bam.csi:md5,e86a3856fa89911dc905147009a797f8",
-                "PUN-Y-INJ_illumina.bam:md5,8823595bc58e76e7f6a65bf8b47b67d5",
-                "PUN-Y-INJ_illumina.bam.csi:md5,3e08291481bed5ceefadbca67272d923",
-                "PUN-Y-LO_illumina.bam:md5,7293ccbf562752cc2bde24b25adb9241",
-                "PUN-Y-LO_illumina.bam.csi:md5,56d16000e8723eda0ae099115b0fc44e",
                 "sample_PUN-Y-LO_illumina.alignment-metrics.txt:md5,121f6fe1d8449ee7478fd7bf3c625dcf",
                 "sample_PUN-Y-LO_illumina.base-distribution-by-cycle.txt:md5,2434ced610b985bbdca1d2d9950dfbe7",
                 "sample_PUN-Y-LO_illumina.gcbias-detail.txt:md5,efed92de0ed03b6f55a0a81cd1a65df3",
@@ -984,10 +958,10 @@
                 "06_merged_samples/PUN-Y-LO_illumina.bam:3c0ab046c6c5389cd03e4ed21d26be6a"
             ]
         ],
+        "timestamp": "2026-09-18T08:59:15.443763226",
         "meta": {
-            "nf-test": "0.9.3",
-            "nextflow": "26.07.0"
-        },
-        "timestamp": "2026-09-17T15:46:01.165246969"
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
     }
 }
