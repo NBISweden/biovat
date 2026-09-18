@@ -180,6 +180,7 @@ def validateInputParameters() {
         'trim': [],
         'align': [],
         'mark_duplicates': ['align'],
+        'variant_calling': ['align'],
     ]
     stage_dependencies.each { step, dependencies ->
         if (enable[step]) {
