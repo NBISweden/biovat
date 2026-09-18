@@ -133,6 +133,11 @@
                 "enable_remove_duplicates": {
                     "type": "boolean",
                     "description": "Remove alignments identified as duplicates (else mark them)."
+                },
+                "optical_distance": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Max offset between duplicate clusters to be considered optical. For unpatterned flowcells, use default. Patterned, use 2500."
                 }
             }
         },
