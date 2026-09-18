@@ -37,6 +37,8 @@ enable_align_qc: true # Boolean: run quality checks on alignment files (BAM/CRAM
 ## Alignment processing
 enable_mark_duplicates: true # Boolean: mark or remove duplicate reads in alignment files (BAM/CRAM)
 
+## Variant calling
+enable_variant_calling: true # Boolean: call variants from alignment files (BAM/CRAM)
 
 ## =============================================================================
 ## Options and software parameters
@@ -63,3 +65,8 @@ enable_mark_duplicates: true # Boolean: mark or remove duplicate reads in alignm
 ## Duplicate marking
 # duplicate_marker: "picard" # Default: picard
 # enable_remove_duplicates: false # Boolean: remove duplicate reads instead of marking them. Default: false
+
+## Variant calling
+
+# variant_caller: "bcftools" # Default: bcftools
+# enable_save_mpileup: false # Boolean: save variants in mpileup format in addition to VCF. Default: false
