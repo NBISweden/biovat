@@ -14,6 +14,7 @@ include { TRIM_READS             } from '../subworkflows/local/trim_reads/main'
 include { ALIGN_READS            } from '../subworkflows/local/align_reads/main'
 include { MERGE_LIBRARIES        } from '../subworkflows/local/merge_libraries/main'
 include { MARK_DUPLICATES        } from '../subworkflows/local/mark_duplicates/main'
+include { CALL_VARIANTS          } from '../subworkflows/local/call_variants/main'
 
 workflow BIOVAT {
 
@@ -25,6 +26,7 @@ workflow BIOVAT {
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     duplicate_marker       // string: Duplicate marking tool to use (e.g. picard, samtools)
+    variant_caller         // string: Variant calling tool to use (e.g. bcftools)
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -137,6 +139,25 @@ workflow BIOVAT {
         outputs_mark_duplicates_qualimap    = MARK_DUPLICATES.out.outputs_mark_duplicates_qualimap
     }
 
+    // Variant calling
+    outputs_variant_calls = channel.empty()
+    outputs_mpileup       = channel.empty()
+    if ( enable.variant_calling ) {
+        ch_alignments_for_calling = enable.mark_duplicates
+            ? ch_from_markdups_alignments_indexed
+            : ch_sample_alignments_indexed
+        CALL_VARIANTS(
+            variant_caller,
+            ch_alignments_for_calling,
+            ch_reference_and_optional_fai,
+            enable,
+            ch_multiqc_files
+        )
+        ch_multiqc_files      = CALL_VARIANTS.out.ch_multiqc_files
+        outputs_variant_calls = CALL_VARIANTS.out.outputs_variant_calls
+        outputs_mpileup       = CALL_VARIANTS.out.outputs_mpileup
+    }
+
     // Collate and save software versions
     def topic_versions = channel.topic("versions")
         .distinct()
@@ -205,6 +226,8 @@ workflow BIOVAT {
     outputs_mark_duplicates_flagstat = outputs_mark_duplicates_flagstat
     outputs_mark_duplicates_riker    = outputs_mark_duplicates_riker
     outputs_mark_duplicates_qualimap = outputs_mark_duplicates_qualimap
+    outputs_variant_calls            = outputs_variant_calls
+    outputs_mpileup                  = outputs_mpileup
     outputs_multiqc                  = outputs_multiqc
 
 }

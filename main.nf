@@ -24,6 +24,7 @@ params {
     enable_align                : Boolean
     enable_align_qc             : Boolean
     enable_mark_duplicates      : Boolean
+    enable_variant_calling      : Boolean
 
     // Read trimming options
     adapter_fasta               : String
@@ -41,6 +42,10 @@ params {
     // Duplicate marking options
     duplicate_marker            : String
     enable_remove_duplicates    : Boolean
+
+    // Variant calling options
+    variant_caller              : String
+    enable_save_mpileup         : Boolean
 
     // MultiQC options
     multiqc_config              : String
@@ -89,16 +94,17 @@ workflow NBISWEDEN_BIOVAT {
     // 'requires' is a map of internal dependency relationships
     def requires = [
         // MERGE_LIBRARIES is triggered when a downstream consumer needs sample-level alignments
-        merge: enable.mark_duplicates
+        merge: enable.mark_duplicates || enable.variant_calling
     ]
 
     // ALIGNMENT_QC runs when a parent stage is also enabled
     // requires.merge acts as an umbrella for all sample-level stages
     def align_qc_active = enable.align_qc && (enable.align || requires.merge)
 
-    // .fai is used for certain CRAM processes, and unconditionally by riker
+    // .fai is used for certain CRAM processes, and unconditionally by riker and bcftools mpileup
     requires.fai = (enable.cram_format && requires.merge)
         || (align_qc_active && enable.riker)
+        || enable.variant_calling
 
     BIOVAT (
         samplesheet,
@@ -108,6 +114,7 @@ workflow NBISWEDEN_BIOVAT {
         params.adapter_fasta,
         params.aligner,
         params.duplicate_marker,
+        params.variant_caller,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
@@ -129,6 +136,8 @@ workflow NBISWEDEN_BIOVAT {
     outputs_mark_duplicates_flagstat = BIOVAT.out.outputs_mark_duplicates_flagstat
     outputs_mark_duplicates_riker    = BIOVAT.out.outputs_mark_duplicates_riker
     outputs_mark_duplicates_qualimap = BIOVAT.out.outputs_mark_duplicates_qualimap
+    outputs_variant_calls            = BIOVAT.out.outputs_variant_calls
+    outputs_mpileup                  = BIOVAT.out.outputs_mpileup
     outputs_multiqc                  = BIOVAT.out.outputs_multiqc
 
 }
@@ -171,6 +180,8 @@ workflow {
     outputs_mark_duplicates_flagstat = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_flagstat
     outputs_mark_duplicates_riker    = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_riker
     outputs_mark_duplicates_qualimap = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_qualimap
+    outputs_variant_calls            = NBISWEDEN_BIOVAT.out.outputs_variant_calls
+    outputs_mpileup                  = NBISWEDEN_BIOVAT.out.outputs_mpileup
     outputs_multiqc                  = NBISWEDEN_BIOVAT.out.outputs_multiqc
 
 }
@@ -227,6 +238,13 @@ output {
     }
     outputs_mark_duplicates_qualimap {
         path '05_duplicate_processed/qc/qualimap'
+    }
+    // CALL_VARIANTS
+    outputs_variant_calls {
+        path '06_variant_calls'
+    }
+    outputs_mpileup {
+        path '06_variant_calls'
     }
     // MultiQC
     outputs_multiqc {

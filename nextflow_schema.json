@@ -60,6 +60,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Run the duplicate marking subworkflow."
+                },
+                "enable_variant_calling": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run variant calling on all samples."
                 }
             }
         },
@@ -133,6 +138,24 @@
                 "enable_remove_duplicates": {
                     "type": "boolean",
                     "description": "Remove alignments identified as duplicates (else mark them)."
+                }
+            }
+        },
+        "variant_calling_options": {
+            "title": "Variant calling options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "variant_caller": {
+                    "type": "string",
+                    "default": "bcftools",
+                    "description": "Variant calling tool choice.",
+                    "enum": ["bcftools"]
+                },
+                "enable_save_mpileup": {
+                    "type": "boolean",
+                    "description": "Save the intermediate bcftools mpileup output."
                 }
             }
         },
@@ -299,6 +322,9 @@
         },
         {
             "$ref": "#/$defs/duplicate_marking_options"
+        },
+        {
+            "$ref": "#/$defs/variant_calling_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
