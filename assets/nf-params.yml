@@ -40,6 +40,7 @@ enable_mark_duplicates: true # Boolean: mark or remove duplicate reads in alignm
 ## Variant calling
 enable_variant_calling: true # Boolean: call variants from alignment files (BAM/CRAM)
 
+
 ## =============================================================================
 ## Options and software parameters
 ## =============================================================================
