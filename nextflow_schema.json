@@ -324,6 +324,9 @@
             "$ref": "#/$defs/duplicate_marking_options"
         },
         {
+            "$ref": "#/$defs/variant_calling_options"
+        },
+        {
             "$ref": "#/$defs/institutional_config_options"
         },
         {
