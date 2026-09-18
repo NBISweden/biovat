@@ -41,6 +41,7 @@ params {
     // Duplicate marking options
     duplicate_marker            : String
     enable_remove_duplicates    : Boolean
+    optical_distance            : Integer
 
     // MultiQC options
     multiqc_config              : String
