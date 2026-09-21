@@ -51,7 +51,7 @@ workflow ALIGN_READS {
             ch_read_group_alignments_indexed,
             ch_reference_and_optional_fai,
             enable,
-            'lane'
+            'readgroup'
         )
         ch_multiqc_files = ch_multiqc_files
             .mix(

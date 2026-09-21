@@ -87,24 +87,27 @@ workflow PIPELINE_INITIALISATION {
     // Validation pipeline parameters
     validateInputParameters()
 
-    // Create channel from input file provided through params.input
-    // Uniqueness of the sample/library_id/flowcell_id/lane combination is enforced by
-    // the "uniqueEntries" key in assets/schema_input.json
-    channel
-        .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
-        .map {
-            meta, fastq_1, fastq_2 ->
-                def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
-                if (!fastq_2) {
-                    return [ meta + [ single_end:true,  read_group:read_group ], [ fastq_1 ] ]
-                } else {
-                    return [ meta + [ single_end:false, read_group:read_group ], [ fastq_1, fastq_2 ] ]
-                }
+    // Build list of samplesheet rows (each carrying single_end and read_group in meta) before
+    // creating a channel from it. Uniqueness of the sample/library_id/flowcell_id/lane
+    // combination is enforced by the "uniqueEntries" key in assets/schema_input.json
+    def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
+        .collect { meta, fastq_1, fastq_2 ->
+            def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
+            fastq_2
+                ? [ meta + [ single_end:false, read_group:read_group ], [ fastq_1, fastq_2 ] ]
+                : [ meta + [ single_end:true,  read_group:read_group ], [ fastq_1 ] ]
         }
-        .set { ch_samplesheet }
+
+    // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every
+    // library sharing a sample, must agree on single_end or the merge produces a BAM with
+    // inconsistent read pairing
+    validateSampleEndedness(samplesheet_rows)
+
+    ch_samplesheet = channel
+        .fromList(samplesheet_rows)
 
     // Create reference channel from input file provided through params.reference
-    ch_reference     = channel.empty()
+    ch_reference = channel.empty()
     if ( params.reference ) {
         ch_reference = channel.value(file(params.reference, checkIfExists: true))
             .map { fasta ->
@@ -192,19 +195,23 @@ def validateInputParameters() {
     }
 }
 
-// Validate channels from input samplesheet
-// TODO: Not used anymore since no mixed experiments expected. Keep single-end option for
-// implementation of RAD-seq subworkflow. Keep this function as template for other tests.
-def validateInputSamplesheet(input) {
-    def (metas, fastqs) = input[1..2]
-
-    // Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end
-    def endedness_ok = metas.collect{ meta -> meta.single_end }.unique().size == 1
-    if (!endedness_ok) {
-        error("Please check input samplesheet -> Multiple runs of a sample must be of the same datatype i.e. single-end or paired-end: ${metas[0].id}")
-    }
-
-    return [ metas[0], fastqs ]
+// Reject a samplesheet where read groups of the same library, or libraries of the same sample, mix
+// single-end and paired-end reads. Alignments are merged read-group -> library -> sample, so a mismatch
+// here would otherwise be merged into a single BAM with inconsistent read pairing.
+def validateSampleEndedness(rows) {
+    rows.groupBy { meta, _reads -> [ meta.id, meta.library ] }
+        .each { key, group ->
+            def (sample_id, library_id) = key
+            if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
+                validationError("Sample '${sample_id}', library '${library_id}' mixes single-end and paired-end reads across lanes - all lanes of a library must share the same read layout.")
+            }
+        }
+    rows.groupBy { meta, _reads -> meta.id }
+        .each { sample_id, group ->
+            if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
+                validationError("Sample '${sample_id}' mixes single-end and paired-end reads across libraries - all libraries of a sample must share the same read layout.")
+            }
+        }
 }
 
 //

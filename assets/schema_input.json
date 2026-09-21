@@ -50,9 +50,9 @@
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "errorMessage": "FastQ file for reads 2, if provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'. Omit for single-end reads"
             }
         },
-        "required": ["sample", "library_id", "flowcell_id", "lane", "platform", "fastq_1", "fastq_2"]
+        "required": ["sample", "library_id", "flowcell_id", "lane", "platform", "fastq_1"]
     }
 }

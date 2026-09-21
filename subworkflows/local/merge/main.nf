@@ -11,12 +11,13 @@ workflow MERGE {
     level                         // string: merge level, controls grouping and QC prefix ('library'/'sample')
 
     main:
-    // Group on the requested level, branch to enable merge skipping (singletons)
+    // Group on the requested level, branch to enable merge skipping (singletons).
+    def keys_to_drop = level == 'library'
+        ? [ 'flowcell', 'lane', 'read_group' ]
+        : [ 'flowcell', 'lane', 'read_group', 'library' ] // else 'sample'
     ch_alignments = ch_alignments_indexed
         .map { meta, alignment, index ->
-            def group_meta = level == 'library'
-                ? [ id: meta.id, library: meta.library, pl: meta.pl ]
-                : [ id: meta.id, pl: meta.pl ]
+            def group_meta = meta.subMap(meta.keySet() - keys_to_drop)
             return [ group_meta, alignment, index ]
         }
         .groupTuple()
