@@ -61,5 +61,6 @@ enable_mark_duplicates: true # Boolean: mark or remove duplicate reads in alignm
 ## Alignment processing
 
 ## Duplicate marking
-# duplicate_marker: "picard" # Default: picard
+# duplicate_marker: "picard" # Default: samtools
 # enable_remove_duplicates: false # Boolean: remove duplicate reads instead of marking them. Default: false
+# optical_distance: 2500 # Max offset between duplicate clusters to be considered optical. For unpatterned flowcells, use default. Patterned, use 2500.
