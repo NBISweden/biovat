@@ -130,7 +130,7 @@ Running with `--enable_cram_format` will produce `.cram` and `.crai` files inste
 - `05_duplicate_processed/`
   - `*_markdup.bam`: Library-level alignment files with duplicates marked and DT tagged (or removed, if `--enable_remove_duplicates` is set).
   - `*_markdup.bam.csi`: Index file.
-  - `*_markdup.metrics.txt`: Duplicate marking metrics, useful for discriminating between library-level issues and sequencing (PCR vs. optical duplicates).
+  - `*_markdup.metrics`: Duplicate marking metrics, useful for discriminating between library-level issues and sequencing (PCR vs. optical duplicates).
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
 
