@@ -110,7 +110,7 @@ workflow BIOVAT {
         )
         ch_library_alignments_indexed = MERGE_TO_LIBRARY.out.ch_merged_alignments_indexed
         ch_multiqc_files              = MERGE_TO_LIBRARY.out.ch_multiqc_files
-        outputs_library               = ch_library_alignments_indexed
+        outputs_library               = MERGE_TO_LIBRARY.out.outputs_alignments
         outputs_library_flagstat      = MERGE_TO_LIBRARY.out.outputs_flagstat
         outputs_library_riker         = MERGE_TO_LIBRARY.out.outputs_riker
         outputs_library_qualimap      = MERGE_TO_LIBRARY.out.outputs_qualimap
@@ -155,7 +155,7 @@ workflow BIOVAT {
         )
         ch_sample_alignments_indexed = MERGE_TO_SAMPLE.out.ch_merged_alignments_indexed
         ch_multiqc_files             = MERGE_TO_SAMPLE.out.ch_multiqc_files
-        outputs_sample               = ch_sample_alignments_indexed
+        outputs_sample               = MERGE_TO_SAMPLE.out.outputs_alignments
         outputs_sample_flagstat      = MERGE_TO_SAMPLE.out.outputs_flagstat
         outputs_sample_riker         = MERGE_TO_SAMPLE.out.outputs_riker
         outputs_sample_qualimap      = MERGE_TO_SAMPLE.out.outputs_qualimap

@@ -89,7 +89,7 @@ workflow NBISWEDEN_BIOVAT {
 
     // 'requires' is a map of internal dependency relationships
     def requires = [
-        // MERGE_LANES (lane -> library) and MERGE_LIBRARIES (library -> sample, post-deduplication)
+        // MERGE_TO_LIBRARY (readgroup -> library) and MERGE_TO_SAMPLE (library -> sample, post-deduplication)
         // are both triggered when a downstream consumer needs deduplicated alignments
         merge: enable.mark_duplicates
     ]
@@ -208,10 +208,10 @@ output {
     outputs_read_group_qualimap {
         path '03_read_alignment/qc/qualimap'
     }
-    // MERGE_LANES
+    // MERGE_TO_LIBRARY
     outputs_library {
         path { meta, alignment, index ->
-            // Renames singletons, includes library and platform to avoid file name collisions
+            // Includes library and platform to avoid file name collisions
             alignment >> "04_merged_libraries/${meta.id}_${meta.library}_${meta.pl}.${alignment.extension}"
             index     >> "04_merged_libraries/${meta.id}_${meta.library}_${meta.pl}.${alignment.extension}.${index.extension}"
         }
@@ -238,10 +238,10 @@ output {
     outputs_mark_duplicates_qualimap {
         path '05_duplicate_processed/qc/qualimap'
     }
-    // MERGE_LIBRARIES
+    // MERGE_TO_SAMPLE
     outputs_sample {
         path { meta, alignment, index ->
-            // Renames singletons, includes platform to avoid file name collisions
+            // Includes platform to avoid file name collisions
             alignment >> "06_merged_samples/${meta.id}_${meta.pl}.${alignment.extension}"
             index     >> "06_merged_samples/${meta.id}_${meta.pl}.${alignment.extension}.${index.extension}"
         }

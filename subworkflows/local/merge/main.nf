@@ -39,7 +39,7 @@ workflow MERGE {
         enable.cram_format ? 'crai' : 'csi'
     )
 
-    // Join merged alignments with their indexes, for alignment QC
+    // Join merged alignments with their indexes, for alignment QC and publishing.
     ch_merged_output_for_alignment_qc = SAMTOOLS_MERGE.out.cram
         .mix(SAMTOOLS_MERGE.out.bam)
         .join(SAMTOOLS_MERGE.out.index)
@@ -70,8 +70,12 @@ workflow MERGE {
         outputs_qualimap = ALIGNMENT_QC.out.qualimap_outputs
     }
 
+    // Merged alignments for publishing, singletons excluded
+    outputs_alignments = ch_merged_output_for_alignment_qc
+
     emit:
-    ch_merged_alignments_indexed
+    ch_merged_alignments_indexed // full set (merged + passthrough), for downstream processing
+    outputs_alignments           // merged only, for publishing
     ch_multiqc_files
     outputs_flagstat
     outputs_riker
