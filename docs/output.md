@@ -13,9 +13,11 @@ results/
 ├── 02_read_trimming
 ├── 03_read_alignment
 │   └── qc
-├── 04_merged_samples
+├── 04_merged_libraries
 │   └── qc
 ├── 05_duplicate_processed
+│   └── qc
+├── 06_merged_samples
 │   └── qc
 ├── multiqc
 │   ├── multiqc_data
@@ -31,8 +33,9 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Read trimming](#read-trimming) - Adapter and quality trimming of raw reads
 - [Alignment](#alignment) - Alignment of raw or trimmed reads
 - [Alignment quality checks](#alignment-qc) - BAM/CRAM alignment QC
-- [Merging](#merging) - Merging is an internal processing step triggered if any downstream sample-level operations are requested
-- [Deduplication](#deduplication) - Duplicates are marked or removed from alignments
+- [Merging readgroups](#merging-readgroups) - Readgroup alignments are merged to library level; an internal processing step triggered if deduplication is requested
+- [Deduplication](#deduplication) - Duplicates are marked or removed from library-level alignments
+- [Merging libraries](#merging-libraries) - Deduplicated library alignments are merged to sample level
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
@@ -82,6 +85,8 @@ Running with `--enable_cram_format` will produce `.cram` and `.crai` files inste
 
 Alignment QC executes at several workflow stages. The outputs will be in the directory `qc`, nested under the respective stage results directory. For example, alignment QC on the library alignments:
 
+At the two merging stages (`04_merged_libraries`, `06_merged_samples`), QC only runs for samples/libraries where an actual merge took place (i.e. more than one lane or library was combined). Where nothing was merged, the passed-through alignment is byte-identical to the one already QC'd at the previous stage, so no QC subfolder entry is produced for it there — see the QC output from the preceding stage instead.
+
 <details markdown="1">
 <summary>Output files</summary>
 
@@ -104,14 +109,16 @@ Alignment QC executes at several workflow stages. The outputs will be in the dir
 
 </details>
 
-### Merging
+### Merging readgroups
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `04_merged_samples/`
-  - `*.bam`: Merged alignment files at the sample level.
+- `04_merged_libraries/`
+  - `*.bam`: Merged alignment files at the library level (different readgroups of the same sample library merged together).
   - `*.bam.csi`: Index file.
+
+These outputs are produced for a sample library sequenced across more than one lane/flowcell. A library sequenced once remains identical to the file published under `03_read_alignment`, and is thus not republished here.
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
 
@@ -123,9 +130,24 @@ Running with `--enable_cram_format` will produce `.cram` and `.crai` files inste
 <summary>Output files</summary>
 
 - `05_duplicate_processed/`
-  - `*_markdup.bam`: Alignment files with duplicates marked (or removed, if `--enable_remove_duplicates` is set).
+  - `*_markdup.bam`: Library-level alignment files with duplicates marked and DT tagged (or removed, if `--enable_remove_duplicates` is set).
   - `*_markdup.bam.csi`: Index file.
-  - `*_markdup.metrics.txt`: Duplicate marking metrics.
+  - `*_markdup.metrics`: Duplicate marking metrics, useful for discriminating between library-level issues and sequencing (PCR vs. optical duplicates).
+
+Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
+
+</details>
+
+### Merging libraries
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `06_merged_samples/`
+  - `*.bam`: Deduplicated alignment files merged at the sample level (libraries for the same sample merged together).
+  - `*.bam.csi`: Index file.
+
+These outputs are produced for a sample with more than one library. A sample with only one library remains identical to the file published under `05_duplicate_processed` or prior, and is thus not republished here.
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
 
