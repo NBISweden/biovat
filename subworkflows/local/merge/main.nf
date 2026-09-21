@@ -38,11 +38,12 @@ workflow MERGE {
         enable.cram_format ? 'crai' : 'csi'
     )
 
-    // Join merged alignments with their indexes, then re-mix with singletons
-    ch_output_from_samtools_merge = SAMTOOLS_MERGE.out.cram
+    // Join merged alignments with their indexes, for alignment QC
+    ch_merged_output_for_alignment_qc = SAMTOOLS_MERGE.out.cram
         .mix(SAMTOOLS_MERGE.out.bam)
         .join(SAMTOOLS_MERGE.out.index)
-    ch_merged_alignments_indexed = ch_output_from_samtools_merge
+    // Re-mix with singletons for passing downstream
+    ch_merged_alignments_indexed = ch_merged_output_for_alignment_qc
         .mix(ch_alignments.skip_merge)
 
     // MERGE:ALIGNMENT_QC — only for alignments that were actually merged; a skipped singleton is
@@ -52,7 +53,7 @@ workflow MERGE {
     outputs_qualimap = channel.empty()
     if ( enable.align_qc ) {
         ALIGNMENT_QC(
-            ch_output_from_samtools_merge,
+            ch_merged_output_for_alignment_qc,
             ch_reference_and_optional_fai,
             enable,
             level
