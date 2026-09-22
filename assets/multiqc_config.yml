@@ -71,6 +71,11 @@ module_order:
       anchor: "qualimap_markdup"
       path_filters:
         - "*markdup_*"
+  - bcftools:
+      name: "BCFtools: variant calling metrics"
+      anchor: "bcftools"
+      path_filters:
+        - "*bcftools_stats.txt"
 
 custom_plot_config:
   general_stats_table:
