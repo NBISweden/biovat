@@ -5,26 +5,24 @@
 include { FASTP } from '../../../modules/nf-core/fastp/main'
 
 workflow TRIM_READS {
-
     take:
-    ch_reads   // channel: [ val(meta), path(reads), path(adapter_fasta) ]
-    enable     // map: stage/tool gating flags
+    ch_reads // channel: [ val(meta), path(reads), path(adapter_fasta) ]
+    enable // map: stage/tool gating flags
 
     main:
     // Run fastp for read trimming
-    FASTP (
+    fastp_out = FASTP(
         ch_reads,
-        false,                 // Never write any reads that pass trimming thresholds. This can be used to use fastp for the output report only
-        enable.save_trimmed_fail, // Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
-        enable.save_merged        // Whether to save all merged reads to a file ending in *.merged.fastq.gz
+        false,
+        enable.save_trimmed_fail,
+        enable.save_merged,
     )
 
     emit:
-    trimmed_reads        = FASTP.out.reads         // channel: [ val(meta), path(reads) ]
-    fastp_json           = FASTP.out.json          // channel: [ val(meta), path(json) ]
-    fastp_html           = FASTP.out.html          // channel: [ val(meta), path(html) ]
-    fastp_log            = FASTP.out.log           // channel: [ val(meta), path(log) ]
-    trimmed_reads_fail   = FASTP.out.reads_fail    // channel: [ val(meta), path(fastq.gz) ]
-    trimmed_reads_merged = FASTP.out.reads_merged  // channel: [ val(meta), path(fastq.gz) ]
-
+    trimmed_reads        = fastp_out.reads // channel: [ val(meta), path(reads) ]
+    fastp_json           = fastp_out.json // channel: [ val(meta), path(json) ]
+    fastp_html           = fastp_out.html // channel: [ val(meta), path(html) ]
+    fastp_log            = fastp_out.log // channel: [ val(meta), path(log) ]
+    trimmed_reads_fail   = fastp_out.reads_fail // channel: [ val(meta), path(fastq.gz) ]
+    trimmed_reads_merged = fastp_out.reads_merged // channel: [ val(meta), path(fastq.gz) ]
 }
