@@ -91,11 +91,13 @@ workflow PIPELINE_INITIALISATION {
     // creating a channel from it. Uniqueness of the sample/library_id/flowcell_id/lane
     // combination is enforced by the "uniqueEntries" key in assets/schema_input.json
     def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
-        .collect { meta, fastq_1, fastq_2 ->
+        .collect { meta, fastq_1, fastq_2, bam ->
             def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
-            fastq_2
-                ? [ meta + [ single_end:false, read_group:read_group ], [ fastq_1, fastq_2 ] ]
-                : [ meta + [ single_end:true,  read_group:read_group ], [ fastq_1 ] ]
+            bam
+                ? [ meta + [ read_group:read_group, input_type:'bam' ], [ bam ] ]
+                : fastq_2
+                    ? [ meta + [ single_end:false, read_group:read_group, input_type:'fastq' ], [ fastq_1, fastq_2 ] ]
+                    : [ meta + [ single_end:true, read_group:read_group, input_type:'fastq' ], [ fastq_1 ] ]
         }
 
     // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every

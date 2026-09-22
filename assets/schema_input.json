@@ -58,15 +58,26 @@
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.bam$",
                 "errorMessage": "Aligned BAM file, if provided in place of fastq_1/fastq_2, cannot contain spaces and must have extension '.bam'"
+            },
+            "single_end": {
+                "type": "boolean",
+                "errorMessage": "BAM input only: must be true (single-end data) or false (paired-end data)",
+                "meta": ["single_end"]
             }
         },
         "required": ["sample", "library_id", "flowcell_id", "lane", "platform"],
         "oneOf": [
-            { "required": ["fastq_1"], "not": { "required": ["bam"] } },
+            { "required": ["fastq_1"], "not": { "anyOf": [ { "required": ["bam"] }, { "required": ["single_end"] } ] } },
             { "required": ["bam"], "not": { "anyOf": [ { "required": ["fastq_1"] }, { "required": ["fastq_2"] } ] } }
         ],
+        "if": {
+            "required": ["bam"]
+        },
+        "then": {
+            "required": ["single_end"]
+        },
         "errorMessage": {
-            "oneOf": "Each row must provide either fastq_1 (and optionally fastq_2) or bam, but not both."
+            "oneOf": "Each row must provide either fastq_1 and optionally fastq_2, or bam and single_end."
         }
     }
 }
