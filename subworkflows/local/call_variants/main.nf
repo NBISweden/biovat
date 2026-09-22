@@ -3,7 +3,7 @@
 //
 
 include { BCFTOOLS_MPILEUP_MULTISAMPLE } from '../../../modules/local/bcftools/mpileup_multisample/main'
-
+include { VARIANT_QC                   } from '../variant_qc/main'
 
 workflow CALL_VARIANTS {
 
@@ -27,8 +27,9 @@ workflow CALL_VARIANTS {
         }
 
     // Call variants with four alternative variant callers
-    outputs_variant_calls = channel.empty()
-    outputs_mpileup       = channel.empty()
+    ch_variant_calls_indexed = channel.empty()
+    ch_mpileup               = channel.empty()
+
     if ( variant_caller == 'bcftools' ) {
         BCFTOOLS_MPILEUP_MULTISAMPLE(
             ch_joint_alignments,
@@ -36,9 +37,9 @@ workflow CALL_VARIANTS {
             [], // intervals
             enable.save_mpileup
         )
-        outputs_variant_calls = BCFTOOLS_MPILEUP_MULTISAMPLE.out.vcf
-            .mix(BCFTOOLS_MPILEUP_MULTISAMPLE.out.index)
-        outputs_mpileup       = BCFTOOLS_MPILEUP_MULTISAMPLE.out.mpileup
+        ch_variant_calls_indexed = BCFTOOLS_MPILEUP_MULTISAMPLE.out.vcf
+            .join(BCFTOOLS_MPILEUP_MULTISAMPLE.out.index)
+        ch_mpileup               = BCFTOOLS_MPILEUP_MULTISAMPLE.out.mpileup
     }
 
     // TODO: add bcftools mpileup/call per sample calling and merging/joint genotyping
@@ -49,13 +50,30 @@ workflow CALL_VARIANTS {
 
     // TODO: convert *.vcf from parabricks to *vcf.gz and index
 
-    // TODO: add bcftools stats for VCF files
+    // CALL_VARIANTS:VARIANT_QC
+    outputs_bcftools_stats = channel.empty()
+    if ( enable.variant_qc ) {
+        // Remove fai for BCFTOOLS_STATS
+        ch_reference = ch_reference_and_fai
+            .map { meta, fasta, fai -> [ meta, fasta ] }
+        VARIANT_QC(
+            ch_variant_calls_indexed,
+            ch_reference
+        )
+        ch_multiqc_files = ch_multiqc_files
+            .mix(
+                VARIANT_QC.out.bcftools_stats_outputs.map{ _meta, file -> file }
+            )
+        outputs_bcftools_stats = VARIANT_QC.out.bcftools_stats_outputs
+    }
+
 
     // TODO: add option to convert `*.vcf.gz` to `*.bcf`
 
     emit:
-    outputs_variant_calls // channel: [ meta, *.vcf.gz ] and [ meta, *.tbi/csi ]
-    outputs_mpileup       // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
+    ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.tbi/csi ]
+    ch_mpileup               // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
     ch_multiqc_files
+    outputs_bcftools_stats
 
 }
