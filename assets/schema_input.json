@@ -51,8 +51,22 @@
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
                 "errorMessage": "FastQ file for reads 2, if provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'. Omit for single-end reads"
+            },
+            "bam": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.bam$",
+                "errorMessage": "Aligned BAM file, if provided in place of fastq_1/fastq_2, cannot contain spaces and must have extension '.bam'"
             }
         },
-        "required": ["sample", "library_id", "flowcell_id", "lane", "platform", "fastq_1"]
+        "required": ["sample", "library_id", "flowcell_id", "lane", "platform"],
+        "oneOf": [
+            { "required": ["fastq_1"], "not": { "required": ["bam"] } },
+            { "required": ["bam"], "not": { "anyOf": [ { "required": ["fastq_1"] }, { "required": ["fastq_2"] } ] } }
+        ],
+        "errorMessage": {
+            "oneOf": "Each row must provide either fastq_1 (and optionally fastq_2) or bam, but not both."
+        }
     }
 }
