@@ -18,13 +18,13 @@ include { MERGE as MERGE_TO_SAMPLE  } from '../subworkflows/local/merge/main'
 
 workflow BIOVAT {
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
-    reference // channel: reference fasta read in from --reference
-    enable // map: gating flags
-    requires // map: defines internal dependency relationships
-    adapter_fasta // channel: adapter fasta file read in from --adapter_fasta
-    aligner // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    duplicate_marker // string: Duplicate marking tool to use (e.g. picard, samtools)
+    ch_samplesheet    // channel: samplesheet read in from --input
+    reference         // channel: reference fasta read in from --reference
+    enable            // map: gating flags
+    requires          // map: defines internal dependency relationships
+    adapter_fasta     // channel: adapter fasta file read in from --adapter_fasta
+    aligner           // string: Aligner to use for read alignment (e.g. bwa, parabricks)
+    duplicate_marker  // string: Duplicate marking tool to use (e.g. picard, samtools)
     multiqc_config
     multiqc_logo
     multiqc_methods_description

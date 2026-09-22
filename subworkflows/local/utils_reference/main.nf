@@ -9,7 +9,7 @@ workflow REFERENCE_UTILS {
     if (requires.fai) {
         samtools_faidx_out = SAMTOOLS_FAIDX(
             reference.map { meta, fasta -> [meta, fasta, []] },
-            false,
+            false, // Create sizes file
         )
         ch_reference_and_optional_fai = reference.join(samtools_faidx_out.fai).collect()
     }

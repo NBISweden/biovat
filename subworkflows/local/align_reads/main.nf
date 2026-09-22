@@ -7,11 +7,11 @@ include { ALIGNMENT_QC      } from '../alignment_qc/main'
 
 workflow ALIGN_READS {
     take:
-    aligner // string: Aligner to use for read alignment (e.g. bwa, parabricks)
+    aligner                       // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     ch_reference_and_optional_fai // value channel: reference fasta and (optional) fai index
-    reads // channel: reads to align
-    enable // map: stage/tool gating flags
-    ch_multiqc_files // channel: MultiQC files
+    reads                         // channel: reads to align
+    enable                        // map: stage/tool gating flags
+    ch_multiqc_files              // channel: MultiQC files
 
     main:
     reference = ch_reference_and_optional_fai.map { meta, fasta, _fai -> [meta, fasta] }
@@ -23,7 +23,7 @@ workflow ALIGN_READS {
             reads,
             bwamem3_index_out.index,
             reference,
-            true,
+            true, // Enforce sorting of BAM/CRAM
         )
         ch_read_group_alignments_indexed = bwamem3_mem_out.aligned.join(bwamem3_mem_out.index)
     }
@@ -34,8 +34,8 @@ workflow ALIGN_READS {
             reads,
             reference,
             bwa_index_out.index,
-            [[], []],
-            [[], []],
+            [[], []], // intervals
+            [[], []], // known_sites
             enable.cram_format ? 'cram' : 'bam',
         )
         samtools_index_out = SAMTOOLS_INDEX(parabricks_fq2bam_out.bam)
