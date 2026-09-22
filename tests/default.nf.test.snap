@@ -5,6 +5,9 @@
                 "BCFTOOLS_MPILEUP_MULTISAMPLE": {
                     "bcftools": "1.23.1"
                 },
+                "BCFTOOLS_STATS": {
+                    "bcftools": "1.23.1"
+                },
                 "BWAMEM3_INDEX": {
                     "bwamem3": "0.8.0"
                 },
@@ -463,6 +466,9 @@
                 "06_variant_calls",
                 "06_variant_calls/all_samples.vcf.gz",
                 "06_variant_calls/all_samples.vcf.gz.tbi",
+                "06_variant_calls/qc",
+                "06_variant_calls/qc/bcftools_stats",
+                "06_variant_calls/qc/bcftools_stats/all_samples.bcftools_stats.txt",
                 "multiqc",
                 "multiqc/multiqc_data",
                 "multiqc/multiqc_data/fastp-insert-size-plot.txt",
@@ -601,7 +607,7 @@
                 "PUN-Y-LO.1.SRR9309469.1.fastp.json:md5,85cde3485f6dd283bb0b3b224a005e1b",
                 "PUN-Y-LO.1.SRR9309469.1_R1.fastp.fastq.gz:md5,910ec05ff1f6fc6c1d51fb9983bfd98a",
                 "PUN-Y-LO.1.SRR9309469.1_R2.fastp.fastq.gz:md5,cd9b61ea0a4ed589ec4d5f282bb01f2d",
-                "PUN-Y-LO.2.SRR9309469.1.fastp.json:md5,65b7a29a2993e154fcf054479b7bed4c",
+                "PUN-Y-LO.2.SRR9309469.1.fastp.json:md5,414f5e32c6aae4ea2eb5da9bc844a83a",
                 "PUN-Y-LO.2.SRR9309469.1_R1.fastp.fastq.gz:md5,fb1f74c6708f33bdf6479f25ea2d0d2e",
                 "PUN-Y-LO.2.SRR9309469.1_R2.fastp.fastq.gz:md5,ac42b52e552f969e80c6ed22af29711f",
                 "PUN-Y-LO.2.SRR9309470.3.fastp.json:md5,583a3f34d5e366b167e09cde9ed46848",
@@ -801,7 +807,8 @@
                 "sample_PUN-Y-LO_illumina.wgs-coverage.txt:md5,f9af234235e899b3aa24efab12dcf95f",
                 "sample_PUN-Y-LO_illumina.wgs-metrics.txt:md5,21894c86b1ec37a2a163596601424183",
                 "sample_PUN-Y-LO_illumina.flagstat:md5,489c37234289a01b5368c0e60a2802c2",
-                "all_samples.vcf.gz.tbi:md5,bd4d38c206db490f061826ec7b93b9d3",
+                "all_samples.vcf.gz.tbi:md5,d796d2120a65b567c7a9edc9a6271ba1",
+                "all_samples.bcftools_stats.txt:md5,c650c547f750708744748751f70a6d55",
                 "fastp-insert-size-plot.txt:md5,53c6551f7576aa702901109472aa7d1c",
                 "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,f6000163362a96c1f1e42c25d8e7b2cb",
                 "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,b177515f2f23975753ee231da30c09a9",
@@ -828,9 +835,9 @@
                 "fastqc_raw_sequence_duplication_levels_plot.txt:md5,70c2b8d8a4a92e6f85631f6403c79994",
                 "fastqc_raw_top_overrepresented_sequences_table.txt:md5,592adcf154f8e2aad2045a89a90dec5f",
                 "multiqc_citations.txt:md5,57db2426be011862828d18f767d25b57",
-                "multiqc_fastp_fastp.txt:md5,d15479e9e321202006e8155a6ddb057a",
+                "multiqc_fastp_fastp.txt:md5,d03733a9bfebe7c71d60f97a83e8c597",
                 "multiqc_fastqc_fastqc_raw.txt:md5,679f1d365035e8b58c9a1a5b9fba070d",
-                "multiqc_general_stats.txt:md5,60986dbd27bd08cd57c24ffa3585ccd1",
+                "multiqc_general_stats.txt:md5,3d7c7f243396f3e7d7566aab2c4f556c",
                 "multiqc_riker_library_alignment_riker_library.txt:md5,58c6b3b7bba979c0d30b2a8078d4e85d",
                 "multiqc_riker_library_basic_base_distribution_riker_library.txt:md5,53d5d8811979946cbfef7dcbd6c799fb",
                 "multiqc_riker_library_basic_mean_quality_by_cycle_riker_library.txt:md5,ec6b121b4eca8546cbbbfdb0dcbfe423",
@@ -930,7 +937,7 @@
                 "06_merged_samples/PUN-Y-LO_illumina.bam:82f53f12624e7642fd573777c67fc19d"
             ]
         ],
-        "timestamp": "2026-09-22T10:34:01.005129",
+        "timestamp": "2026-09-22T16:43:44.009584",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
