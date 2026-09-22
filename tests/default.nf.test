@@ -16,7 +16,8 @@ nextflow_pipeline {
                 "PUN-Y-BCRD,1,SRR9309788,1,illumina,${projectDir}/tests/data/monkeyflower/PUN-Y-BCRD_R1.fastq.gz,${projectDir}/tests/data/monkeyflower/PUN-Y-BCRD_R2.fastq.gz",
                 "PUN-Y-INJ,1,SRR9309790,1,illumina,${projectDir}/tests/data/monkeyflower/PUN-Y-INJ_R1.fastq.gz,${projectDir}/tests/data/monkeyflower/PUN-Y-INJ_R2.fastq.gz",
                 "PUN-Y-LO,1,SRR9309469,1,illumina,${projectDir}/tests/data/monkeyflower/PUN-Y-LO_R1.fastq.gz,${projectDir}/tests/data/monkeyflower/PUN-Y-LO_R2.fastq.gz",
-                "PUN-Y-LO,2,SRR9309469,1,illumina,${projectDir}/tests/data/monkeyflower/PUN-Y-LO_R1.fastq.gz,${projectDir}/tests/data/monkeyflower/PUN-Y-LO_R2.fastq.gz"
+                "PUN-Y-LO,2,SRR9309469,1,illumina,${projectDir}/tests/data/monkeyflower/PUN-Y-LO_L2_R1.fastq.gz,${projectDir}/tests/data/monkeyflower/PUN-Y-LO_L2_R2.fastq.gz",
+                "PUN-Y-LO,2,SRR9309470,3,illumina,${projectDir}/tests/data/monkeyflower/PUN-Y-LO_L2_repeat_R1.fastq.gz,${projectDir}/tests/data/monkeyflower/PUN-Y-LO_L2_repeat_R2.fastq.gz"
             ].join("\n") + "\n"
         }
 

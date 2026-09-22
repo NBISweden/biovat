@@ -15,4 +15,7 @@ For testing, six samples of the subspecies Diplacus puniceus were selected, repr
 | SRS4979222 | SRR9309469 | Diplacus puniceus | PUN-LO4-2016    | LO           | PUN-Y-LO     | ssp. puniceus, yellow  | 32.6767  | -116.3312 | 93.4            | 18.04      |
 | SRS4979221 | SRR9309470 | Diplacus puniceus | PUN-MT10-2016   | MT           | PUN-R-MT     | ssp. puniceus, red     | 32.821   | -117.0618 | 93.7            | 20.85      |
 
-Note that sample PUN-LO4-2016 (PUN-Y-LO) was duplicated in the samplesheet to be able to test sample merging.
+Note that sample PUN-LO4-2016 (PUN-Y-LO) was duplicated twice, each with edited QNAMEs, to be able to test sample merging.
+One duplicate represents a distinct library that should not be deduplicated with respect to the others.
+The other represents repeat sequencing of a library on a distinct flowcell.
+In this case biological replicates should be deduplicated between the pair.

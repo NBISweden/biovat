@@ -7,7 +7,7 @@ workflow MARK_DUPLICATES {
 
     take:
     duplicate_marker
-    ch_sample_alignments_indexed
+    ch_library_alignments_indexed
     ch_reference_and_optional_fai
     ch_multiqc_files
     enable
@@ -15,7 +15,7 @@ workflow MARK_DUPLICATES {
     main:
     if ( duplicate_marker == 'picard' ) {
         PICARD_MARKDUPLICATES(
-            ch_sample_alignments_indexed.map { meta, alignment, _index -> [ meta, alignment ] },
+            ch_library_alignments_indexed.map { meta, alignment, _index -> [ meta, alignment ] },
             ch_reference_and_optional_fai
         )
         ch_from_markdups_alignments = PICARD_MARKDUPLICATES.out.bam.mix(PICARD_MARKDUPLICATES.out.cram)
@@ -29,7 +29,7 @@ workflow MARK_DUPLICATES {
             .mix(PICARD_MARKDUPLICATES.out.metrics.map { _meta, file -> file })
     } else if ( duplicate_marker == 'samtools' ) {
         SAMTOOLS_SORMADUP(
-            ch_sample_alignments_indexed.map { meta, alignment, _index -> [ meta, alignment ] },
+            ch_library_alignments_indexed.map { meta, alignment, _index -> [ meta, alignment ] },
             ch_reference_and_optional_fai
         )
         ch_from_markdups_bam_indexed  = SAMTOOLS_SORMADUP.out.bam.join(SAMTOOLS_SORMADUP.out.csi)

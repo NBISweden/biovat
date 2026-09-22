@@ -131,13 +131,18 @@
             "properties": {
                 "duplicate_marker": {
                     "type": "string",
-                    "default": "picard",
+                    "default": "samtools",
                     "description": "Duplicate marking tool choice.",
                     "enum": ["picard", "samtools"]
                 },
                 "enable_remove_duplicates": {
                     "type": "boolean",
                     "description": "Remove alignments identified as duplicates (else mark them)."
+                },
+                "optical_distance": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Max offset between clusters to be considered optical duplicates. For unpatterned flowcells, use default. Patterned, use 2500."
                 }
             }
         },
