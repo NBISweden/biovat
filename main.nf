@@ -15,83 +15,82 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biov
 params {
 
     // Input options
-    input                       : String
-    reference                   : String
+    input: String
+    reference: String
 
     // Workflow stage gating options
-    enable_raw_read_qc          : Boolean
-    enable_trim                 : Boolean
-    enable_align                : Boolean
-    enable_align_qc             : Boolean
-    enable_mark_duplicates      : Boolean
+    enable_raw_read_qc: Boolean
+    enable_trim: Boolean
+    enable_align: Boolean
+    enable_align_qc: Boolean
+    enable_mark_duplicates: Boolean
 
     // Read trimming options
-    adapter_fasta               : String
-    enable_save_trimmed_fail    : Boolean
-    enable_save_merged          : Boolean
+    adapter_fasta: String
+    enable_save_trimmed_fail: Boolean
+    enable_save_merged: Boolean
 
     // Alignment options
-    aligner                     : String
-    enable_cram_format          : Boolean
+    aligner: String
+    enable_cram_format: Boolean
 
     // Alignment QC options
-    enable_riker                : Boolean
-    enable_qualimap             : Boolean
+    enable_riker: Boolean
+    enable_qualimap: Boolean
 
     // Duplicate marking options
-    duplicate_marker            : String
-    enable_remove_duplicates    : Boolean
-    optical_distance            : Integer
+    duplicate_marker: String
+    enable_remove_duplicates: Boolean
+    optical_distance: Integer
 
     // MultiQC options
-    multiqc_config              : String
-    multiqc_title               : String
-    multiqc_logo                : String
-    max_multiqc_email_size      : String
-    multiqc_methods_description : String
+    multiqc_config: String
+    multiqc_title: String
+    multiqc_logo: String
+    max_multiqc_email_size: String
+    multiqc_methods_description: String
 
     // Boilerplate options
-    outdir                      : String
-    publish_dir_mode            : String
-    monochrome_logs             : Boolean
-    help                        : Boolean
-    help_full                   : Boolean
-    show_hidden                 : Boolean
-    version                     : Boolean
-    modules_testdata_base_path  : String
+    outdir: String
+    publish_dir_mode: String
+    monochrome_logs: Boolean
+    help: Boolean
+    help_full: Boolean
+    show_hidden: Boolean
+    version: Boolean
+    modules_testdata_base_path: String
     pipelines_testdata_base_path: String
-    trace_report_suffix         : String
+    trace_report_suffix: String
 
     // Config options
-    config_profile_name         : String
-    config_profile_description  : String
-    custom_config_version       : String
-    custom_config_base          : String
-    config_profile_contact      : String
-    config_profile_url          : String
+    config_profile_name: String
+    config_profile_description: String
+    custom_config_version: String
+    custom_config_base: String
+    config_profile_contact: String
+    config_profile_url: String
 
     // Schema validation default options
-    validate_params             : Boolean
-
+    validate_params: Boolean
 }
 
 // Main analysis pipeline
 workflow NBISWEDEN_BIOVAT {
-
     take:
     samplesheet // channel: samplesheet read in from --input
     reference   // channel: reference fasta read in from --reference
 
     main:
     // Gating parameters, passed as a single map
-    def enable = params.findAll { k, _v -> k.startsWith('enable_') }
+    def enable = params
+        .findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
 
     // 'requires' is a map of internal dependency relationships
     def requires = [
         // MERGE_TO_LIBRARY (readgroup -> library) and MERGE_TO_SAMPLE (library -> sample, post-deduplication)
         // are both triggered when a downstream consumer needs deduplicated alignments
-        merge: enable.mark_duplicates
+        merge: enable.mark_duplicates,
     ]
 
     // ALIGNMENT_QC runs when a parent stage is also enabled
@@ -99,10 +98,9 @@ workflow NBISWEDEN_BIOVAT {
     def align_qc_active = enable.align_qc && (enable.align || requires.merge)
 
     // .fai is used for certain CRAM processes, and unconditionally by riker
-    requires.fai = (enable.cram_format && requires.merge)
-        || (align_qc_active && enable.riker)
+    requires.fai = (enable.cram_format && requires.merge) || (align_qc_active && enable.riker)
 
-    BIOVAT (
+    biovat_out = BIOVAT(
         samplesheet,
         reference,
         enable,
@@ -113,37 +111,36 @@ workflow NBISWEDEN_BIOVAT {
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
-        params.outdir
+        params.outdir,
     )
 
     emit:
-    outputs_raw_read_qc              = BIOVAT.out.outputs_raw_read_qc
-    outputs_trim_reads               = BIOVAT.out.outputs_trim_reads
-    outputs_read_group               = BIOVAT.out.outputs_read_group
-    outputs_read_group_flagstat      = BIOVAT.out.outputs_read_group_flagstat
-    outputs_read_group_riker         = BIOVAT.out.outputs_read_group_riker
-    outputs_read_group_qualimap      = BIOVAT.out.outputs_read_group_qualimap
-    outputs_library                  = BIOVAT.out.outputs_library
-    outputs_library_flagstat         = BIOVAT.out.outputs_library_flagstat
-    outputs_library_riker            = BIOVAT.out.outputs_library_riker
-    outputs_library_qualimap         = BIOVAT.out.outputs_library_qualimap
-    outputs_mark_duplicates          = BIOVAT.out.outputs_mark_duplicates
-    outputs_mark_duplicates_flagstat = BIOVAT.out.outputs_mark_duplicates_flagstat
-    outputs_mark_duplicates_riker    = BIOVAT.out.outputs_mark_duplicates_riker
-    outputs_mark_duplicates_qualimap = BIOVAT.out.outputs_mark_duplicates_qualimap
-    outputs_sample                   = BIOVAT.out.outputs_sample
-    outputs_sample_flagstat          = BIOVAT.out.outputs_sample_flagstat
-    outputs_sample_riker             = BIOVAT.out.outputs_sample_riker
-    outputs_sample_qualimap          = BIOVAT.out.outputs_sample_qualimap
-    outputs_multiqc                  = BIOVAT.out.outputs_multiqc
-
+    outputs_raw_read_qc              = biovat_out.outputs_raw_read_qc
+    outputs_trim_reads               = biovat_out.outputs_trim_reads
+    outputs_read_group               = biovat_out.outputs_read_group
+    outputs_read_group_flagstat      = biovat_out.outputs_read_group_flagstat
+    outputs_read_group_riker         = biovat_out.outputs_read_group_riker
+    outputs_read_group_qualimap      = biovat_out.outputs_read_group_qualimap
+    outputs_library                  = biovat_out.outputs_library
+    outputs_library_flagstat         = biovat_out.outputs_library_flagstat
+    outputs_library_riker            = biovat_out.outputs_library_riker
+    outputs_library_qualimap         = biovat_out.outputs_library_qualimap
+    outputs_mark_duplicates          = biovat_out.outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat = biovat_out.outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker    = biovat_out.outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap = biovat_out.outputs_mark_duplicates_qualimap
+    outputs_sample                   = biovat_out.outputs_sample
+    outputs_sample_flagstat          = biovat_out.outputs_sample_flagstat
+    outputs_sample_riker             = biovat_out.outputs_sample_riker
+    outputs_sample_qualimap          = biovat_out.outputs_sample_qualimap
+    outputs_multiqc                  = biovat_out.outputs_multiqc
 }
 
 // Entry workflow
 workflow {
 
     main:
-    PIPELINE_INITIALISATION (
+    pipeline_initialisation_out = PIPELINE_INITIALISATION(
         params.version,
         params.validate_params,
         params.monochrome_logs,
@@ -152,37 +149,36 @@ workflow {
         params.input,
         params.help,
         params.help_full,
-        params.show_hidden
+        params.show_hidden,
     )
-    NBISWEDEN_BIOVAT (
-        PIPELINE_INITIALISATION.out.samplesheet,
-        PIPELINE_INITIALISATION.out.reference
+    nbisweden_biovat_out = NBISWEDEN_BIOVAT(
+        pipeline_initialisation_out.samplesheet,
+        pipeline_initialisation_out.reference,
     )
-    PIPELINE_COMPLETION (
-        params.monochrome_logs,
+    PIPELINE_COMPLETION(
+        params.monochrome_logs
     )
 
     publish:
-    outputs_raw_read_qc              = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
-    outputs_trim_reads               = NBISWEDEN_BIOVAT.out.outputs_trim_reads
-    outputs_read_group               = NBISWEDEN_BIOVAT.out.outputs_read_group
-    outputs_read_group_flagstat      = NBISWEDEN_BIOVAT.out.outputs_read_group_flagstat
-    outputs_read_group_riker         = NBISWEDEN_BIOVAT.out.outputs_read_group_riker
-    outputs_read_group_qualimap      = NBISWEDEN_BIOVAT.out.outputs_read_group_qualimap
-    outputs_library                  = NBISWEDEN_BIOVAT.out.outputs_library
-    outputs_library_flagstat         = NBISWEDEN_BIOVAT.out.outputs_library_flagstat
-    outputs_library_riker            = NBISWEDEN_BIOVAT.out.outputs_library_riker
-    outputs_library_qualimap         = NBISWEDEN_BIOVAT.out.outputs_library_qualimap
-    outputs_mark_duplicates          = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates
-    outputs_mark_duplicates_flagstat = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_flagstat
-    outputs_mark_duplicates_riker    = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_riker
-    outputs_mark_duplicates_qualimap = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_qualimap
-    outputs_sample                   = NBISWEDEN_BIOVAT.out.outputs_sample
-    outputs_sample_flagstat          = NBISWEDEN_BIOVAT.out.outputs_sample_flagstat
-    outputs_sample_riker             = NBISWEDEN_BIOVAT.out.outputs_sample_riker
-    outputs_sample_qualimap          = NBISWEDEN_BIOVAT.out.outputs_sample_qualimap
-    outputs_multiqc                  = NBISWEDEN_BIOVAT.out.outputs_multiqc
-
+    outputs_raw_read_qc              = nbisweden_biovat_out.outputs_raw_read_qc
+    outputs_trim_reads               = nbisweden_biovat_out.outputs_trim_reads
+    outputs_read_group               = nbisweden_biovat_out.outputs_read_group
+    outputs_read_group_flagstat      = nbisweden_biovat_out.outputs_read_group_flagstat
+    outputs_read_group_riker         = nbisweden_biovat_out.outputs_read_group_riker
+    outputs_read_group_qualimap      = nbisweden_biovat_out.outputs_read_group_qualimap
+    outputs_library                  = nbisweden_biovat_out.outputs_library
+    outputs_library_flagstat         = nbisweden_biovat_out.outputs_library_flagstat
+    outputs_library_riker            = nbisweden_biovat_out.outputs_library_riker
+    outputs_library_qualimap         = nbisweden_biovat_out.outputs_library_qualimap
+    outputs_mark_duplicates          = nbisweden_biovat_out.outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat = nbisweden_biovat_out.outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker    = nbisweden_biovat_out.outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap = nbisweden_biovat_out.outputs_mark_duplicates_qualimap
+    outputs_sample                   = nbisweden_biovat_out.outputs_sample
+    outputs_sample_flagstat          = nbisweden_biovat_out.outputs_sample_flagstat
+    outputs_sample_riker             = nbisweden_biovat_out.outputs_sample_riker
+    outputs_sample_qualimap          = nbisweden_biovat_out.outputs_sample_qualimap
+    outputs_multiqc                  = nbisweden_biovat_out.outputs_multiqc
 }
 
 output {
