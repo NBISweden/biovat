@@ -61,10 +61,8 @@ workflow CALL_VARIANTS {
             ch_reference
         )
         ch_multiqc_files = ch_multiqc_files
-            .mix(
-                VARIANT_QC.out.bcftools_stats_outputs.map{ _meta, file -> file }
-            )
-        outputs_bcftools_stats = VARIANT_QC.out.bcftools_stats_outputs
+            .mix(VARIANT_QC.out.bcftools_stats_output.map { _meta, file -> [file] })
+        outputs_bcftools_stats = VARIANT_QC.out.bcftools_stats_output
     }
 
 

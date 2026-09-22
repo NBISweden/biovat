@@ -16,6 +16,6 @@ workflow VARIANT_QC {
         ch_reference)
 
     emit:
-    bcftools_stats_outputs = BCFTOOLS_STATS.out.stats
+    bcftools_stats_output = BCFTOOLS_STATS.out.stats
 
 }
