@@ -51,18 +51,28 @@ workflow CALL_VARIANTS {
     // TODO: convert *.vcf from parabricks to *vcf.gz and index
 
     // CALL_VARIANTS:VARIANT_QC
-    outputs_bcftools_stats = channel.empty()
+    outputs_bcftools_stats          = channel.empty()
+    outputs_vcftools_tstv_counts    = channel.empty()
+    outputs_vcftools_tstv_qual      = channel.empty()
+    outputs_vcftools_filter_summary = channel.empty()
+    outputs_vcftools_relatedness2   = channel.empty()
     if ( enable.variant_qc ) {
-        // Remove fai for BCFTOOLS_STATS
-        ch_reference = ch_reference_and_fai
-            .map { meta, fasta, fai -> [ meta, fasta ] }
         VARIANT_QC(
             ch_variant_calls_indexed,
-            ch_reference
+            ch_reference_and_fai
         )
         ch_multiqc_files = ch_multiqc_files
-            .mix(VARIANT_QC.out.bcftools_stats_output.map { _meta, file -> [file] })
-        outputs_bcftools_stats = VARIANT_QC.out.bcftools_stats_output
+            .mix(VARIANT_QC.out.bcftools_stats_output.map { _meta, file -> [file] },
+                VARIANT_QC.out.vcftools_tstv_counts_output.map { _meta, file -> [file] },
+                VARIANT_QC.out.vcftools_tstv_qual_output.map { _meta, file -> [file] },
+                VARIANT_QC.out.vcftools_filter_summary_output.map { _meta, file -> [file] },
+                VARIANT_QC.out.vcftools_relatedness2_output.map { _meta, file -> [file] }
+            )
+        outputs_bcftools_stats          = VARIANT_QC.out.bcftools_stats_output
+        outputs_vcftools_tstv_counts    = VARIANT_QC.out.vcftools_tstv_counts_output
+        outputs_vcftools_tstv_qual      = VARIANT_QC.out.vcftools_tstv_qual_output
+        outputs_vcftools_filter_summary = VARIANT_QC.out.vcftools_filter_summary_output
+        outputs_vcftools_relatedness2   = VARIANT_QC.out.vcftools_relatedness2_output
     }
 
 

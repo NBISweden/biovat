@@ -76,6 +76,22 @@ module_order:
       anchor: "bcftools"
       path_filters:
         - "*bcftools_stats.txt"
+  - vcftools/relatedness2:
+      name: "Vcftools: relatedness2"
+      anchor: "vcftools_relatedness2"
+      path_filters: "*.relatedness2"
+  - vcftools/tstv_by_count:
+      name: "Vcftools: Ti/Tv ratio by count"
+      anchor: "vcftools_tstv_by_count"
+      path_filters: "*.TsTv.count"
+  - vcftools/tstv_by_qual:
+      name: "Vcftools: Ti/Tv ratio by quality"
+      anchor: "vcftools_tstv_by_qual"
+      path_filters: "*.TsTv.qual"
+  - vcftools/tstv_summary:
+      name: "Vcftools: Ti/Tv ratio summary"
+      anchor: "vcftools_tstv_summary"
+      path_filters: "*.TsTv.summary"
 
 custom_plot_config:
   general_stats_table:

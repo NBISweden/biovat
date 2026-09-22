@@ -164,9 +164,13 @@ workflow BIOVAT {
     }
 
     // Variant calling
-    outputs_variant_calls                = channel.empty()
-    outputs_mpileup                      = channel.empty()
-    outputs_call_variants_bcftools_stats = channel.empty()
+    outputs_variant_calls                         = channel.empty()
+    outputs_mpileup                               = channel.empty()
+    outputs_call_variants_bcftools_stats          = channel.empty()
+    outputs_call_variants_vcftools_tstv_counts    = channel.empty()
+    outputs_call_variants_vcftools_tstv_qual      = channel.empty()
+    outputs_call_variants_vcftools_filter_summary = channel.empty()
+    outputs_call_variants_vcftools_relatedness2   = channel.empty()
     if ( enable.variant_calling ) {
         def ch_alignments_for_calling = ch_sample_alignments_indexed
         CALL_VARIANTS(
@@ -176,10 +180,14 @@ workflow BIOVAT {
             enable,
             ch_multiqc_files
         )
-        ch_multiqc_files                     = CALL_VARIANTS.out.ch_multiqc_files
-        outputs_variant_calls                = CALL_VARIANTS.out.ch_variant_calls_indexed
-        outputs_mpileup                      = CALL_VARIANTS.out.ch_mpileup
-        outputs_call_variants_bcftools_stats = CALL_VARIANTS.out.outputs_bcftools_stats
+        ch_multiqc_files                              = CALL_VARIANTS.out.ch_multiqc_files
+        outputs_variant_calls                         = CALL_VARIANTS.out.ch_variant_calls_indexed
+        outputs_mpileup                               = CALL_VARIANTS.out.ch_mpileup
+        outputs_call_variants_bcftools_stats          = CALL_VARIANTS.out.outputs_bcftools_stats
+        outputs_call_variants_vcftools_tstv_counts    = CALL_VARIANTS.out.outputs_vcftools_tstv_counts
+        outputs_call_variants_vcftools_tstv_qual      = CALL_VARIANTS.out.outputs_vcftools_tstv_qual
+        outputs_call_variants_vcftools_filter_summary = CALL_VARIANTS.out.outputs_vcftools_filter_summary
+        outputs_call_variants_vcftools_relatedness2   = CALL_VARIANTS.out.outputs_vcftools_relatedness2
     }
 
     // Collate and save software versions
@@ -236,27 +244,31 @@ workflow BIOVAT {
         .mix(MULTIQC.out.plots)
 
     emit:
-    outputs_raw_read_qc                  = outputs_raw_read_qc
-    outputs_trim_reads                   = outputs_trim_reads
-    outputs_read_group                   = outputs_read_group
-    outputs_read_group_flagstat          = outputs_read_group_flagstat
-    outputs_read_group_riker             = outputs_read_group_riker
-    outputs_read_group_qualimap          = outputs_read_group_qualimap
-    outputs_library                      = outputs_library
-    outputs_library_flagstat             = outputs_library_flagstat
-    outputs_library_riker                = outputs_library_riker
-    outputs_library_qualimap             = outputs_library_qualimap
-    outputs_mark_duplicates              = outputs_mark_duplicates
-    outputs_mark_duplicates_flagstat     = outputs_mark_duplicates_flagstat
-    outputs_mark_duplicates_riker        = outputs_mark_duplicates_riker
-    outputs_mark_duplicates_qualimap     = outputs_mark_duplicates_qualimap
-    outputs_sample                       = outputs_sample
-    outputs_sample_flagstat              = outputs_sample_flagstat
-    outputs_sample_riker                 = outputs_sample_riker
-    outputs_sample_qualimap              = outputs_sample_qualimap
-    outputs_variant_calls                = outputs_variant_calls
-    outputs_mpileup                      = outputs_mpileup
-    outputs_call_variants_bcftools_stats = outputs_call_variants_bcftools_stats
-    outputs_multiqc                      = outputs_multiqc
+    outputs_raw_read_qc                           = outputs_raw_read_qc
+    outputs_trim_reads                            = outputs_trim_reads
+    outputs_read_group                            = outputs_read_group
+    outputs_read_group_flagstat                   = outputs_read_group_flagstat
+    outputs_read_group_riker                      = outputs_read_group_riker
+    outputs_read_group_qualimap                   = outputs_read_group_qualimap
+    outputs_library                               = outputs_library
+    outputs_library_flagstat                      = outputs_library_flagstat
+    outputs_library_riker                         = outputs_library_riker
+    outputs_library_qualimap                      = outputs_library_qualimap
+    outputs_mark_duplicates                       = outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat              = outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker                 = outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap              = outputs_mark_duplicates_qualimap
+    outputs_sample                                = outputs_sample
+    outputs_sample_flagstat                       = outputs_sample_flagstat
+    outputs_sample_riker                          = outputs_sample_riker
+    outputs_sample_qualimap                       = outputs_sample_qualimap
+    outputs_variant_calls                         = outputs_variant_calls
+    outputs_mpileup                               = outputs_mpileup
+    outputs_call_variants_bcftools_stats          = outputs_call_variants_bcftools_stats
+    outputs_call_variants_vcftools_tstv_counts    = outputs_call_variants_vcftools_tstv_counts
+    outputs_call_variants_vcftools_tstv_qual      = outputs_call_variants_vcftools_tstv_qual
+    outputs_call_variants_vcftools_filter_summary = outputs_call_variants_vcftools_filter_summary
+    outputs_call_variants_vcftools_relatedness2   = outputs_call_variants_vcftools_relatedness2
+    outputs_multiqc                               = outputs_multiqc
 
 }
