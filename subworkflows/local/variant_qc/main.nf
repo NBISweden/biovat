@@ -8,7 +8,7 @@ workflow VARIANT_QC {
 
     main:
     // BCFTOOLS_STATS
-    BCFTOOLS_STATS(ch_variant_calls_and_tbi, 
+    BCFTOOLS_STATS(ch_variant_calls_and_tbi,
         [[], []], // regions
         [[], []], // targets
         [[], []], // samples
