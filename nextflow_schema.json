@@ -65,6 +65,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Run variant calling on all samples."
+                },
+                "enable_variant_qc": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run quality checks on variant files (VCF/BCF)."
                 }
             }
         },
