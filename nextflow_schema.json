@@ -157,6 +157,11 @@
             "description": "",
             "default": "",
             "properties": {
+                "dataset_name": {
+                    "type": "string",
+                    "default": "all_samples",
+                    "description": "File name prefix used for VCF/BCF files containing all samples."
+                },
                 "variant_caller": {
                     "type": "string",
                     "default": "bcftools",
