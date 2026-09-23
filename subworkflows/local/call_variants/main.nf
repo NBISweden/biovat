@@ -83,5 +83,9 @@ workflow CALL_VARIANTS {
     ch_mpileup               // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
     ch_multiqc_files
     outputs_bcftools_stats
+    outputs_vcftools_tstv_counts
+    outputs_vcftools_tstv_qual
+    outputs_vcftools_filter_summary
+    outputs_vcftools_relatedness2
 
 }
