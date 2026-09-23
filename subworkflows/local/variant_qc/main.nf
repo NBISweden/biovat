@@ -44,6 +44,6 @@ workflow VARIANT_QC {
     vcftools_tstv_counts_output    = VCFTOOLS_TSTV_COUNT.out.tstv_count
     vcftools_tstv_qual_output      = VCFTOOLS_TSTV_QUAL.out.tstv_qual
     vcftools_filter_summary_output = VCFTOOLS_SUMMARY.out.filter_summary
-    vcftools_relatedness2_output   = VCFTOOLS_SUMMARY.out.relatedness2
+    vcftools_relatedness2_output   = VCFTOOLS_RELATEDNESS2.out.relatedness2
 
 }
