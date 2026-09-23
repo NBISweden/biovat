@@ -28,6 +28,7 @@ workflow BIOVAT {
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     duplicate_marker       // string: Duplicate marking tool to use (e.g. picard, samtools)
     variant_caller         // string: Variant calling tool to use (e.g. bcftools)
+    dataset_name           // string: File name prefix for VCF/BCF file containing all samples
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -177,6 +178,7 @@ workflow BIOVAT {
             variant_caller,
             ch_alignments_for_calling,
             ch_reference_and_optional_fai,
+            dataset_name,
             enable,
             ch_multiqc_files
         )

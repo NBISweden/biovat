@@ -11,6 +11,7 @@ workflow CALL_VARIANTS {
     variant_caller
     ch_alignment_and_index
     ch_reference_and_fai
+    dataset_name
     enable
     ch_multiqc_files
 
@@ -18,9 +19,8 @@ workflow CALL_VARIANTS {
     // TODO: add option to split genome into chromosomes or chunks for parallelization
 
     // Group all samples into a single joint call
-    // TODO: provide option for dataset name to replace 'all_samples'
     ch_joint_alignments = ch_alignment_and_index
-        .map { meta, alignment, index -> [ 'all_samples', meta.id, alignment, index ] }
+        .map { meta, alignment, index -> [ dataset_name, meta.id, alignment, index ] }
         .groupTuple()
         .map { group, samples, alignments, indexes ->
             [ [ id: group, samples: samples ], alignments, indexes ]

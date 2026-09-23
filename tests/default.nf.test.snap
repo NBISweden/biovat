@@ -36,6 +36,18 @@
                 "SAMTOOLS_SORMADUP": {
                     "samtools": 1.24
                 },
+                "VCFTOOLS_RELATEDNESS2": {
+                    "vcftools": "0.1.17"
+                },
+                "VCFTOOLS_SUMMARY": {
+                    "vcftools": "0.1.17"
+                },
+                "VCFTOOLS_TSTV_COUNT": {
+                    "vcftools": "0.1.17"
+                },
+                "VCFTOOLS_TSTV_QUAL": {
+                    "vcftools": "0.1.17"
+                },
                 "Workflow": {
                     "NBISweden/biovat": "v0.0.1dev"
                 }
@@ -469,6 +481,11 @@
                 "06_variant_calls/qc",
                 "06_variant_calls/qc/bcftools_stats",
                 "06_variant_calls/qc/bcftools_stats/all_samples.bcftools_stats.txt",
+                "06_variant_calls/qc/vcftools",
+                "06_variant_calls/qc/vcftools/all_samples.FILTER.summary",
+                "06_variant_calls/qc/vcftools/all_samples.TsTv.count",
+                "06_variant_calls/qc/vcftools/all_samples.TsTv.qual",
+                "06_variant_calls/qc/vcftools/all_samples.relatedness2",
                 "multiqc",
                 "multiqc/multiqc_data",
                 "multiqc/multiqc_data/bcftools-stats-subtypes.txt",
@@ -592,6 +609,11 @@
                 "multiqc/multiqc_data/samtools-flagstat-table.txt",
                 "multiqc/multiqc_data/samtools-markdup-fraction.txt",
                 "multiqc/multiqc_data/samtools-markdup-table.txt",
+                "multiqc/multiqc_data/vcftools-relatedness2-heatmap-1.txt",
+                "multiqc/multiqc_data/vcftools_tstv_by_count.txt",
+                "multiqc/multiqc_data/vcftools_tstv_by_count_vcftools_tstv_by_count.txt",
+                "multiqc/multiqc_data/vcftools_tstv_by_qual.txt",
+                "multiqc/multiqc_data/vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt",
                 "multiqc/multiqc_report.html",
                 "pipeline_info",
                 "pipeline_info/biovat_software_mqc_versions.yml"
@@ -815,8 +837,12 @@
                 "sample_PUN-Y-LO_illumina.wgs-coverage.txt:md5,f9af234235e899b3aa24efab12dcf95f",
                 "sample_PUN-Y-LO_illumina.wgs-metrics.txt:md5,21894c86b1ec37a2a163596601424183",
                 "sample_PUN-Y-LO_illumina.flagstat:md5,489c37234289a01b5368c0e60a2802c2",
-                "all_samples.vcf.gz.tbi:md5,6675c064b7728e3ab63868e66c3c79d5",
+                "all_samples.vcf.gz.tbi:md5,6e2f7d8a0a89d52c39f225c57eaeaf84",
                 "all_samples.bcftools_stats.txt:md5,c650c547f750708744748751f70a6d55",
+                "all_samples.FILTER.summary:md5,2c63bd046e0e96cb726bac9e3da3d853",
+                "all_samples.TsTv.count:md5,b718ac221105e0ef5e0f55be35ff89db",
+                "all_samples.TsTv.qual:md5,c2b79137a702c5e87a5a5f3c99eccbfb",
+                "all_samples.relatedness2:md5,03ffecc42f5f0402e52c74d51533f83a",
                 "bcftools-stats-subtypes.txt:md5,4041da43f5b9b2f4c83079347659b4a6",
                 "bcftools_stats_indel-lengths.txt:md5,65a0b8befeeda92433f55d504aeb6dc2",
                 "bcftools_stats_variant_depths.txt:md5,d75c0171b206331df662239ef0d149c6",
@@ -850,7 +876,7 @@
                 "fastqc_raw_sequence_duplication_levels_plot.txt:md5,70c2b8d8a4a92e6f85631f6403c79994",
                 "fastqc_raw_top_overrepresented_sequences_table.txt:md5,592adcf154f8e2aad2045a89a90dec5f",
                 "multiqc_bcftools_stats_bcftools.txt:md5,675eb122d90cd93d5de2d0696cc75e0e",
-                "multiqc_citations.txt:md5,f600e32af943d6b7bb7e0be93b0ac293",
+                "multiqc_citations.txt:md5,5f191b693fe416b9bf4fc88421bb4c64",
                 "multiqc_fastp_fastp.txt:md5,d15479e9e321202006e8155a6ddb057a",
                 "multiqc_fastqc_fastqc_raw.txt:md5,679f1d365035e8b58c9a1a5b9fba070d",
                 "multiqc_general_stats.txt:md5,85e18cfa25ab929f0d6e869c1365d8e7",
@@ -931,7 +957,12 @@
                 "samtools-flagstat-pct-table.txt:md5,fc31f82dbf4ecbd9b0e30e21977d9eb5",
                 "samtools-flagstat-table.txt:md5,5a8d1406466046759aa538a6be041ecf",
                 "samtools-markdup-fraction.txt:md5,cdc7b45c9eaab56f13746d9184bc3278",
-                "samtools-markdup-table.txt:md5,b31de98302ac930efa0d45f1bec09f2d"
+                "samtools-markdup-table.txt:md5,b31de98302ac930efa0d45f1bec09f2d",
+                "vcftools-relatedness2-heatmap-1.txt:md5,b324b75c6a3111e27e88bec22dea6db3",
+                "vcftools_tstv_by_count.txt:md5,42cdddb5a1b00884c8cab73a03f32c33",
+                "vcftools_tstv_by_count_vcftools_tstv_by_count.txt:md5,d788148c240d35a00833c064780cffe0",
+                "vcftools_tstv_by_qual.txt:md5,a40b5c008f48a695d61c3d8b81ab1bef",
+                "vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt:md5,140da6f252cace8f0100d4edc2e5390e"
             ],
             [
                 "03_read_alignment/PUN-R-ELF.1.SRR9309791.1.bam:b2f199368dba51863077d07614a30718",
@@ -953,7 +984,7 @@
                 "06_merged_samples/PUN-Y-LO_illumina.bam:82f53f12624e7642fd573777c67fc19d"
             ]
         ],
-        "timestamp": "2026-09-22T17:05:41.481005",
+        "timestamp": "2026-09-23T10:11:47.413132",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

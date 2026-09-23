@@ -118,6 +118,7 @@ workflow NBISWEDEN_BIOVAT {
         params.aligner,
         params.duplicate_marker,
         params.variant_caller,
+        params.dataset_name,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
