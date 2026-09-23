@@ -13,6 +13,8 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     tuple val(meta2), path(fasta), path(fai)
     path(intervals)
     val save_mpileup
+    val group_samples
+    path(population_file)
 
     output:
     tuple val(meta), path("*vcf.gz"), emit: vcf
@@ -30,6 +32,8 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     def mpileup = save_mpileup ? "| tee ${prefix}.mpileup" : ""
     def bgzip_mpileup = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
     def intervals_cmd = intervals ? "-T ${intervals}" : ""
+    def annotate_format_ad_cmd = group_samples ? "-a AD" : ""
+    def group_samples_cmd = group_samples ? "--group-samples ${population_file}" : ""
     """
     bcftools \\
         mpileup \\
@@ -39,10 +43,12 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         ${bams} \\
         ${intervals_cmd} \\
         ${mpileup} \\
+        ${annotate_format_ad_cmd} \\
         | bcftools call \\
         --output-type z \\
         ${args2} \\
         ${intervals_cmd} \\
+        ${group_samples_cmd} \\
         --output ${prefix}.vcf.gz
 
     ${bgzip_mpileup}

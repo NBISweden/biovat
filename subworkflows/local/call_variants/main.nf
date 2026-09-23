@@ -10,6 +10,7 @@ workflow CALL_VARIANTS {
     take:
     variant_caller
     ch_alignment_and_index
+    ch_samplesheet
     ch_reference_and_fai
     dataset_name
     enable
@@ -31,11 +32,26 @@ workflow CALL_VARIANTS {
     ch_mpileup               = channel.empty()
 
     if ( variant_caller == 'bcftools' ) {
+        ch_population_file   = channel.value([])
+        if ( enable.group_samples ) {
+            ch_population_file = ch_samplesheet
+                .map { meta, _reads -> "${meta.id}\t${meta.population}" }
+                .unique()
+                .collectFile(
+                    name:    'sample_population.tsv',
+                    newLine: true,
+                    sort:    true,
+                    cache:   true
+                )
+            }
+
         BCFTOOLS_MPILEUP_MULTISAMPLE(
             ch_joint_alignments,
             ch_reference_and_fai,
             [], // intervals
-            enable.save_mpileup
+            enable.save_mpileup,
+            enable.group_samples,
+            ch_population_file
         )
         ch_variant_calls_indexed = BCFTOOLS_MPILEUP_MULTISAMPLE.out.vcf
             .join(BCFTOOLS_MPILEUP_MULTISAMPLE.out.index)

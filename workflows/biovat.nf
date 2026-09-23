@@ -177,6 +177,7 @@ workflow BIOVAT {
         CALL_VARIANTS(
             variant_caller,
             ch_alignments_for_calling,
+            ch_samplesheet,
             ch_reference_and_optional_fai,
             dataset_name,
             enable,

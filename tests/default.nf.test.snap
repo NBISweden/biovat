@@ -837,12 +837,12 @@
                 "sample_PUN-Y-LO_illumina.wgs-coverage.txt:md5,f9af234235e899b3aa24efab12dcf95f",
                 "sample_PUN-Y-LO_illumina.wgs-metrics.txt:md5,21894c86b1ec37a2a163596601424183",
                 "sample_PUN-Y-LO_illumina.flagstat:md5,489c37234289a01b5368c0e60a2802c2",
-                "Diplacus_puniceus_red_yellow.vcf.gz.tbi:md5,73eca27e211ededc468679b530405f79",
+                "Diplacus_puniceus_red_yellow.vcf.gz.tbi:md5,d92a132fa18eb00ca414b4d28164d01d",
                 "Diplacus_puniceus_red_yellow.bcftools_stats.txt:md5,dcc436951662eec607804c86205990f1",
                 "Diplacus_puniceus_red_yellow.FILTER.summary:md5,e63bd03bb89d5f043141bff8e1fc4528",
                 "Diplacus_puniceus_red_yellow.TsTv.count:md5,91edc6a8f10e29cc6494d6e22a8a8fc1",
-                "Diplacus_puniceus_red_yellow.TsTv.qual:md5,69b0b27d769769fabc269b67d6f6acc8",
-                "Diplacus_puniceus_red_yellow.relatedness2:md5,bbcfd6293119b7946a6c32839613200b",
+                "Diplacus_puniceus_red_yellow.TsTv.qual:md5,54f9a9d472bf60ce64d6e2e44d97fb24",
+                "Diplacus_puniceus_red_yellow.relatedness2:md5,2ccd09a86040d11616b8829750669e11",
                 "bcftools-stats-subtypes.txt:md5,e7316eba04fd35ebc1fe56a3d5957e0f",
                 "bcftools_stats_indel-lengths.txt:md5,081acf5f8381302bc254a39874e8db10",
                 "bcftools_stats_variant_depths.txt:md5,fcd7da94daedc9d65182ad6b90ee9993",
@@ -961,8 +961,8 @@
                 "vcftools-relatedness2-heatmap-1.txt:md5,538e90ff8acba34123138901dc2c2945",
                 "vcftools_tstv_by_count.txt:md5,40effc2777187082362c7b6985db6d31",
                 "vcftools_tstv_by_count_vcftools_tstv_by_count.txt:md5,bf5d96c5fc97b24a17f93ef447073c93",
-                "vcftools_tstv_by_qual.txt:md5,a662e3a355e1b8862d7ec362b69b6ddf",
-                "vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt:md5,4e16caaa362d520ecd5984d1fd878a28"
+                "vcftools_tstv_by_qual.txt:md5,3149b69bf1ea0813c9bada396c87bf45",
+                "vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt:md5,ee5615d229df363fcb4d09834627377b"
             ],
             [
                 "03_read_alignment/PUN-R-ELF.1.SRR9309791.1.bam:b2f199368dba51863077d07614a30718",
@@ -984,7 +984,7 @@
                 "06_merged_samples/PUN-Y-LO_illumina.bam:a55b7df25cee17d7adf1cf8b646913dd"
             ]
         ],
-        "timestamp": "2026-09-23T11:16:13.766915",
+        "timestamp": "2026-09-23T13:34:24.64949",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

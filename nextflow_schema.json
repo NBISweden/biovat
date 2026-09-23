@@ -172,6 +172,10 @@
                     "type": "boolean",
                     "description": "Save the intermediate bcftools mpileup output."
                 },
+                "enable_group_samples": {
+                    "type": "boolean",
+                    "description": "Group samples into populations and apply the HWE assumption within but not across the populations in bcftools call."
+                },
                 "bcftools_mpileup_arguments": {
                     "type": "string",
                     "default": "--no-BAQ",
