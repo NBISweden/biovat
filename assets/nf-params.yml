@@ -75,6 +75,6 @@ enable_variant_calling: true # Boolean: call variants from alignment files (BAM/
 
 ## BCFtools variant calling
 # enable_save_mpileup: false # Boolean: save variants in mpileup format in addition to VCF. Default: false
-# enable_group_samples: false # Boolean: group samples into populations and apply the HWE assumption within but not across the populations in bcftools call. Adds the flags '-a AD' to bcftools mpileup and '--group-samples sample_population.tsv' to bcftools call. Default: false
+# enable_group_samples: false # Boolean: group samples into populations and apply the HWE assumption within but not across the populations in bcftools call. Default: false
 # bcftools_mpileup_extra: '--noBAQ --min-BQ 30 -min-MQ 30' # Default: --no-BAQ
 # bcftools_call_extra: '--multiallelic-caller' # Default: --multiallelic-caller --variants-only
