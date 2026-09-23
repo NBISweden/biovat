@@ -171,6 +171,11 @@
                 "enable_save_mpileup": {
                     "type": "boolean",
                     "description": "Save the intermediate bcftools mpileup output."
+                },
+                "bcftools_call_arguments": {
+                    "type": "string",
+                    "default": "--multiallelic-caller --variants-only",
+                    "description": "Command line arguments passed to bcftools call."
                 }
             }
         },

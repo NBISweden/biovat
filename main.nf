@@ -46,8 +46,10 @@ params {
     optical_distance            : Integer
 
     // Variant calling options
+    dataset_name                : String
     variant_caller              : String
     enable_save_mpileup         : Boolean
+    bcftools_call_arguments     : String
 
     // MultiQC options
     multiqc_config              : String

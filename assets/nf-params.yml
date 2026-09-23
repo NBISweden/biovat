@@ -70,5 +70,9 @@ enable_variant_calling: true # Boolean: call variants from alignment files (BAM/
 
 ## Variant calling
 
+# dataset_name: "M_aurantiacus_v1" # Default: all_samples
 # variant_caller: "bcftools" # Default: bcftools
+
+## BCFtools variant calling
 # enable_save_mpileup: false # Boolean: save variants in mpileup format in addition to VCF. Default: false
+# bcftools_call_arguments: '--multiallelic-caller' # Default: --multiallelic-caller --variants-only

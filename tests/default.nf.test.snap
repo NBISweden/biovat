@@ -837,15 +837,15 @@
                 "sample_PUN-Y-LO_illumina.wgs-coverage.txt:md5,f9af234235e899b3aa24efab12dcf95f",
                 "sample_PUN-Y-LO_illumina.wgs-metrics.txt:md5,21894c86b1ec37a2a163596601424183",
                 "sample_PUN-Y-LO_illumina.flagstat:md5,489c37234289a01b5368c0e60a2802c2",
-                "Diplacus_puniceus_red_yellow.vcf.gz.tbi:md5,9eb649ad02d9f434d4e38b5b80e87050",
-                "Diplacus_puniceus_red_yellow.bcftools_stats.txt:md5,f2e8a73454645cf3cfeac35775784306",
-                "Diplacus_puniceus_red_yellow.FILTER.summary:md5,2c63bd046e0e96cb726bac9e3da3d853",
+                "Diplacus_puniceus_red_yellow.vcf.gz.tbi:md5,c4c4bc015c225490dcbf7ef15bfc2135",
+                "Diplacus_puniceus_red_yellow.bcftools_stats.txt:md5,abf88c4b9386cf6d2b9db60004dd4e4d",
+                "Diplacus_puniceus_red_yellow.FILTER.summary:md5,84cbf228b43c5a28737237ac15a39537",
                 "Diplacus_puniceus_red_yellow.TsTv.count:md5,b718ac221105e0ef5e0f55be35ff89db",
-                "Diplacus_puniceus_red_yellow.TsTv.qual:md5,67a6168b54086100a0a1e32dcdefe8dd",
-                "Diplacus_puniceus_red_yellow.relatedness2:md5,4116d0923d814bbefe01d8a2e540fcf7",
+                "Diplacus_puniceus_red_yellow.TsTv.qual:md5,788a52d1d53ccfc81012f170df460d3b",
+                "Diplacus_puniceus_red_yellow.relatedness2:md5,e1fb48f91db57df7c3b39280209fcc3c",
                 "bcftools-stats-subtypes.txt:md5,03857ff2acb79cd29ef90439504d3fab",
                 "bcftools_stats_indel-lengths.txt:md5,085904b73f63b161cbcc5b794af0b982",
-                "bcftools_stats_variant_depths.txt:md5,db2e8655d26f8732ad352f483d591c5f",
+                "bcftools_stats_variant_depths.txt:md5,e2abbc616ec9af857e18373ea27a36b6",
                 "bcftools_stats_vqc_Count_Indels.txt:md5,4bb5fc7693efe8192682c3cc1c57b499",
                 "bcftools_stats_vqc_Count_SNP.txt:md5,3478651d830ba9767e71dfa81ce20c18",
                 "bcftools_stats_vqc_Count_Transitions.txt:md5,777b9928a0ad3f24666c7050ec41c50e",
@@ -875,11 +875,11 @@
                 "fastqc_raw_sequence_counts_plot.txt:md5,9b04e8fd370f75fdb167dddf0cd8ff32",
                 "fastqc_raw_sequence_duplication_levels_plot.txt:md5,70c2b8d8a4a92e6f85631f6403c79994",
                 "fastqc_raw_top_overrepresented_sequences_table.txt:md5,592adcf154f8e2aad2045a89a90dec5f",
-                "multiqc_bcftools_stats_bcftools.txt:md5,cd8e8feadc2c62a8702b320a22246801",
+                "multiqc_bcftools_stats_bcftools.txt:md5,da506263751de5e6728abe2f4ba4432a",
                 "multiqc_citations.txt:md5,5f191b693fe416b9bf4fc88421bb4c64",
                 "multiqc_fastp_fastp.txt:md5,d15479e9e321202006e8155a6ddb057a",
                 "multiqc_fastqc_fastqc_raw.txt:md5,679f1d365035e8b58c9a1a5b9fba070d",
-                "multiqc_general_stats.txt:md5,65b5eaafae9dafea5e691e9e7148f261",
+                "multiqc_general_stats.txt:md5,03e370ded9074a3b06601184de0f1313",
                 "multiqc_riker_library_alignment_riker_library.txt:md5,58c6b3b7bba979c0d30b2a8078d4e85d",
                 "multiqc_riker_library_basic_base_distribution_riker_library.txt:md5,53d5d8811979946cbfef7dcbd6c799fb",
                 "multiqc_riker_library_basic_mean_quality_by_cycle_riker_library.txt:md5,ec6b121b4eca8546cbbbfdb0dcbfe423",
@@ -961,8 +961,8 @@
                 "vcftools-relatedness2-heatmap-1.txt:md5,b324b75c6a3111e27e88bec22dea6db3",
                 "vcftools_tstv_by_count.txt:md5,c06d19252761fb9e4a434602aaaf7320",
                 "vcftools_tstv_by_count_vcftools_tstv_by_count.txt:md5,c23dda43f35f727f50dbdb2599d4b480",
-                "vcftools_tstv_by_qual.txt:md5,de7adcadf9fac231ddf6261891a1b82a",
-                "vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt:md5,8aeefdc453495f7a5721839c31be7537"
+                "vcftools_tstv_by_qual.txt:md5,f3c77e3b0d2e90ec71b8e77f761c6f8e",
+                "vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt:md5,fd139957a4f68fd6ea5829a4d0ddf61c"
             ],
             [
                 "03_read_alignment/PUN-R-ELF.1.SRR9309791.1.bam:b2f199368dba51863077d07614a30718",
@@ -984,7 +984,7 @@
                 "06_merged_samples/PUN-Y-LO_illumina.bam:82f53f12624e7642fd573777c67fc19d"
             ]
         ],
-        "timestamp": "2026-09-23T10:47:47.242894",
+        "timestamp": "2026-09-23T11:08:50.927228",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
