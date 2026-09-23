@@ -176,6 +176,10 @@ def validateInputParameters() {
     if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
         validationError("Qualimap cannot be run when CRAM format is enabled.")
     }
+    // Parabricks markdup can only mark duplicates, not remove them
+    if ( params.duplicate_marker == 'parabricks' && params.enable_remove_duplicates ) {
+        validationError("The 'parabricks' duplicate marker can only mark duplicates, not remove them. Set '--enable_remove_duplicates' to false or change the '--duplicate_marker'.")
+    }
 
     // Stage dependency map
     def stage_dependencies = [

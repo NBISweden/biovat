@@ -50,7 +50,6 @@ workflow MARK_DUPLICATES {
         )
         ch_from_markdups_alignments_indexed = ch_from_markdups_alignments
             .join(SAMTOOLS_INDEX.out.index)
-        ch_from_markdups_alignments_indexed.view()
         ch_from_markdups_metrics            = PARABRICKS_MARKDUP.out.metrics
         ch_multiqc_files = ch_multiqc_files
             .mix(PARABRICKS_MARKDUP.out.metrics.map { _meta, file -> file })
