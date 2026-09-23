@@ -50,8 +50,8 @@ params {
     variant_caller              : String
     enable_save_mpileup         : Boolean
     enable_group_samples        : Boolean
-    bcftools_mpileup_arguments  : String
-    bcftools_call_arguments     : String
+    bcftools_mpileup_extra      : String
+    bcftools_call_extra         : String
 
     // MultiQC options
     multiqc_config              : String

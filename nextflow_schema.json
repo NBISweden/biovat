@@ -176,15 +176,15 @@
                     "type": "boolean",
                     "description": "Group samples into populations and apply the HWE assumption within but not across the populations in bcftools call."
                 },
-                "bcftools_mpileup_arguments": {
+                "bcftools_mpileup_extra": {
                     "type": "string",
                     "default": "--no-BAQ",
-                    "description": "Command line arguments passed to bcftools mpileup."
+                    "description": "Additional command line arguments passed to bcftools mpileup."
                 },
-                "bcftools_call_arguments": {
+                "bcftools_call_extra": {
                     "type": "string",
                     "default": "--multiallelic-caller --variants-only",
-                    "description": "Command line arguments passed to bcftools call."
+                    "description": "Additional command line arguments passed to bcftools call."
                 }
             }
         },
