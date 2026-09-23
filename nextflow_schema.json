@@ -128,7 +128,7 @@
                     "type": "string",
                     "default": "samtools",
                     "description": "Duplicate marking tool choice.",
-                    "enum": ["picard", "samtools"]
+                    "enum": ["picard", "samtools", "parabricks"]
                 },
                 "enable_remove_duplicates": {
                     "type": "boolean",

@@ -1,5 +1,6 @@
 include { PICARD_MARKDUPLICATES } from '../../../modules/nf-core/picard/markduplicates/main'
 include { SAMTOOLS_SORMADUP     } from '../../../modules/nf-core/samtools/sormadup/main'
+include { PARABRICKS_MARKDUP    } from '../../../modules/local/parabricks/markdup/main'
 include { SAMTOOLS_INDEX        } from '../../../modules/nf-core/samtools/index/main'
 include { ALIGNMENT_QC          } from '../alignment_qc/main'
 
@@ -38,6 +39,21 @@ workflow MARK_DUPLICATES {
         ch_from_markdups_metrics            = SAMTOOLS_SORMADUP.out.metrics
         ch_multiqc_files = ch_multiqc_files
             .mix(SAMTOOLS_SORMADUP.out.metrics.map { _meta, file -> file })
+    } else if ( duplicate_marker == 'parabricks' ) {
+        PARABRICKS_MARKDUP(
+            ch_library_alignments_indexed.map { meta, alignment, _index -> [ meta, alignment ] },
+            ch_reference_and_optional_fai
+        )
+        ch_from_markdups_alignments = PARABRICKS_MARKDUP.out.bam.mix(PARABRICKS_MARKDUP.out.cram)
+        SAMTOOLS_INDEX(
+            ch_from_markdups_alignments
+        )
+        ch_from_markdups_alignments_indexed = ch_from_markdups_alignments
+            .join(SAMTOOLS_INDEX.out.index)
+        ch_from_markdups_alignments_indexed.view()
+        ch_from_markdups_metrics            = PARABRICKS_MARKDUP.out.metrics
+        ch_multiqc_files = ch_multiqc_files
+            .mix(PARABRICKS_MARKDUP.out.metrics.map { _meta, file -> file })
     }
 
     // MARK_DUPLICATES:ALIGNMENT_QC
