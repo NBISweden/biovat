@@ -16,4 +16,4 @@ pipeline_info/*.{html,json,txt,yml}
 05_duplicate_processed/*.{bam,bam.csi}
 06_merged_samples/*.{bam,bam.csi}
 **/qc/riker/*.{pdf}
-06_variant_calls/*.{vcf,vcf.gz}
+07_variant_calls/*.{vcf,vcf.gz}

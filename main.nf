@@ -284,25 +284,25 @@ output {
     }
         // CALL_VARIANTS
     outputs_variant_calls {
-        path '06_variant_calls'
+        path '07_variant_calls'
     }
     outputs_mpileup {
-        path '06_variant_calls'
+        path '07_variant_calls'
     }
     outputs_call_variants_bcftools_stats {
-        path '06_variant_calls/qc/bcftools_stats'
+        path '07_variant_calls/qc/bcftools_stats'
     }
     outputs_call_variants_vcftools_tstv_counts {
-        path '06_variant_calls/qc/vcftools'
+        path '07_variant_calls/qc/vcftools'
     }
     outputs_call_variants_vcftools_tstv_qual {
-        path '06_variant_calls/qc/vcftools'
+        path '07_variant_calls/qc/vcftools'
     }
     outputs_call_variants_vcftools_filter_summary {
-        path '06_variant_calls/qc/vcftools'
+        path '07_variant_calls/qc/vcftools'
     }
     outputs_call_variants_vcftools_relatedness2 {
-        path '06_variant_calls/qc/vcftools'
+        path '07_variant_calls/qc/vcftools'
     }
     // MultiQC
     outputs_multiqc {
