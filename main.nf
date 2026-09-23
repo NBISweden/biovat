@@ -49,6 +49,7 @@ params {
     dataset_name                : String
     variant_caller              : String
     enable_save_mpileup         : Boolean
+    bcftools_mpileup_arguments  : String
     bcftools_call_arguments     : String
 
     // MultiQC options

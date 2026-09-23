@@ -75,4 +75,5 @@ enable_variant_calling: true # Boolean: call variants from alignment files (BAM/
 
 ## BCFtools variant calling
 # enable_save_mpileup: false # Boolean: save variants in mpileup format in addition to VCF. Default: false
+# bcftools_mpileup_arguments: '--noBAQ --min-BQ 30 -min-MQ 30' # Default: --no-BAQ
 # bcftools_call_arguments: '--multiallelic-caller' # Default: --multiallelic-caller --variants-only
