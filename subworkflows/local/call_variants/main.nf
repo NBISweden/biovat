@@ -32,6 +32,7 @@ workflow CALL_VARIANTS {
     ch_mpileup               = channel.empty()
 
     if ( variant_caller == 'bcftools' ) {
+        // TODO: If ch_population_file is re-used in future modules, move the following code to PIPELINE_INITIALISATION
         ch_population_file   = channel.value([])
         if ( enable.group_samples ) {
             ch_population_file = ch_samplesheet
