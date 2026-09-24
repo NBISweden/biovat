@@ -8,9 +8,10 @@ workflow INGEST_BAM_OR_CRAM {
     enable
 
     main:
+    // ifEmpty handles case with no reference set (only BAM, CRAM input forces early error)
     SAMTOOLS_SORT(
         ch_input_bam_cram,
-        enable.cram_format ? ch_reference_and_optional_fai : [[],[],[]],
+        ch_reference_and_optional_fai.ifEmpty([[],[],[]]),
         enable.cram_format ? "crai" : "csi"
     )
     normalised_bam      = SAMTOOLS_SORT.out.bam.join(SAMTOOLS_SORT.out.index)

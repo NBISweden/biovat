@@ -105,6 +105,9 @@ workflow PIPELINE_INITIALISATION {
     // inconsistent read pairing
     validateSampleEndedness(samplesheet_rows)
 
+    // A CRAM input row needs --reference to decode
+    validateCramInputReference(samplesheet_rows)
+
     ch_samplesheet = channel
         .fromList(samplesheet_rows)
 
@@ -214,6 +217,20 @@ def validateSampleEndedness(rows) {
                 validationError("Sample '${sample_id}' mixes single-end and paired-end reads across libraries - all libraries of a sample must share the same read layout.")
             }
         }
+}
+
+// A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
+def validateCramInputReference(rows) {
+    if ( params.reference ) {
+        return
+    }
+    def cram_samples = rows
+        .findAll { meta, files -> meta.input_type == 'bam_cram' && files[0].toString().endsWith('.cram') }
+        .collect { meta, _files -> meta.id }
+        .unique()
+    if ( cram_samples ) {
+        validationError("CRAM input requires --reference to decode (sample(s): ${cram_samples.join(', ')}).")
+    }
 }
 
 //
