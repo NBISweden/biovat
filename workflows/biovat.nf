@@ -25,7 +25,7 @@ workflow BIOVAT {
     requires               // map: defines internal dependency relationships
     adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
     aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    duplicate_marker       // string: Duplicate marking tool to use (e.g. picard, samtools)
+    duplicate_marker       // string: Duplicate marking tool to use (e.g. picard, samtools, parabricks)
     multiqc_config
     multiqc_logo
     multiqc_methods_description

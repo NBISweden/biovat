@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "parabricks_markdup"
+description: NVIDIA Clara Parabricks GPU-accelerated duplicate marking. Presorts
+  the input to queryname order internally, since the tool requires this, and
+  produces coordinate-sorted output equivalent to GATK MarkDuplicates run on a
+  coordinate-sorted BAM.
+keywords:
+  - markdup
+  - duplicates
+  - gpu
+  - genomics
+tools:
+  - "parabricks":
+      description: "NVIDIA Clara Parabricks GPU-accelerated genomics tools"
+      homepage: "https://www.nvidia.com/en-us/clara/genomics/"
+      documentation: "https://docs.nvidia.com/clara/parabricks/latest/index.html"
+      tool_dev_url: ""
+      doi: ""
+      licence: ["custom"]
+      identifier: null
+
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1' ]`
+    - bam:
+        type: file
+        description: Coordinate-sorted BAM/CRAM file
+        pattern: "*.{bam,cram}"
+        ontologies:
+          - edam: "http://edamontology.org/format_2572" # BAM
+          - edam: "http://edamontology.org/format_2573" # CRAM
+  - - meta2:
+        type: map
+        description: |
+          Groovy Map containing fasta information
+    - fasta:
+        type: file
+        description: Reference fasta file, required for CRAM input
+        pattern: "*.{fa,fasta}"
+        ontologies:
+          - edam: "http://edamontology.org/format_1929" # FASTA
+    - fai:
+        type: file
+        description: Reference fasta index file
+        pattern: "*.fai"
+
+output:
+  bam:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "*.bam":
+          type: file
+          description: Coordinate-sorted BAM file with duplicates marked, produced
+            when the input alignment is a BAM
+          pattern: "*.bam"
+          ontologies:
+            - edam: "http://edamontology.org/format_2572" # BAM
+  cram:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "*.cram":
+          type: file
+          description: Coordinate-sorted CRAM file with duplicates marked, produced
+            when the input alignment is a CRAM
+          pattern: "*.cram"
+          ontologies:
+            - edam: "http://edamontology.org/format_2573" # CRAM
+  versions_parabricks:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "parabricks":
+          type: string
+          description: The name of the tool
+      - "pbrun version | grep -m1 '^pbrun:' | sed 's/^pbrun:[[:space:]]*//'":
+          type: eval
+          description: The expression to obtain the version of the tool
+
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - parabricks:
+          type: string
+          description: The name of the tool
+      - pbrun version | grep -m1 '^pbrun:' | sed 's/^pbrun:[[:space:]]*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - "@CormacKinsella"
+maintainers:
+  - "@CormacKinsella"
