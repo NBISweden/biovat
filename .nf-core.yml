@@ -7,8 +7,8 @@ lint:
     # Binary alignment fixtures: mimetypes doesn't recognise .bam/.cram, so the
     # naive Jinja-placeholder scan reads them as latin1 text and can coincidentally
     # match double-brace patterns in compressed binary data. False positives.
-    - tests/data/monkeyflower/PUN-R-MT.1.SRR9309471.2.cram
-    - tests/data/monkeyflower/PUN-R-ELF.2.SRR9309891.3.bam
+    - tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram
+    - tests/data/monkeyflower/PUN-R-ELF_2.bam
   files_unchanged:
     - docs/CONTRIBUTING.md
     - CODE_OF_CONDUCT.md
