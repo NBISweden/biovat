@@ -91,17 +91,22 @@ workflow PIPELINE_INITIALISATION {
     // creating a channel from it. Uniqueness of the sample/library_id/flowcell_id/lane
     // combination is enforced by the "uniqueEntries" key in assets/schema_input.json
     def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
-        .collect { meta, fastq_1, fastq_2 ->
+        .collect { meta, fastq_1, fastq_2, bam ->
             def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
-            fastq_2
-                ? [ meta + [ single_end:false, read_group:read_group ], [ fastq_1, fastq_2 ] ]
-                : [ meta + [ single_end:true,  read_group:read_group ], [ fastq_1 ] ]
+            bam
+                ? [ meta + [ read_group:read_group, input_type:'bam_cram' ], [ bam ] ]
+                : fastq_2
+                    ? [ meta + [ single_end:false, read_group:read_group, input_type:'fastq' ], [ fastq_1, fastq_2 ] ]
+                    : [ meta + [ single_end:true, read_group:read_group, input_type:'fastq' ], [ fastq_1 ] ]
         }
 
     // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every
     // library sharing a sample, must agree on single_end or the merge produces a BAM with
     // inconsistent read pairing
     validateSampleEndedness(samplesheet_rows)
+
+    // A CRAM input row needs --reference to decode
+    validateCramInputReference(samplesheet_rows)
 
     ch_samplesheet = channel
         .fromList(samplesheet_rows)
@@ -182,7 +187,7 @@ def validateInputParameters() {
         'raw_read_qc': [],
         'trim': [],
         'align': [],
-        'mark_duplicates': ['align'],
+        'mark_duplicates': [],
     ]
     stage_dependencies.each { step, dependencies ->
         if (enable[step]) {
@@ -212,6 +217,20 @@ def validateSampleEndedness(rows) {
                 validationError("Sample '${sample_id}' mixes single-end and paired-end reads across libraries - all libraries of a sample must share the same read layout.")
             }
         }
+}
+
+// A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
+def validateCramInputReference(rows) {
+    if ( params.reference ) {
+        return
+    }
+    def cram_samples = rows
+        .findAll { meta, files -> meta.input_type == 'bam_cram' && files[0].toString().endsWith('.cram') }
+        .collect { meta, _files -> meta.id }
+        .unique()
+    if ( cram_samples ) {
+        validationError("CRAM input requires --reference to decode (sample(s): ${cram_samples.join(', ')}).")
+    }
 }
 
 //

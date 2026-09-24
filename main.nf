@@ -24,6 +24,7 @@ params {
     enable_align                : Boolean
     enable_align_qc             : Boolean
     enable_mark_duplicates      : Boolean
+    enable_variant_calling      : Boolean
 
     // Read trimming options
     adapter_fasta               : String
@@ -90,16 +91,17 @@ workflow NBISWEDEN_BIOVAT {
     // 'requires' is a map of internal dependency relationships
     def requires = [
         // MERGE_TO_LIBRARY (readgroup -> library) and MERGE_TO_SAMPLE (library -> sample, post-deduplication)
-        // are both triggered when a downstream consumer needs deduplicated alignments
-        merge: enable.mark_duplicates
+        // are triggered when a downstream consumer needs alignments merged to respective levels
+        merge_to_library: enable.mark_duplicates,
+        merge_to_sample : enable.variant_calling
     ]
 
     // ALIGNMENT_QC runs when a parent stage is also enabled
-    // requires.merge acts as an umbrella for all sample-level stages
-    def align_qc_active = enable.align_qc && (enable.align || requires.merge)
+    // requires.merge_to_sample acts as an umbrella for all sample-level stages
+    def align_qc_active = enable.align_qc && (enable.align || requires.merge_to_library || requires.merge_to_sample)
 
     // .fai is used for certain CRAM processes, and unconditionally by riker
-    requires.fai = (enable.cram_format && requires.merge)
+    requires.fai = (enable.cram_format && (requires.merge_to_library || requires.merge_to_sample))
         || (align_qc_active && enable.riker)
 
     BIOVAT (

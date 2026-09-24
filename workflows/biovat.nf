@@ -8,6 +8,7 @@ include { paramsSummaryMap          } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText    } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { INGEST_BAM_OR_CRAM        } from '../subworkflows/local/utils_bam'
 include { REFERENCE_UTILS           } from '../subworkflows/local/utils_reference'
 include { READ_QC                   } from '../subworkflows/local/read_qc/main'
 include { TRIM_READS                } from '../subworkflows/local/trim_reads/main'
@@ -34,7 +35,12 @@ workflow BIOVAT {
     main:
     def ch_versions      = channel.empty()
     def ch_multiqc_files = channel.empty()
-    reads_to_process     = ch_samplesheet
+    ch_input             = ch_samplesheet
+        .branch { meta, _data ->
+            bam_cram: meta.input_type == 'bam_cram'
+            fastq: meta.input_type == 'fastq'
+        }
+    reads_to_preprocess = ch_input.fastq
 
     // Reference utilities
     ch_reference_and_optional_fai = channel.empty()
@@ -50,7 +56,7 @@ workflow BIOVAT {
     outputs_raw_read_qc = channel.empty()
     if ( enable.raw_read_qc ) {
         READ_QC(
-            reads_to_process
+            reads_to_preprocess
         )
         ch_multiqc_files    = ch_multiqc_files.mix(READ_QC.out.fastqc_zip.map { _meta, file -> file })
         outputs_raw_read_qc = READ_QC.out.fastqc_zip.mix(READ_QC.out.fastqc_html)
@@ -61,15 +67,15 @@ workflow BIOVAT {
     if ( enable.trim ) {
         // FASTP takes reads + adapters (if provided)
         def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
-        def ch_reads_and_adapters = reads_to_process.map { meta, reads -> [meta, reads, path_adapter_fasta] }
+        def ch_reads_and_adapters = reads_to_preprocess.map { meta, reads -> [meta, reads, path_adapter_fasta] }
         // FASTP
         TRIM_READS(
             ch_reads_and_adapters,
             enable
         )
-        reads_to_process   = TRIM_READS.out.trimmed_reads
-        ch_multiqc_files   = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map { _meta, file -> file })
-        outputs_trim_reads = TRIM_READS.out.mix()
+        reads_to_preprocess = TRIM_READS.out.trimmed_reads
+        ch_multiqc_files    = ch_multiqc_files.mix(TRIM_READS.out.fastp_json.map { _meta, file -> file })
+        outputs_trim_reads  = TRIM_READS.out.mix()
     }
 
     // Align reads
@@ -82,7 +88,7 @@ workflow BIOVAT {
         ALIGN_READS(
             aligner,
             ch_reference_and_optional_fai,
-            reads_to_process,
+            reads_to_preprocess,
             enable,
             ch_multiqc_files
         )
@@ -94,30 +100,37 @@ workflow BIOVAT {
         outputs_read_group_qualimap      = ALIGN_READS.out.outputs_read_group_qualimap
     }
 
+    // User input BAM/CRAMs enter here
+    // We assume they are aligned, but enforce sorting/indexing to ensure compatibility
+    INGEST_BAM_OR_CRAM(
+        ch_input.bam_cram,
+        ch_reference_and_optional_fai,
+        enable
+    )
+    alignments_to_process = ch_read_group_alignments_indexed.mix(INGEST_BAM_OR_CRAM.out.user_input_bam_cram)
+
     // Merge lane alignments to library level
-    ch_library_alignments_indexed = channel.empty()
     outputs_library               = channel.empty()
     outputs_library_flagstat      = channel.empty()
     outputs_library_riker         = channel.empty()
     outputs_library_qualimap      = channel.empty()
-    if ( requires.merge ) {
+    if ( requires.merge_to_library ) {
         MERGE_TO_LIBRARY(
-            ch_read_group_alignments_indexed,
+            alignments_to_process,
             ch_reference_and_optional_fai,
             enable,
             ch_multiqc_files,
             'library'
         )
-        ch_library_alignments_indexed = MERGE_TO_LIBRARY.out.ch_merged_alignments_indexed
-        ch_multiqc_files              = MERGE_TO_LIBRARY.out.ch_multiqc_files
-        outputs_library               = MERGE_TO_LIBRARY.out.outputs_alignments
-        outputs_library_flagstat      = MERGE_TO_LIBRARY.out.outputs_flagstat
-        outputs_library_riker         = MERGE_TO_LIBRARY.out.outputs_riker
-        outputs_library_qualimap      = MERGE_TO_LIBRARY.out.outputs_qualimap
+        alignments_to_process    = MERGE_TO_LIBRARY.out.ch_merged_alignments_indexed
+        ch_multiqc_files         = MERGE_TO_LIBRARY.out.ch_multiqc_files
+        outputs_library          = MERGE_TO_LIBRARY.out.outputs_alignments
+        outputs_library_flagstat = MERGE_TO_LIBRARY.out.outputs_flagstat
+        outputs_library_riker    = MERGE_TO_LIBRARY.out.outputs_riker
+        outputs_library_qualimap = MERGE_TO_LIBRARY.out.outputs_qualimap
     }
 
     // Deduplicate library alignments
-    ch_from_markdups_alignments_indexed = channel.empty()
     outputs_mark_duplicates             = channel.empty()
     outputs_mark_duplicates_flagstat    = channel.empty()
     outputs_mark_duplicates_riker       = channel.empty()
@@ -125,40 +138,39 @@ workflow BIOVAT {
     if ( enable.mark_duplicates ) {
         MARK_DUPLICATES(
             duplicate_marker,
-            ch_library_alignments_indexed,
+            alignments_to_process,
             ch_reference_and_optional_fai,
             ch_multiqc_files,
             enable
         )
-        ch_from_markdups_alignments_indexed = MARK_DUPLICATES.out.ch_from_markdups_alignments_indexed
-        ch_multiqc_files                    = MARK_DUPLICATES.out.ch_multiqc_files
-        outputs_mark_duplicates             = ch_from_markdups_alignments_indexed
+        alignments_to_process            = MARK_DUPLICATES.out.ch_from_markdups_alignments_indexed
+        ch_multiqc_files                 = MARK_DUPLICATES.out.ch_multiqc_files
+        outputs_mark_duplicates          = alignments_to_process
             .mix(MARK_DUPLICATES.out.ch_from_markdups_metrics)
-        outputs_mark_duplicates_flagstat    = MARK_DUPLICATES.out.outputs_mark_duplicates_flagstat
-        outputs_mark_duplicates_riker       = MARK_DUPLICATES.out.outputs_mark_duplicates_riker
-        outputs_mark_duplicates_qualimap    = MARK_DUPLICATES.out.outputs_mark_duplicates_qualimap
+        outputs_mark_duplicates_flagstat = MARK_DUPLICATES.out.outputs_mark_duplicates_flagstat
+        outputs_mark_duplicates_riker    = MARK_DUPLICATES.out.outputs_mark_duplicates_riker
+        outputs_mark_duplicates_qualimap = MARK_DUPLICATES.out.outputs_mark_duplicates_qualimap
     }
 
     // Merge deduplicated library alignments to sample level
-    ch_sample_alignments_indexed = channel.empty()
     outputs_sample               = channel.empty()
     outputs_sample_flagstat      = channel.empty()
     outputs_sample_riker         = channel.empty()
     outputs_sample_qualimap      = channel.empty()
-    if ( requires.merge ) {
+    if ( requires.merge_to_sample ) {
         MERGE_TO_SAMPLE(
-            ch_from_markdups_alignments_indexed,
+            alignments_to_process,
             ch_reference_and_optional_fai,
             enable,
             ch_multiqc_files,
             'sample'
         )
-        ch_sample_alignments_indexed = MERGE_TO_SAMPLE.out.ch_merged_alignments_indexed
-        ch_multiqc_files             = MERGE_TO_SAMPLE.out.ch_multiqc_files
-        outputs_sample               = MERGE_TO_SAMPLE.out.outputs_alignments
-        outputs_sample_flagstat      = MERGE_TO_SAMPLE.out.outputs_flagstat
-        outputs_sample_riker         = MERGE_TO_SAMPLE.out.outputs_riker
-        outputs_sample_qualimap      = MERGE_TO_SAMPLE.out.outputs_qualimap
+        alignments_to_process   = MERGE_TO_SAMPLE.out.ch_merged_alignments_indexed
+        ch_multiqc_files        = MERGE_TO_SAMPLE.out.ch_multiqc_files
+        outputs_sample          = MERGE_TO_SAMPLE.out.outputs_alignments
+        outputs_sample_flagstat = MERGE_TO_SAMPLE.out.outputs_flagstat
+        outputs_sample_riker    = MERGE_TO_SAMPLE.out.outputs_riker
+        outputs_sample_qualimap = MERGE_TO_SAMPLE.out.outputs_qualimap
     }
 
     // Collate and save software versions

@@ -17,32 +17,37 @@ You will need to create a samplesheet with information about the samples you wou
 The samplesheet can have as many columns as you desire, however, it must contain the columns defined in the table below. It has to contain a header row as shown in the example below.
 
 The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. Sequencing library IDs, flowcell IDs, and lane numbers are specified in the columns `library_id`,
-`flowcell_id`, and `lane`. Each combination of `sample`, `library_id`, `flowcell_id`, and `lane` has to be unique. When deduplication is enabled, alignments belonging to the same sample and library are first merged across lanes/flowcells, deduplicated, and then merged again across libraries to give one alignment per sample, ready for any analysis downstream of alignment, such as variant calling.
+`flowcell_id`, and `lane`. Each combination of `sample`, `library_id`, `flowcell_id`, and `lane` has to be unique. When deduplication is enabled, alignments belonging to the same sample and library are first merged and deduplicated. If variant calling is enabled, libraries are further merged to sample level.
 
-A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. Sample `S1` has been sequenced across three lanes and sample `S6` has been sequenced twice.
+Each row must provide raw reads via `fastq_1` (optionally `fastq_2`), **or** an already-aligned `BAM`/`CRAM` file via `bam`. If providing `BAM`/`CRAM`, users must also fill-out the `single_end` column (`false` for paired-end reads). When providing pre-aligned files, raw read QC, trimming, and alignment are skipped. All read groups of a library, and all libraries of a sample, must agree on `single_end` (mixing single- and paired-end reads at the same merge level is rejected).
+
+A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. A single library of sample `S1` has been sequenced across three lanes. Two independent libraries of sample `S6` have been sequenced. Sample `S7` supplies a pre-aligned CRAM instead of raw reads.
 
 ```csv title="samplesheet.csv"
-sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2
-S1,1,AEG588A1,2,illumina,/data/AEG588A1_S1_L002_R1_001.fastq.gz,/data/AEG588A1_S1_L002_R2_001.fastq.gz
-S1,1,AEG588A1,3,illumina,/data/AEG588A1_S1_L003_R1_001.fastq.gz,/data/AEG588A1_S1_L003_R2_001.fastq.gz
-S1,1,AEG588A1,4,illumina,/data/AEG588A1_S1_L004_R1_001.fastq.gz,/data/AEG588A1_S1_L004_R2_001.fastq.gz
-S2,1,AEG588A2,2,illumina,/data/AEG588A2_S2_L002_R1_001.fastq.gz,/data/AEG588A2_S2_L002_R2_001.fastq.gz
-S3,1,AEG588A3,2,illumina,/data/AEG588A3_S3_L002_R1_001.fastq.gz,/data/AEG588A3_S3_L002_R2_001.fastq.gz
-S4,1,AEG588A4,3,illumina,/data/AEG588A4_S4_L003_R1_001.fastq.gz,/data/AEG588A4_S4_L003_R2_001.fastq.gz
-S5,1,AEG588A5,3,illumina,/data/AEG588A5_S5_L003_R1_001.fastq.gz,/data/AEG588A5_S5_L003_R2_001.fastq.gz
-S6,1,AEG588A6,3,illumina,/data/AEG588A6_S6_L003_R1_001.fastq.gz,/data/AEG588A6_S6_L003_R2_001.fastq.gz
-S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S6_L004_R2_001.fastq.gz
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end
+S1,1,AEG588A1,2,illumina,/data/AEG588A1_S1_L002_R1_001.fastq.gz,/data/AEG588A1_S1_L002_R2_001.fastq.gz,,
+S1,1,AEG588A1,3,illumina,/data/AEG588A1_S1_L003_R1_001.fastq.gz,/data/AEG588A1_S1_L003_R2_001.fastq.gz,,
+S1,1,AEG588A1,4,illumina,/data/AEG588A1_S1_L004_R1_001.fastq.gz,/data/AEG588A1_S1_L004_R2_001.fastq.gz,,
+S2,1,AEG588A2,2,illumina,/data/AEG588A2_S2_L002_R1_001.fastq.gz,/data/AEG588A2_S2_L002_R2_001.fastq.gz,,
+S3,1,AEG588A3,2,illumina,/data/AEG588A3_S3_L002_R1_001.fastq.gz,/data/AEG588A3_S3_L002_R2_001.fastq.gz,,
+S4,1,AEG588A4,3,illumina,/data/AEG588A4_S4_L003_R1_001.fastq.gz,/data/AEG588A4_S4_L003_R2_001.fastq.gz,,
+S5,1,AEG588A5,3,illumina,/data/AEG588A5_S5_L003_R1_001.fastq.gz,/data/AEG588A5_S5_L003_R2_001.fastq.gz,,
+S6,1,AEG588A6,3,illumina,/data/AEG588A6_S6_L003_R1_001.fastq.gz,/data/AEG588A6_S6_L003_R2_001.fastq.gz,,
+S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S6_L004_R2_001.fastq.gz,,
+S7,1,AEG588A7,2,illumina,,,/data/AEG588A7_S7_L002.cram,false
 ```
 
-| Column        | Description                                                                                                                                                     |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`      | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample                                           |
-| `library_id`  | Unique sequencing library identifier                                                                                                                            |
-| `flowcell_id` | Unique identifier/barcode of the flowcell used for this sample library                                                                                          |
-| `lane`        | The flow cell lane number as a positive integer                                                                                                                 |
-| `platform`    | Sequencing platform with no spaces, for example `illumina`                                                                                                      |
-| `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz"                                       |
-| `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads |
+| Column        | Description                                                                                                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sample`      | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample                                                            |
+| `library_id`  | Unique sequencing library identifier                                                                                                                                             |
+| `flowcell_id` | Unique identifier/barcode of the flowcell used for this sample library                                                                                                           |
+| `lane`        | The flow cell lane number as a positive integer                                                                                                                                  |
+| `platform`    | Sequencing platform with no spaces, for example `illumina`                                                                                                                       |
+| `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Mutually exclusive with `bam`                         |
+| `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads                  |
+| `bam`         | Full path to a pre-aligned `.bam` or `.cram` file, provided instead of `fastq_1`/`fastq_2`. Requires `single_end` on the same row; CRAM additionally requires `--reference`      |
+| `single_end`  | Required only when `bam` is set: `true` for single-end data, `false` for paired-end. Not required for `fastq_1`/`fastq_2` rows - it's inferred from whether `fastq_2` is present |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 

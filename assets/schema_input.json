@@ -51,8 +51,33 @@
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
                 "errorMessage": "FastQ file for reads 2, if provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'. Omit for single-end reads"
+            },
+            "bam": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.(bam|cram)$",
+                "errorMessage": "Aligned BAM/CRAM file, if provided in place of fastq_1/fastq_2, cannot contain spaces and must have extension '.bam' or '.cram'"
+            },
+            "single_end": {
+                "type": "boolean",
+                "errorMessage": "BAM/CRAM input only: must be true (single-end data) or false (paired-end data)",
+                "meta": ["single_end"]
             }
         },
-        "required": ["sample", "library_id", "flowcell_id", "lane", "platform", "fastq_1"]
+        "required": ["sample", "library_id", "flowcell_id", "lane", "platform"],
+        "oneOf": [
+            { "required": ["fastq_1"], "not": { "anyOf": [{ "required": ["bam"] }, { "required": ["single_end"] }] } },
+            { "required": ["bam"], "not": { "anyOf": [{ "required": ["fastq_1"] }, { "required": ["fastq_2"] }] } }
+        ],
+        "if": {
+            "required": ["bam"]
+        },
+        "then": {
+            "required": ["single_end"]
+        },
+        "errorMessage": {
+            "oneOf": "Each row must provide either fastq_1 and optionally fastq_2, or bam and single_end."
+        }
     }
 }

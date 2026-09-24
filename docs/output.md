@@ -79,6 +79,8 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
 
+Samplesheet rows that supply an already-aligned `bam`/`cram` file (in place of `fastq_1`/`fastq_2`) skip this stage: the file is instead sorted, indexed, and re-encoded to match `--enable_cram_format` if needed. These read groups are not published under `03_read_alignment` (that directory holds `ALIGN_READS` output only) and get no read-group-level QC subfolder entry here - they first appear once merged, deduplicated, or otherwise published downstream.
+
 </details>
 
 ### Alignment QC
