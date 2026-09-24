@@ -56,12 +56,12 @@
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
-                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.bam$",
-                "errorMessage": "Aligned BAM file, if provided in place of fastq_1/fastq_2, cannot contain spaces and must have extension '.bam'"
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.(bam|cram)$",
+                "errorMessage": "Aligned BAM/CRAM file, if provided in place of fastq_1/fastq_2, cannot contain spaces and must have extension '.bam' or '.cram'"
             },
             "single_end": {
                 "type": "boolean",
-                "errorMessage": "BAM input only: must be true (single-end data) or false (paired-end data)",
+                "errorMessage": "BAM/CRAM input only: must be true (single-end data) or false (paired-end data)",
                 "meta": ["single_end"]
             }
         },

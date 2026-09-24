@@ -13,8 +13,8 @@ workflow MERGE {
     main:
     // Group on the requested level, branch to enable merge skipping (singletons).
     def keys_to_drop = level == 'library'
-        ? [ 'flowcell', 'lane', 'read_group' ]
-        : [ 'flowcell', 'lane', 'read_group', 'library' ] // else 'sample'
+        ? [ 'flowcell', 'lane', 'read_group', 'input_type' ]
+        : [ 'flowcell', 'lane', 'read_group', 'input_type', 'library' ] // else 'sample'
     ch_alignments = ch_alignments_indexed
         .map { meta, alignment, index ->
             def group_meta = meta.subMap(meta.keySet() - keys_to_drop)

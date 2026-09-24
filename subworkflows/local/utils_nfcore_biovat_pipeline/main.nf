@@ -94,7 +94,7 @@ workflow PIPELINE_INITIALISATION {
         .collect { meta, fastq_1, fastq_2, bam ->
             def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
             bam
-                ? [ meta + [ read_group:read_group, input_type:'bam' ], [ bam ] ]
+                ? [ meta + [ read_group:read_group, input_type:'bam_cram' ], [ bam ] ]
                 : fastq_2
                     ? [ meta + [ single_end:false, read_group:read_group, input_type:'fastq' ], [ fastq_1, fastq_2 ] ]
                     : [ meta + [ single_end:true, read_group:read_group, input_type:'fastq' ], [ fastq_1 ] ]
@@ -184,7 +184,7 @@ def validateInputParameters() {
         'raw_read_qc': [],
         'trim': [],
         'align': [],
-        'mark_duplicates': ['align'],
+        'mark_duplicates': [],
     ]
     stage_dependencies.each { step, dependencies ->
         if (enable[step]) {
