@@ -51,8 +51,14 @@
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
                 "errorMessage": "FastQ file for reads 2, if provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'. Omit for single-end reads"
+            },
+            "population": {
+                "type": "string",
+                "pattern": "^[^\\s.]+$",
+                "errorMessage": "Population ID for grouping of samples must be provided, cannot contain spaces or full stops",
+                "meta": ["pop"]
             }
         },
-        "required": ["sample", "library_id", "flowcell_id", "lane", "platform", "fastq_1"]
+        "required": ["sample", "library_id", "flowcell_id", "lane", "platform", "fastq_1", "population"]
     }
 }

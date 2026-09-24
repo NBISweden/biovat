@@ -60,6 +60,16 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Run the duplicate marking subworkflow."
+                },
+                "enable_variant_calling": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run variant calling on all samples."
+                },
+                "enable_variant_qc": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run quality checks on variant files (VCF/BCF)."
                 }
             }
         },
@@ -138,6 +148,43 @@
                     "type": "integer",
                     "default": 100,
                     "description": "Max offset between clusters to be considered optical duplicates. For unpatterned flowcells, use default. Patterned, use 2500."
+                }
+            }
+        },
+        "variant_calling_options": {
+            "title": "Variant calling options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "dataset_name": {
+                    "type": "string",
+                    "default": "all_samples",
+                    "description": "File name prefix used for VCF/BCF files containing all samples."
+                },
+                "variant_caller": {
+                    "type": "string",
+                    "default": "bcftools",
+                    "description": "Variant calling tool choice.",
+                    "enum": ["bcftools"]
+                },
+                "enable_save_mpileup": {
+                    "type": "boolean",
+                    "description": "Save the intermediate bcftools mpileup output."
+                },
+                "enable_group_samples": {
+                    "type": "boolean",
+                    "description": "Group samples into populations and apply the HWE assumption within but not across the populations in bcftools call."
+                },
+                "bcftools_mpileup_extra": {
+                    "type": "string",
+                    "default": "--no-BAQ",
+                    "description": "Additional command line arguments passed to bcftools mpileup."
+                },
+                "bcftools_call_extra": {
+                    "type": "string",
+                    "default": "--multiallelic-caller --variants-only",
+                    "description": "Additional command line arguments passed to bcftools call."
                 }
             }
         },
@@ -304,6 +351,9 @@
         },
         {
             "$ref": "#/$defs/duplicate_marking_options"
+        },
+        {
+            "$ref": "#/$defs/variant_calling_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
