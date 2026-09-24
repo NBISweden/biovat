@@ -837,7 +837,7 @@
                 "sample_PUN-Y-LO_illumina.wgs-coverage.txt:md5,f9af234235e899b3aa24efab12dcf95f",
                 "sample_PUN-Y-LO_illumina.wgs-metrics.txt:md5,21894c86b1ec37a2a163596601424183",
                 "sample_PUN-Y-LO_illumina.flagstat:md5,489c37234289a01b5368c0e60a2802c2",
-                "Diplacus_puniceus_red_yellow.vcf.gz.tbi:md5,8876dabf4bfa83f40ac32397409b5627",
+                "Diplacus_puniceus_red_yellow.vcf.gz.tbi:md5,20d1e7c30254868f358eb196c7abf505",
                 "bcftools-stats-subtypes.txt:md5,e7316eba04fd35ebc1fe56a3d5957e0f",
                 "bcftools_stats_indel-lengths.txt:md5,081acf5f8381302bc254a39874e8db10",
                 "bcftools_stats_variant_depths.txt:md5,fcd7da94daedc9d65182ad6b90ee9993",
@@ -953,11 +953,11 @@
                 "samtools-flagstat-table.txt:md5,5a8d1406466046759aa538a6be041ecf",
                 "samtools-markdup-fraction.txt:md5,cdc7b45c9eaab56f13746d9184bc3278",
                 "samtools-markdup-table.txt:md5,b31de98302ac930efa0d45f1bec09f2d",
-                "vcftools-relatedness2-heatmap-1.txt:md5,538e90ff8acba34123138901dc2c2945",
-                "vcftools_tstv_by_count.txt:md5,40effc2777187082362c7b6985db6d31",
-                "vcftools_tstv_by_count_vcftools_tstv_by_count.txt:md5,bf5d96c5fc97b24a17f93ef447073c93",
-                "vcftools_tstv_by_qual.txt:md5,655d9eb8e1635cac6cecdf59d21d5ceb",
-                "vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt:md5,e1897ebd29a474243c3fae78a0f474f2"
+                "vcftools-relatedness2-heatmap-1.txt:md5,96dd5e600625d2f3910c94561734bfd7",
+                "vcftools_tstv_by_count.txt:md5,9780d03f051d21036a7552bd6c62ee9e",
+                "vcftools_tstv_by_count_vcftools_tstv_by_count.txt:md5,24eca3636b1c8895ed0dd6bb999e07d0",
+                "vcftools_tstv_by_qual.txt:md5,2bc58d31172565c333efca9b54a6a133",
+                "vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt:md5,34acc8249579016dc2e4a1565ede915e"
             ],
             [
                 "03_read_alignment/PUN-R-ELF.1.SRR9309791.1.bam:b2f199368dba51863077d07614a30718",
@@ -979,7 +979,7 @@
                 "06_merged_samples/PUN-Y-LO_illumina.bam:82f53f12624e7642fd573777c67fc19d"
             ]
         ],
-        "timestamp": "2026-09-23T15:52:05.455317",
+        "timestamp": "2026-09-24T16:35:11.525935",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
