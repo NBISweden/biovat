@@ -67,8 +67,8 @@
         },
         "required": ["sample", "library_id", "flowcell_id", "lane", "platform"],
         "oneOf": [
-            { "required": ["fastq_1"], "not": { "anyOf": [ { "required": ["bam"] }, { "required": ["single_end"] } ] } },
-            { "required": ["bam"], "not": { "anyOf": [ { "required": ["fastq_1"] }, { "required": ["fastq_2"] } ] } }
+            { "required": ["fastq_1"], "not": { "anyOf": [{ "required": ["bam"] }, { "required": ["single_end"] }] } },
+            { "required": ["bam"], "not": { "anyOf": [{ "required": ["fastq_1"] }, { "required": ["fastq_2"] }] } }
         ],
         "if": {
             "required": ["bam"]
