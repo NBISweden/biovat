@@ -19,3 +19,14 @@ Note that sample PUN-LO4-2016 (PUN-Y-LO) was duplicated twice, each with edited 
 One duplicate represents a distinct library that should not be deduplicated with respect to the others.
 The other represents repeat sequencing of a library on a distinct flowcell.
 In this case biological replicates should be deduplicated between the pair.
+
+Samples PUN-ELF11-2016 (PUN-R-ELF) and PUN-MT10-2016 (PUN-R-MT) each additionally carry a row whose reads
+were duplicated from their own fastq data and converted to an already-aligned BAM/CRAM, to test BAM/CRAM
+samplesheet input (`bam` column). As with PUN-Y-LO above, QNAMEs were edited (`L2:`/`l1rep1:` prefixes) so
+they don't collide with the sibling row they get merged with. PUN-R-ELF's row is a distinct second library
+(`PUN-R-ELF_2.bam`); PUN-R-MT's is repeat sequencing of library 1 on a second flowcell (`PUN-R-MT_1_repeat2.cram`).
+
+Files follow the naming convention `<sample>_<library_id>_R1/R2.fastq.gz`. Where a library has more than one
+row (repeat sequencing on a different flowcell/lane, e.g. PUN-Y-LO library 2 and PUN-R-MT library 1), a
+`repeat1`/`repeat2` tag is inserted before the read suffix: `<sample>_<library_id>_repeatN_R1/R2.fastq.gz`.
+BAM/CRAM fixtures drop the `_R1`/`_R2` suffix.
