@@ -11,10 +11,10 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     input:
     tuple val(meta), path(bams), path(indexes)
     tuple val(meta2), path(fasta), path(fai)
-    path(intervals)
+    path intervals
     val save_mpileup
     val group_samples
-    path(population_file)
+    path population_file
 
     output:
     tuple val(meta), path("*vcf.gz"), emit: vcf
