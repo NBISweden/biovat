@@ -168,6 +168,14 @@
                     "description": "Variant calling tool choice.",
                     "enum": ["bcftools"]
                 },
+                "chunk_size": {
+                    "type": "integer",
+                    "description": "Genome chunk size (bp) used for parallelization. Defaults to the longest chromosome."
+                },
+                "min_length": {
+                    "type": "integer",
+                    "description": "Minimum contig/scaffold length to be kept."
+                },
                 "enable_save_mpileup": {
                     "type": "boolean",
                     "description": "Save the intermediate bcftools mpileup output."

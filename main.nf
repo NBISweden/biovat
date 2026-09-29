@@ -48,6 +48,8 @@ params {
     // Variant calling options
     dataset_name: String
     variant_caller: String
+    chunk_size: Integer
+    min_length: Integer
     enable_save_mpileup: Boolean
     enable_group_samples: Boolean
     bcftools_mpileup_extra: String
@@ -115,6 +117,8 @@ workflow NBISWEDEN_BIOVAT {
         params.aligner,
         params.duplicate_marker,
         params.variant_caller,
+        params.chunk_size,
+        params.min_length,
         params.dataset_name,
         params.multiqc_config,
         params.multiqc_logo,

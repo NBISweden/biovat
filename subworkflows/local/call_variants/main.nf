@@ -2,12 +2,15 @@
 // Variant calling subworkflow
 //
 
+include { SPLITGENOME                  } from '../../../modules/local/splitgenome/main'
 include { BCFTOOLS_MPILEUP_MULTISAMPLE } from '../../../modules/local/bcftools/mpileup_multisample/main'
 include { VARIANT_QC                   } from '../variant_qc/main'
 
 workflow CALL_VARIANTS {
     take:
     variant_caller
+    chunk_size
+    min_length
     ch_alignment_and_index
     ch_samplesheet
     ch_reference_and_fai
@@ -16,7 +19,11 @@ workflow CALL_VARIANTS {
     ch_multiqc_files
 
     main:
-    // TODO: add option to split genome into chromosomes or chunks for parallelization
+    // Split the reference genome into chunks of chromosomes for parallelization
+    ch_genome_chunks = channel.empty()
+    ch_fai = ch_reference_and_fai.map { meta, fasta, fai -> [meta, fai] }
+    SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
+    ch_genome_chunks = SPLITGENOME.out.chunks
 
     // Group all samples into a single joint call
     ch_joint_alignments = ch_alignment_and_index
@@ -45,10 +52,19 @@ workflow CALL_VARIANTS {
                 )
         }
 
+        ch_intervals = ch_genome_chunks.transpose()
+            .map { _meta_ref, chunk_bed -> chunk_bed }
+
+        ch_joint_alignments_per_chunk = ch_joint_alignments
+            .combine(ch_intervals)
+            .map { meta, alignments, indexes, chunk_bed ->
+                [[id: "${meta.id}.${chunk_bed.baseName}", samples: meta.samples], alignments, indexes, chunk_bed]
+            }
+
         BCFTOOLS_MPILEUP_MULTISAMPLE(
-            ch_joint_alignments,
+            ch_joint_alignments_per_chunk.map { meta, alignments, indexes, _chunk_bed -> [meta, alignments, indexes] },
             ch_reference_and_fai,
-            [],
+            ch_joint_alignments_per_chunk.map { _meta, _alignments, _indexes, chunk_bed -> chunk_bed },
             enable.save_mpileup,
             enable.group_samples,
             ch_population_file,

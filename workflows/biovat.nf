@@ -27,6 +27,8 @@ workflow BIOVAT {
     aligner // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     duplicate_marker // string: Duplicate marking tool to use (e.g. picard, samtools)
     variant_caller // string: Variant calling tool to use (e.g. bcftools)
+    chunk_size // integer: Genome chunk size (bp) used for parallelization
+    min_length // integer: Minimum contig/scaffold length to be kept
     dataset_name // string: File name prefix for VCF/BCF file containing all samples
     multiqc_config
     multiqc_logo
@@ -174,6 +176,8 @@ workflow BIOVAT {
         def ch_alignments_for_calling = ch_sample_alignments_indexed
         CALL_VARIANTS(
             variant_caller,
+            chunk_size,
+            min_length,
             ch_alignments_for_calling,
             ch_samplesheet,
             ch_reference_and_optional_fai,
