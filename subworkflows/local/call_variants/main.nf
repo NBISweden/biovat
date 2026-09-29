@@ -4,6 +4,7 @@
 
 include { SPLITGENOME                  } from '../../../modules/local/splitgenome/main'
 include { BCFTOOLS_MPILEUP_MULTISAMPLE } from '../../../modules/local/bcftools/mpileup_multisample/main'
+include { BCFTOOLS_CONCAT              } from '../../../modules/nf-core/bcftools/concat/main'
 include { VARIANT_QC                   } from '../variant_qc/main'
 
 workflow CALL_VARIANTS {
@@ -71,6 +72,9 @@ workflow CALL_VARIANTS {
         )
         ch_variant_calls_indexed = BCFTOOLS_MPILEUP_MULTISAMPLE.out.vcf.join(BCFTOOLS_MPILEUP_MULTISAMPLE.out.index)
         ch_mpileup = BCFTOOLS_MPILEUP_MULTISAMPLE.out.mpileup
+
+        // TODO: concatenate the genome chunks using BCFTOOLS_CONCAT
+        // input channel: tuple val(meta), path(vcfs), path(tbi)
     }
 
     // TODO: add bcftools mpileup/call per sample calling and merging/joint genotyping
