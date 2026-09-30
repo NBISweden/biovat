@@ -19,6 +19,9 @@ results/
 │   └── qc
 ├── 06_merged_samples
 │   └── qc
+├── 07_variant_calls
+│   ├── genome_chunk_bed_files
+│   └── qc
 ├── multiqc
 │   ├── multiqc_data
 │   └── multiqc_plots
@@ -36,6 +39,8 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Merging readgroups](#merging-readgroups) - Readgroup alignments are merged to library level; an internal processing step triggered if deduplication is requested
 - [Deduplication](#deduplication) - Duplicates are marked or removed from library-level alignments
 - [Merging libraries](#merging-libraries) - Deduplicated library alignments are merged to sample level
+- [Variant calling](#variant-calling) - Variants are called
+- [Variant call quality checks](#variant-qc) - VCF/BCF QC
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
@@ -150,6 +155,37 @@ Running with `--enable_cram_format` will produce `.cram` and `.crai` files inste
 These outputs are produced for a sample with more than one library. A sample with only one library remains identical to the file published under `05_duplicate_processed` or prior, and is thus not republished here.
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
+
+</details>
+
+### Variant calling
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `07_variant_calls/`
+  - `genome_chunk_bed_files/chunk_*.bed`: BED files listing genome regions passing `min_length` filtering, used for parallelization of variant calling.
+  - `*.vcf.gz`: Compressed VCF file with variants called across all samples.
+  - `*.vcf.gz.tbi`: Index file.
+
+</details>
+
+### Variant QC
+
+Variant QC executes at several workflow stages. The outputs will be in the directory `qc`, nested under the respective stage results directory. For example, variant QC on the raw variants:
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `07_variant_calls/`
+  - `qc/`
+    - `bcftools_stats/`
+      - `*.bcftools_stats.txt`: variant metrics.
+    - `vcftools/`
+      - `*.FILTER.summary`: summary of the number of SNPs and Ts/Tv ratio for each FILTER category.
+      - `*.relatedness2`: heatmap of pairwise sample relatedness, based on Manichaikul et al., BIOINFORMATICS 2010 (doi:10.1093/bioinformatics/btq559).
+      - `*.TsTv.count`: transition to transversion ratio as a function of alternative allele count (using only bi-allelic SNPs).
+      - `*.TsTv.qual`: transition to transversion ratio as a function of SNP quality threshold (using only bi-allelic SNPs).
 
 </details>
 
