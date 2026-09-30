@@ -22,16 +22,16 @@ The `sample` identifiers have to be the same when you have re-sequenced the same
 A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. Sample `S1` has been sequenced across three lanes and sample `S6` has been sequenced twice.
 
 ```csv title="samplesheet.csv"
-sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2
-S1,1,AEG588A1,2,illumina,/data/AEG588A1_S1_L002_R1_001.fastq.gz,/data/AEG588A1_S1_L002_R2_001.fastq.gz
-S1,1,AEG588A1,3,illumina,/data/AEG588A1_S1_L003_R1_001.fastq.gz,/data/AEG588A1_S1_L003_R2_001.fastq.gz
-S1,1,AEG588A1,4,illumina,/data/AEG588A1_S1_L004_R1_001.fastq.gz,/data/AEG588A1_S1_L004_R2_001.fastq.gz
-S2,1,AEG588A2,2,illumina,/data/AEG588A2_S2_L002_R1_001.fastq.gz,/data/AEG588A2_S2_L002_R2_001.fastq.gz
-S3,1,AEG588A3,2,illumina,/data/AEG588A3_S3_L002_R1_001.fastq.gz,/data/AEG588A3_S3_L002_R2_001.fastq.gz
-S4,1,AEG588A4,3,illumina,/data/AEG588A4_S4_L003_R1_001.fastq.gz,/data/AEG588A4_S4_L003_R2_001.fastq.gz
-S5,1,AEG588A5,3,illumina,/data/AEG588A5_S5_L003_R1_001.fastq.gz,/data/AEG588A5_S5_L003_R2_001.fastq.gz
-S6,1,AEG588A6,3,illumina,/data/AEG588A6_S6_L003_R1_001.fastq.gz,/data/AEG588A6_S6_L003_R2_001.fastq.gz
-S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S6_L004_R2_001.fastq.gz
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,population
+S1,1,AEG588A1,2,illumina,/data/AEG588A1_S1_L002_R1_001.fastq.gz,/data/AEG588A1_S1_L002_R2_001.fastq.gz,popA
+S1,1,AEG588A1,3,illumina,/data/AEG588A1_S1_L003_R1_001.fastq.gz,/data/AEG588A1_S1_L003_R2_001.fastq.gz,popA
+S1,1,AEG588A1,4,illumina,/data/AEG588A1_S1_L004_R1_001.fastq.gz,/data/AEG588A1_S1_L004_R2_001.fastq.gz,popA
+S2,1,AEG588A2,2,illumina,/data/AEG588A2_S2_L002_R1_001.fastq.gz,/data/AEG588A2_S2_L002_R2_001.fastq.gz,popA
+S3,1,AEG588A3,2,illumina,/data/AEG588A3_S3_L002_R1_001.fastq.gz,/data/AEG588A3_S3_L002_R2_001.fastq.gz,popA
+S4,1,AEG588A4,3,illumina,/data/AEG588A4_S4_L003_R1_001.fastq.gz,/data/AEG588A4_S4_L003_R2_001.fastq.gz,popB
+S5,1,AEG588A5,3,illumina,/data/AEG588A5_S5_L003_R1_001.fastq.gz,/data/AEG588A5_S5_L003_R2_001.fastq.gz,popB
+S6,1,AEG588A6,3,illumina,/data/AEG588A6_S6_L003_R1_001.fastq.gz,/data/AEG588A6_S6_L003_R2_001.fastq.gz,popB
+S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S6_L004_R2_001.fastq.gz,popB
 ```
 
 | Column        | Description                                                                                                                                                     |
@@ -43,6 +43,7 @@ S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S
 | `platform`    | Sequencing platform with no spaces, for example `illumina`                                                                                                      |
 | `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz"                                       |
 | `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads |
+| `population`  | Population identifier                                                                                                                                           |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
