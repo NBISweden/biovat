@@ -74,9 +74,9 @@
                 "01_input_checks/prealigned_reads/riker/input_PUN-R-MT.1.SRR9309471.2.wgs-coverage.pdf",
                 "01_input_checks/prealigned_reads/riker/input_PUN-R-MT.1.SRR9309471.2.wgs-coverage.txt",
                 "01_input_checks/prealigned_reads/riker/input_PUN-R-MT.1.SRR9309471.2.wgs-metrics.txt",
-                "01_input_checks/prealigned_reads/samtools",
-                "01_input_checks/prealigned_reads/samtools/input_PUN-R-ELF.2.SRR9309891.3.flagstat",
-                "01_input_checks/prealigned_reads/samtools/input_PUN-R-MT.1.SRR9309471.2.flagstat",
+                "01_input_checks/prealigned_reads/samtools_flagstat",
+                "01_input_checks/prealigned_reads/samtools_flagstat/input_PUN-R-ELF.2.SRR9309891.3.flagstat",
+                "01_input_checks/prealigned_reads/samtools_flagstat/input_PUN-R-MT.1.SRR9309471.2.flagstat",
                 "01_input_checks/reads",
                 "01_input_checks/reads/fastqc",
                 "01_input_checks/reads/fastqc/PUN-R-ELF.1.SRR9309791.1_1_fastqc.html",
@@ -739,7 +739,7 @@
                 "input_PUN-R-ELF.2.SRR9309891.3.wgs-coverage.txt:md5,7e8e43ddd3aa4e21d511a34fe2b56622",
                 "input_PUN-R-ELF.2.SRR9309891.3.wgs-metrics.txt:md5,787bba52a1c360dc3868dc8de4e39ff0",
                 "input_PUN-R-MT.1.SRR9309471.2.alignment-metrics.txt:md5,08c0df6b0d202988174e84df866e9301",
-                "input_PUN-R-MT.1.SRR9309471.2.base-distribution-by-cycle.pdf:md5,d1211354c81f2d1eba52d8cdbd7c6d1d",
+                "input_PUN-R-MT.1.SRR9309471.2.base-distribution-by-cycle.pdf:md5,167e9ec52f7e6e497485d72ee6222876",
                 "input_PUN-R-MT.1.SRR9309471.2.base-distribution-by-cycle.txt:md5,2c60cd1815344a57e6b651bc74fa547a",
                 "input_PUN-R-MT.1.SRR9309471.2.gcbias-chart.pdf:md5,d63bb69ad5b1ce404ef84fc887a3326a",
                 "input_PUN-R-MT.1.SRR9309471.2.gcbias-detail.txt:md5,f1ee3e58833cf0a36177990c06a00025",
@@ -1189,7 +1189,7 @@
                 "06_merged_samples/PUN-Y-LO_illumina.bam:82f53f12624e7642fd573777c67fc19d"
             ]
         ],
-        "timestamp": "2026-09-30T14:42:14.330422704",
+        "timestamp": "2026-09-30T15:46:13.269793056",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
