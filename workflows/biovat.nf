@@ -43,11 +43,11 @@ workflow BIOVAT {
     reads_to_preprocess = ch_input.fastq
 
     // Reference utilities
-    ch_reference_and_optional_fai = channel.empty()
+    ch_reference_and_optional_fai = channel.value([[], [], []])
     if ( params.reference ) {
         REFERENCE_UTILS(
             reference,
-            requires
+            requires,
         )
         ch_reference_and_optional_fai = REFERENCE_UTILS.out.ch_reference_and_optional_fai
     }
