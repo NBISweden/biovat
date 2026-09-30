@@ -170,7 +170,6 @@
                 },
                 "chunk_size": {
                     "type": "integer",
-                    "default": null,
                     "description": "Genome chunk size (bp) used for parallelization. Defaults to the longest chromosome, increase to run variant calling on fewer and larger chunks."
                 },
                 "min_length": {
