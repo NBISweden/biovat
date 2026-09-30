@@ -20,9 +20,9 @@ workflow INGEST_BAM_OR_CRAM {
         ch_reference_and_optional_fai,
         enable.cram_format ? "crai" : "csi",
     )
-    normalised_bam      = SAMTOOLS_SORT.out.bam.join(SAMTOOLS_SORT.out.index)
-    normalised_cram     = SAMTOOLS_SORT.out.cram.join(SAMTOOLS_SORT.out.index)
-    user_input_bam_cram = normalised_bam.mix(normalised_cram)
+    user_input_bam_cram = SAMTOOLS_SORT.out.bam
+        .mix(SAMTOOLS_SORT.out.cram)
+        .join(SAMTOOLS_SORT.out.index)
 
     emit:
     user_input_bam_cram
