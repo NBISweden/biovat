@@ -145,6 +145,7 @@ workflow NBISWEDEN_BIOVAT {
     outputs_sample_flagstat                       = BIOVAT.out.outputs_sample_flagstat
     outputs_sample_riker                          = BIOVAT.out.outputs_sample_riker
     outputs_sample_qualimap                       = BIOVAT.out.outputs_sample_qualimap
+    outputs_genome_chunks                         = BIOVAT.out.outputs_genome_chunks
     outputs_variant_calls                         = BIOVAT.out.outputs_variant_calls
     outputs_mpileup                               = BIOVAT.out.outputs_mpileup
     outputs_call_variants_bcftools_stats          = BIOVAT.out.outputs_call_variants_bcftools_stats
@@ -197,6 +198,7 @@ workflow {
     outputs_sample_flagstat                       = NBISWEDEN_BIOVAT.out.outputs_sample_flagstat
     outputs_sample_riker                          = NBISWEDEN_BIOVAT.out.outputs_sample_riker
     outputs_sample_qualimap                       = NBISWEDEN_BIOVAT.out.outputs_sample_qualimap
+    outputs_genome_chunks                         = NBISWEDEN_BIOVAT.out.outputs_genome_chunks
     outputs_variant_calls                         = NBISWEDEN_BIOVAT.out.outputs_variant_calls
     outputs_mpileup                               = NBISWEDEN_BIOVAT.out.outputs_mpileup
     outputs_call_variants_bcftools_stats          = NBISWEDEN_BIOVAT.out.outputs_call_variants_bcftools_stats
@@ -269,6 +271,9 @@ output {
     }
     outputs_sample_qualimap {
         path '06_merged_samples/qc/qualimap'
+    }
+    outputs_genome_chunks {
+        path '07_variant_calls/genome_chunk_bed_files'
     }
     outputs_variant_calls {
         path '07_variant_calls'

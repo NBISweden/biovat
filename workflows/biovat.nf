@@ -186,6 +186,7 @@ workflow BIOVAT {
             ch_multiqc_files,
         )
         ch_multiqc_files = CALL_VARIANTS.out.ch_multiqc_files
+        outputs_genome_chunks = CALL_VARIANTS.out.ch_genome_chunks
         outputs_variant_calls = CALL_VARIANTS.out.ch_variant_calls_indexed
         outputs_mpileup = CALL_VARIANTS.out.ch_mpileup
         outputs_call_variants_bcftools_stats = CALL_VARIANTS.out.outputs_bcftools_stats
@@ -267,6 +268,7 @@ workflow BIOVAT {
     outputs_sample_flagstat                       = outputs_sample_flagstat
     outputs_sample_riker                          = outputs_sample_riker
     outputs_sample_qualimap                       = outputs_sample_qualimap
+    outputs_genome_chunks                         = outputs_genome_chunks
     outputs_variant_calls                         = outputs_variant_calls
     outputs_mpileup                               = outputs_mpileup
     outputs_call_variants_bcftools_stats          = outputs_call_variants_bcftools_stats
