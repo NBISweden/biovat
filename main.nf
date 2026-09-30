@@ -97,12 +97,11 @@ workflow NBISWEDEN_BIOVAT {
     ]
 
     // ALIGNMENT_QC runs when a parent stage is also enabled
-    // requires.merge_to_sample acts as an umbrella for all sample-level stages
-    def align_qc_active = enable.align_qc && (enable.align || requires.merge_to_library || requires.merge_to_sample)
+    def merge_active    = requires.merge_to_library || requires.merge_to_sample
+    def align_qc_active = enable.align_qc && (enable.align || merge_active)
 
     // .fai is used for certain CRAM processes, and unconditionally by riker
-    requires.fai = (enable.cram_format && (requires.merge_to_library || requires.merge_to_sample))
-        || (align_qc_active && enable.riker)
+    requires.fai = (enable.cram_format && merge_active) || (align_qc_active && enable.riker)
 
     BIOVAT (
         samplesheet,
