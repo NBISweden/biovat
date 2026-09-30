@@ -179,21 +179,21 @@
                 },
                 "enable_save_mpileup": {
                     "type": "boolean",
-                    "description": "Save the intermediate bcftools mpileup output."
+                    "description": "BCFtools multi-sample: save the intermediate bcftools mpileup output."
                 },
                 "enable_group_samples": {
                     "type": "boolean",
-                    "description": "Group samples into populations and apply the HWE assumption within but not across the populations in bcftools call."
+                    "description": "BCFtools multi-sample: group samples into populations and apply the HWE assumption within but not across the populations in bcftools call."
                 },
                 "bcftools_mpileup_extra": {
                     "type": "string",
                     "default": "--no-BAQ",
-                    "description": "Additional command line arguments passed to bcftools mpileup."
+                    "description": "BCFtools multi-sample: additional command line arguments passed to bcftools mpileup."
                 },
                 "bcftools_call_extra": {
                     "type": "string",
                     "default": "--multiallelic-caller --variants-only",
-                    "description": "Additional command line arguments passed to bcftools call."
+                    "description": "BCFtools multi-sample: additional command line arguments passed to bcftools call."
                 }
             }
         },
