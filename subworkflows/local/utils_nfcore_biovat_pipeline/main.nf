@@ -93,11 +93,11 @@ workflow PIPELINE_INITIALISATION {
     def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
         .collect { meta, fastq_1, fastq_2, bam ->
             def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
-            bam
-                ? [ meta + [ read_group:read_group, input_type:'bam_cram' ], [ bam ] ]
-                : fastq_2
-                    ? [ meta + [ single_end:false, read_group:read_group, input_type:'fastq' ], [ fastq_1, fastq_2 ] ]
-                    : [ meta + [ single_end:true, read_group:read_group, input_type:'fastq' ], [ fastq_1 ] ]
+            def extra = bam
+                ? [ read_group:read_group, input_type:'bam_cram' ]
+                : [ read_group:read_group, input_type:'fastq', single_end:!fastq_2 ] ]
+                [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
+
         }
 
     // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every
