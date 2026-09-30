@@ -96,12 +96,11 @@ workflow NBISWEDEN_BIOVAT {
         merge_to_sample : enable.variant_calling
     ]
 
-    // ALIGNMENT_QC runs when a parent stage is also enabled
-    def merge_active    = requires.merge_to_library || requires.merge_to_sample
-    def align_qc_active = enable.align_qc && (enable.align || merge_active)
+    def merge_active = requires.merge_to_library || requires.merge_to_sample
 
     // .fai is used for certain CRAM processes, and unconditionally by riker
-    requires.fai = (enable.cram_format && merge_active) || (align_qc_active && enable.riker)
+    // (ALIGNMENT_QC also runs on BAM/CRAM input rows during ingestion, independent of any enabled stage)
+    requires.fai = (enable.cram_format && merge_active) || (enable.align_qc && enable.riker)
 
     BIOVAT (
         samplesheet,
@@ -120,6 +119,9 @@ workflow NBISWEDEN_BIOVAT {
     emit:
     outputs_raw_read_qc              = BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads               = BIOVAT.out.outputs_trim_reads
+    outputs_input_flagstat           = BIOVAT.out.outputs_input_flagstat
+    outputs_input_riker              = BIOVAT.out.outputs_input_riker
+    outputs_input_qualimap           = BIOVAT.out.outputs_input_qualimap
     outputs_read_group               = BIOVAT.out.outputs_read_group
     outputs_read_group_flagstat      = BIOVAT.out.outputs_read_group_flagstat
     outputs_read_group_riker         = BIOVAT.out.outputs_read_group_riker
@@ -166,6 +168,9 @@ workflow {
     publish:
     outputs_raw_read_qc              = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads               = NBISWEDEN_BIOVAT.out.outputs_trim_reads
+    outputs_input_flagstat           = NBISWEDEN_BIOVAT.out.outputs_input_flagstat
+    outputs_input_riker              = NBISWEDEN_BIOVAT.out.outputs_input_riker
+    outputs_input_qualimap           = NBISWEDEN_BIOVAT.out.outputs_input_qualimap
     outputs_read_group               = NBISWEDEN_BIOVAT.out.outputs_read_group
     outputs_read_group_flagstat      = NBISWEDEN_BIOVAT.out.outputs_read_group_flagstat
     outputs_read_group_riker         = NBISWEDEN_BIOVAT.out.outputs_read_group_riker
@@ -191,6 +196,16 @@ output {
     // READ_QC
     outputs_raw_read_qc {
         path '01_input_checks/reads/fastqc'
+    }
+    // INGEST_BAM_OR_CRAM
+    outputs_input_flagstat {
+        path '01_input_checks/prealigned_reads/samtools_flagstat'
+    }
+    outputs_input_riker {
+        path '01_input_checks/prealigned_reads/riker'
+    }
+    outputs_input_qualimap {
+        path '01_input_checks/prealigned_reads/qualimap'
     }
     // TRIM_READS
     outputs_trim_reads {

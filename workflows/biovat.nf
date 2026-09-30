@@ -105,9 +105,14 @@ workflow BIOVAT {
     INGEST_BAM_OR_CRAM(
         ch_input.bam_cram,
         ch_reference_and_optional_fai,
-        enable
+        enable,
+        ch_multiqc_files
     )
-    alignments_to_process = ch_read_group_alignments_indexed.mix(INGEST_BAM_OR_CRAM.out.user_input_bam_cram)
+    ch_multiqc_files       = INGEST_BAM_OR_CRAM.out.ch_multiqc_files
+    outputs_input_flagstat = INGEST_BAM_OR_CRAM.out.outputs_input_flagstat
+    outputs_input_riker    = INGEST_BAM_OR_CRAM.out.outputs_input_riker
+    outputs_input_qualimap = INGEST_BAM_OR_CRAM.out.outputs_input_qualimap
+    alignments_to_process  = ch_read_group_alignments_indexed.mix(INGEST_BAM_OR_CRAM.out.user_input_bam_cram)
 
     // Merge lane alignments to library level
     outputs_library               = channel.empty()
@@ -229,6 +234,9 @@ workflow BIOVAT {
     emit:
     outputs_raw_read_qc              = outputs_raw_read_qc
     outputs_trim_reads               = outputs_trim_reads
+    outputs_input_flagstat           = outputs_input_flagstat
+    outputs_input_riker              = outputs_input_riker
+    outputs_input_qualimap           = outputs_input_qualimap
     outputs_read_group               = outputs_read_group
     outputs_read_group_flagstat      = outputs_read_group_flagstat
     outputs_read_group_riker         = outputs_read_group_riker

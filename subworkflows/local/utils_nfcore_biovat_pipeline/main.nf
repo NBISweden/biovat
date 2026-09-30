@@ -108,6 +108,9 @@ workflow PIPELINE_INITIALISATION {
     // A CRAM input row needs --reference to decode
     validateCramInputReference(samplesheet_rows)
 
+    // RIKER on a BAM/CRAM input row needs --reference
+    validateRikerInputReference(samplesheet_rows)
+
     ch_samplesheet = channel
         .fromList(samplesheet_rows)
 
@@ -173,7 +176,6 @@ def validateInputParameters() {
     def enable = params
         .findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
-
     // If align is requested, a reference must be provided
     if ( enable.align && !params.reference ) {
         validationError("Alignment cannot be run without a reference FASTA file.")
@@ -186,7 +188,7 @@ def validateInputParameters() {
     if ( enable.cram_format && !params.reference ) {
         validationError("CRAM output (--enable_cram_format) cannot be run without a reference FASTA file.")
     }
-    // RIKER needs a reference, and only runs where alignment QC is active (mirrors align_qc_active in main.nf)
+    // RIKER needs a reference, and only runs where alignment QC is active
     def align_qc_active = enable.align_qc && ( enable.align || enable.mark_duplicates || enable.variant_calling )
     if ( enable.riker && align_qc_active && !params.reference ) {
         validationError("RIKER (--enable_riker) cannot be run without a reference FASTA file.")
@@ -242,6 +244,21 @@ def validateCramInputReference(rows) {
         .unique()
     if ( cram_samples ) {
         validationError("CRAM input requires --reference to decode (sample(s): ${cram_samples.join(', ')}).")
+    }
+}
+
+// INGEST_BAM_OR_CRAM runs alignment QC on BAM/CRAM input rows if enabled
+// RIKER needs --reference when such a row is present
+def validateRikerInputReference(rows) {
+    if ( params.reference || !( params.enable_align_qc && params.enable_riker ) ) {
+        return
+    }
+    def bam_cram_samples = rows
+        .findAll { meta, _files -> meta.input_type == 'bam_cram' }
+        .collect { meta, _files -> meta.id }
+        .unique()
+    if ( bam_cram_samples ) {
+        validationError("RIKER (--enable_riker) on BAM/CRAM input requires --reference (sample(s): ${bam_cram_samples.join(', ')}).")
     }
 }
 

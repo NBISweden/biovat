@@ -9,6 +9,7 @@ The directories listed below will be created in the results directory after the 
 ```
 results/
 ├── 01_input_checks
+│   ├── prealigned_reads
 │   └── reads
 ├── 02_read_trimming
 ├── 03_read_alignment
@@ -79,7 +80,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
 
-Samplesheet rows that supply an already-aligned `bam`/`cram` file (in place of `fastq_1`/`fastq_2`) skip this stage: the file is instead sorted, indexed, and re-encoded to match `--enable_cram_format` if needed. These read groups are not published under `03_read_alignment` (that directory holds `ALIGN_READS` output only) and get no read-group-level QC subfolder entry here - they first appear once merged, deduplicated, or otherwise published downstream.
+Samplesheet rows that supply an already-aligned `bam`/`cram` file (in place of `fastq_1`/`fastq_2`) skip this stage: the file is instead sorted, indexed, and re-encoded to match `--enable_cram_format` if needed. These read groups are not published under `03_read_alignment` (that directory holds `ALIGN_READS` output only) - they first appear once merged, deduplicated, or otherwise published downstream. Their read-group-level QC is published under `01_input_checks/prealigned_reads` instead (see [Alignment QC](#alignment-qc)).
 
 </details>
 
@@ -88,6 +89,8 @@ Samplesheet rows that supply an already-aligned `bam`/`cram` file (in place of `
 Alignment QC executes at several workflow stages. The outputs will be in the directory `qc`, nested under the respective stage results directory. For example, alignment QC on the library alignments:
 
 At the two merging stages (`04_merged_libraries`, `06_merged_samples`), QC only runs for samples/libraries where an actual merge took place (i.e. more than one lane or library was combined). Where nothing was merged, the passed-through alignment is byte-identical to the one already QC'd at the previous stage, so no QC subfolder entry is produced for it there — see the QC output from the preceding stage instead.
+
+Samplesheet rows supplying an already-aligned `bam`/`cram` file are QC'd once ingested (after sorting, indexing, and any format conversion), with results in `01_input_checks/prealigned_reads/` (subfolders `samtools/`, `riker/`, `qualimap/`, with the same contents as the `qc/` subfolders below).
 
 <details markdown="1">
 <summary>Output files</summary>
