@@ -22,7 +22,7 @@ workflow CALL_VARIANTS {
     main:
     // Split the reference genome into chunks of chromosomes for parallelization
     ch_genome_chunks = channel.empty()
-    ch_fai = ch_reference_and_fai.map { meta, fasta, fai -> [meta, fai] }
+    ch_fai = ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] }
     SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
     ch_genome_chunks = SPLITGENOME.out.chunks
 
@@ -39,6 +39,7 @@ workflow CALL_VARIANTS {
     ch_mpileup = channel.empty()
 
     if (variant_caller == 'bcftools') {
+        // Provide the option to pass population information to bcftools call
         // TODO: If ch_population_file is re-used in future modules, move the following code to PIPELINE_INITIALISATION
         ch_population_file = channel.value([])
         if (enable.group_samples) {
@@ -53,28 +54,64 @@ workflow CALL_VARIANTS {
                 )
         }
 
-        ch_intervals = ch_genome_chunks.transpose()
+        ch_intervals = ch_genome_chunks
+            .transpose()
             .map { _meta_ref, chunk_bed -> chunk_bed }
 
         ch_joint_alignments_per_chunk = ch_joint_alignments
             .combine(ch_intervals)
             .map { meta, alignments, indexes, chunk_bed ->
-                [[id: "${meta.id}.${chunk_bed.baseName}", samples: meta.samples], alignments, indexes, chunk_bed]
+                [[id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName], alignments, indexes, chunk_bed]
             }
 
+        ch_joint_alignments_for_variant_calling = ch_joint_alignments_per_chunk.map { meta, alignments, indexes, _chunk_bed ->
+            [meta, alignments, indexes]
+        }
+        ch_chunk_beds_for_variant_calling = ch_joint_alignments_per_chunk.map { _meta, _alignments, _indexes, chunk_bed ->
+            chunk_bed
+        }
+
+        // Multi-sample variant calling
         BCFTOOLS_MPILEUP_MULTISAMPLE(
-            ch_joint_alignments_per_chunk.map { meta, alignments, indexes, _chunk_bed -> [meta, alignments, indexes] },
+            ch_joint_alignments_for_variant_calling,
             ch_reference_and_fai,
-            ch_joint_alignments_per_chunk.map { _meta, _alignments, _indexes, chunk_bed -> chunk_bed },
+            ch_chunk_beds_for_variant_calling,
             enable.save_mpileup,
             enable.group_samples,
             ch_population_file,
         )
-        ch_variant_calls_indexed = BCFTOOLS_MPILEUP_MULTISAMPLE.out.vcf.join(BCFTOOLS_MPILEUP_MULTISAMPLE.out.index)
+        ch_chunk_variant_calls_indexed = BCFTOOLS_MPILEUP_MULTISAMPLE.out.vcf.join(BCFTOOLS_MPILEUP_MULTISAMPLE.out.index)
         ch_mpileup = BCFTOOLS_MPILEUP_MULTISAMPLE.out.mpileup
 
-        // TODO: concatenate the genome chunks using BCFTOOLS_CONCAT
-        // input channel: tuple val(meta), path(vcfs), path(tbi)
+        // Concatenate the genome chunks using BCFTOOLS_CONCAT
+        ch_variant_calls = ch_chunk_variant_calls_indexed
+            .map { meta, vcf, index ->
+                def group_meta = [id: meta.group_id, samples: meta.samples]
+                // keep chunk id (e.g. "chunk_00002") for sorting later
+                return [group_meta, meta.chunk, vcf, index]
+            }
+            .groupTuple()
+            .map { meta, chunk_ids, vcfs, indexes ->
+                // sort files by chunk_id to preserve genomic order
+                def order = chunk_ids
+                    .withIndex()
+                    .sort { a, b -> a[0] <=> b[0] }
+                    .collect { pair -> pair[1] }
+                def sorted_vcfs = order.collect { idx -> vcfs[idx] }
+                def sorted_indexes = order.collect { idx -> indexes[idx] }
+                return [meta, sorted_vcfs, sorted_indexes]
+            }
+            .branch { meta, vcfs, indexes ->
+                skip_concat: vcfs.size() == 1
+                return [meta, vcfs[0], indexes[0]]
+                for_concat: vcfs.size() > 1
+            }
+
+        BCFTOOLS_CONCAT(ch_variant_calls.for_concat)
+        // Join concatenated vcf files with their indexes, for variant QC and publishing.
+        ch_variant_calls_indexed = BCFTOOLS_CONCAT.out.vcf
+            .join(BCFTOOLS_CONCAT.out.index)
+            .mix(ch_variant_calls.skip_concat)
     }
 
     // TODO: add bcftools mpileup/call per sample calling and merging/joint genotyping
@@ -111,6 +148,7 @@ workflow CALL_VARIANTS {
     }
 
     emit:
+    ch_genome_chunks
     ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.tbi/csi ]
     ch_mpileup // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
     ch_multiqc_files
