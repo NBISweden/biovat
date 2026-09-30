@@ -106,7 +106,7 @@ workflow NBISWEDEN_BIOVAT {
     def align_qc_active = enable.align_qc && (enable.align || requires.merge)
 
     // .fai is used for certain CRAM processes, and unconditionally by riker and bcftools mpileup
-    requires.fai = (enable.cram_format && requires.merge) || (align_qc_active && enable.riker) || (enable.variant_calling && params.variant_caller == 'bcftools')
+    requires.fai = (enable.cram_format && requires.merge) || (align_qc_active && enable.riker) || (enable.variant_calling && params.variant_caller == 'bcftools_multisample')
 
     BIOVAT(
         samplesheet,

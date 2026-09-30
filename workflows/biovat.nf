@@ -26,7 +26,7 @@ workflow BIOVAT {
     adapter_fasta // channel: adapter fasta file read in from --adapter_fasta
     aligner // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     duplicate_marker // string: Duplicate marking tool to use (e.g. picard, samtools)
-    variant_caller // string: Variant calling tool to use (e.g. bcftools)
+    variant_caller // string: Variant calling tool to use (e.g. bcftools_multisample)
     chunk_size // integer: Genome chunk size (bp) used for parallelization
     min_length // integer: Minimum contig/scaffold length to be kept
     dataset_name // string: File name prefix for VCF/BCF file containing all samples

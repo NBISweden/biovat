@@ -164,9 +164,9 @@
                 },
                 "variant_caller": {
                     "type": "string",
-                    "default": "bcftools",
+                    "default": "bcftools_multisample",
                     "description": "Variant calling tool choice.",
-                    "enum": ["bcftools"]
+                    "enum": ["bcftools_multisample"]
                 },
                 "chunk_size": {
                     "type": "integer",

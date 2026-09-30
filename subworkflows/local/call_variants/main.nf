@@ -26,19 +26,11 @@ workflow CALL_VARIANTS {
     SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
     ch_genome_chunks = SPLITGENOME.out.chunks
 
-    // Group all samples into a single joint call
-    ch_joint_alignments = ch_alignment_and_index
-        .map { meta, alignment, index -> [dataset_name, meta.id, alignment, index] }
-        .groupTuple()
-        .map { group, samples, alignments, indexes ->
-            [[id: group, samples: samples], alignments, indexes]
-        }
-
     // Call variants with four alternative variant callers
     ch_variant_calls_indexed = channel.empty()
     ch_mpileup = channel.empty()
 
-    if (variant_caller == 'bcftools') {
+    if (variant_caller == 'bcftools_multisample') {
         // Provide the option to pass population information to bcftools call
         // TODO: If ch_population_file is re-used in future modules, move the following code to PIPELINE_INITIALISATION
         ch_population_file = channel.value([])
@@ -54,6 +46,15 @@ workflow CALL_VARIANTS {
                 )
         }
 
+        // Group all samples into a single joint call
+        ch_joint_alignments = ch_alignment_and_index
+            .map { meta, alignment, index -> [dataset_name, meta.id, alignment, index] }
+            .groupTuple()
+            .map { group, samples, alignments, indexes ->
+                [[id: group, samples: samples], alignments, indexes]
+            }
+
+        // Split into genome chunks for parallelization
         ch_intervals = ch_genome_chunks
             .transpose()
             .map { _meta_ref, chunk_bed -> chunk_bed }
@@ -67,6 +68,7 @@ workflow CALL_VARIANTS {
         ch_joint_alignments_for_variant_calling = ch_joint_alignments_per_chunk.map { meta, alignments, indexes, _chunk_bed ->
             [meta, alignments, indexes]
         }
+
         ch_chunk_beds_for_variant_calling = ch_joint_alignments_per_chunk.map { _meta, _alignments, _indexes, chunk_bed ->
             chunk_bed
         }
