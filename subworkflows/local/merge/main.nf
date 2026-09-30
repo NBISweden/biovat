@@ -21,9 +21,16 @@ workflow MERGE {
             return [ group_meta, alignment, index ]
         }
         .groupTuple()
+        .map { meta, alignments, indexes ->
+            // groupTuple order reflects non-deterministic arrival timing.
+            // sort by filename so SAMTOOLS_MERGE always stages in the same subdirectories.
+            // (samtools merge breaks position ties using input file order)
+            def sorted = [alignments, indexes].transpose().sort { a, b -> a[0].name <=> b[0].name }
+            return [meta, sorted.collect { it[0] }, sorted.collect { it[1] }]
+        }
         .branch { meta, alignments, indexes ->
             skip_merge: alignments.size() == 1
-                return [ meta, alignments[0], indexes[0] ]
+            return [ meta, alignments[0], indexes[0] ]
             for_merge : alignments.size() > 1
         }
 
@@ -44,8 +51,7 @@ workflow MERGE {
         .mix(SAMTOOLS_MERGE.out.bam)
         .join(SAMTOOLS_MERGE.out.index)
     // Re-mix with singletons for passing downstream
-    ch_merged_alignments_indexed = ch_merged_output_for_alignment_qc
-        .mix(ch_alignments.skip_merge)
+    ch_merged_alignments_indexed = ch_merged_output_for_alignment_qc.mix(ch_alignments.skip_merge)
 
     // MERGE:ALIGNMENT_QC — only for alignments that were actually merged; a skipped singleton is
     // byte-identical to the pre-merge alignment already QC'd upstream
