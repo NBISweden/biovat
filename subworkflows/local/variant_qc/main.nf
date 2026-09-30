@@ -12,7 +12,7 @@ workflow VARIANT_QC {
     main:
     // BCFTOOLS_STATS
     // Remove fai for BCFTOOLS_STATS module
-    ch_reference = ch_reference_and_fai.map { meta, fasta, fai -> [meta, fasta] }
+    ch_reference = ch_reference_and_fai.map { meta, fasta, _fai -> [meta, fasta] }
     BCFTOOLS_STATS(
         ch_variant_calls_and_tbi,
         [[:], []],
@@ -24,7 +24,7 @@ workflow VARIANT_QC {
 
     // VCFTOOLS:
     // Remove tbi for VCFTOOLS module
-    ch_variant_calls = ch_variant_calls_and_tbi.map { meta, vcf, tbi -> [meta, vcf] }
+    ch_variant_calls = ch_variant_calls_and_tbi.map { meta, vcf, _tbi -> [meta, vcf] }
     VCFTOOLS_TSTV_COUNT(
         ch_variant_calls,
         [],

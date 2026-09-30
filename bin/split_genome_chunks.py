@@ -2,14 +2,14 @@
 """
 split_genome_chunks.py
 
-Split a reference genome BED file (or a FAI index) into 
-approximately evenly-sized genome chunks in BED format, 
-without splitting chromosomes/regions and preserving 
+Split a reference genome BED file (or a FAI index) into
+approximately evenly-sized genome chunks in BED format,
+without splitting chromosomes/regions and preserving
 chromosome order.
 
-Input: a BED file specifying reference genome chromosomes 
+Input: a BED file specifying reference genome chromosomes
 or regions or a samtools FAI index.
-Output: one or more BED files named `chunk_00001.bed` through 
+Output: one or more BED files named `chunk_00001.bed` through
 `chunk_XXXXX.bed`.
 
 Code was written with assistance from Claude.

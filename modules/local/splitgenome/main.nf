@@ -1,11 +1,11 @@
 process SPLITGENOME {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
         ? 'oras://community.wave.seqera.io/library/python:3.14.7--19b091bddc2db8c8'
-        : 'community.wave.seqera.io/library/python:3.14.7--629fbce4f44dac86' }"
+        : 'community.wave.seqera.io/library/python:3.14.7--629fbce4f44dac86'}"
 
     input:
     tuple val(meta), path(fai)
