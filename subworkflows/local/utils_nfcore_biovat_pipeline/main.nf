@@ -95,7 +95,7 @@ workflow PIPELINE_INITIALISATION {
             def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
             def extra = bam
                 ? [ read_group:read_group, input_type:'bam_cram' ]
-                : [ read_group:read_group, input_type:'fastq', single_end:!fastq_2 ] ]
+                : [ read_group:read_group, input_type:'fastq', single_end:!fastq_2 ]
                 [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
 
         }
