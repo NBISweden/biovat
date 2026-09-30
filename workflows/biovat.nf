@@ -38,7 +38,7 @@ workflow BIOVAT {
     ch_input             = ch_samplesheet
         .branch { meta, _data ->
             bam_cram: meta.input_type == 'bam_cram'
-            fastq: meta.input_type == 'fastq'
+            fastq   : meta.input_type == 'fastq'
         }
     reads_to_preprocess = ch_input.fastq
 
