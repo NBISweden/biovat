@@ -8,13 +8,13 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { UTILS_NFSCHEMA_PLUGIN     } from '../../nf-core/utils_nfschema_plugin'
-include { paramsSummaryMap          } from 'plugin/nf-schema'
-include { samplesheetToList         } from 'plugin/nf-schema'
-include { paramsHelp                } from 'plugin/nf-schema'
-include { completionSummary         } from '../../nf-core/utils_nfcore_pipeline'
-include { UTILS_NFCORE_PIPELINE     } from '../../nf-core/utils_nfcore_pipeline'
-include { UTILS_NEXTFLOW_PIPELINE   } from '../../nf-core/utils_nextflow_pipeline'
+include { UTILS_NFSCHEMA_PLUGIN   } from '../../nf-core/utils_nfschema_plugin'
+include { paramsSummaryMap        } from 'plugin/nf-schema'
+include { samplesheetToList       } from 'plugin/nf-schema'
+include { paramsHelp              } from 'plugin/nf-schema'
+include { completionSummary       } from '../../nf-core/utils_nfcore_pipeline'
+include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
+include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,9 +28,9 @@ workflow PIPELINE_INITIALISATION {
     version           // boolean: Display version and exit
     validate_params   // boolean: Boolean whether to validate parameters against the schema at runtime
     monochrome_logs   // boolean: Do not use coloured log outputs
-    nextflow_cli_args //   array: List of positional nextflow CLI args
-    outdir            //  string: The output directory where the results will be saved
-    input             //  string: Path to input samplesheet
+    nextflow_cli_args // array: List of positional nextflow CLI args
+    outdir            // string: The output directory where the results will be saved
+    input             // string: Path to input samplesheet
     help              // boolean: Display help message and exit
     help_full         // boolean: Show the full help message
     show_hidden       // boolean: Show hidden parameters in the help message
@@ -170,7 +170,8 @@ def validationError(message) {
 
 def validateInputParameters() {
 
-    def enable = params.findAll { k, _v -> k.startsWith('enable_') }
+    def enable = params
+        .findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
 
     // If align is requested, a reference must be provided
@@ -179,7 +180,16 @@ def validateInputParameters() {
     }
     // If CRAM format is requested, qualimap cannot be run
     if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
-        validationError("Qualimap cannot be run when CRAM format is enabled.")
+        validationError("Qualimap cannot be run when CRAM output is enabled.")
+    }
+    // CRAM encoding needs a reference
+    if ( enable.cram_format && !params.reference ) {
+        validationError("CRAM output (--enable_cram_format) cannot be run without a reference FASTA file.")
+    }
+    // RIKER needs a reference, and only runs where alignment QC is active (mirrors align_qc_active in main.nf)
+    def align_qc_active = enable.align_qc && ( enable.align || enable.mark_duplicates || enable.variant_calling )
+    if ( enable.riker && align_qc_active && !params.reference ) {
+        validationError("RIKER (--enable_riker) cannot be run without a reference FASTA file.")
     }
 
     // Stage dependency map
@@ -204,14 +214,16 @@ def validateInputParameters() {
 // single-end and paired-end reads. Alignments are merged read-group -> library -> sample, so a mismatch
 // here would otherwise be merged into a single BAM with inconsistent read pairing.
 def validateSampleEndedness(rows) {
-    rows.groupBy { meta, _reads -> [ meta.id, meta.library ] }
+    rows
+        .groupBy { meta, _reads -> [ meta.id, meta.library ] }
         .each { key, group ->
             def (sample_id, library_id) = key
             if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
                 validationError("Sample '${sample_id}', library '${library_id}' mixes single-end and paired-end reads across lanes - all lanes of a library must share the same read layout.")
             }
         }
-    rows.groupBy { meta, _reads -> meta.id }
+    rows
+        .groupBy { meta, _reads -> meta.id }
         .each { sample_id, group ->
             if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
                 validationError("Sample '${sample_id}' mixes single-end and paired-end reads across libraries - all libraries of a sample must share the same read layout.")
@@ -293,7 +305,7 @@ def methodsDescriptionText(mqc_methods_yaml) {
 
     def methods_text = mqc_methods_yaml.text
 
-    def engine =  new groovy.text.SimpleTemplateEngine()
+    def engine = new groovy.text.SimpleTemplateEngine()
     def description_html = engine.createTemplate(methods_text).make(meta)
 
     return description_html.toString()
