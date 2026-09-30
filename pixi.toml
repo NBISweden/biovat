@@ -85,6 +85,10 @@ description = "Build the pipeline schema"
 cmd         = "nf-test test tests/default.nf.test --profile +docker"
 description = "Run the default nf-test profile with Docker"
 
+[tasks.module-tests]
+cmd               = "nf-test test --filter process --profile +docker --verbose"
+description       = "Run the module nf-test profile with Docker"
+
 [target.osx-arm64.tasks.default-nf-test]
 cmd         = "nf-test test tests/default.nf.test --profile +docker,arm64"
 description = "Run the default nf-test profile with Docker (arm64)"

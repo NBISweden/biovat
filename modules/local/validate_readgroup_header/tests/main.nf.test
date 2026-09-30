@@ -1,0 +1,135 @@
+nextflow_process {
+
+    name "Test Process VALIDATE_READGROUP_HEADER"
+    script "../main.nf"
+    process "VALIDATE_READGROUP_HEADER"
+    tag "modules_local"
+    tag "validate_readgroup_header"
+
+    test("header agrees with samplesheet metadata - succeeds") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    // Matches PUN-R-MT_1_repeat2.cram's own @RG ID/SM/LB/PU/PL
+                    [ id:'PUN-R-MT', library:'1', flowcell:'SRR9309471', lane:2, pl:'illumina' ],
+                    file("${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assert process.success
+        }
+    }
+
+    test("all tags agree (fake data) - succeeds") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/good_readgroup.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assert process.success
+        }
+    }
+
+    test("SM disagrees with samplesheet sample - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_sm.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assert process.failed
+        }
+    }
+
+    test("LB disagrees with samplesheet library_id - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_lb.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assert process.failed
+        }
+    }
+
+    test("ID disagrees with expected flowcell/lane/sample/library - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_id.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assert process.failed
+        }
+    }
+
+    test("PU disagrees with expected flowcell/lane/sample/library - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_pu.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assert process.failed
+        }
+    }
+
+    test("PL disagrees with samplesheet platform - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_pl.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assert process.failed
+        }
+    }
+}
