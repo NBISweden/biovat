@@ -43,7 +43,7 @@ S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S
 | `platform`    | Sequencing platform with no spaces, for example `illumina`                                                                                                      |
 | `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz"                                       |
 | `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads |
-| `population`  | Population identifier                                                                                                                                           |
+| `population`  | Population identifier for grouping of samples                                                                                                                   |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 

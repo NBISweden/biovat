@@ -167,6 +167,7 @@ Running with `--enable_cram_format` will produce `.cram` and `.crai` files inste
   - `genome_chunk_bed_files/chunk_*.bed`: BED files listing genome regions passing `min_length` filtering, used for parallelization of variant calling.
   - `*.vcf.gz`: Compressed VCF file with variants called across all samples.
   - `*.vcf.gz.tbi`: Index file.
+  - `*mpileup.gz`: Compressed mpileup output for all sites, produced when running with `--enable_save_mpileup`. Note that this file can get very large.
 
 </details>
 

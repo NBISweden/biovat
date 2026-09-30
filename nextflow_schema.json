@@ -170,7 +170,8 @@
                 },
                 "chunk_size": {
                     "type": "integer",
-                    "description": "Genome chunk size (bp) used for parallelization. Defaults to the longest chromosome."
+                    "default": null,
+                    "description": "Genome chunk size (bp) used for parallelization. Defaults to the longest chromosome, increase to run variant calling on fewer and larger chunks."
                 },
                 "min_length": {
                     "type": "integer",
@@ -179,7 +180,7 @@
                 },
                 "enable_save_mpileup": {
                     "type": "boolean",
-                    "description": "BCFtools multi-sample: save the intermediate bcftools mpileup output."
+                    "description": "BCFtools multi-sample: save the intermediate bcftools mpileup output. Note that this file can get very large."
                 },
                 "enable_group_samples": {
                     "type": "boolean",
