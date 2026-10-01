@@ -21,7 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented workflow outputs (replaced publishDir)
 - nft-bam plugin for BAM content snapshots
 - Reference utilities subworkflow for creating generic reference supplementary files used across many subworkflows (currently gated on `params.reference`)
-- BAM QC workflow ()
+- BAM QC workflow
+- Test dataset composed of reference and multiple samples per population
+- Variant calling workflow with BCFtools (multi-sample variant calling)
+- Genome chunking support for parallelized variant calling
+- Variant QC workflow
 
 ### `Fixed`
 

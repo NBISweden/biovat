@@ -71,6 +71,27 @@ module_order:
       anchor: "qualimap_markdup"
       path_filters:
         - "*markdup_*"
+  - bcftools:
+      name: "BCFtools: variant calling metrics"
+      anchor: "bcftools"
+      path_filters:
+        - "*bcftools_stats.txt"
+  - vcftools:
+      name: "Vcftools: variant calling metrics"
+      anchor: "vcftools_filter_summary"
+      path_filters: "*.FILTER.summary"
+  - vcftools:
+      name: "Vcftools: Ti/Tv ratio by count"
+      anchor: "vcftools_tstv_by_count"
+      path_filters: "*.TsTv.count"
+  - vcftools:
+      name: "Vcftools: Ti/Tv ratio by quality"
+      anchor: "vcftools_tstv_by_qual"
+      path_filters: "*.TsTv.qual"
+  - vcftools:
+      name: "Vcftools: relatedness2"
+      anchor: "vcftools_relatedness2"
+      path_filters: "*.relatedness2"
 
 custom_plot_config:
   general_stats_table:
