@@ -56,7 +56,7 @@
                 "type": "string",
                 "pattern": "^[^\\s.]+$",
                 "errorMessage": "Population ID for grouping of samples must be provided, cannot contain spaces or full stops",
-                "meta": ["pop"]
+                "meta": ["population"]
             }
         },
         "required": ["sample", "library_id", "flowcell_id", "lane", "platform", "fastq_1", "population"]
