@@ -9,9 +9,8 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         : 'community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a'}"
 
     input:
-    tuple val(meta), path(bams), path(indexes)
+    tuple val(meta), path(bams), path(indexes), path(intervals)
     tuple val(meta2), path(fasta), path(fai)
-    path intervals
     val save_mpileup
     val group_samples
     path population_file

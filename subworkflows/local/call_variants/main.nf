@@ -61,22 +61,13 @@ workflow CALL_VARIANTS {
         ch_joint_alignments_per_chunk = ch_joint_alignments
             .combine(ch_intervals)
             .map { meta, alignments, indexes, chunk_bed ->
-                [[id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName], alignments, indexes, chunk_bed]
-            }
-
-        ch_joint_alignments_for_variant_calling = ch_joint_alignments_per_chunk.map { meta, alignments, indexes, _chunk_bed ->
-            [meta, alignments, indexes]
-        }
-
-        ch_chunk_beds_for_variant_calling = ch_joint_alignments_per_chunk.map { _meta, _alignments, _indexes, chunk_bed ->
-            chunk_bed
-        }
+                [[id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName], 
+                alignments, indexes, chunk_bed]}
 
         // Multi-sample variant calling
         BCFTOOLS_MPILEUP_MULTISAMPLE(
-            ch_joint_alignments_for_variant_calling,
+            ch_joint_alignments_per_chunk,
             ch_reference_and_fai,
-            ch_chunk_beds_for_variant_calling,
             enable.save_mpileup,
             enable.group_samples,
             ch_population_file,
