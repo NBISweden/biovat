@@ -1,4 +1,5 @@
 include { VALIDATE_READGROUP_HEADER } from '../../../modules/local/validate_readgroup_header/main'
+include { SAMTOOLS_ADDREPLACERG     } from '../../../modules/nf-core/samtools/addreplacerg/main'
 include { SAMTOOLS_SORT             } from '../../../modules/nf-core/samtools/sort/main'
 include { ALIGNMENT_QC              } from '../alignment_qc/main'
 
@@ -11,14 +12,30 @@ workflow INGEST_BAM_OR_CRAM {
     ch_multiqc_files
 
     main:
-    // Reject a BAM/CRAM whose @RG SM/LB/PL/PU/ID tags disagree with its samplesheet row
+    // Reject a BAM/CRAM with several @RG lines, or one whose @RG tags are missing or disagree with its samplesheet row
     VALIDATE_READGROUP_HEADER(
         ch_input_bam_cram
+    )
+    ch_validated = VALIDATE_READGROUP_HEADER.out.validated
+        .branch { meta, bam_cram, rg_status ->
+            missing: rg_status == 'missing'
+                return [ meta, bam_cram ]
+            present: true
+                return [ meta, bam_cram ]
+        }
+
+    // A BAM/CRAM with no @RG line gets one built from its samplesheet row
+    SAMTOOLS_ADDREPLACERG(
+        ch_validated.missing.map { meta, bam_cram ->
+            log.warn "No @RG header line in '${bam_cram.name}' (sample '${meta.id}', library '${meta.library}'): adding one from the samplesheet and tagging the reads"
+            [ meta, bam_cram, [], '' ]
+        },
+        ch_reference_and_optional_fai.map { meta, fasta, fai -> [ meta, fasta, fai, [] ] }
     )
 
     // Ensure compatible sort order, index, and convert CRAM to BAM/BAM to CRAM if required
     SAMTOOLS_SORT(
-        VALIDATE_READGROUP_HEADER.out.validated,
+        ch_validated.present.mix(SAMTOOLS_ADDREPLACERG.out.bam),
         ch_reference_and_optional_fai,
         enable.cram_format ? "crai" : "csi",
     )

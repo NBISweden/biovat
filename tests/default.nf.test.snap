@@ -18,6 +18,9 @@
                 "RIKER_MULTI": {
                     "riker": "0.4.0"
                 },
+                "SAMTOOLS_ADDREPLACERG": {
+                    "samtools": 1.24
+                },
                 "SAMTOOLS_FAIDX": {
                     "samtools": 1.24
                 },
@@ -1179,7 +1182,7 @@
                 "06_merged_samples/PUN-Y-LO_illumina.bam:82f53f12624e7642fd573777c67fc19d"
             ]
         ],
-        "timestamp": "2026-09-30T16:01:12.108639099",
+        "timestamp": "2026-10-01T13:41:02.118760724",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

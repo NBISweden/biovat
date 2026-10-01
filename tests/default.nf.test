@@ -43,6 +43,8 @@ nextflow_pipeline {
                 .collect { f -> "${outdir_path.relativize(f.toPath())}:${bam(f.toString()).getReadsMD5()}" }
             assert workflow.success
             assertAll(
+                // PUN-R-ELF_2.bam has no @RG line: INGEST_BAM_OR_CRAM must warn that it's filling one in from the samplesheet
+                { assert file("${launchDir}/meta/nextflow.log").text.contains("No @RG header line in 'PUN-R-ELF_2.bam'") },
                 { assert snapshot(
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
                     removeNextflowVersion("$outputDir/pipeline_info/biovat_software_mqc_versions.yml"),

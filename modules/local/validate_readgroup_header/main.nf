@@ -11,7 +11,7 @@ process VALIDATE_READGROUP_HEADER {
     tuple val(meta), path(bam_cram)
 
     output:
-    tuple val(meta), path(bam_cram), emit: validated
+    tuple val(meta), path(bam_cram), env('rg_status'), emit: validated // rg_status: 'present' or 'missing' (no @RG line, filled downstream)
     tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions
 
     when:
@@ -23,17 +23,27 @@ process VALIDATE_READGROUP_HEADER {
     """
     samtools view -H ${bam_cram} > header.sam
 
+    # Each samplesheet row is one read group. Several @RG lines is an error. No @RG line is filled downstream from the samplesheet.
+    rg_count=\$(grep -c '^@RG' header.sam || true)
+    if [ "\${rg_count}" -gt 1 ]; then
+        echo "ERROR: '${bam_cram}' has \${rg_count} @RG header lines; expected at most 1 (one read group per samplesheet row)" >&2
+        exit 1
+    fi
+    rg_status=\$([ "\${rg_count}" -eq 0 ] && echo missing || echo present)
+
     check_tag() {
         local tag="\$1" expected="\$2"
         awk -F'\\t' -v tag="\${tag}:" -v expected="\${expected}" '
             \$1 == "@RG" {
                 for (i = 2; i <= NF; i++) {
                     if (index(\$i, tag) == 1) {
+                        found = 1
                         value = substr(\$i, length(tag) + 1)
-                        if (value != expected) print tag value
+                        if (value != expected) print "found " tag value
                     }
                 }
             }
+            END { if (!found) print "missing " tag }
         ' header.sam | sort -u
     }
 
@@ -47,14 +57,15 @@ process VALIDATE_READGROUP_HEADER {
         }
     )
 
-    if [ -n "\${mismatches}" ]; then
-        echo "ERROR: @RG header of '${bam_cram}' disagrees with the samplesheet row for sample '${meta.id}', library '${meta.library}' (expected ID/PU:${platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):" >&2
-        echo "\${mismatches}" | sed 's/^/  found /' >&2
+    if [ "\${rg_status}" = present ] && [ -n "\${mismatches}" ]; then
+        echo "ERROR: @RG header of '${bam_cram}' is missing tags or disagrees with the samplesheet row for sample '${meta.id}', library '${meta.library}' (expected ID/PU:${platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):" >&2
+        echo "\${mismatches}" | sed 's/^/  /' >&2
         exit 1
     fi
     """
 
     stub:
     """
+    rg_status=present
     """
 }

@@ -21,7 +21,11 @@ nextflow_process {
         }
 
         then {
-            assert process.success
+            assertAll(
+                { assert process.success },
+                // rg_status tells INGEST_BAM_OR_CRAM whether the @RG line is present or if it must be filled in
+                { assert process.out.validated[0][2] == 'present' }
+            )
         }
     }
 
@@ -43,6 +47,50 @@ nextflow_process {
                 { assert process.failed },
                 // Fail for the right reason: the SM mismatch itself, not e.g. a missing file or container error
                 { assert process.stdout.any { line -> line.contains('found SM:WRONG') } }
+            )
+        }
+    }
+
+    test("several @RG header lines - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/two_readgroups.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                // Rejected by the at-most-one-@RG-line requirement
+                { assert process.stdout.any { line -> line.contains('has 2 @RG header lines') } }
+            )
+        }
+    }
+
+    test("@RG line missing a required tag - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/missing_lb.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                // Absent tag is reported, not silently skipped
+                { assert process.stdout.any { line -> line.contains('missing LB') } }
             )
         }
     }

@@ -21,6 +21,12 @@ The `sample` identifiers have to be the same when you have re-sequenced the same
 
 Each row must provide raw reads via `fastq_1` (optionally `fastq_2`), **or** an already-aligned `BAM`/`CRAM` file via `bam`. If providing `BAM`/`CRAM`, users must also fill-out the `single_end` column (`false` for paired-end reads). When providing pre-aligned files, trimming and alignment are skipped. All read groups of a library, and all libraries of a sample, must agree on `single_end` (mixing single- and paired-end reads at the same merge level is rejected).
 
+Each `BAM`/`CRAM` file is treated as a single read group, and its `@RG` header is checked against its samplesheet row. The pipeline expects `ID` and `PU` to be `<flowcell_id>.<lane>.<sample>_<library_id>`, `SM` to be `sample`, `LB` to be `library_id`, and `PL` to be `platform`. This is the read group the pipeline writes itself when aligning `fastq` rows. Consequently:
+
+- A file with **no** `@RG` line is accepted with a warning. The pipeline builds the read group from the samplesheet row and tags every read with it.
+- A file with **more than one** `@RG` line is rejected. Split it by read group (e.g. `samtools split`) and give each part its own samplesheet row.
+- A file whose `@RG` line is missing any of the tags, or disagrees with the samplesheet, is rejected. Correct the samplesheet, or the file with e.g. `samtools addreplacerg -m overwrite_all -r '@RG\tID:...'`.
+
 A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. A single library of sample `S1` has been sequenced across three lanes. Two independent libraries of sample `S6` have been sequenced. Sample `S7` supplies a pre-aligned CRAM instead of raw reads.
 
 ```csv title="samplesheet.csv"
