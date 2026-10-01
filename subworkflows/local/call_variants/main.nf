@@ -21,7 +21,6 @@ workflow CALL_VARIANTS {
 
     main:
     // Split the reference genome into chunks of chromosomes for parallelization
-    ch_genome_chunks = channel.empty()
     ch_fai = ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] }
     SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
     ch_genome_chunks = SPLITGENOME.out.chunks
