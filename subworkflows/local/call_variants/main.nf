@@ -61,7 +61,7 @@ workflow CALL_VARIANTS {
         ch_joint_alignments_per_chunk = ch_joint_alignments
             .combine(ch_intervals)
             .map { meta, alignments, indexes, chunk_bed ->
-                [[id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName], 
+                [[id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName],
                 alignments, indexes, chunk_bed]}
 
         // Multi-sample variant calling
