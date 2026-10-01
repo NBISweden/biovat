@@ -65,10 +65,6 @@ description = "List open issues assigned to you"
 cmd         = "gh pr view --web"
 description = "Open the current branch's PR in the browser"
 
-[tasks.format]
-cmd         = "nextflow lint -format -harshil-alignment -spaces 4"
-description = "Run Nextflow formatter on target file(s). Usage: <cmd> <file(s)>"
-
 [tasks.lint-pipeline]
 cmd         = "nf-core pipelines lint"
 description = "Run the nf-core pipeline linter"
