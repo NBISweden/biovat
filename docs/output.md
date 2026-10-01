@@ -90,7 +90,7 @@ Alignment QC executes at several workflow stages. The outputs will be in the dir
 
 At the two merging stages (`04_merged_libraries`, `06_merged_samples`), QC only runs for samples/libraries where an actual merge took place (i.e. more than one lane or library was combined). Where nothing was merged, the passed-through alignment is byte-identical to the one already QC'd at the previous stage, so no QC subfolder entry is produced for it there — see the QC output from the preceding stage instead.
 
-Samplesheet rows supplying an already-aligned `bam`/`cram` file are QC'd once ingested (after sorting, indexing, and any format conversion), with results in `01_input_checks/prealigned_reads/` (subfolders `samtools/`, `riker/`, `qualimap/`, with the same contents as the `qc/` subfolders below).
+Samplesheet rows supplying an already-aligned `bam`/`cram` file are QC'd once ingested (after sorting, indexing, and any format conversion), with results in `01_input_checks/prealigned_reads/` (subfolders `samtools_flagstat/`, `riker/`, `qualimap/`, with the same contents as the `qc/` subfolders below).
 
 <details markdown="1">
 <summary>Output files</summary>
