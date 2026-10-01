@@ -16,7 +16,7 @@ workflow INGEST_BAM_OR_CRAM {
         ch_input_bam_cram
     )
 
-    // Ensure compatibile sort order, index, and convert CRAM to BAM/BAM to CRAM if required
+    // Ensure compatible sort order, index, and convert CRAM to BAM/BAM to CRAM if required
     SAMTOOLS_SORT(
         VALIDATE_READGROUP_HEADER.out.validated,
         ch_reference_and_optional_fai,
