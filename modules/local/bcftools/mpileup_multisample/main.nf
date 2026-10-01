@@ -29,9 +29,9 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def intervals_cmd = intervals ? "-T ${intervals}" : ""
     def mpileup = save_mpileup ? "| tee ${prefix}.mpileup" : ""
     def bgzip_mpileup = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
-    def intervals_cmd = intervals ? "-T ${intervals}" : ""
     def annotate_format_ad_cmd = group_samples ? "-a AD" : ""
     def group_samples_cmd = group_samples ? "--group-samples ${population_file}" : ""
     """
@@ -42,8 +42,8 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         ${args} \\
         ${bams} \\
         ${intervals_cmd} \\
-        ${mpileup} \\
         ${annotate_format_ad_cmd} \\
+        ${mpileup} \\
         | bcftools call \\
         --output-type z \\
         ${args2} \\
