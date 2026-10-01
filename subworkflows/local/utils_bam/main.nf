@@ -11,7 +11,7 @@ workflow INGEST_BAM_OR_CRAM {
     ch_multiqc_files
 
     main:
-    // Reject a BAM/CRAM whose @RG SM/LB disagrees with its samplesheet row
+    // Reject a BAM/CRAM whose @RG SM/LB/PL/PU/ID tags disagree with its samplesheet row
     VALIDATE_READGROUP_HEADER(
         ch_input_bam_cram
     )

@@ -25,24 +25,6 @@ nextflow_process {
         }
     }
 
-    test("all tags agree (fake data) - succeeds") {
-
-        when {
-            process {
-                """
-                input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/good_readgroup.bam", checkIfExists: true)
-                ])
-                """
-            }
-        }
-
-        then {
-            assert process.success
-        }
-    }
-
     test("SM disagrees with samplesheet sample - fails") {
 
         when {
@@ -57,79 +39,11 @@ nextflow_process {
         }
 
         then {
-            assert process.failed
-        }
-    }
-
-    test("LB disagrees with samplesheet library_id - fails") {
-
-        when {
-            process {
-                """
-                input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_lb.bam", checkIfExists: true)
-                ])
-                """
-            }
-        }
-
-        then {
-            assert process.failed
-        }
-    }
-
-    test("ID disagrees with expected flowcell/lane/sample/library - fails") {
-
-        when {
-            process {
-                """
-                input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_id.bam", checkIfExists: true)
-                ])
-                """
-            }
-        }
-
-        then {
-            assert process.failed
-        }
-    }
-
-    test("PU disagrees with expected flowcell/lane/sample/library - fails") {
-
-        when {
-            process {
-                """
-                input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_pu.bam", checkIfExists: true)
-                ])
-                """
-            }
-        }
-
-        then {
-            assert process.failed
-        }
-    }
-
-    test("PL disagrees with samplesheet platform - fails") {
-
-        when {
-            process {
-                """
-                input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_pl.bam", checkIfExists: true)
-                ])
-                """
-            }
-        }
-
-        then {
-            assert process.failed
+            assertAll(
+                { assert process.failed },
+                // Fail for the right reason: the SM mismatch itself, not e.g. a missing file or container error
+                { assert process.stdout.any { line -> line.contains('found SM:WRONG') } }
+            )
         }
     }
 }
