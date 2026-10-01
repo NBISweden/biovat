@@ -165,6 +165,7 @@ workflow BIOVAT {
     }
 
     // Variant calling
+    outputs_genome_chunks = channel.empty()
     outputs_variant_calls = channel.empty()
     outputs_mpileup = channel.empty()
     outputs_call_variants_bcftools_stats = channel.empty()
