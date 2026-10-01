@@ -42,8 +42,8 @@ workflow CALL_VARIANTS {
                     name: 'sample_population.tsv',
                     newLine: true,
                     sort: true,
-                    cache: true,
-                )
+                    cache: true,)
+                .collect()
         }
 
         // Group all samples into a single joint call
