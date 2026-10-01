@@ -16,6 +16,10 @@
 
 - [BWA-MEM3](https://github.com/fg-labs/bwa-mem3)
 
+- [BCFtools](https://www.htslib.org/)
+
+> Li H. A statistical framework for SNP calling, mutation discovery, association mapping and population genetical parameter estimation from sequencing data. Bioinformatics. 2011 Nov 1;27(21):2987-93. doi: 10.1093/bioinformatics/btr509. PubMed PMID: 21903627.
+
 - [FastP](https://github.com/opengene/fastp)
 
 > Chen S. fastp 1.0: An Ultra-Fast All-Round Tool for FASTQ Data Quality Control and Preprocessing. iMeta. 2025 4:e70078. doi:10.1002/imt2.70078
@@ -43,6 +47,10 @@
 - [Samtools](https://www.htslib.org/)
 
 > Li H, Handsaker B, Wysoker A, Fennell T, Ruan J, Homer N, Marth G, Abecasis G, Durbin R; 1000 Genome Project Data Processing Subgroup. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009 Aug 15;25(16):2078-2079. doi: 10.1093/bioinformatics/btp352. PubMed PMID: 19505943.
+
+- [VCFtools](https://vcftools.github.io/)
+
+> Danecek P, Auton A, Abecasis G, Albers CA, Banks E, DePristo MA, Handsaker RE, Lunter G, Marth GT, Sherry ST, McVean G, Durbin R; 1000 Genomes Project Analysis Group. The Variant Call Format and VCFtools. Bioinformatics. 2011 Aug 1;27(15):2156-8. doi: 10.1093/bioinformatics/btr330. PubMed PMID: 21653522.
 
 ## Software packaging/containerisation tools
 
