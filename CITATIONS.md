@@ -32,6 +32,10 @@
 
 > NVIDIA Corporation. NVIDIA Clara Parabricks documentation [Online]. Available from: https://docs.nvidia.com/clara/parabricks/latest/index.html
 
+- [Picard](https://broadinstitute.github.io/picard/)
+
+> Broad Institute. Picard Toolkit. Broad Institute, GitHub Repository. Available from: https://broadinstitute.github.io/picard/
+
 - [Qualimap](http://qualimap.bioinfo.cipf.es/)
 
 > Okonechnikov K, Conesa A, Garcia-Alcalde F. Qualimap 2: advanced multi-sample quality control for high-throughput sequencing data. Bioinformatics. 2016 Jan 15;32(2):292-294. doi: 10.1093/bioinformatics/btv566.

@@ -8,13 +8,13 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { UTILS_NFSCHEMA_PLUGIN     } from '../../nf-core/utils_nfschema_plugin'
-include { paramsSummaryMap          } from 'plugin/nf-schema'
-include { samplesheetToList         } from 'plugin/nf-schema'
-include { paramsHelp                } from 'plugin/nf-schema'
-include { completionSummary         } from '../../nf-core/utils_nfcore_pipeline'
-include { UTILS_NFCORE_PIPELINE     } from '../../nf-core/utils_nfcore_pipeline'
-include { UTILS_NEXTFLOW_PIPELINE   } from '../../nf-core/utils_nextflow_pipeline'
+include { UTILS_NFSCHEMA_PLUGIN   } from '../../nf-core/utils_nfschema_plugin'
+include { paramsSummaryMap        } from 'plugin/nf-schema'
+include { samplesheetToList       } from 'plugin/nf-schema'
+include { paramsHelp              } from 'plugin/nf-schema'
+include { completionSummary       } from '../../nf-core/utils_nfcore_pipeline'
+include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
+include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,9 +28,9 @@ workflow PIPELINE_INITIALISATION {
     version           // boolean: Display version and exit
     validate_params   // boolean: Boolean whether to validate parameters against the schema at runtime
     monochrome_logs   // boolean: Do not use coloured log outputs
-    nextflow_cli_args //   array: List of positional nextflow CLI args
-    outdir            //  string: The output directory where the results will be saved
-    input             //  string: Path to input samplesheet
+    nextflow_cli_args // array: List of positional nextflow CLI args
+    outdir            // string: The output directory where the results will be saved
+    input             // string: Path to input samplesheet
     help              // boolean: Display help message and exit
     help_full         // boolean: Show the full help message
     show_hidden       // boolean: Show hidden parameters in the help message
@@ -87,21 +87,28 @@ workflow PIPELINE_INITIALISATION {
     // Validation pipeline parameters
     validateInputParameters()
 
-    // Build list of samplesheet rows (each carrying single_end and read_group in meta) before
-    // creating a channel from it. Uniqueness of the sample/library_id/flowcell_id/lane
+    // Build list of samplesheet rows, run validation checks, & then create a channel from it
+    // Uniqueness of the sample/library_id/flowcell_id/lane
     // combination is enforced by the "uniqueEntries" key in assets/schema_input.json
     def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
-        .collect { meta, fastq_1, fastq_2 ->
+        .collect { meta, fastq_1, fastq_2, bam ->
+            // We define read_group separately as an intuitive/readable @RG-level file prefix
             def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
-            fastq_2
-                ? [ meta + [ single_end:false, read_group:read_group ], [ fastq_1, fastq_2 ] ]
-                : [ meta + [ single_end:true,  read_group:read_group ], [ fastq_1 ] ]
+            // GATK format @RG ID/PU written by the aligners/samtools, and expected by VALIDATE_READGROUP_HEADER
+            def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}".toString()
+            def extra = bam
+                ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
+                : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
+            [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
         }
 
     // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every
     // library sharing a sample, must agree on single_end or the merge produces a BAM with
     // inconsistent read pairing
     validateSampleEndedness(samplesheet_rows)
+
+    // Report every reason --reference is needed (params and samplesheet rows) in one error
+    validateReferenceRequirements(samplesheet_rows)
 
     ch_samplesheet = channel
         .fromList(samplesheet_rows)
@@ -165,16 +172,12 @@ def validationError(message) {
 
 def validateInputParameters() {
 
-    def enable = params.findAll { k, _v -> k.startsWith('enable_') }
+    def enable = params
+        .findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
-
-    // If align is requested, a reference must be provided
-    if ( enable.align && !params.reference ) {
-        validationError("Alignment cannot be run without a reference FASTA file.")
-    }
     // If CRAM format is requested, qualimap cannot be run
     if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
-        validationError("Qualimap cannot be run when CRAM format is enabled.")
+        validationError("Qualimap cannot be run when CRAM output is enabled.")
     }
 
     // Stage dependency map
@@ -182,7 +185,7 @@ def validateInputParameters() {
         'raw_read_qc': [],
         'trim': [],
         'align': [],
-        'mark_duplicates': ['align'],
+        'mark_duplicates': [],
     ]
     stage_dependencies.each { step, dependencies ->
         if (enable[step]) {
@@ -199,19 +202,64 @@ def validateInputParameters() {
 // single-end and paired-end reads. Alignments are merged read-group -> library -> sample, so a mismatch
 // here would otherwise be merged into a single BAM with inconsistent read pairing.
 def validateSampleEndedness(rows) {
-    rows.groupBy { meta, _reads -> [ meta.id, meta.library ] }
+    rows
+        .groupBy { meta, _reads -> [ meta.id, meta.library ] }
         .each { key, group ->
             def (sample_id, library_id) = key
             if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
                 validationError("Sample '${sample_id}', library '${library_id}' mixes single-end and paired-end reads across lanes - all lanes of a library must share the same read layout.")
             }
         }
-    rows.groupBy { meta, _reads -> meta.id }
+    rows
+        .groupBy { meta, _reads -> meta.id }
         .each { sample_id, group ->
             if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
                 validationError("Sample '${sample_id}' mixes single-end and paired-end reads across libraries - all libraries of a sample must share the same read layout.")
             }
         }
+}
+
+// Alignments enter the pipeline only via ALIGN_READS or INGEST_BAM_OR_CRAM (BAM/CRAM input rows); every
+// downstream stage (merge, dedup) operates on those same alignments, so adds no source of its own
+def hasAlignmentSource(enable, has_bam_cram_rows) {
+    enable.align || has_bam_cram_rows
+}
+
+// RIKER runs wherever ALIGNMENT_QC runs, i.e. whenever alignment QC is enabled and any alignment exists.
+// Callers that can't see the samplesheet rows (main.nf) pass has_bam_cram_rows = true to stay conservative
+def rikerActive(enable, has_bam_cram_rows) {
+    enable.align_qc && enable.riker && hasAlignmentSource(enable, has_bam_cram_rows)
+}
+
+// Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
+def validateReferenceRequirements(rows) {
+    if ( params.reference ) {
+        return
+    }
+    def enable            = params
+        .findAll { k, _v -> k.startsWith('enable_') }
+        .collectEntries { k, v -> [(k - 'enable_'): v] }
+    def bam_cram_rows     = rows.findAll { meta, _files -> meta.input_type == 'bam_cram' }
+    def cram_rows         = bam_cram_rows.findAll { _meta, files -> files[0].toString().endsWith('.cram') }
+    def has_bam_cram_rows = !bam_cram_rows.isEmpty()
+    def reasons           = []
+    if ( enable.align ) {
+        reasons.add("alignment (--enable_align)")
+    }
+    if ( enable.cram_format && hasAlignmentSource(enable, has_bam_cram_rows) ) {
+        reasons.add("CRAM output (--enable_cram_format)")
+    }
+    // A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
+    if ( !cram_rows.isEmpty() ) {
+        def cram_samples = cram_rows.collect { meta, _files -> meta.id }.unique()
+        reasons.add("decoding CRAM input (sample(s): ${cram_samples.join(', ')})")
+    }
+    if ( rikerActive(enable, has_bam_cram_rows) ) {
+        reasons.add("RIKER (--enable_riker)")
+    }
+    if ( !reasons.isEmpty() ) {
+        validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")
+    }
 }
 
 //
@@ -274,7 +322,7 @@ def methodsDescriptionText(mqc_methods_yaml) {
 
     def methods_text = mqc_methods_yaml.text
 
-    def engine =  new groovy.text.SimpleTemplateEngine()
+    def engine = new groovy.text.SimpleTemplateEngine()
     def description_html = engine.createTemplate(methods_text).make(meta)
 
     return description_html.toString()
