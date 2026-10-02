@@ -26,7 +26,7 @@ workflow MERGE {
             // sort by filename so SAMTOOLS_MERGE always stages in the same subdirectories.
             // (samtools merge breaks position ties using input file order)
             def sorted = [alignments, indexes].transpose().sort { a, b -> a[0].name <=> b[0].name }
-            return [meta, sorted.collect { it[0] }, sorted.collect { it[1] }]
+            return [meta, sorted.collect { it -> it[0] }, sorted.collect { it -> it[1] }]
         }
         .branch { meta, alignments, indexes ->
             skip_merge: alignments.size() == 1
