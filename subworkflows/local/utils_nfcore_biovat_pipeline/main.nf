@@ -105,11 +105,8 @@ workflow PIPELINE_INITIALISATION {
     // inconsistent read pairing
     validateSampleEndedness(samplesheet_rows)
 
-    // A CRAM input row needs --reference to decode
-    validateCramInputReference(samplesheet_rows)
-
-    // RIKER on a BAM/CRAM input row needs --reference
-    validateRikerInputReference(samplesheet_rows)
+    // Report every reason --reference is needed (params and samplesheet rows) in one error
+    validateReferenceRequirements(samplesheet_rows)
 
     ch_samplesheet = channel
         .fromList(samplesheet_rows)
@@ -176,22 +173,9 @@ def validateInputParameters() {
     def enable = params
         .findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
-    // If align is requested, a reference must be provided
-    if ( enable.align && !params.reference ) {
-        validationError("Alignment cannot be run without a reference FASTA file.")
-    }
     // If CRAM format is requested, qualimap cannot be run
     if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
         validationError("Qualimap cannot be run when CRAM output is enabled.")
-    }
-    // CRAM encoding needs a reference
-    if ( enable.cram_format && !params.reference ) {
-        validationError("CRAM output (--enable_cram_format) cannot be run without a reference FASTA file.")
-    }
-    // RIKER needs a reference, and only runs where alignment QC is active
-    def align_qc_active = enable.align_qc && ( enable.align || enable.mark_duplicates || enable.variant_calling )
-    if ( enable.riker && align_qc_active && !params.reference ) {
-        validationError("RIKER (--enable_riker) cannot be run without a reference FASTA file.")
     }
 
     // Stage dependency map
@@ -233,32 +217,34 @@ def validateSampleEndedness(rows) {
         }
 }
 
-// A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
-def validateCramInputReference(rows) {
+// Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
+def validateReferenceRequirements(rows) {
     if ( params.reference ) {
         return
     }
-    def cram_samples = rows
-        .findAll { meta, files -> meta.input_type == 'bam_cram' && files[0].toString().endsWith('.cram') }
-        .collect { meta, _files -> meta.id }
-        .unique()
-    if ( cram_samples ) {
-        validationError("CRAM input requires --reference to decode (sample(s): ${cram_samples.join(', ')}).")
+    def bam_cram_rows = rows.findAll { meta, _files -> meta.input_type == 'bam_cram' }
+    def cram_rows     = bam_cram_rows.findAll { _meta, files -> files[0].toString().endsWith('.cram') }
+    def reasons = []
+    if ( params.enable_align ) {
+        reasons.add("alignment (--enable_align)")
     }
-}
-
-// INGEST_BAM_OR_CRAM runs alignment QC on BAM/CRAM input rows if enabled
-// RIKER needs --reference when such a row is present
-def validateRikerInputReference(rows) {
-    if ( params.reference || !( params.enable_align_qc && params.enable_riker ) ) {
-        return
+    if ( params.enable_cram_format ) {
+        reasons.add("CRAM output (--enable_cram_format)")
     }
-    def bam_cram_samples = rows
-        .findAll { meta, _files -> meta.input_type == 'bam_cram' }
-        .collect { meta, _files -> meta.id }
-        .unique()
-    if ( bam_cram_samples ) {
-        validationError("RIKER (--enable_riker) on BAM/CRAM input requires --reference (sample(s): ${bam_cram_samples.join(', ')}).")
+    // A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
+    if ( !cram_rows.isEmpty() ) {
+        def cram_samples = cram_rows.collect { meta, _files -> meta.id }.unique()
+        reasons.add("decoding CRAM input (sample(s): ${cram_samples.join(', ')})")
+    }
+    // RIKER runs wherever alignment QC is active: after alignment/merging/dedup, and in INGEST_BAM_OR_CRAM
+    // on BAM/CRAM input rows
+    def align_qc_active = params.enable_align_qc &&
+        ( params.enable_align || params.enable_mark_duplicates || params.enable_variant_calling || !bam_cram_rows.isEmpty() )
+    if ( params.enable_riker && align_qc_active ) {
+        reasons.add("RIKER (--enable_riker)")
+    }
+    if ( !reasons.isEmpty() ) {
+        validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")
     }
 }
 
