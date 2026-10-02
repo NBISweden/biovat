@@ -87,15 +87,18 @@ workflow PIPELINE_INITIALISATION {
     // Validation pipeline parameters
     validateInputParameters()
 
-    // Build list of samplesheet rows (each carrying single_end and read_group in meta) before
-    // creating a channel from it. Uniqueness of the sample/library_id/flowcell_id/lane
+    // Build list of samplesheet rows, run validation checks, & then create a channel from it
+    // Uniqueness of the sample/library_id/flowcell_id/lane
     // combination is enforced by the "uniqueEntries" key in assets/schema_input.json
     def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
         .collect { meta, fastq_1, fastq_2, bam ->
+            // We define read_group separately as an intuitive/readable @RG-level file prefix
             def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
+            // GATK format @RG ID/PU written by the aligners/samtools, and expected by VALIDATE_READGROUP_HEADER
+            def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}".toString()
             def extra = bam
-                ? [ read_group:read_group, input_type:'bam_cram' ]
-                : [ read_group:read_group, input_type:'fastq', single_end:!fastq_2 ]
+                ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
+                : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
                 [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
 
         }
