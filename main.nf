@@ -10,6 +10,7 @@
 include { BIOVAT                  } from './workflows/biovat'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { rikerActive             } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // Global default parameters: define param types here, and defaults in nextflow.config
 params {
@@ -95,12 +96,11 @@ workflow NBISWEDEN_BIOVAT {
         merge_to_library: enable.mark_duplicates,
         merge_to_sample : enable.variant_calling
     ]
-
     def merge_active = requires.merge_to_library || requires.merge_to_sample
 
-    // .fai is used for certain CRAM processes, and unconditionally by riker
-    // (ALIGNMENT_QC also runs on BAM/CRAM input rows during ingestion, independent of any enabled stage)
-    requires.fai = (enable.cram_format && merge_active) || (enable.align_qc && enable.riker)
+    // .fai is used for certain CRAM processes, and unconditionally by riker. The samplesheet rows aren't
+    // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
+    requires.fai = (enable.cram_format && merge_active) || rikerActive(enable, true)
 
     BIOVAT (
         samplesheet,
@@ -199,13 +199,13 @@ output {
     }
     // INGEST_BAM_OR_CRAM
     outputs_input_flagstat {
-        path '01_input_checks/prealigned_reads/samtools_flagstat'
+        path '01_input_checks/reads/samtools_flagstat'
     }
     outputs_input_riker {
-        path '01_input_checks/prealigned_reads/riker'
+        path '01_input_checks/reads/riker'
     }
     outputs_input_qualimap {
-        path '01_input_checks/prealigned_reads/qualimap'
+        path '01_input_checks/reads/qualimap'
     }
     // TRIM_READS
     outputs_trim_reads {

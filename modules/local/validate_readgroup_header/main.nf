@@ -18,10 +18,8 @@ process VALIDATE_READGROUP_HEADER {
     task.ext.when == null || task.ext.when
 
     script:
-    // Check every @RG tag (see conf/modules.config) against the samplesheet
-    def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}"
     """
-    samtools view -H ${bam_cram} > header.sam
+    samtools view -H ${bam_cram} > header.txt
 
     # Each samplesheet row is one read group. Several @RG lines is an error. No @RG line is filled downstream from the samplesheet.
     rg_count=\$(grep -c '^@RG' header.sam || true)
@@ -44,21 +42,21 @@ process VALIDATE_READGROUP_HEADER {
                 }
             }
             END { if (!found) print "missing " tag }
-        ' header.sam | sort -u
+        ' header.txt | sort -u
     }
 
     mismatches=\$(
         {
-            check_tag "ID" "${platform_unit}"
+            check_tag "ID" "${meta.platform_unit}"
             check_tag "SM" "${meta.id}"
             check_tag "LB" "${meta.library}"
-            check_tag "PU" "${platform_unit}"
+            check_tag "PU" "${meta.platform_unit}"
             check_tag "PL" "${meta.pl}"
         }
     )
 
     if [ "\${rg_status}" = present ] && [ -n "\${mismatches}" ]; then
-        echo "ERROR: @RG header of '${bam_cram}' is missing tags or disagrees with the samplesheet row for sample '${meta.id}', library '${meta.library}' (expected ID/PU:${platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):" >&2
+        echo "ERROR: @RG header of '${bam_cram}' is missing tags or disagrees with the samplesheet row for sample '${meta.id}', library '${meta.library}' (expected ID/PU:${meta.platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):" >&2
         echo "\${mismatches}" | sed 's/^/  /' >&2
         exit 1
     fi

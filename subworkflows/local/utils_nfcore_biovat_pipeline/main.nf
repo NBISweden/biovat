@@ -87,17 +87,19 @@ workflow PIPELINE_INITIALISATION {
     // Validation pipeline parameters
     validateInputParameters()
 
-    // Build list of samplesheet rows (each carrying single_end and read_group in meta) before
-    // creating a channel from it. Uniqueness of the sample/library_id/flowcell_id/lane
+    // Build list of samplesheet rows, run validation checks, & then create a channel from it
+    // Uniqueness of the sample/library_id/flowcell_id/lane
     // combination is enforced by the "uniqueEntries" key in assets/schema_input.json
     def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
         .collect { meta, fastq_1, fastq_2, bam ->
+            // We define read_group separately as an intuitive/readable @RG-level file prefix
             def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
+            // GATK format @RG ID/PU written by the aligners/samtools, and expected by VALIDATE_READGROUP_HEADER
+            def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}".toString()
             def extra = bam
-                ? [ read_group:read_group, input_type:'bam_cram' ]
-                : [ read_group:read_group, input_type:'fastq', single_end:!fastq_2 ]
-                [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
-
+                ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
+                : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
+            [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
         }
 
     // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every
@@ -105,11 +107,8 @@ workflow PIPELINE_INITIALISATION {
     // inconsistent read pairing
     validateSampleEndedness(samplesheet_rows)
 
-    // A CRAM input row needs --reference to decode
-    validateCramInputReference(samplesheet_rows)
-
-    // RIKER on a BAM/CRAM input row needs --reference
-    validateRikerInputReference(samplesheet_rows)
+    // Report every reason --reference is needed (params and samplesheet rows) in one error
+    validateReferenceRequirements(samplesheet_rows)
 
     ch_samplesheet = channel
         .fromList(samplesheet_rows)
@@ -176,22 +175,9 @@ def validateInputParameters() {
     def enable = params
         .findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
-    // If align is requested, a reference must be provided
-    if ( enable.align && !params.reference ) {
-        validationError("Alignment cannot be run without a reference FASTA file.")
-    }
     // If CRAM format is requested, qualimap cannot be run
     if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
         validationError("Qualimap cannot be run when CRAM output is enabled.")
-    }
-    // CRAM encoding needs a reference
-    if ( enable.cram_format && !params.reference ) {
-        validationError("CRAM output (--enable_cram_format) cannot be run without a reference FASTA file.")
-    }
-    // RIKER needs a reference, and only runs where alignment QC is active
-    def align_qc_active = enable.align_qc && ( enable.align || enable.mark_duplicates || enable.variant_calling )
-    if ( enable.riker && align_qc_active && !params.reference ) {
-        validationError("RIKER (--enable_riker) cannot be run without a reference FASTA file.")
     }
 
     // Stage dependency map
@@ -233,32 +219,46 @@ def validateSampleEndedness(rows) {
         }
 }
 
-// A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
-def validateCramInputReference(rows) {
+// Alignments enter the pipeline only via ALIGN_READS or INGEST_BAM_OR_CRAM (BAM/CRAM input rows); every
+// downstream stage (merge, dedup) operates on those same alignments, so adds no source of its own
+def hasAlignmentSource(enable, has_bam_cram_rows) {
+    enable.align || has_bam_cram_rows
+}
+
+// RIKER runs wherever ALIGNMENT_QC runs, i.e. whenever alignment QC is enabled and any alignment exists.
+// Callers that can't see the samplesheet rows (main.nf) pass has_bam_cram_rows = true to stay conservative
+def rikerActive(enable, has_bam_cram_rows) {
+    enable.align_qc && enable.riker && hasAlignmentSource(enable, has_bam_cram_rows)
+}
+
+// Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
+def validateReferenceRequirements(rows) {
     if ( params.reference ) {
         return
     }
-    def cram_samples = rows
-        .findAll { meta, files -> meta.input_type == 'bam_cram' && files[0].toString().endsWith('.cram') }
-        .collect { meta, _files -> meta.id }
-        .unique()
-    if ( cram_samples ) {
-        validationError("CRAM input requires --reference to decode (sample(s): ${cram_samples.join(', ')}).")
+    def enable            = params
+        .findAll { k, _v -> k.startsWith('enable_') }
+        .collectEntries { k, v -> [(k - 'enable_'): v] }
+    def bam_cram_rows     = rows.findAll { meta, _files -> meta.input_type == 'bam_cram' }
+    def cram_rows         = bam_cram_rows.findAll { _meta, files -> files[0].toString().endsWith('.cram') }
+    def has_bam_cram_rows = !bam_cram_rows.isEmpty()
+    def reasons           = []
+    if ( enable.align ) {
+        reasons.add("alignment (--enable_align)")
     }
-}
-
-// INGEST_BAM_OR_CRAM runs alignment QC on BAM/CRAM input rows if enabled
-// RIKER needs --reference when such a row is present
-def validateRikerInputReference(rows) {
-    if ( params.reference || !( params.enable_align_qc && params.enable_riker ) ) {
-        return
+    if ( enable.cram_format && hasAlignmentSource(enable, has_bam_cram_rows) ) {
+        reasons.add("CRAM output (--enable_cram_format)")
     }
-    def bam_cram_samples = rows
-        .findAll { meta, _files -> meta.input_type == 'bam_cram' }
-        .collect { meta, _files -> meta.id }
-        .unique()
-    if ( bam_cram_samples ) {
-        validationError("RIKER (--enable_riker) on BAM/CRAM input requires --reference (sample(s): ${bam_cram_samples.join(', ')}).")
+    // A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
+    if ( !cram_rows.isEmpty() ) {
+        def cram_samples = cram_rows.collect { meta, _files -> meta.id }.unique()
+        reasons.add("decoding CRAM input (sample(s): ${cram_samples.join(', ')})")
+    }
+    if ( rikerActive(enable, has_bam_cram_rows) ) {
+        reasons.add("RIKER (--enable_riker)")
+    }
+    if ( !reasons.isEmpty() ) {
+        validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")
     }
 }
 

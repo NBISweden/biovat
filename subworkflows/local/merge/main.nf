@@ -12,9 +12,10 @@ workflow MERGE {
 
     main:
     // Group on the requested level, branch to enable merge skipping (singletons).
-    def keys_to_drop = level == 'library'
-        ? [ 'flowcell', 'lane', 'read_group', 'input_type' ]
-        : [ 'flowcell', 'lane', 'read_group', 'input_type', 'library' ] // else 'sample'
+    def keys_to_drop = [ 'flowcell', 'lane', 'read_group', 'platform_unit', 'input_type' ]
+    if ( level == 'sample' ) {
+        keys_to_drop += [ 'library' ]
+    }
     ch_alignments = ch_alignments_indexed
         .map { meta, alignment, index ->
             def group_meta = meta.subMap(meta.keySet() - keys_to_drop)
@@ -26,7 +27,7 @@ workflow MERGE {
             // sort by filename so SAMTOOLS_MERGE always stages in the same subdirectories.
             // (samtools merge breaks position ties using input file order)
             def sorted = [alignments, indexes].transpose().sort { a, b -> a[0].name <=> b[0].name }
-            return [meta, sorted.collect { it[0] }, sorted.collect { it[1] }]
+            return [meta, sorted.collect { it -> it[0] }, sorted.collect { it -> it[1] }]
         }
         .branch { meta, alignments, indexes ->
             skip_merge: alignments.size() == 1
