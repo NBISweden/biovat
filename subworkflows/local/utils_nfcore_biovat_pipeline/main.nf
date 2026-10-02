@@ -220,18 +220,34 @@ def validateSampleEndedness(rows) {
         }
 }
 
+// Alignments enter the pipeline only via ALIGN_READS or INGEST_BAM_OR_CRAM (BAM/CRAM input rows); every
+// downstream stage (merge, dedup) operates on those same alignments, so adds no source of its own
+def hasAlignmentSource(enable, has_bam_cram_rows) {
+    enable.align || has_bam_cram_rows
+}
+
+// RIKER runs wherever ALIGNMENT_QC runs, i.e. whenever alignment QC is enabled and any alignment exists.
+// Callers that can't see the samplesheet rows (main.nf) pass has_bam_cram_rows = true to stay conservative
+def rikerActive(enable, has_bam_cram_rows) {
+    enable.align_qc && enable.riker && hasAlignmentSource(enable, has_bam_cram_rows)
+}
+
 // Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
 def validateReferenceRequirements(rows) {
     if ( params.reference ) {
         return
     }
-    def bam_cram_rows = rows.findAll { meta, _files -> meta.input_type == 'bam_cram' }
-    def cram_rows     = bam_cram_rows.findAll { _meta, files -> files[0].toString().endsWith('.cram') }
-    def reasons = []
-    if ( params.enable_align ) {
+    def enable            = params
+        .findAll { k, _v -> k.startsWith('enable_') }
+        .collectEntries { k, v -> [(k - 'enable_'): v] }
+    def bam_cram_rows     = rows.findAll { meta, _files -> meta.input_type == 'bam_cram' }
+    def cram_rows         = bam_cram_rows.findAll { _meta, files -> files[0].toString().endsWith('.cram') }
+    def has_bam_cram_rows = !bam_cram_rows.isEmpty()
+    def reasons           = []
+    if ( enable.align ) {
         reasons.add("alignment (--enable_align)")
     }
-    if ( params.enable_cram_format ) {
+    if ( enable.cram_format && hasAlignmentSource(enable, has_bam_cram_rows) ) {
         reasons.add("CRAM output (--enable_cram_format)")
     }
     // A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
@@ -239,11 +255,7 @@ def validateReferenceRequirements(rows) {
         def cram_samples = cram_rows.collect { meta, _files -> meta.id }.unique()
         reasons.add("decoding CRAM input (sample(s): ${cram_samples.join(', ')})")
     }
-    // RIKER runs wherever alignment QC is active: after alignment/merging/dedup, and in INGEST_BAM_OR_CRAM
-    // on BAM/CRAM input rows
-    def align_qc_active = params.enable_align_qc &&
-        ( params.enable_align || params.enable_mark_duplicates || params.enable_variant_calling || !bam_cram_rows.isEmpty() )
-    if ( params.enable_riker && align_qc_active ) {
+    if ( rikerActive(enable, has_bam_cram_rows) ) {
         reasons.add("RIKER (--enable_riker)")
     }
     if ( !reasons.isEmpty() ) {
