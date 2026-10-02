@@ -99,8 +99,7 @@ workflow PIPELINE_INITIALISATION {
             def extra = bam
                 ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
                 : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
-                [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
-
+            [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
         }
 
     // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every
