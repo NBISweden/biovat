@@ -21,7 +21,7 @@ process VALIDATE_READGROUP_HEADER {
     // Check every @RG tag (see conf/modules.config) against the samplesheet
     def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}"
     """
-    samtools view -H ${bam_cram} > header.sam
+    samtools view -H ${bam_cram} > header.txt
 
     check_tag() {
         local tag="\$1" expected="\$2"
@@ -34,7 +34,7 @@ process VALIDATE_READGROUP_HEADER {
                     }
                 }
             }
-        ' header.sam | sort -u
+        ' header.txt | sort -u
     }
 
     mismatches=\$(
