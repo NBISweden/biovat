@@ -199,13 +199,13 @@ output {
     }
     // INGEST_BAM_OR_CRAM
     outputs_input_flagstat {
-        path '01_input_checks/prealigned_reads/samtools_flagstat'
+        path '01_input_checks/reads/samtools_flagstat'
     }
     outputs_input_riker {
-        path '01_input_checks/prealigned_reads/riker'
+        path '01_input_checks/reads/riker'
     }
     outputs_input_qualimap {
-        path '01_input_checks/prealigned_reads/qualimap'
+        path '01_input_checks/reads/qualimap'
     }
     // TRIM_READS
     outputs_trim_reads {
