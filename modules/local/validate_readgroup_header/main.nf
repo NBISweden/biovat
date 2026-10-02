@@ -22,7 +22,7 @@ process VALIDATE_READGROUP_HEADER {
     samtools view -H ${bam_cram} > header.txt
 
     # Each samplesheet row is one read group. Several @RG lines is an error. No @RG line is filled downstream from the samplesheet.
-    rg_count=\$(grep -c '^@RG' header.sam || true)
+    rg_count=\$(grep -c '^@RG' header.txt || true)
     if [ "\${rg_count}" -gt 1 ]; then
         echo "ERROR: '${bam_cram}' has \${rg_count} @RG header lines; expected at most 1 (one read group per samplesheet row)" >&2
         exit 1
