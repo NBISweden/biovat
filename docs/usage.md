@@ -21,33 +21,39 @@ The `sample` identifiers have to be the same when you have re-sequenced the same
 
 Each row must provide raw reads via `fastq_1` (optionally `fastq_2`), **or** an already-aligned `BAM`/`CRAM` file via `bam`. If providing `BAM`/`CRAM`, users must also fill-out the `single_end` column (`false` for paired-end reads). When providing pre-aligned files, trimming and alignment are skipped. All read groups of a library, and all libraries of a sample, must agree on `single_end` (mixing single- and paired-end reads at the same merge level is rejected).
 
+Each `BAM`/`CRAM` file is treated as a single read group, and its `@RG` header is checked against its samplesheet row. The pipeline expects `ID` and `PU` to be GATK format (`<flowcell_id>.<lane>.<sample>_<library_id>`), `SM` to be `sample`, `LB` to be `library_id`, and `PL` to be `platform`. `PL` is matched case-insensitively (the SAM specification asks tools to accept lowercase `PL` values); all other tags must match exactly. This is the read group the pipeline writes itself when aligning `fastq` rows. Consequently:
+
+- A file with **no** `@RG` line is accepted with a warning. The pipeline builds the read group from the samplesheet row and tags every read with it.
+- A file with **more than one** `@RG` line is rejected. Split it by read group (e.g. `samtools split`) and give each part its own samplesheet row.
+- A file whose `@RG` line is missing any of the tags, or disagrees with the samplesheet, is rejected. Correct the samplesheet, or the file with e.g. `samtools addreplacerg -m overwrite_all -r '@RG\tID:...'`.
+
 A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. A single library of sample `S1` has been sequenced across three lanes. Two independent libraries of sample `S6` have been sequenced. Sample `S7` supplies a pre-aligned CRAM instead of raw reads.
 
 ```csv title="samplesheet.csv"
 sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end
-S1,1,AEG588A1,2,illumina,/data/AEG588A1_S1_L002_R1_001.fastq.gz,/data/AEG588A1_S1_L002_R2_001.fastq.gz,,
-S1,1,AEG588A1,3,illumina,/data/AEG588A1_S1_L003_R1_001.fastq.gz,/data/AEG588A1_S1_L003_R2_001.fastq.gz,,
-S1,1,AEG588A1,4,illumina,/data/AEG588A1_S1_L004_R1_001.fastq.gz,/data/AEG588A1_S1_L004_R2_001.fastq.gz,,
-S2,1,AEG588A2,2,illumina,/data/AEG588A2_S2_L002_R1_001.fastq.gz,/data/AEG588A2_S2_L002_R2_001.fastq.gz,,
-S3,1,AEG588A3,2,illumina,/data/AEG588A3_S3_L002_R1_001.fastq.gz,/data/AEG588A3_S3_L002_R2_001.fastq.gz,,
-S4,1,AEG588A4,3,illumina,/data/AEG588A4_S4_L003_R1_001.fastq.gz,/data/AEG588A4_S4_L003_R2_001.fastq.gz,,
-S5,1,AEG588A5,3,illumina,/data/AEG588A5_S5_L003_R1_001.fastq.gz,/data/AEG588A5_S5_L003_R2_001.fastq.gz,,
-S6,1,AEG588A6,3,illumina,/data/AEG588A6_S6_L003_R1_001.fastq.gz,/data/AEG588A6_S6_L003_R2_001.fastq.gz,,
-S6,2,AEG588A6,4,illumina,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S6_L004_R2_001.fastq.gz,,
-S7,1,AEG588A7,2,illumina,,,/data/AEG588A7_S7_L002.cram,false
+S1,1,AEG588A1,2,ILLUMINA,/data/AEG588A1_S1_L002_R1_001.fastq.gz,/data/AEG588A1_S1_L002_R2_001.fastq.gz,,
+S1,1,AEG588A1,3,ILLUMINA,/data/AEG588A1_S1_L003_R1_001.fastq.gz,/data/AEG588A1_S1_L003_R2_001.fastq.gz,,
+S1,1,AEG588A1,4,ILLUMINA,/data/AEG588A1_S1_L004_R1_001.fastq.gz,/data/AEG588A1_S1_L004_R2_001.fastq.gz,,
+S2,1,AEG588A2,2,ILLUMINA,/data/AEG588A2_S2_L002_R1_001.fastq.gz,/data/AEG588A2_S2_L002_R2_001.fastq.gz,,
+S3,1,AEG588A3,2,ILLUMINA,/data/AEG588A3_S3_L002_R1_001.fastq.gz,/data/AEG588A3_S3_L002_R2_001.fastq.gz,,
+S4,1,AEG588A4,3,ILLUMINA,/data/AEG588A4_S4_L003_R1_001.fastq.gz,/data/AEG588A4_S4_L003_R2_001.fastq.gz,,
+S5,1,AEG588A5,3,ILLUMINA,/data/AEG588A5_S5_L003_R1_001.fastq.gz,/data/AEG588A5_S5_L003_R2_001.fastq.gz,,
+S6,1,AEG588A6,3,ILLUMINA,/data/AEG588A6_S6_L003_R1_001.fastq.gz,/data/AEG588A6_S6_L003_R2_001.fastq.gz,,
+S6,2,AEG588A6,4,ILLUMINA,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S6_L004_R2_001.fastq.gz,,
+S7,1,AEG588A7,2,ILLUMINA,,,/data/AEG588A7_S7_L002.cram,false
 ```
 
-| Column        | Description                                                                                                                                                                      |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`      | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample                                                            |
-| `library_id`  | Unique sequencing library identifier                                                                                                                                             |
-| `flowcell_id` | Unique identifier/barcode of the flowcell used for this sample library                                                                                                           |
-| `lane`        | The flow cell lane number as a positive integer                                                                                                                                  |
-| `platform`    | Sequencing platform with no spaces, for example `illumina`                                                                                                                       |
-| `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Mutually exclusive with `bam`                         |
-| `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads                  |
-| `bam`         | Full path to a pre-aligned `.bam` or `.cram` file, provided instead of `fastq_1`/`fastq_2`. Requires `single_end` on the same row; CRAM additionally requires `--reference`      |
-| `single_end`  | Required only when `bam` is set: `true` for single-end data, `false` for paired-end. Not required for `fastq_1`/`fastq_2` rows - it's inferred from whether `fastq_2` is present |
+| Column        | Description                                                                                                                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sample`      | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample                                                                                          |
+| `library_id`  | Unique sequencing library identifier                                                                                                                                                                           |
+| `flowcell_id` | Unique identifier/barcode of the flowcell used for this sample library                                                                                                                                         |
+| `lane`        | The flow cell lane number as a positive integer                                                                                                                                                                |
+| `platform`    | Sequencing platform, one of the SAM specification `@RG PL` values in uppercase: `CAPILLARY`, `DNBSEQ`, `ELEMENT`, `HELICOS`, `ILLUMINA`, `IONTORRENT`, `LS454`, `ONT`, `PACBIO`, `SINGULAR`, `SOLID`, `ULTIMA` |
+| `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Mutually exclusive with `bam`                                                       |
+| `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads                                                |
+| `bam`         | Full path to a pre-aligned `.bam` or `.cram` file, provided instead of `fastq_1`/`fastq_2`. Requires `single_end` on the same row; CRAM additionally requires `--reference`                                    |
+| `single_end`  | Required only when `bam` is set: `true` for single-end data, `false` for paired-end. Not required for `fastq_1`/`fastq_2` rows - it's inferred from whether `fastq_2` is present                               |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 

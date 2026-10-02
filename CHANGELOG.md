@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - nft-bam plugin for BAM content snapshots
 - Reference utilities subworkflow for creating generic reference supplementary files used across many subworkflows (currently gated on `params.reference`)
 - BAM QC workflow ()
+- BAM/CRAM samplesheet input (`bam` column): each file's `@RG` header is validated against its samplesheet row; files with no `@RG` line get one built from the samplesheet (`samtools addreplacerg`), and files with several `@RG` lines or missing/mismatched tags are rejected (`PL` is matched case-insensitively, per the SAM spec)
+- Samplesheet `platform` restricted to the uppercase SAM spec `@RG PL` values (e.g. `ILLUMINA`)
 
 ### `Fixed`
 
