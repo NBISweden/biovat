@@ -25,7 +25,7 @@ workflow ALIGNMENT_QC {
         }
 
     // SAMTOOLS_FLAGSTAT
-    SAMTOOLS_FLAGSTAT(ch_qc_input)
+    samtools_flagstat_out = SAMTOOLS_FLAGSTAT(ch_qc_input)
 
     // RIKER
     riker_outputs = channel.empty()
@@ -45,26 +45,26 @@ workflow ALIGNMENT_QC {
                     []  // path: wgs_intervals
                 ]
             }
-        RIKER_MULTI(
+        riker_multi_out = RIKER_MULTI(
             ch_riker_input,
             ch_reference_and_optional_fai
         )
-        riker_outputs = (RIKER_MULTI.out - RIKER_MULTI.out.versions_riker)
+        riker_outputs = (riker_multi_out - riker_multi_out.versions_riker)
             .inject(channel.empty()) { acc, ch -> acc.mix(ch) }
     }
 
     // QUALIMAP
     qualimap_outputs = channel.empty()
     if ( enable.qualimap ) {
-        QUALIMAP_BAMQC(
+        qualimap_bamqc_out = QUALIMAP_BAMQC(
             ch_qc_input.map { meta, alignment, _index -> [ meta, alignment ] },
             []         //  TODO: Potentially support optional input (gff file)
         )
-        qualimap_outputs = QUALIMAP_BAMQC.out.results
+        qualimap_outputs = qualimap_bamqc_out.results
     }
 
     emit:
-    flagstat_outputs = SAMTOOLS_FLAGSTAT.out.flagstat
+    flagstat_outputs = samtools_flagstat_out.flagstat
     riker_outputs    = riker_outputs
     qualimap_outputs = qualimap_outputs
 

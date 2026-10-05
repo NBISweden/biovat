@@ -102,7 +102,7 @@ workflow NBISWEDEN_BIOVAT {
     // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
     requires.fai = (enable.cram_format && merge_active) || rikerActive(enable, true)
 
-    BIOVAT (
+    biovat_out = BIOVAT(
         samplesheet,
         reference,
         enable,
@@ -117,28 +117,28 @@ workflow NBISWEDEN_BIOVAT {
     )
 
     emit:
-    outputs_raw_read_qc              = BIOVAT.out.outputs_raw_read_qc
-    outputs_trim_reads               = BIOVAT.out.outputs_trim_reads
-    outputs_input_flagstat           = BIOVAT.out.outputs_input_flagstat
-    outputs_input_riker              = BIOVAT.out.outputs_input_riker
-    outputs_input_qualimap           = BIOVAT.out.outputs_input_qualimap
-    outputs_read_group               = BIOVAT.out.outputs_read_group
-    outputs_read_group_flagstat      = BIOVAT.out.outputs_read_group_flagstat
-    outputs_read_group_riker         = BIOVAT.out.outputs_read_group_riker
-    outputs_read_group_qualimap      = BIOVAT.out.outputs_read_group_qualimap
-    outputs_library                  = BIOVAT.out.outputs_library
-    outputs_library_flagstat         = BIOVAT.out.outputs_library_flagstat
-    outputs_library_riker            = BIOVAT.out.outputs_library_riker
-    outputs_library_qualimap         = BIOVAT.out.outputs_library_qualimap
-    outputs_mark_duplicates          = BIOVAT.out.outputs_mark_duplicates
-    outputs_mark_duplicates_flagstat = BIOVAT.out.outputs_mark_duplicates_flagstat
-    outputs_mark_duplicates_riker    = BIOVAT.out.outputs_mark_duplicates_riker
-    outputs_mark_duplicates_qualimap = BIOVAT.out.outputs_mark_duplicates_qualimap
-    outputs_sample                   = BIOVAT.out.outputs_sample
-    outputs_sample_flagstat          = BIOVAT.out.outputs_sample_flagstat
-    outputs_sample_riker             = BIOVAT.out.outputs_sample_riker
-    outputs_sample_qualimap          = BIOVAT.out.outputs_sample_qualimap
-    outputs_multiqc                  = BIOVAT.out.outputs_multiqc
+    outputs_raw_read_qc              = biovat_out.outputs_raw_read_qc
+    outputs_trim_reads               = biovat_out.outputs_trim_reads
+    outputs_input_flagstat           = biovat_out.outputs_input_flagstat
+    outputs_input_riker              = biovat_out.outputs_input_riker
+    outputs_input_qualimap           = biovat_out.outputs_input_qualimap
+    outputs_read_group               = biovat_out.outputs_read_group
+    outputs_read_group_flagstat      = biovat_out.outputs_read_group_flagstat
+    outputs_read_group_riker         = biovat_out.outputs_read_group_riker
+    outputs_read_group_qualimap      = biovat_out.outputs_read_group_qualimap
+    outputs_library                  = biovat_out.outputs_library
+    outputs_library_flagstat         = biovat_out.outputs_library_flagstat
+    outputs_library_riker            = biovat_out.outputs_library_riker
+    outputs_library_qualimap         = biovat_out.outputs_library_qualimap
+    outputs_mark_duplicates          = biovat_out.outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat = biovat_out.outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker    = biovat_out.outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap = biovat_out.outputs_mark_duplicates_qualimap
+    outputs_sample                   = biovat_out.outputs_sample
+    outputs_sample_flagstat          = biovat_out.outputs_sample_flagstat
+    outputs_sample_riker             = biovat_out.outputs_sample_riker
+    outputs_sample_qualimap          = biovat_out.outputs_sample_qualimap
+    outputs_multiqc                  = biovat_out.outputs_multiqc
 
 }
 
@@ -146,7 +146,7 @@ workflow NBISWEDEN_BIOVAT {
 workflow {
 
     main:
-    PIPELINE_INITIALISATION (
+    pipeline_initialisation_out = PIPELINE_INITIALISATION(
         params.version,
         params.validate_params,
         params.monochrome_logs,
@@ -157,37 +157,37 @@ workflow {
         params.help_full,
         params.show_hidden
     )
-    NBISWEDEN_BIOVAT (
-        PIPELINE_INITIALISATION.out.samplesheet,
-        PIPELINE_INITIALISATION.out.reference
+    nbisweden_biovat_out = NBISWEDEN_BIOVAT(
+        pipeline_initialisation_out.samplesheet,
+        pipeline_initialisation_out.reference
     )
     PIPELINE_COMPLETION (
         params.monochrome_logs,
     )
 
     publish:
-    outputs_raw_read_qc              = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
-    outputs_trim_reads               = NBISWEDEN_BIOVAT.out.outputs_trim_reads
-    outputs_input_flagstat           = NBISWEDEN_BIOVAT.out.outputs_input_flagstat
-    outputs_input_riker              = NBISWEDEN_BIOVAT.out.outputs_input_riker
-    outputs_input_qualimap           = NBISWEDEN_BIOVAT.out.outputs_input_qualimap
-    outputs_read_group               = NBISWEDEN_BIOVAT.out.outputs_read_group
-    outputs_read_group_flagstat      = NBISWEDEN_BIOVAT.out.outputs_read_group_flagstat
-    outputs_read_group_riker         = NBISWEDEN_BIOVAT.out.outputs_read_group_riker
-    outputs_read_group_qualimap      = NBISWEDEN_BIOVAT.out.outputs_read_group_qualimap
-    outputs_library                  = NBISWEDEN_BIOVAT.out.outputs_library
-    outputs_library_flagstat         = NBISWEDEN_BIOVAT.out.outputs_library_flagstat
-    outputs_library_riker            = NBISWEDEN_BIOVAT.out.outputs_library_riker
-    outputs_library_qualimap         = NBISWEDEN_BIOVAT.out.outputs_library_qualimap
-    outputs_mark_duplicates          = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates
-    outputs_mark_duplicates_flagstat = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_flagstat
-    outputs_mark_duplicates_riker    = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_riker
-    outputs_mark_duplicates_qualimap = NBISWEDEN_BIOVAT.out.outputs_mark_duplicates_qualimap
-    outputs_sample                   = NBISWEDEN_BIOVAT.out.outputs_sample
-    outputs_sample_flagstat          = NBISWEDEN_BIOVAT.out.outputs_sample_flagstat
-    outputs_sample_riker             = NBISWEDEN_BIOVAT.out.outputs_sample_riker
-    outputs_sample_qualimap          = NBISWEDEN_BIOVAT.out.outputs_sample_qualimap
-    outputs_multiqc                  = NBISWEDEN_BIOVAT.out.outputs_multiqc
+    outputs_raw_read_qc              = nbisweden_biovat_out.outputs_raw_read_qc
+    outputs_trim_reads               = nbisweden_biovat_out.outputs_trim_reads
+    outputs_input_flagstat           = nbisweden_biovat_out.outputs_input_flagstat
+    outputs_input_riker              = nbisweden_biovat_out.outputs_input_riker
+    outputs_input_qualimap           = nbisweden_biovat_out.outputs_input_qualimap
+    outputs_read_group               = nbisweden_biovat_out.outputs_read_group
+    outputs_read_group_flagstat      = nbisweden_biovat_out.outputs_read_group_flagstat
+    outputs_read_group_riker         = nbisweden_biovat_out.outputs_read_group_riker
+    outputs_read_group_qualimap      = nbisweden_biovat_out.outputs_read_group_qualimap
+    outputs_library                  = nbisweden_biovat_out.outputs_library
+    outputs_library_flagstat         = nbisweden_biovat_out.outputs_library_flagstat
+    outputs_library_riker            = nbisweden_biovat_out.outputs_library_riker
+    outputs_library_qualimap         = nbisweden_biovat_out.outputs_library_qualimap
+    outputs_mark_duplicates          = nbisweden_biovat_out.outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat = nbisweden_biovat_out.outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker    = nbisweden_biovat_out.outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap = nbisweden_biovat_out.outputs_mark_duplicates_qualimap
+    outputs_sample                   = nbisweden_biovat_out.outputs_sample
+    outputs_sample_flagstat          = nbisweden_biovat_out.outputs_sample_flagstat
+    outputs_sample_riker             = nbisweden_biovat_out.outputs_sample_riker
+    outputs_sample_qualimap          = nbisweden_biovat_out.outputs_sample_qualimap
+    outputs_multiqc                  = nbisweden_biovat_out.outputs_multiqc
 
 }
 
