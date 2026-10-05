@@ -20,34 +20,40 @@ process VALIDATE_READGROUP_HEADER {
     script:
     """
     # Each samplesheet row is one read group. Several @RG lines is an error. No @RG line -> will be filled downstream from the samplesheet.
-    rg_status=\$(
-        samtools view -H ${bam_cram} | awk -F'\\t' \\
-            -v id="${meta.platform_unit}" -v sm="${meta.id}" -v lb="${meta.library}" -v pl="${meta.pl}" '
-            BEGIN { want["ID"] = id; want["SM"] = sm; want["LB"] = lb; want["PU"] = id; want["PL"] = pl }
-            \$1 == "@RG" {
-                n_rg++
-                for (i = 2; i <= NF; i++) if (\$i ~ /^[A-Za-z][A-Za-z0-9]:/) found[substr(\$i, 1, 2)] = substr(\$i, 4)
-            }
-            END {
-                if (n_rg > 1) {
-                    print "ERROR: \\047${bam_cram}\\047 has " n_rg " @RG header lines; expected at most 1 (one read group per samplesheet row)" > "/dev/stderr"
-                    exit 1
-                }
-                if (n_rg == 0) { print "missing"; exit 0 }
-                split("ID SM LB PU PL", tags, " ")
-                for (t = 1; t <= 5; t++) {
-                    tag = tags[t]
-                    if (!(tag in found)) { problems = problems "\\n  missing " tag; continue }
-                    got = (tag == "PL") ? toupper(found[tag]) : found[tag]
-                    if (got != want[tag]) problems = problems "\\n  found " tag ":" found[tag]
-                }
-                if (problems) {
-                    print "ERROR: @RG header of \\047${bam_cram}\\047 is missing tags or disagrees with the samplesheet row for sample \\047${meta.id}\\047, library \\047${meta.library}\\047 (expected ID/PU:${meta.platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):" problems > "/dev/stderr"
-                    exit 1
-                }
-                print "present"
-            }'
-    )
+    samtools view -H ${bam_cram} > header.txt
+    grep '^@RG' header.txt > rg_lines.txt || true
+    n_rg=\$(wc -l < rg_lines.txt)
+    if [ "\$n_rg" -gt 1 ]; then
+        echo "ERROR: '${bam_cram}' has \$n_rg @RG header lines; expected at most 1 (one read group per samplesheet row)" >&2
+        exit 1
+    fi
+
+    if [ "\$n_rg" -eq 0 ]; then
+        rg_status=missing
+    else
+        # One tag per line. PL is compared case-insensitively, so also match against an uppercased copy of it
+        tr '\\t' '\\n' < rg_lines.txt | sed 1d > header_tags.txt
+        grep '^PL:' header_tags.txt | tr a-z A-Z > header_pl.txt || true
+        printf '%s\\n' "ID:${meta.platform_unit}" "SM:${meta.id}" "LB:${meta.library}" "PU:${meta.platform_unit}" "PL:${meta.pl}" > expected_tags.txt
+
+        # Expected tags with no exact match in the header: report what the header holds for that tag, or that it is absent
+        grep -vxF -f header_tags.txt -f header_pl.txt expected_tags.txt | while IFS=: read -r tag _; do
+            if grep -q "^\${tag}:" header_tags.txt; then
+                echo "  found \$(grep -m1 "^\${tag}:" header_tags.txt)"
+            else
+                echo "  missing \${tag}"
+            fi
+        done > problems.txt || true
+
+        if [ -s problems.txt ]; then
+            {
+                echo "ERROR: @RG header of '${bam_cram}' is missing tags or disagrees with the samplesheet row for sample '${meta.id}', library '${meta.library}' (expected ID/PU:${meta.platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):"
+                cat problems.txt
+            } >&2
+            exit 1
+        fi
+        rg_status=present
+    fi
     """
 
     stub:
