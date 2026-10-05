@@ -19,25 +19,26 @@ include { MERGE as MERGE_TO_SAMPLE  } from '../subworkflows/local/merge/main'
 include { CALL_VARIANTS             } from '../subworkflows/local/call_variants/main'
 
 workflow BIOVAT {
+
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
-    reference // channel: reference fasta read in from --reference
-    enable // map: gating flags
-    requires // map: defines internal dependency relationships
-    adapter_fasta // channel: adapter fasta file read in from --adapter_fasta
-    aligner // string: Aligner to use for read alignment (e.g. bwa, parabricks)
+    ch_samplesheet   // channel: samplesheet read in from --input
+    reference        // channel: reference fasta read in from --reference
+    enable           // map: gating flags
+    requires         // map: defines internal dependency relationships
+    adapter_fasta    // channel: adapter fasta file read in from --adapter_fasta
+    aligner          // string: Aligner to use for read alignment (e.g. bwa, parabricks)
     duplicate_marker // string: Duplicate marking tool to use (e.g. picard, samtools)
-    variant_caller // string: Variant calling tool to use (e.g. bcftools_multisample)
-    chunk_size // integer: Genome chunk size (bp) used for parallelization
-    min_length // integer: Minimum contig/scaffold length to be kept
-    dataset_name // string: File name prefix for VCF/BCF file containing all samples
+    variant_caller   // string: Variant calling tool to use (e.g. bcftools_multisample)
+    chunk_size       // integer: Genome chunk size (bp) used for parallelization
+    min_length       // integer: Minimum contig/scaffold length to be kept
+    dataset_name     // string: File name prefix for VCF/BCF file containing all samples
     multiqc_config
     multiqc_logo
     multiqc_methods_description
     outdir
 
     main:
-    def ch_versions = channel.empty()
+    def ch_versions      = channel.empty()
     def ch_multiqc_files = channel.empty()
     ch_input             = ch_samplesheet
         .branch { meta, _data ->
@@ -68,7 +69,7 @@ workflow BIOVAT {
 
     // Trim reads
     outputs_trim_reads = channel.empty()
-    if (enable.trim) {
+    if ( enable.trim ) {
         // FASTP takes reads + adapters (if provided)
         def path_adapter_fasta    = adapter_fasta ? file(adapter_fasta, checkIfExists: true) : []
         def ch_reads_and_adapters = reads_to_preprocess.map { meta, reads -> [meta, reads, path_adapter_fasta] }
@@ -221,9 +222,9 @@ workflow BIOVAT {
         }
     def topic_versions_string = topic_versions.versions_tuple
         .map { process, tool, version ->
-            [process[process.lastIndexOf(':') + 1..-1], "  ${tool}: ${version}"]
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
         }
-        .groupTuple(by: 0)
+        .groupTuple(by:0)
         .map { process, tool_versions ->
             tool_versions.unique().sort()
             "${process}:\n${tool_versions.join('\n')}"

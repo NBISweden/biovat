@@ -85,13 +85,15 @@ params {
 
     // Schema validation default options
     validate_params             : Boolean
+
 }
 
 // Main analysis pipeline
 workflow NBISWEDEN_BIOVAT {
+
     take:
     samplesheet // channel: samplesheet read in from --input
-    reference // channel: reference fasta read in from --reference
+    reference   // channel: reference fasta read in from --reference
 
     main:
     // Gating parameters, passed as a single map
@@ -222,6 +224,8 @@ workflow {
 }
 
 output {
+
+    // READ_QC
     outputs_raw_read_qc {
         path '01_input_checks/reads/fastqc'
     }
@@ -239,6 +243,7 @@ output {
     outputs_trim_reads {
         path '02_read_trimming'
     }
+    // ALIGN_READS
     outputs_read_group {
         path '03_read_alignment'
     }
@@ -251,11 +256,12 @@ output {
     outputs_read_group_qualimap {
         path '03_read_alignment/qc/qualimap'
     }
+    // MERGE_TO_LIBRARY
     outputs_library {
         path { meta, alignment, index ->
             // Includes library and platform to avoid file name collisions
             alignment >> "04_merged_libraries/${meta.id}_${meta.library}_${meta.pl}.${alignment.extension}"
-            index >> "04_merged_libraries/${meta.id}_${meta.library}_${meta.pl}.${alignment.extension}.${index.extension}"
+            index     >> "04_merged_libraries/${meta.id}_${meta.library}_${meta.pl}.${alignment.extension}.${index.extension}"
         }
     }
     outputs_library_flagstat {
@@ -267,6 +273,7 @@ output {
     outputs_library_qualimap {
         path '04_merged_libraries/qc/qualimap'
     }
+    // MARK_DUPLICATES
     outputs_mark_duplicates {
         path '05_duplicate_processed'
     }
@@ -279,11 +286,12 @@ output {
     outputs_mark_duplicates_qualimap {
         path '05_duplicate_processed/qc/qualimap'
     }
+    // MERGE_TO_SAMPLE
     outputs_sample {
         path { meta, alignment, index ->
             // Includes platform to avoid file name collisions
             alignment >> "06_merged_samples/${meta.id}_${meta.pl}.${alignment.extension}"
-            index >> "06_merged_samples/${meta.id}_${meta.pl}.${alignment.extension}.${index.extension}"
+            index     >> "06_merged_samples/${meta.id}_${meta.pl}.${alignment.extension}.${index.extension}"
         }
     }
     outputs_sample_flagstat {
@@ -295,6 +303,7 @@ output {
     outputs_sample_qualimap {
         path '06_merged_samples/qc/qualimap'
     }
+    // VARIANT_CALLING
     outputs_genome_chunks {
         path '07_variant_calls/genome_chunk_bed_files'
     }
@@ -319,7 +328,9 @@ output {
     outputs_call_variants_vcftools_relatedness2 {
         path '07_variant_calls/qc/vcftools'
     }
+    // MULTIQC
     outputs_multiqc {
         path 'multiqc'
     }
+
 }
