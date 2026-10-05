@@ -17,7 +17,7 @@ params {
 
     // Input options
     input                       : String
-    reference                   : String
+    reference                   : String?
 
     // Workflow stage gating options
     enable_raw_read_qc          : Boolean
@@ -28,7 +28,7 @@ params {
     enable_variant_calling      : Boolean
 
     // Read trimming options
-    adapter_fasta               : String
+    adapter_fasta               : String?
     enable_save_trimmed_fail    : Boolean
     enable_save_merged          : Boolean
 
@@ -46,11 +46,11 @@ params {
     optical_distance            : Integer
 
     // MultiQC options
-    multiqc_config              : String
-    multiqc_title               : String
-    multiqc_logo                : String
+    multiqc_config              : String?
+    multiqc_title               : String?
+    multiqc_logo                : String?
     max_multiqc_email_size      : String
-    multiqc_methods_description : String
+    multiqc_methods_description : String?
 
     // Boilerplate options
     outdir                      : String
@@ -65,12 +65,12 @@ params {
     trace_report_suffix         : String
 
     // Config options
-    config_profile_name         : String
-    config_profile_description  : String
+    config_profile_name         : String?
+    config_profile_description  : String?
     custom_config_version       : String
     custom_config_base          : String
-    config_profile_contact      : String
-    config_profile_url          : String
+    config_profile_contact      : String?
+    config_profile_url          : String?
 
     // Schema validation default options
     validate_params             : Boolean
