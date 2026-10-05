@@ -36,9 +36,6 @@ workflow PIPELINE_INITIALISATION {
     show_hidden       // boolean: Show hidden parameters in the help message
 
     main:
-
-    ch_versions = channel.empty()
-
     //
     // Print version and exit if required and dump pipeline parameters to JSON file
     //
@@ -110,13 +107,10 @@ workflow PIPELINE_INITIALISATION {
     // Report every reason --reference is needed (params and samplesheet rows) in one error
     validateReferenceRequirements(samplesheet_rows)
 
-    ch_samplesheet = channel
-        .fromList(samplesheet_rows)
-
     // Create reference channel from input file provided through params.reference
-    ch_reference = channel.empty()
+    reference = channel.empty()
     if ( params.reference ) {
-        ch_reference = channel.value(file(params.reference, checkIfExists: true))
+        reference = channel.value(file(params.reference, checkIfExists: true))
             .map { fasta ->
                 def meta = [ id: fasta.baseName ]
                 return [ meta, fasta ]
@@ -124,9 +118,8 @@ workflow PIPELINE_INITIALISATION {
     }
 
     emit:
-    samplesheet = ch_samplesheet
-    reference   = ch_reference
-    versions    = ch_versions
+    samplesheet = channel.fromList(samplesheet_rows)
+    reference
 }
 
 /*
