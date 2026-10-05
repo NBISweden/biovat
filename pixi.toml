@@ -65,6 +65,10 @@ description = "List open issues assigned to you"
 cmd         = "gh pr view --web"
 description = "Open the current branch's PR in the browser"
 
+[tasks.lint]
+cmd         = "nextflow lint . -exclude .pixi"
+description = "Lint all Nextflow scripts and config files, excluding the pixi environment"
+
 [tasks.lint-pipeline]
 cmd         = "nf-core pipelines lint"
 description = "Run the nf-core pipeline linter"
