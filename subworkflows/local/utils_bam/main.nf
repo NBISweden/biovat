@@ -13,10 +13,10 @@ workflow INGEST_BAM_OR_CRAM {
 
     main:
     // Reject a BAM/CRAM with several @RG lines, or one whose @RG tags are missing or disagree with its samplesheet row
-    VALIDATE_READGROUP_HEADER(
+    validate_readgroup_header_out = VALIDATE_READGROUP_HEADER(
         ch_input_bam_cram
     )
-    ch_validated = VALIDATE_READGROUP_HEADER.out.validated
+    ch_validated = validate_readgroup_header_out.validated
         .branch { meta, bam_cram, rg_status ->
             missing: rg_status == 'missing'
                 return [ meta, bam_cram ]
@@ -25,7 +25,7 @@ workflow INGEST_BAM_OR_CRAM {
         }
 
     // A BAM/CRAM with no @RG line gets one built from its samplesheet row
-    SAMTOOLS_ADDREPLACERG(
+    samtools_addreplacerg_out = SAMTOOLS_ADDREPLACERG(
         ch_validated.missing.map { meta, bam_cram ->
             log.warn "No @RG header line in '${bam_cram.name}' (sample '${meta.id}', library '${meta.library}'): adding one from the samplesheet and tagging the reads"
             [ meta, bam_cram, [], '' ]
@@ -34,21 +34,21 @@ workflow INGEST_BAM_OR_CRAM {
     )
 
     // Ensure compatible sort order, index, and convert CRAM to BAM/BAM to CRAM if required
-    SAMTOOLS_SORT(
-        ch_validated.present.mix(SAMTOOLS_ADDREPLACERG.out.bam),
+    samtools_sort_out = SAMTOOLS_SORT(
+        ch_validated.present.mix(samtools_addreplacerg_out.bam),
         ch_reference_and_optional_fai,
         enable.cram_format ? "crai" : "csi",
     )
-    user_input_bam_cram = SAMTOOLS_SORT.out.bam
-        .mix(SAMTOOLS_SORT.out.cram)
-        .join(SAMTOOLS_SORT.out.index)
+    user_input_bam_cram = samtools_sort_out.bam
+        .mix(samtools_sort_out.cram)
+        .join(samtools_sort_out.index)
 
     // INGEST_BAM_OR_CRAM:ALIGNMENT_QC
     outputs_input_flagstat = channel.empty()
     outputs_input_riker    = channel.empty()
     outputs_input_qualimap = channel.empty()
     if ( enable.align_qc ) {
-        ALIGNMENT_QC(
+        alignment_qc_out = ALIGNMENT_QC(
             user_input_bam_cram,
             ch_reference_and_optional_fai,
             enable,
@@ -56,13 +56,13 @@ workflow INGEST_BAM_OR_CRAM {
         )
         ch_multiqc_files = ch_multiqc_files
             .mix(
-                ALIGNMENT_QC.out.flagstat_outputs.map{ _meta, file -> file },
-                ALIGNMENT_QC.out.riker_outputs.map{ _meta, file -> file },
-                ALIGNMENT_QC.out.qualimap_outputs.map{ _meta, file -> file }
+                alignment_qc_out.flagstat_outputs.map{ _meta, file -> file },
+                alignment_qc_out.riker_outputs.map{ _meta, file -> file },
+                alignment_qc_out.qualimap_outputs.map{ _meta, file -> file }
             )
-        outputs_input_flagstat = ALIGNMENT_QC.out.flagstat_outputs
-        outputs_input_riker    = ALIGNMENT_QC.out.riker_outputs
-        outputs_input_qualimap = ALIGNMENT_QC.out.qualimap_outputs
+        outputs_input_flagstat = alignment_qc_out.flagstat_outputs
+        outputs_input_riker    = alignment_qc_out.riker_outputs
+        outputs_input_qualimap = alignment_qc_out.qualimap_outputs
     }
 
     emit:

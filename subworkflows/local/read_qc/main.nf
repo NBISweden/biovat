@@ -9,11 +9,11 @@ workflow READ_QC {
     ch_reads // channel: [ val(meta), path(reads), path(adapter_fasta) ]
 
     main:
-    FASTQC(
+    fastqc_out = FASTQC(
         ch_reads
     )
 
     emit:
-    fastqc_html = FASTQC.out.html // channel: [ val(meta), path(html) ]
-    fastqc_zip  = FASTQC.out.zip // channel: [ val(meta), path(zip) ]
+    fastqc_html = fastqc_out.html // channel: [ val(meta), path(html) ]
+    fastqc_zip  = fastqc_out.zip // channel: [ val(meta), path(zip) ]
 }
