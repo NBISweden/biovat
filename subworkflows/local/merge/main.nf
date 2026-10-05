@@ -12,15 +12,23 @@ workflow MERGE {
 
     main:
     // Group on the requested level, branch to enable merge skipping (singletons).
-    def keys_to_drop = level == 'library'
-        ? [ 'flowcell', 'lane', 'read_group' ]
-        : [ 'flowcell', 'lane', 'read_group', 'library' ] // else 'sample'
+    def keys_to_drop = [ 'flowcell', 'lane', 'read_group', 'platform_unit', 'input_type' ]
+    if ( level == 'sample' ) {
+        keys_to_drop += [ 'library' ]
+    }
     ch_alignments = ch_alignments_indexed
         .map { meta, alignment, index ->
             def group_meta = meta.subMap(meta.keySet() - keys_to_drop)
             return [ group_meta, alignment, index ]
         }
         .groupTuple()
+        .map { meta, alignments, indexes ->
+            // groupTuple order reflects non-deterministic arrival timing.
+            // sort by filename so SAMTOOLS_MERGE always stages in the same subdirectories.
+            // (samtools merge breaks position ties using input file order)
+            def sorted = [alignments, indexes].transpose().sort { a, b -> a[0].name <=> b[0].name }
+            return [meta, sorted.collect { it -> it[0] }, sorted.collect { it -> it[1] }]
+        }
         .branch { meta, alignments, indexes ->
             skip_merge: alignments.size() == 1
                 return [ meta, alignments[0], indexes[0] ]
@@ -33,19 +41,18 @@ workflow MERGE {
         : [ [], [], [], [] ] // else BAM
 
     // Merge alignments
-    SAMTOOLS_MERGE(
+    samtools_merge_out = SAMTOOLS_MERGE(
         ch_alignments.for_merge,
         ch_reference_for_merge,
         enable.cram_format ? 'crai' : 'csi'
     )
 
     // Join merged alignments with their indexes, for alignment QC and publishing.
-    ch_merged_output_for_alignment_qc = SAMTOOLS_MERGE.out.cram
-        .mix(SAMTOOLS_MERGE.out.bam)
-        .join(SAMTOOLS_MERGE.out.index)
+    ch_merged_output_for_alignment_qc = samtools_merge_out.cram
+        .mix(samtools_merge_out.bam)
+        .join(samtools_merge_out.index)
     // Re-mix with singletons for passing downstream
-    ch_merged_alignments_indexed = ch_merged_output_for_alignment_qc
-        .mix(ch_alignments.skip_merge)
+    ch_merged_alignments_indexed = ch_merged_output_for_alignment_qc.mix(ch_alignments.skip_merge)
 
     // MERGE:ALIGNMENT_QC — only for alignments that were actually merged; a skipped singleton is
     // byte-identical to the pre-merge alignment already QC'd upstream
@@ -53,7 +60,7 @@ workflow MERGE {
     outputs_riker    = channel.empty()
     outputs_qualimap = channel.empty()
     if ( enable.align_qc ) {
-        ALIGNMENT_QC(
+        alignment_qc_out = ALIGNMENT_QC(
             ch_merged_output_for_alignment_qc,
             ch_reference_and_optional_fai,
             enable,
@@ -61,13 +68,13 @@ workflow MERGE {
         )
         ch_multiqc_files = ch_multiqc_files
             .mix(
-                ALIGNMENT_QC.out.flagstat_outputs.map{ _meta, file -> file },
-                ALIGNMENT_QC.out.riker_outputs.map{ _meta, file -> file },
-                ALIGNMENT_QC.out.qualimap_outputs.map{ _meta, file -> file }
+                alignment_qc_out.flagstat_outputs.map{ _meta, file -> file },
+                alignment_qc_out.riker_outputs.map{ _meta, file -> file },
+                alignment_qc_out.qualimap_outputs.map{ _meta, file -> file }
             )
-        outputs_flagstat = ALIGNMENT_QC.out.flagstat_outputs
-        outputs_riker    = ALIGNMENT_QC.out.riker_outputs
-        outputs_qualimap = ALIGNMENT_QC.out.qualimap_outputs
+        outputs_flagstat = alignment_qc_out.flagstat_outputs
+        outputs_riker    = alignment_qc_out.riker_outputs
+        outputs_qualimap = alignment_qc_out.qualimap_outputs
     }
 
     // Merged alignments for publishing, singletons excluded

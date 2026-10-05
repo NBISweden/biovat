@@ -1,0 +1,119 @@
+nextflow_process {
+
+    name "Test Process VALIDATE_READGROUP_HEADER"
+    script "../main.nf"
+    process "VALIDATE_READGROUP_HEADER"
+    tag "modules_local"
+    tag "validate_readgroup_header"
+
+    test("header agrees with samplesheet metadata - succeeds") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    // Matches PUN-R-MT_1_repeat2.cram's own @RG ID/SM/LB/PU/PL (its PL:illumina is lowercase, so this also covers case-insensitive PL)
+                    [ id:'PUN-R-MT', library:'1', flowcell:'SRR9309471', lane:2, pl:'ILLUMINA', platform_unit:'SRR9309471.2.PUN-R-MT_1' ],
+                    file("${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // rg_status tells INGEST_BAM_OR_CRAM whether the @RG line is present or if it must be filled in
+                { assert process.out.validated[0][2] == 'present' }
+            )
+        }
+    }
+
+    test("no @RG header line - succeeds, flagged missing") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/no_readgroup.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // Not an error: 'missing' routes the BAM to SAMTOOLS_ADDREPLACERG in INGEST_BAM_OR_CRAM to fill the @RG line from the samplesheet
+                { assert process.out.validated[0][2] == 'missing' }
+            )
+        }
+    }
+
+    test("SM disagrees with samplesheet sample - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_sm.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                // Fail for the right reason: the SM mismatch itself, not e.g. a missing file or container error
+                { assert process.stdout.any { line -> line.contains('found SM:WRONG') } }
+            )
+        }
+    }
+
+    test("several @RG header lines - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/two_readgroups.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                // Rejected by the at-most-one-@RG-line requirement
+                { assert process.stdout.any { line -> line.contains('has 2 @RG header lines') } }
+            )
+        }
+    }
+
+    test("@RG line missing a required tag - fails") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/missing_lb.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                // Absent tag is reported, not silently skipped
+                { assert process.stdout.any { line -> line.contains('missing LB') } }
+            )
+        }
+    }
+}

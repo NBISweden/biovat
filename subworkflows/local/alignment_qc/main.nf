@@ -8,15 +8,15 @@ workflow ALIGNMENT_QC {
     ch_alignment_and_index        // channel: aligned reads and their indices to perform QC on
     ch_reference_and_optional_fai // channel: reference fasta and (optional) fai index
     enable                        // map: stage/tool gating flags
-    level                         // string: QC level, used as the output prefix ('readgroup'/'library'/'markdup'/'sample')
+    level                         // string: QC level, used as the output prefix ('input'/'readgroup'/'library'/'markdup'/'sample')
 
     main:
     // Tag each record with a level-scoped prefix so a single modules.config selector covers every call site
     ch_qc_input = ch_alignment_and_index
         .map { meta, alignment, index ->
-            // Read-group-level records still carry all meta, library/markdup have readgroups merged to library level
-            // sample-level merging groups on {id, pl}, dropping library
-            def prefix = level == 'readgroup'
+            // Input (user BAM/CRAM) and read-group-level records still carry all meta, library/markdup have readgroups
+            // merged to library level, sample-level merging groups on {id, pl}, dropping library
+            def prefix = level in [ 'input', 'readgroup' ]
                 ? meta.read_group
                 : level == 'sample'
                     ? "${meta.id}_${meta.pl}"
@@ -25,7 +25,7 @@ workflow ALIGNMENT_QC {
         }
 
     // SAMTOOLS_FLAGSTAT
-    SAMTOOLS_FLAGSTAT(ch_qc_input)
+    samtools_flagstat_out = SAMTOOLS_FLAGSTAT(ch_qc_input)
 
     // RIKER
     riker_outputs = channel.empty()
@@ -45,26 +45,26 @@ workflow ALIGNMENT_QC {
                     []  // path: wgs_intervals
                 ]
             }
-        RIKER_MULTI(
+        riker_multi_out = RIKER_MULTI(
             ch_riker_input,
             ch_reference_and_optional_fai
         )
-        riker_outputs = (RIKER_MULTI.out - RIKER_MULTI.out.versions_riker)
+        riker_outputs = (riker_multi_out - riker_multi_out.versions_riker)
             .inject(channel.empty()) { acc, ch -> acc.mix(ch) }
     }
 
     // QUALIMAP
     qualimap_outputs = channel.empty()
     if ( enable.qualimap ) {
-        QUALIMAP_BAMQC(
+        qualimap_bamqc_out = QUALIMAP_BAMQC(
             ch_qc_input.map { meta, alignment, _index -> [ meta, alignment ] },
             []         //  TODO: Potentially support optional input (gff file)
         )
-        qualimap_outputs = QUALIMAP_BAMQC.out.results
+        qualimap_outputs = qualimap_bamqc_out.results
     }
 
     emit:
-    flagstat_outputs = SAMTOOLS_FLAGSTAT.out.flagstat
+    flagstat_outputs = samtools_flagstat_out.flagstat
     riker_outputs    = riker_outputs
     qualimap_outputs = qualimap_outputs
 

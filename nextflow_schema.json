@@ -36,6 +36,10 @@
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
                 },
+                "enable_cram_format": {
+                    "type": "boolean",
+                    "description": "Use CRAM format instead of BAM."
+                },
                 "enable_raw_read_qc": {
                     "type": "boolean",
                     "description": "Run quality checks on raw reads.",
@@ -104,10 +108,6 @@
                     "default": "bwa-mem3",
                     "enum": ["bwa-mem3", "parabricks"],
                     "description": "Alignment tool choice."
-                },
-                "enable_cram_format": {
-                    "type": "boolean",
-                    "description": "Output alignments in CRAM format instead of BAM."
                 }
             }
         },

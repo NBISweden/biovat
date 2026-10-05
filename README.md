@@ -27,10 +27,10 @@ First, prepare a samplesheet with your input data that looks as follows:
 
 ```csv
 sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,population
-SAMPLE_1,1,AEG588A1,2,illumina,/path/to/AEG588A1_S1_L002_R1_001.fastq.gz,/path/to/AEG588A1_S1_L002_R2_001.fastq.gz,popA
+SAMPLE_1,1,AEG588A1,2,ILLUMINA,/path/to/AEG588A1_S1_L002_R1_001.fastq.gz,/path/to/AEG588A1_S1_L002_R2_001.fastq.gz,popA
 ```
 
-Each row represents a set of paired-end FASTQ files generated from a specific sample library and run on a specific flowcell lane.
+Each row represents a set of paired-end FASTQ files generated from a specific sample library and run on a specific flowcell lane. A row can instead supply an already-aligned BAM/CRAM file via a `bam` column; see the [usage documentation](docs/usage.md#samplesheet-input) for details.
 
 Next, create a parameter file for your run based on the example file `assets/nf-params.yml` and fill out all relevant parameters.
 

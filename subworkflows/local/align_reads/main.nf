@@ -19,27 +19,27 @@ workflow ALIGN_READS {
 
     // Alignment
     if ( aligner == 'bwa-mem3' ) {
-        BWAMEM3_INDEX(reference)
-        BWAMEM3_MEM(
+        bwamem3_index_out = BWAMEM3_INDEX(reference)
+        bwamem3_mem_out = BWAMEM3_MEM(
             reads,
-            BWAMEM3_INDEX.out.index,
+            bwamem3_index_out.index,
             reference,
             true // Enforce sorting of BAM/CRAM
         )
-        ch_read_group_alignments_indexed = BWAMEM3_MEM.out.aligned.join(BWAMEM3_MEM.out.index)
+        ch_read_group_alignments_indexed = bwamem3_mem_out.aligned.join(bwamem3_mem_out.index)
     } else if ( aligner == 'parabricks' ) {
         // Parabricks requires BWA v0.7.x indexes
-        BWA_INDEX(reference)
-        PARABRICKS_FQ2BAM(
+        bwa_index_out = BWA_INDEX(reference)
+        parabricks_fq2bam_out = PARABRICKS_FQ2BAM(
             reads,
             reference,
-            BWA_INDEX.out.index,
+            bwa_index_out.index,
             [[],[]], // intervals
             [[],[]], // known_sites
             enable.cram_format ? 'cram' : 'bam'
         )
-        SAMTOOLS_INDEX(PARABRICKS_FQ2BAM.out.bam)
-        ch_read_group_alignments_indexed = PARABRICKS_FQ2BAM.out.bam.join(SAMTOOLS_INDEX.out.index)
+        samtools_index_out = SAMTOOLS_INDEX(parabricks_fq2bam_out.bam)
+        ch_read_group_alignments_indexed = parabricks_fq2bam_out.bam.join(samtools_index_out.index)
     }
 
     // ALIGN_READS:ALIGNMENT_QC
@@ -47,7 +47,7 @@ workflow ALIGN_READS {
     outputs_read_group_riker    = channel.empty()
     outputs_read_group_qualimap = channel.empty()
     if ( enable.align_qc ) {
-        ALIGNMENT_QC(
+        alignment_qc_out = ALIGNMENT_QC(
             ch_read_group_alignments_indexed,
             ch_reference_and_optional_fai,
             enable,
@@ -55,13 +55,13 @@ workflow ALIGN_READS {
         )
         ch_multiqc_files = ch_multiqc_files
             .mix(
-                ALIGNMENT_QC.out.flagstat_outputs.map{ _meta, file -> file },
-                ALIGNMENT_QC.out.riker_outputs.map{ _meta, file -> file },
-                ALIGNMENT_QC.out.qualimap_outputs.map{ _meta, file -> file }
+                alignment_qc_out.flagstat_outputs.map{ _meta, file -> file },
+                alignment_qc_out.riker_outputs.map{ _meta, file -> file },
+                alignment_qc_out.qualimap_outputs.map{ _meta, file -> file }
             )
-        outputs_read_group_flagstat = ALIGNMENT_QC.out.flagstat_outputs
-        outputs_read_group_riker    = ALIGNMENT_QC.out.riker_outputs
-        outputs_read_group_qualimap = ALIGNMENT_QC.out.qualimap_outputs
+        outputs_read_group_flagstat = alignment_qc_out.flagstat_outputs
+        outputs_read_group_riker    = alignment_qc_out.riker_outputs
+        outputs_read_group_qualimap = alignment_qc_out.qualimap_outputs
     }
 
     emit:

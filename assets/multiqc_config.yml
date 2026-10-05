@@ -17,6 +17,36 @@ module_order:
       name: "fastp: read trimming/filtering"
       anchor: "fastp"
   - samtools:
+      name: "flagstat: input BAM/CRAM alignment metrics"
+      anchor: "samtools_flagstat_input"
+      path_filters:
+        - "*input_*"
+  - riker:
+      name: "Riker: input BAM/CRAM alignment metrics"
+      anchor: "riker_input"
+      path_filters:
+        - "*input_*"
+  - qualimap:
+      name: "Qualimap: input BAM/CRAM alignment metrics"
+      anchor: "qualimap_input"
+      path_filters:
+        - "*input_*"
+  - samtools:
+      name: "flagstat: read group alignment metrics"
+      anchor: "samtools_flagstat_readgroup"
+      path_filters:
+        - "*readgroup_*"
+  - riker:
+      name: "Riker: read group alignment metrics"
+      anchor: "riker_readgroup"
+      path_filters:
+        - "*readgroup_*"
+  - qualimap:
+      name: "Qualimap: read group alignment metrics"
+      anchor: "qualimap_readgroup"
+      path_filters:
+        - "*readgroup_*"
+  - samtools:
       name: "flagstat: library alignment metrics"
       anchor: "samtools_flagstat_library"
       path_filters:
@@ -92,6 +122,31 @@ module_order:
       name: "Vcftools: relatedness2"
       anchor: "vcftools_relatedness2"
       path_filters: "*.relatedness2"
+
+# Riker reports the BAM @RG SM tag as its sample name, which is shared by every read group and library of a
+# sample, so all but one of them would be silently dropped. Use the (level-prefixed) file name instead.
+use_filename_as_sample_name:
+  - riker/alignment
+  - riker/basic_base_dist
+  - riker/basic_mean_quality
+  - riker/basic_quality_dist
+  - riker/gcbias_detail
+  - riker/gcbias_summary
+  - riker/isize_metrics
+  - riker/isize_histogram
+  - riker/wgs_metrics
+  - riker/wgs_coverage
+extra_fn_clean_exts:
+  - ".alignment-metrics"
+  - ".base-distribution-by-cycle"
+  - ".mean-quality-by-cycle"
+  - ".quality-score-distribution"
+  - ".gcbias-detail"
+  - ".gcbias-summary"
+  - ".isize-metrics"
+  - ".isize-histogram"
+  - ".wgs-metrics"
+  - ".wgs-coverage"
 
 custom_plot_config:
   general_stats_table:
