@@ -31,7 +31,7 @@ workflow MERGE {
         }
         .branch { meta, alignments, indexes ->
             skip_merge: alignments.size() == 1
-            return [ meta, alignments[0], indexes[0] ]
+                return [ meta, alignments[0], indexes[0] ]
             for_merge : alignments.size() > 1
         }
 
