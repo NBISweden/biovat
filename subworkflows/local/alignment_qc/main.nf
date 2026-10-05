@@ -8,15 +8,15 @@ workflow ALIGNMENT_QC {
     ch_alignment_and_index        // channel: aligned reads and their indices to perform QC on
     ch_reference_and_optional_fai // channel: reference fasta and (optional) fai index
     enable                        // map: stage/tool gating flags
-    level                         // string: QC level, used as the output prefix ('readgroup'/'library'/'markdup'/'sample')
+    level                         // string: QC level, used as the output prefix ('input'/'readgroup'/'library'/'markdup'/'sample')
 
     main:
     // Tag each record with a level-scoped prefix so a single modules.config selector covers every call site
     ch_qc_input = ch_alignment_and_index
         .map { meta, alignment, index ->
-            // Read-group-level records still carry all meta, library/markdup have readgroups merged to library level
-            // sample-level merging groups on {id, pl}, dropping library
-            def prefix = level == 'readgroup'
+            // Input (user BAM/CRAM) and read-group-level records still carry all meta, library/markdup have readgroups
+            // merged to library level, sample-level merging groups on {id, pl}, dropping library
+            def prefix = level in [ 'input', 'readgroup' ]
                 ? meta.read_group
                 : level == 'sample'
                     ? "${meta.id}_${meta.pl}"

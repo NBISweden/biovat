@@ -2,6 +2,7 @@
 work/
 data/
 !tests/data/
+!modules/**/tests/data/
 results/
 .DS_Store
 testing/

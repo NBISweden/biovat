@@ -10,6 +10,7 @@
 include { BIOVAT                  } from './workflows/biovat'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { rikerActive             } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // Global default parameters: define param types here, and defaults in nextflow.config
 params {
@@ -24,6 +25,7 @@ params {
     enable_align                : Boolean
     enable_align_qc             : Boolean
     enable_mark_duplicates      : Boolean
+    enable_variant_calling      : Boolean
 
     // Read trimming options
     adapter_fasta               : String
@@ -90,17 +92,15 @@ workflow NBISWEDEN_BIOVAT {
     // 'requires' is a map of internal dependency relationships
     def requires = [
         // MERGE_TO_LIBRARY (readgroup -> library) and MERGE_TO_SAMPLE (library -> sample, post-deduplication)
-        // are both triggered when a downstream consumer needs deduplicated alignments
-        merge: enable.mark_duplicates
+        // are triggered when a downstream consumer needs alignments merged to respective levels
+        merge_to_library: enable.mark_duplicates,
+        merge_to_sample : enable.variant_calling
     ]
+    def merge_active = requires.merge_to_library || requires.merge_to_sample
 
-    // ALIGNMENT_QC runs when a parent stage is also enabled
-    // requires.merge acts as an umbrella for all sample-level stages
-    def align_qc_active = enable.align_qc && (enable.align || requires.merge)
-
-    // .fai is used for certain CRAM processes, and unconditionally by riker
-    requires.fai = (enable.cram_format && requires.merge)
-        || (align_qc_active && enable.riker)
+    // .fai is used for certain CRAM processes, and unconditionally by riker. The samplesheet rows aren't
+    // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
+    requires.fai = (enable.cram_format && merge_active) || rikerActive(enable, true)
 
     BIOVAT (
         samplesheet,
@@ -119,6 +119,9 @@ workflow NBISWEDEN_BIOVAT {
     emit:
     outputs_raw_read_qc              = BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads               = BIOVAT.out.outputs_trim_reads
+    outputs_input_flagstat           = BIOVAT.out.outputs_input_flagstat
+    outputs_input_riker              = BIOVAT.out.outputs_input_riker
+    outputs_input_qualimap           = BIOVAT.out.outputs_input_qualimap
     outputs_read_group               = BIOVAT.out.outputs_read_group
     outputs_read_group_flagstat      = BIOVAT.out.outputs_read_group_flagstat
     outputs_read_group_riker         = BIOVAT.out.outputs_read_group_riker
@@ -165,6 +168,9 @@ workflow {
     publish:
     outputs_raw_read_qc              = NBISWEDEN_BIOVAT.out.outputs_raw_read_qc
     outputs_trim_reads               = NBISWEDEN_BIOVAT.out.outputs_trim_reads
+    outputs_input_flagstat           = NBISWEDEN_BIOVAT.out.outputs_input_flagstat
+    outputs_input_riker              = NBISWEDEN_BIOVAT.out.outputs_input_riker
+    outputs_input_qualimap           = NBISWEDEN_BIOVAT.out.outputs_input_qualimap
     outputs_read_group               = NBISWEDEN_BIOVAT.out.outputs_read_group
     outputs_read_group_flagstat      = NBISWEDEN_BIOVAT.out.outputs_read_group_flagstat
     outputs_read_group_riker         = NBISWEDEN_BIOVAT.out.outputs_read_group_riker
@@ -190,6 +196,16 @@ output {
     // READ_QC
     outputs_raw_read_qc {
         path '01_input_checks/reads/fastqc'
+    }
+    // INGEST_BAM_OR_CRAM
+    outputs_input_flagstat {
+        path '01_input_checks/reads/samtools_flagstat'
+    }
+    outputs_input_riker {
+        path '01_input_checks/reads/riker'
+    }
+    outputs_input_qualimap {
+        path '01_input_checks/reads/qualimap'
     }
     // TRIM_READS
     outputs_trim_reads {
