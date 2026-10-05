@@ -29,6 +29,28 @@ nextflow_process {
         }
     }
 
+    test("no @RG header line - succeeds, flagged missing") {
+
+        when {
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/no_readgroup.bam", checkIfExists: true)
+                ])
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // Not an error: 'missing' routes the BAM to SAMTOOLS_ADDREPLACERG in INGEST_BAM_OR_CRAM to fill the @RG line from the samplesheet
+                { assert process.out.validated[0][2] == 'missing' }
+            )
+        }
+    }
+
     test("SM disagrees with samplesheet sample - fails") {
 
         when {
