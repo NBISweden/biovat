@@ -25,8 +25,11 @@ were duplicated from their own fastq data and converted to an already-aligned BA
 samplesheet input (`bam` column). As with PUN-Y-LO above, QNAMEs were edited (`L2:`/`l1rep1:` prefixes) so
 they don't collide with the sibling row they get merged with. PUN-R-ELF's row is a distinct second library
 (`PUN-R-ELF_2.bam`); PUN-R-MT's is repeat sequencing of library 1 on a second flowcell (`PUN-R-MT_1_repeat2.cram`).
-Both files' `@RG` ID/SM/LB/PU/PL tags were set with `samtools addreplacerg` to match what the pipeline's own
+The CRAM's `@RG` ID/SM/LB/PU/PL tags were set with `samtools addreplacerg` to match what the pipeline's own
 aligner would have written for that samplesheet row (see `conf/modules.config`'s `BWAMEM3_MEM` args).
+`PUN-R-ELF_2.bam` instead has its `@RG` header line and every read's `RG:Z` tag stripped
+(`samtools view -x RG` + `samtools reheader`), to test that the pipeline fills a missing read group in from
+the samplesheet. Its reads are otherwise unchanged, so the filled-in alignment matches the original.
 
 Files follow the naming convention `<sample>_<library_id>_R1/R2.fastq.gz`. Where a library has more than one
 row (repeat sequencing on a different flowcell/lane, e.g. PUN-Y-LO library 2 and PUN-R-MT library 1), a

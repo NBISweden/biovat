@@ -34,8 +34,21 @@
             },
             "platform": {
                 "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sequencing platform must be provided and cannot contain spaces",
+                "enum": [
+                    "CAPILLARY",
+                    "DNBSEQ",
+                    "ELEMENT",
+                    "HELICOS",
+                    "ILLUMINA",
+                    "IONTORRENT",
+                    "LS454",
+                    "ONT",
+                    "PACBIO",
+                    "SINGULAR",
+                    "SOLID",
+                    "ULTIMA"
+                ],
+                "errorMessage": "Sequencing platform must be one of the SAM specification @RG PL values, in uppercase: CAPILLARY, DNBSEQ, ELEMENT, HELICOS, ILLUMINA, IONTORRENT, LS454, ONT, PACBIO, SINGULAR, SOLID, ULTIMA",
                 "meta": ["pl"]
             },
             "fastq_1": {

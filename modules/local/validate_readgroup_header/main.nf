@@ -11,7 +11,7 @@ process VALIDATE_READGROUP_HEADER {
     tuple val(meta), path(bam_cram)
 
     output:
-    tuple val(meta), path(bam_cram), emit: validated
+    tuple val(meta), path(bam_cram), env('rg_status'), emit: validated // rg_status: 'present' or 'missing' (no @RG line, filled downstream)
     tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions
 
     when:
@@ -19,40 +19,39 @@ process VALIDATE_READGROUP_HEADER {
 
     script:
     """
-    samtools view -H ${bam_cram} > header.txt
-
-    check_tag() {
-        local tag="\$1" expected="\$2"
-        awk -F'\\t' -v tag="\${tag}:" -v expected="\${expected}" '
+    # Each samplesheet row is one read group. Several @RG lines is an error. No @RG line -> will be filled downstream from the samplesheet.
+    rg_status=\$(
+        samtools view -H ${bam_cram} | awk -F'\\t' \\
+            -v id="${meta.platform_unit}" -v sm="${meta.id}" -v lb="${meta.library}" -v pl="${meta.pl}" '
+            BEGIN { want["ID"] = id; want["SM"] = sm; want["LB"] = lb; want["PU"] = id; want["PL"] = pl }
             \$1 == "@RG" {
-                for (i = 2; i <= NF; i++) {
-                    if (index(\$i, tag) == 1) {
-                        value = substr(\$i, length(tag) + 1)
-                        if (value != expected) print tag value
-                    }
-                }
+                n_rg++
+                for (i = 2; i <= NF; i++) if (\$i ~ /^[A-Za-z][A-Za-z0-9]:/) found[substr(\$i, 1, 2)] = substr(\$i, 4)
             }
-        ' header.txt | sort -u
-    }
-
-    mismatches=\$(
-        {
-            check_tag "ID" "${meta.platform_unit}"
-            check_tag "SM" "${meta.id}"
-            check_tag "LB" "${meta.library}"
-            check_tag "PU" "${meta.platform_unit}"
-            check_tag "PL" "${meta.pl}"
-        }
+            END {
+                if (n_rg > 1) {
+                    print "ERROR: \\047${bam_cram}\\047 has " n_rg " @RG header lines; expected at most 1 (one read group per samplesheet row)" > "/dev/stderr"
+                    exit 1
+                }
+                if (n_rg == 0) { print "missing"; exit 0 }
+                split("ID SM LB PU PL", tags, " ")
+                for (t = 1; t <= 5; t++) {
+                    tag = tags[t]
+                    if (!(tag in found)) { problems = problems "\\n  missing " tag; continue }
+                    got = (tag == "PL") ? toupper(found[tag]) : found[tag]
+                    if (got != want[tag]) problems = problems "\\n  found " tag ":" found[tag]
+                }
+                if (problems) {
+                    print "ERROR: @RG header of \\047${bam_cram}\\047 is missing tags or disagrees with the samplesheet row for sample \\047${meta.id}\\047, library \\047${meta.library}\\047 (expected ID/PU:${meta.platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):" problems > "/dev/stderr"
+                    exit 1
+                }
+                print "present"
+            }'
     )
-
-    if [ -n "\${mismatches}" ]; then
-        echo "ERROR: @RG header of '${bam_cram}' disagrees with the samplesheet row for sample '${meta.id}', library '${meta.library}' (expected ID/PU:${meta.platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):" >&2
-        echo "\${mismatches}" | sed 's/^/  found /' >&2
-        exit 1
-    fi
     """
 
     stub:
     """
+    rg_status=present
     """
 }

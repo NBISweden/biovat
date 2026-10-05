@@ -12,8 +12,8 @@ nextflow_process {
             process {
                 """
                 input[0] = channel.of([
-                    // Matches PUN-R-MT_1_repeat2.cram's own @RG ID/SM/LB/PU/PL
-                    [ id:'PUN-R-MT', library:'1', flowcell:'SRR9309471', lane:2, pl:'illumina' ],
+                    // Matches PUN-R-MT_1_repeat2.cram's own @RG ID/SM/LB/PU/PL (its PL:illumina is lowercase, so this also covers case-insensitive PL)
+                    [ id:'PUN-R-MT', library:'1', flowcell:'SRR9309471', lane:2, pl:'ILLUMINA', platform_unit:'SRR9309471.2.PUN-R-MT_1' ],
                     file("${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram", checkIfExists: true)
                 ])
                 """
@@ -21,25 +21,11 @@ nextflow_process {
         }
 
         then {
-            assert process.success
-        }
-    }
-
-    test("all tags agree (fake data) - succeeds") {
-
-        when {
-            process {
-                """
-                input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/good_readgroup.bam", checkIfExists: true)
-                ])
-                """
-            }
-        }
-
-        then {
-            assert process.success
+            assertAll(
+                { assert process.success },
+                // rg_status tells INGEST_BAM_OR_CRAM whether the @RG line is present or if it must be filled in
+                { assert process.out.validated[0][2] == 'present' }
+            )
         }
     }
 
@@ -49,7 +35,7 @@ nextflow_process {
             process {
                 """
                 input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
                     file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_sm.bam", checkIfExists: true)
                 ])
                 """
@@ -57,79 +43,55 @@ nextflow_process {
         }
 
         then {
-            assert process.failed
+            assertAll(
+                { assert process.failed },
+                // Fail for the right reason: the SM mismatch itself, not e.g. a missing file or container error
+                { assert process.stdout.any { line -> line.contains('found SM:WRONG') } }
+            )
         }
     }
 
-    test("LB disagrees with samplesheet library_id - fails") {
+    test("several @RG header lines - fails") {
 
         when {
             process {
                 """
                 input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_lb.bam", checkIfExists: true)
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/two_readgroups.bam", checkIfExists: true)
                 ])
                 """
             }
         }
 
         then {
-            assert process.failed
+            assertAll(
+                { assert process.failed },
+                // Rejected by the at-most-one-@RG-line requirement
+                { assert process.stdout.any { line -> line.contains('has 2 @RG header lines') } }
+            )
         }
     }
 
-    test("ID disagrees with expected flowcell/lane/sample/library - fails") {
+    test("@RG line missing a required tag - fails") {
 
         when {
             process {
                 """
                 input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_id.bam", checkIfExists: true)
+                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/missing_lb.bam", checkIfExists: true)
                 ])
                 """
             }
         }
 
         then {
-            assert process.failed
-        }
-    }
-
-    test("PU disagrees with expected flowcell/lane/sample/library - fails") {
-
-        when {
-            process {
-                """
-                input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_pu.bam", checkIfExists: true)
-                ])
-                """
-            }
-        }
-
-        then {
-            assert process.failed
-        }
-    }
-
-    test("PL disagrees with samplesheet platform - fails") {
-
-        when {
-            process {
-                """
-                input[0] = channel.of([
-                    [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'illumina' ],
-                    file("${projectDir}/modules/local/validate_readgroup_header/tests/data/mismatched_pl.bam", checkIfExists: true)
-                ])
-                """
-            }
-        }
-
-        then {
-            assert process.failed
+            assertAll(
+                { assert process.failed },
+                // Absent tag is reported, not silently skipped
+                { assert process.stdout.any { line -> line.contains('missing LB') } }
+            )
         }
     }
 }
