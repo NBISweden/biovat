@@ -27,7 +27,7 @@ Each `BAM`/`CRAM` file is treated as a single read group, and its `@RG` header i
 - A file with **more than one** `@RG` line is rejected. Split it by read group (e.g. `samtools split`) and give each part its own samplesheet row.
 - A file whose `@RG` line is missing any of the tags, or disagrees with the samplesheet, is rejected. Correct the samplesheet, or the file with e.g. `samtools addreplacerg -m overwrite_all -r '@RG\tID:...'`.
 
-A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. A single library of sample `S1` has been sequenced across three lanes. Two independent libraries of sample `S6` have been sequenced. Sample `S7` supplies a pre-aligned CRAM instead of raw reads.
+A final samplesheet file consisting of paired-end data for 7 samples may look something like the one below. A single library of sample `S1` has been sequenced across three lanes. Two independent libraries of sample `S6` have been sequenced. Sample `S7` supplies a pre-aligned CRAM instead of raw reads.
 
 ```csv title="samplesheet.csv"
 sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end,population

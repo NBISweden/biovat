@@ -36,9 +36,9 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Read trimming](#read-trimming) - Adapter and quality trimming of raw reads
 - [Alignment](#alignment) - Alignment of raw or trimmed reads
 - [Alignment quality checks](#alignment-qc) - BAM/CRAM alignment QC
-- [Merging readgroups](#merging-readgroups) - Readgroup alignments are merged to library level; an internal processing step triggered if deduplication is requested
+- [Merging readgroups](#merging-readgroups) - Readgroup alignments are merged to library level if necessary
 - [Deduplication](#deduplication) - Duplicates are marked or removed from library-level alignments
-- [Merging libraries](#merging-libraries) - Deduplicated library alignments are merged to sample level
+- [Merging libraries](#merging-libraries) - Readgroup/library alignments are merged to sample level if necessary
 - [Variant calling](#variant-calling) - Variants are called
 - [Variant call quality checks](#variant-qc) - VCF/BCF QC
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
