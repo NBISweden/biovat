@@ -1,0 +1,119 @@
+nextflow_process {
+
+    name "Test Process SPLITGENOME"
+    script "../main.nf"
+    process "SPLITGENOME"
+    tag "modules_local"
+    tag "splitgenome"
+
+    setup {
+        run("SAMTOOLS_FAIDX") {
+            script "../../../nf-core/samtools/faidx/main.nf"
+            process {
+                """
+                input[0] = channel.of([
+                    [ id:'monkeyflower' ],
+                    file("${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta", checkIfExists: true),
+                    []
+                ])
+                input[1] = false
+                """
+            }
+        }
+    }
+
+    test("default min_length - LG4_3 (940 bp) is dropped") {
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_FAIDX.out.fai
+                input[1] = ''
+                input[2] = params.min_length // pipeline default (1000), so this tracks any change to it
+                """
+            }
+        }
+
+        then {
+            def contigs = process.out.chunks[0][1]
+                .with { it instanceof List ? it : [it] }
+                .collectMany { bed -> path(bed).readLines() }
+                .collect { line -> line.tokenize('\t')[0] }
+            assertAll(
+                { assert process.success },
+                { assert contigs == ['LG4_1', 'LG4_2'] }
+            )
+        }
+    }
+
+    test("min_length below 940 - LG4_3 is kept") {
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_FAIDX.out.fai
+                input[1] = ''
+                input[2] = 500
+                """
+            }
+        }
+
+        then {
+            def contigs = process.out.chunks[0][1]
+                .with { it instanceof List ? it : [it] }
+                .collectMany { bed -> path(bed).readLines() }
+                .collect { line -> line.tokenize('\t')[0] }
+            assertAll(
+                { assert process.success },
+                { assert contigs == ['LG4_1', 'LG4_2', 'LG4_3'] }
+            )
+        }
+    }
+
+    test("chunk_size below longest contig - raised, one contig per chunk") {
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_FAIDX.out.fai
+                input[1] = 1000 // longest contig is LG4_2 (51180 bp)
+                input[2] = 500
+                """
+            }
+        }
+
+        then {
+            def beds = process.out.chunks[0][1]
+            def chunks = beds.collect { bed -> path(bed).readLines().collect { line -> line.tokenize('\t')[0] } }
+            // chunk BEDs are written to the task work dir, alongside the script's stderr
+            def stderr = path(beds[0]).getParent().resolve('.command.err').text
+            assertAll(
+                { assert process.success },
+                // Contigs are never split, so each one gets a chunk to itself
+                { assert chunks == [['LG4_1'], ['LG4_2'], ['LG4_3']] },
+                { assert stderr.contains('raising --chunk_size to 51180') }
+            )
+        }
+    }
+
+    test("min_length above every contig - fails") {
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_FAIDX.out.fai
+                input[1] = ''
+                input[2] = 60000 // longest contig is LG4_2 (51180 bp)
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                // Fail for the right reason: everything filtered out, not e.g. a container error
+                { assert process.stdout.any { line -> line.contains('all chromosomes were filtered out by --min_length=60000') } }
+            )
+        }
+    }
+}
