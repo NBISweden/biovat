@@ -110,9 +110,9 @@ workflow NBISWEDEN_BIOVAT {
     ]
     def merge_active = requires.merge_to_library || requires.merge_to_sample
 
-    // .fai is used for certain CRAM processes, and unconditionally by riker. The samplesheet rows aren't
+    // .fai is used for certain CRAM processes, and unconditionally by riker & CALL_VARIANTS. Samplesheet rows aren't
     // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
-    requires.fai = (enable.cram_format && merge_active) || rikerActive(enable, true)
+    requires.fai = (enable.cram_format && merge_active) || rikerActive(enable, true) || enable.variant_calling
 
     biovat_out = BIOVAT(
         samplesheet,

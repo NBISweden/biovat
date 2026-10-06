@@ -251,6 +251,9 @@ def validateReferenceRequirements(rows) {
     if ( rikerActive(enable, has_bam_cram_rows) ) {
         reasons.add("RIKER (--enable_riker)")
     }
+    if ( enable.variant_calling && hasAlignmentSource(enable, has_bam_cram_rows) ) {
+        reasons.add("variant calling (--enable_variant_calling)")
+    }
     if ( !reasons.isEmpty() ) {
         validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")
     }

@@ -50,7 +50,9 @@ workflow CALL_VARIANTS {
             .map { meta, alignment, index -> [dataset_name, meta.id, alignment, index] }
             .groupTuple()
             .map { group, samples, alignments, indexes ->
-                [[id: group, samples: samples], alignments, indexes]
+                // sort by sample id so VCF sample columns don't depend on channel arrival order
+                def sorted = [samples, alignments, indexes].transpose().sort { row -> row[0] }
+                [[id: group, samples: sorted.collect { row -> row[0] }], sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
             }
 
         // Split into genome chunks for parallelization
