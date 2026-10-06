@@ -56,7 +56,6 @@ S7,1,AEG588A7,2,ILLUMINA,,,/data/AEG588A7_S7_L002.cram,false,popB
 | `single_end`  | Required only when `bam` is set: `true` for single-end data, `false` for paired-end. Not required for `fastq_1`/`fastq_2` rows - it's inferred from whether `fastq_2` is present                               |
 | `population`  | Population identifier for grouping of samples                                                                                                                                                                  |
 
-
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
 ## Configuring the pipeline
