@@ -13,7 +13,7 @@ workflow VARIANT_QC {
     // BCFTOOLS_STATS
     // Remove fai for BCFTOOLS_STATS module
     ch_reference = ch_reference_and_fai.map { meta, fasta, _fai -> [meta, fasta] }
-    BCFTOOLS_STATS(
+    bcftools_stats_out = BCFTOOLS_STATS(
         ch_variant_calls_and_tbi,
         [[:], []],
         [[:], []],
@@ -25,31 +25,31 @@ workflow VARIANT_QC {
     // VCFTOOLS:
     // Remove tbi for VCFTOOLS module
     ch_variant_calls = ch_variant_calls_and_tbi.map { meta, vcf, _tbi -> [meta, vcf] }
-    VCFTOOLS_TSTV_COUNT(
+    vcftools_tstv_count_out = VCFTOOLS_TSTV_COUNT(
         ch_variant_calls,
         [],
         [],
     )
-    VCFTOOLS_TSTV_QUAL(
+    vcftools_tstv_qual_out = VCFTOOLS_TSTV_QUAL(
         ch_variant_calls,
         [],
         [],
     )
-    VCFTOOLS_SUMMARY(
+    vcftools_summary_out = VCFTOOLS_SUMMARY(
         ch_variant_calls,
         [],
         [],
     )
-    VCFTOOLS_RELATEDNESS2(
+    vcftools_relatedness2_out = VCFTOOLS_RELATEDNESS2(
         ch_variant_calls,
         [],
         [],
     )
 
     emit:
-    bcftools_stats_output          = BCFTOOLS_STATS.out.stats
-    vcftools_tstv_counts_output    = VCFTOOLS_TSTV_COUNT.out.tstv_count
-    vcftools_tstv_qual_output      = VCFTOOLS_TSTV_QUAL.out.tstv_qual
-    vcftools_filter_summary_output = VCFTOOLS_SUMMARY.out.filter_summary
-    vcftools_relatedness2_output   = VCFTOOLS_RELATEDNESS2.out.relatedness2
+    bcftools_stats_output          = bcftools_stats_out.stats
+    vcftools_tstv_counts_output    = vcftools_tstv_count_out.tstv_count
+    vcftools_tstv_qual_output      = vcftools_tstv_qual_out.tstv_qual
+    vcftools_filter_summary_output = vcftools_summary_out.filter_summary
+    vcftools_relatedness2_output   = vcftools_relatedness2_out.relatedness2
 }

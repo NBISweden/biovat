@@ -22,8 +22,8 @@ workflow CALL_VARIANTS {
     main:
     // Split the reference genome into chunks of chromosomes for parallelization
     ch_fai = ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] }
-    SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
-    ch_genome_chunks = SPLITGENOME.out.chunks
+    splitgenome_out = SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
+    ch_genome_chunks = splitgenome_out.chunks
 
     // Call variants with four alternative variant callers
     ch_variant_calls_indexed = channel.empty()
@@ -65,15 +65,15 @@ workflow CALL_VARIANTS {
                 alignments, indexes, chunk_bed]}
 
         // Multi-sample variant calling
-        BCFTOOLS_MPILEUP_MULTISAMPLE(
+        bcftools_mpileup_multisample_out = BCFTOOLS_MPILEUP_MULTISAMPLE(
             ch_joint_alignments_per_chunk,
             ch_reference_and_fai,
             enable.save_mpileup,
             enable.group_samples,
             ch_population_file,
         )
-        ch_chunk_variant_calls_indexed = BCFTOOLS_MPILEUP_MULTISAMPLE.out.vcf.join(BCFTOOLS_MPILEUP_MULTISAMPLE.out.index)
-        ch_mpileup = BCFTOOLS_MPILEUP_MULTISAMPLE.out.mpileup
+        ch_chunk_variant_calls_indexed = bcftools_mpileup_multisample_out.vcf.join(bcftools_mpileup_multisample_out.index)
+        ch_mpileup = bcftools_mpileup_multisample_out.mpileup
 
         // Concatenate the genome chunks using BCFTOOLS_CONCAT
         ch_variant_calls = ch_chunk_variant_calls_indexed
@@ -99,10 +99,10 @@ workflow CALL_VARIANTS {
                 for_concat: vcfs.size() > 1
             }
 
-        BCFTOOLS_CONCAT(ch_variant_calls.for_concat)
+        bcftools_concat_out = BCFTOOLS_CONCAT(ch_variant_calls.for_concat)
         // Join concatenated vcf files with their indexes, for variant QC and publishing.
-        ch_variant_calls_indexed = BCFTOOLS_CONCAT.out.vcf
-            .join(BCFTOOLS_CONCAT.out.index)
+        ch_variant_calls_indexed = bcftools_concat_out.vcf
+            .join(bcftools_concat_out.index)
             .mix(ch_variant_calls.skip_concat)
     }
 
@@ -121,22 +121,22 @@ workflow CALL_VARIANTS {
     outputs_vcftools_filter_summary = channel.empty()
     outputs_vcftools_relatedness2 = channel.empty()
     if (enable.variant_qc) {
-        VARIANT_QC(
+        variant_qc_out = VARIANT_QC(
             ch_variant_calls_indexed,
             ch_reference_and_fai,
         )
         ch_multiqc_files = ch_multiqc_files.mix(
-            VARIANT_QC.out.bcftools_stats_output.map { _meta, file -> [file] },
-            VARIANT_QC.out.vcftools_tstv_counts_output.map { _meta, file -> [file] },
-            VARIANT_QC.out.vcftools_tstv_qual_output.map { _meta, file -> [file] },
-            VARIANT_QC.out.vcftools_filter_summary_output.map { _meta, file -> [file] },
-            VARIANT_QC.out.vcftools_relatedness2_output.map { _meta, file -> [file] },
+            variant_qc_out.bcftools_stats_output.map { _meta, file -> [file] },
+            variant_qc_out.vcftools_tstv_counts_output.map { _meta, file -> [file] },
+            variant_qc_out.vcftools_tstv_qual_output.map { _meta, file -> [file] },
+            variant_qc_out.vcftools_filter_summary_output.map { _meta, file -> [file] },
+            variant_qc_out.vcftools_relatedness2_output.map { _meta, file -> [file] },
         )
-        outputs_bcftools_stats = VARIANT_QC.out.bcftools_stats_output
-        outputs_vcftools_tstv_counts = VARIANT_QC.out.vcftools_tstv_counts_output
-        outputs_vcftools_tstv_qual = VARIANT_QC.out.vcftools_tstv_qual_output
-        outputs_vcftools_filter_summary = VARIANT_QC.out.vcftools_filter_summary_output
-        outputs_vcftools_relatedness2 = VARIANT_QC.out.vcftools_relatedness2_output
+        outputs_bcftools_stats = variant_qc_out.bcftools_stats_output
+        outputs_vcftools_tstv_counts = variant_qc_out.vcftools_tstv_counts_output
+        outputs_vcftools_tstv_qual = variant_qc_out.vcftools_tstv_qual_output
+        outputs_vcftools_filter_summary = variant_qc_out.vcftools_filter_summary_output
+        outputs_vcftools_relatedness2 = variant_qc_out.vcftools_relatedness2_output
     }
 
     emit:

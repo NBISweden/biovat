@@ -190,7 +190,7 @@ workflow BIOVAT {
     outputs_call_variants_vcftools_filter_summary = channel.empty()
     outputs_call_variants_vcftools_relatedness2   = channel.empty()
     if (enable.variant_calling) {
-        CALL_VARIANTS(
+        call_variants_out = CALL_VARIANTS(
             variant_caller,
             chunk_size,
             min_length,
@@ -201,15 +201,15 @@ workflow BIOVAT {
             enable,
             ch_multiqc_files,
         )
-        ch_multiqc_files                              = CALL_VARIANTS.out.ch_multiqc_files
-        outputs_genome_chunks                         = CALL_VARIANTS.out.ch_genome_chunks
-        outputs_variant_calls                         = CALL_VARIANTS.out.ch_variant_calls_indexed
-        outputs_mpileup                               = CALL_VARIANTS.out.ch_mpileup
-        outputs_call_variants_bcftools_stats          = CALL_VARIANTS.out.outputs_bcftools_stats
-        outputs_call_variants_vcftools_tstv_counts    = CALL_VARIANTS.out.outputs_vcftools_tstv_counts
-        outputs_call_variants_vcftools_tstv_qual      = CALL_VARIANTS.out.outputs_vcftools_tstv_qual
-        outputs_call_variants_vcftools_filter_summary = CALL_VARIANTS.out.outputs_vcftools_filter_summary
-        outputs_call_variants_vcftools_relatedness2   = CALL_VARIANTS.out.outputs_vcftools_relatedness2
+        ch_multiqc_files                              = call_variants_out.ch_multiqc_files
+        outputs_genome_chunks                         = call_variants_out.ch_genome_chunks
+        outputs_variant_calls                         = call_variants_out.ch_variant_calls_indexed
+        outputs_mpileup                               = call_variants_out.ch_mpileup
+        outputs_call_variants_bcftools_stats          = call_variants_out.outputs_bcftools_stats
+        outputs_call_variants_vcftools_tstv_counts    = call_variants_out.outputs_vcftools_tstv_counts
+        outputs_call_variants_vcftools_tstv_qual      = call_variants_out.outputs_vcftools_tstv_qual
+        outputs_call_variants_vcftools_filter_summary = call_variants_out.outputs_vcftools_filter_summary
+        outputs_call_variants_vcftools_relatedness2   = call_variants_out.outputs_vcftools_relatedness2
     }
 
     // Collate and save software versions
