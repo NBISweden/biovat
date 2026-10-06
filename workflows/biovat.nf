@@ -190,12 +190,11 @@ workflow BIOVAT {
     outputs_call_variants_vcftools_filter_summary = channel.empty()
     outputs_call_variants_vcftools_relatedness2   = channel.empty()
     if (enable.variant_calling) {
-        def ch_alignments_for_calling = ch_sample_alignments_indexed
         CALL_VARIANTS(
             variant_caller,
             chunk_size,
             min_length,
-            ch_alignments_for_calling,
+            alignments_to_process,
             ch_samplesheet,
             ch_reference_and_optional_fai,
             dataset_name,
