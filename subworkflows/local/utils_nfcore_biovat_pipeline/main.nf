@@ -104,6 +104,9 @@ workflow PIPELINE_INITIALISATION {
     // inconsistent read pairing
     validateSampleEndedness(samplesheet_rows)
 
+    // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
+    validateAlignmentConsumers(samplesheet_rows)
+
     // Report every reason --reference is needed (params and samplesheet rows) in one error
     validateReferenceRequirements(samplesheet_rows)
 
@@ -172,24 +175,6 @@ def validateInputParameters() {
     if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
         validationError("Qualimap cannot be run when CRAM output is enabled.")
     }
-
-    // Stage dependency map
-    def stage_dependencies = [
-        'raw_read_qc': [],
-        'trim': [],
-        'align': [],
-        'mark_duplicates': [],
-        'variant_calling': [],
-    ]
-    stage_dependencies.each { step, dependencies ->
-        if (enable[step]) {
-            dependencies.each { dependency ->
-                if (!enable[dependency]) {
-                    validationError("The '${step}' stage requires the '${dependency}' stage to be enabled.")
-                }
-            }
-        }
-    }
 }
 
 // Reject a samplesheet where read groups of the same library, or libraries of the same sample, mix
@@ -223,6 +208,22 @@ def hasAlignmentSource(enable, has_bam_cram_rows) {
 // Callers that can't see the samplesheet rows (main.nf) pass has_bam_cram_rows = true to stay conservative
 def rikerActive(enable, has_bam_cram_rows) {
     enable.align_qc && enable.riker && hasAlignmentSource(enable, has_bam_cram_rows)
+}
+
+// Stages that consume alignments need a source of them: ALIGN_READS or BAM/CRAM input rows
+def validateAlignmentConsumers(rows) {
+    def enable            = params
+        .findAll { k, _v -> k.startsWith('enable_') }
+        .collectEntries { k, v -> [(k - 'enable_'): v] }
+    def has_bam_cram_rows = rows.any { meta, _files -> meta.input_type == 'bam_cram' }
+    if ( hasAlignmentSource(enable, has_bam_cram_rows) ) {
+        return
+    }
+    def stages = [ mark_duplicates: '--enable_mark_duplicates', variant_calling: '--enable_variant_calling' ]
+        .findAll { stage, _flag -> enable[stage] }
+    if ( stages ) {
+        validationError("No alignments to process for ${stages.values().join(', ')}. Either enable alignment, provide 'BAM/CRAM' files, or disable these stage(s).")
+    }
 }
 
 // Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
