@@ -49,7 +49,7 @@ params {
     // Variant calling options
     dataset_name                : String
     variant_caller              : String
-    chunk_size                  : Integer
+    chunk_size                  : Integer?
     min_length                  : Integer
     enable_save_mpileup         : Boolean
     enable_group_samples        : Boolean
