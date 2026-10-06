@@ -22,7 +22,7 @@
                     "fastp": "1.3.6"
                 },
                 "FASTQC": {
-                    "fastqc": "0.12.1"
+                    "fastqc": "0.13.0"
                 },
                 "RIKER_MULTI": {
                     "riker": "0.4.0"
@@ -1081,7 +1081,7 @@
                 "fastp_filtered_reads_plot.txt:md5,42291b646fbe30fa3e69865669b0026f",
                 "fastqc_raw-status-check-heatmap.txt:md5,bf79b99b12a44dd468c1121407b1b3dd",
                 "fastqc_raw_adapter_content_plot.txt:md5,4414f10931632a98a43db67ba506bdd4",
-                "fastqc_raw_overrepresented_sequences_plot.txt:md5,a4e7ac2668c971bf99bd5b30ca2898fa",
+                "fastqc_raw_overrepresented_sequences_plot.txt:md5,79342eff403b98dc9178ded6666206d5",
                 "fastqc_raw_per_base_n_content_plot.txt:md5,a515e412ff13e5f4633af03a36cf77a6",
                 "fastqc_raw_per_base_sequence_quality_plot.txt:md5,13f0b4db1f60f5c7c07dcd96b3b01e55",
                 "fastqc_raw_per_sequence_gc_content_plot_Counts.txt:md5,eff04af21e45cbf76c63e4721cbbe2c1",
@@ -1093,7 +1093,7 @@
                 "multiqc_bcftools_stats_bcftools.txt:md5,9b059973bde567517ac83f497c7d76f7",
                 "multiqc_citations.txt:md5,5f191b693fe416b9bf4fc88421bb4c64",
                 "multiqc_fastp_fastp.txt:md5,d15479e9e321202006e8155a6ddb057a",
-                "multiqc_fastqc_fastqc_raw.txt:md5,679f1d365035e8b58c9a1a5b9fba070d",
+                "multiqc_fastqc_fastqc_raw.txt:md5,92c4a02050f24853e7687298ab6db9f4",
                 "multiqc_general_stats.txt:md5,24312437af80cd234296a83ec027a65a",
                 "multiqc_riker_input_alignment_riker_input.txt:md5,3897e4055e4849dec47daac669459f59",
                 "multiqc_riker_input_basic_base_distribution_riker_input.txt:md5,d8877a876e15184479e4622c365f9e61",
@@ -1246,9 +1246,12 @@
                 "05_duplicate_processed/PUN-Y-LO_2_ILLUMINA_markdup.bam:dfa5a6773c37bfe7e5250c215e62c2df",
                 "06_merged_samples/PUN-R-ELF_ILLUMINA.bam:7f70596a05515a703dc2c43a4edc960b",
                 "06_merged_samples/PUN-Y-LO_ILLUMINA.bam:9c8ab4d7c206ee5545f1b583519206a7"
+            ],
+            [
+                "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz:309007346e661d111743cdae7d9d2343"
             ]
         ],
-        "timestamp": "2026-10-06T10:08:30.90743828",
+        "timestamp": "2026-10-06T10:44:07.126765215",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

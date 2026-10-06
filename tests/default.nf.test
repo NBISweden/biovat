@@ -41,6 +41,11 @@ nextflow_pipeline {
                 .findAll { f -> f.toString().endsWith('.bam') }
                 .sort { f -> f.toString() }
                 .collect { f -> "${outdir_path.relativize(f.toPath())}:${bam(f.toString()).getReadsMD5()}" }
+            // vcf_variant_md5s: any VCF file in ${params.outdir}
+            def vcf_variant_md5s = getAllFilesFromDir(params.outdir)
+                .findAll { f -> f.toString().endsWith('.vcf') || f.toString().endsWith('.vcf.gz') }
+                .sort { f -> f.toString() }
+                .collect { f -> "${outdir_path.relativize(f.toPath())}:${path(f.toString()).vcf.variantsMD5}" }
             assert workflow.success
             assertAll(
                 // PUN-R-ELF_2.bam has no @RG line: INGEST_BAM_OR_CRAM must warn that it's filling one in from the samplesheet
@@ -55,6 +60,8 @@ nextflow_pipeline {
                     // Unstable content checks handled by dedicated plugins
                     // BAMs: use nft-bam to validate stable hashes on all alignments, ignoring headers
                     bam_read_md5s,
+                    // VCFs: use nft-vcf to validate stable hashes on all variant records, ignoring headers
+                    vcf_variant_md5s,
                 ).match() }
             )
         }
