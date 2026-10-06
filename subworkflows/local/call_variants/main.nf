@@ -82,7 +82,7 @@ workflow CALL_VARIANTS {
             .map { meta, vcf, index ->
                 def group_meta = [id: meta.group_id, samples: meta.samples]
                 // keep chunk id (e.g. "chunk_00002") for sorting later
-                return [group_meta, meta.chunk, vcf, index]
+                    return [group_meta, meta.chunk, vcf, index]
             }
             .groupTuple()
             .map { meta, chunk_ids, vcfs, indexes ->
@@ -93,11 +93,11 @@ workflow CALL_VARIANTS {
                     .collect { pair -> pair[1] }
                 def sorted_vcfs = order.collect { idx -> vcfs[idx] }
                 def sorted_indexes = order.collect { idx -> indexes[idx] }
-                return [meta, sorted_vcfs, sorted_indexes]
+                    return [meta, sorted_vcfs, sorted_indexes]
             }
             .branch { meta, vcfs, indexes ->
                 skip_concat: vcfs.size() == 1
-                return [meta, vcfs[0], indexes[0]]
+                    return [meta, vcfs[0], indexes[0]]
                 for_concat: vcfs.size() > 1
             }
 
