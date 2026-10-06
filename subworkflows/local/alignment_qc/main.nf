@@ -65,7 +65,7 @@ workflow ALIGNMENT_QC {
 
     emit:
     flagstat_outputs = samtools_flagstat_out.flagstat
-    riker_outputs    = riker_outputs
-    qualimap_outputs = qualimap_outputs
+    riker_outputs
+    qualimap_outputs
 
 }
