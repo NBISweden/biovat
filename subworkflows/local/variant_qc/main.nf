@@ -47,9 +47,17 @@ workflow VARIANT_QC {
     )
 
     emit:
-    bcftools_stats_output          = bcftools_stats_out.stats
-    vcftools_tstv_counts_output    = vcftools_tstv_count_out.tstv_count
-    vcftools_tstv_qual_output      = vcftools_tstv_qual_out.tstv_qual
-    vcftools_filter_summary_output = vcftools_summary_out.filter_summary
-    vcftools_relatedness2_output   = vcftools_relatedness2_out.relatedness2
+    outputs_bcftools_stats          = bcftools_stats_out.stats
+    outputs_vcftools_tstv_counts    = vcftools_tstv_count_out.tstv_count
+    outputs_vcftools_tstv_qual      = vcftools_tstv_qual_out.tstv_qual
+    outputs_vcftools_filter_summary = vcftools_summary_out.filter_summary
+    outputs_vcftools_relatedness2   = vcftools_relatedness2_out.relatedness2
+    multiqc_files                   = bcftools_stats_out.stats
+        .mix(
+            vcftools_tstv_count_out.tstv_count,
+            vcftools_tstv_qual_out.tstv_qual,
+            vcftools_summary_out.filter_summary,
+            vcftools_relatedness2_out.relatedness2,
+        )
+        .map { _meta, file -> [file] }
 }

@@ -24,7 +24,6 @@ workflow CALL_VARIANTS {
         chunk_size ?: '',
         min_length ?: ''
     )
-    ch_genome_chunks = splitgenome_out.chunks
 
     // Call variants with four alternative variant callers
     ch_variant_calls_indexed = channel.empty()
@@ -45,7 +44,7 @@ workflow CALL_VARIANTS {
         }
 
         // Group all samples into a single joint call
-        ch_joint_alignments = ch_alignment_and_index
+        ch_alignments_for_joint_call = ch_alignment_and_index
             .map { meta, alignment, index -> [dataset_name, meta.id, alignment, index] }
             .groupTuple()
             .map { group, samples, alignments, indexes ->
@@ -55,11 +54,11 @@ workflow CALL_VARIANTS {
             }
 
         // Split into genome chunks for parallelization
-        ch_intervals = ch_genome_chunks
+        ch_intervals = splitgenome_out.chunks
             .transpose()
             .map { _meta_ref, chunk_bed -> chunk_bed }
 
-        ch_joint_alignments_per_chunk = ch_joint_alignments
+        ch_alignments_for_bcftools_mpileup = ch_alignments_for_joint_call
             .combine(ch_intervals)
             .map { meta, alignments, indexes, chunk_bed ->
                 [
@@ -70,17 +69,17 @@ workflow CALL_VARIANTS {
 
         // Multi-sample variant calling
         bcftools_mpileup_multisample_out = BCFTOOLS_MPILEUP_MULTISAMPLE(
-            ch_joint_alignments_per_chunk,
+            ch_alignments_for_bcftools_mpileup,
             ch_reference_and_fai,
             enable.save_mpileup,
             requires.group_samples,
             ch_population_file,
         )
-        ch_chunk_variant_calls_indexed = bcftools_mpileup_multisample_out.vcf.join(bcftools_mpileup_multisample_out.index)
+        ch_bcftools_mpileup_for_concat = bcftools_mpileup_multisample_out.vcf.join(bcftools_mpileup_multisample_out.index)
         ch_mpileup                     = bcftools_mpileup_multisample_out.mpileup
 
         // Concatenate the genome chunks using BCFTOOLS_CONCAT
-        ch_variant_calls = ch_chunk_variant_calls_indexed
+        ch_chunk_vcfs = ch_bcftools_mpileup_for_concat
             .map { meta, vcf, index ->
                 def group_meta = [id: meta.group_id, samples: meta.samples]
                 // keep chunk id (e.g. "chunk_00002") for sorting later
@@ -104,11 +103,11 @@ workflow CALL_VARIANTS {
                 for_concat: vcfs.size() > 1
             }
 
-        bcftools_concat_out = BCFTOOLS_CONCAT(ch_variant_calls.for_concat)
+        bcftools_concat_out = BCFTOOLS_CONCAT(ch_chunk_vcfs.for_concat)
         // Join concatenated vcf files with their indexes, for variant QC and publishing.
         ch_variant_calls_indexed = bcftools_concat_out.vcf
             .join(bcftools_concat_out.index)
-            .mix(ch_variant_calls.skip_concat)
+            .mix(ch_chunk_vcfs.skip_concat)
     }
 
     // TODO: add bcftools mpileup/call per sample calling and merging/joint genotyping
@@ -120,34 +119,28 @@ workflow CALL_VARIANTS {
     // TODO: convert *.vcf from parabricks to *vcf.gz and index
 
     // CALL_VARIANTS:VARIANT_QC
-    outputs_bcftools_stats = channel.empty()
-    outputs_vcftools_tstv_counts = channel.empty()
-    outputs_vcftools_tstv_qual = channel.empty()
+    outputs_bcftools_stats          = channel.empty()
+    outputs_vcftools_tstv_counts    = channel.empty()
+    outputs_vcftools_tstv_qual      = channel.empty()
     outputs_vcftools_filter_summary = channel.empty()
-    outputs_vcftools_relatedness2 = channel.empty()
+    outputs_vcftools_relatedness2   = channel.empty()
     if (enable.variant_qc) {
         variant_qc_out = VARIANT_QC(
             ch_variant_calls_indexed,
             ch_reference_and_fai,
         )
-        ch_multiqc_files = ch_multiqc_files.mix(
-            variant_qc_out.bcftools_stats_output.map { _meta, file -> [file] },
-            variant_qc_out.vcftools_tstv_counts_output.map { _meta, file -> [file] },
-            variant_qc_out.vcftools_tstv_qual_output.map { _meta, file -> [file] },
-            variant_qc_out.vcftools_filter_summary_output.map { _meta, file -> [file] },
-            variant_qc_out.vcftools_relatedness2_output.map { _meta, file -> [file] },
-        )
-        outputs_bcftools_stats = variant_qc_out.bcftools_stats_output
-        outputs_vcftools_tstv_counts = variant_qc_out.vcftools_tstv_counts_output
-        outputs_vcftools_tstv_qual = variant_qc_out.vcftools_tstv_qual_output
-        outputs_vcftools_filter_summary = variant_qc_out.vcftools_filter_summary_output
-        outputs_vcftools_relatedness2 = variant_qc_out.vcftools_relatedness2_output
+        ch_multiqc_files                = ch_multiqc_files.mix(variant_qc_out.multiqc_files)
+        outputs_bcftools_stats          = variant_qc_out.outputs_bcftools_stats
+        outputs_vcftools_tstv_counts    = variant_qc_out.outputs_vcftools_tstv_counts
+        outputs_vcftools_tstv_qual      = variant_qc_out.outputs_vcftools_tstv_qual
+        outputs_vcftools_filter_summary = variant_qc_out.outputs_vcftools_filter_summary
+        outputs_vcftools_relatedness2   = variant_qc_out.outputs_vcftools_relatedness2
     }
 
     emit:
-    ch_genome_chunks
+    ch_genome_chunks         = splitgenome_out.chunks
     ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.tbi/csi ]
-    ch_mpileup // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
+    ch_mpileup               // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
     ch_multiqc_files
     outputs_bcftools_stats
     outputs_vcftools_tstv_counts
