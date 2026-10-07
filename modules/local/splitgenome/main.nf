@@ -31,4 +31,9 @@ process SPLITGENOME {
         ${args}
 
     """
+
+    stub:
+    """
+    touch chunk_00001.bed
+    """
 }

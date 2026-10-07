@@ -31,6 +31,7 @@ workflow PIPELINE_INITIALISATION {
     nextflow_cli_args // array: List of positional nextflow CLI args
     outdir            // string: The output directory where the results will be saved
     input             // string: Path to input samplesheet
+    sample_metadata   // string: Path to sample-level metadata sheet (optional)
     help              // boolean: Display help message and exit
     help_full         // boolean: Show the full help message
     show_hidden       // boolean: Show hidden parameters in the help message
@@ -99,10 +100,18 @@ workflow PIPELINE_INITIALISATION {
             [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
         }
 
-    // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every
-    // library sharing a sample, must agree on single_end or the merge produces a BAM with
-    // inconsistent read pairing
-    validateSampleEndedness(samplesheet_rows)
+    // Alignments are merged from read group to library to sample levels. A specific library must not mix platforms, and
+    // every alignment in a merge group must agree on single_end
+    validateMergeGroups(samplesheet_rows)
+
+    // Sample-level metadata (one row per sample) is loaded separately from readgroup level metadata.
+    // Uniqueness of sample data is enforced by the "uniqueEntries" key in assets/schema_sample_metadata.json
+    def sample_metadata_rows = sample_metadata
+        ? samplesheetToList(sample_metadata, "${projectDir}/assets/schema_sample_metadata.json").collect { row -> row[0] }
+        : []
+    // Correctness of --sample_metadata is checked against the samplesheet rows
+    validateSampleMetadata(samplesheet_rows, sample_metadata_rows)
+    def samples = samplesheet_rows.collect { meta, _files -> meta.id }.toSet()
 
     // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
     validateAlignmentConsumers(samplesheet_rows)
@@ -121,7 +130,8 @@ workflow PIPELINE_INITIALISATION {
     }
 
     emit:
-    samplesheet = channel.fromList(samplesheet_rows)
+    samplesheet           = channel.fromList(samplesheet_rows)
+    sample_metadata_sheet = channel.fromList(sample_metadata_rows.findAll { meta -> meta.id in samples })
     reference
 }
 
@@ -177,25 +187,58 @@ def validateInputParameters() {
     }
 }
 
-// Reject a samplesheet where read groups of the same library, or libraries of the same sample, mix
-// single-end and paired-end reads. Alignments are merged read-group -> library -> sample, so a mismatch
-// here would otherwise be merged into a single BAM with inconsistent read pairing.
-def validateSampleEndedness(rows) {
+// Reject a samplesheet whose rows can't be merged consistently. Alignments are merged from read group -> library
+// (grouped on sample, library and platform) -> sample (grouped on sample and platform):
+//  - a library is prepared for a single sequencing platform. Its read groups must agree on platform
+//  - every alignment in a merge group must agree on single_end, or it is merged into a single BAM with
+//    inconsistent read pairing. A sample may span platforms (e.g. paired-end ILLUMINA and single-end ONT),
+//    so libraries are only compared within a platform
+def validateMergeGroups(rows) {
     rows
         .groupBy { meta, _reads -> [ meta.id, meta.library ] }
         .each { key, group ->
             def (sample_id, library_id) = key
+            def platforms = group.collect { meta, _reads -> meta.pl }.unique()
+            if (platforms.size() > 1) {
+                validationError("Sample '${sample_id}', library '${library_id}' mixes sequencing platforms (${platforms.join(', ')}) - all lanes of a library must share the same platform.")
+            }
             if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
                 validationError("Sample '${sample_id}', library '${library_id}' mixes single-end and paired-end reads across lanes - all lanes of a library must share the same read layout.")
             }
         }
     rows
-        .groupBy { meta, _reads -> meta.id }
-        .each { sample_id, group ->
+        .groupBy { meta, _reads -> [ meta.id, meta.pl ] }
+        .each { key, group ->
+            def (sample_id, platform) = key
             if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
-                validationError("Sample '${sample_id}' mixes single-end and paired-end reads across libraries - all libraries of a sample must share the same read layout.")
+                validationError("Sample '${sample_id}' mixes single-end and paired-end reads across its ${platform} libraries - all libraries of a sample sequenced on the same platform must share the same read layout.")
             }
         }
+}
+
+// --sample_metadata is used for population grouping during variant calling
+// A sample must have a corresponding entry in the metadata file. We warn if extras are found.
+def validateSampleMetadata(rows, metadata_rows) {
+    def group_samples = params.enable_variant_calling && params.enable_group_samples
+    if ( !group_samples ) {
+        if ( params.sample_metadata ) {
+            log.warn("--sample_metadata is only used for population grouping (--enable_variant_calling with --enable_group_samples), and will be ignored.")
+        }
+        return
+    }
+    if ( !params.sample_metadata ) {
+        validationError("Grouping samples into populations (--enable_group_samples) requires --sample_metadata, with a 'population' value for every sample.")
+    }
+    def samplesheet_samples = rows.collect { meta, _files -> meta.id }.unique()
+    def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
+    def extra_samples       = metadata_supplied - samplesheet_samples
+    if ( extra_samples ) {
+        log.warn("--sample_metadata lists sample(s) not in --input, which will be ignored: ${extra_samples.join(', ')}")
+    }
+    def missing_metadata    = samplesheet_samples - metadata_rows.findAll { meta -> meta.population }.collect { meta -> meta.id }
+    if ( missing_metadata ) {
+        validationError("Grouping samples into populations (--enable_group_samples) requires a 'population' in --sample_metadata for every sample. Missing for: ${missing_metadata.join(', ')}")
+    }
 }
 
 // Alignments enter the pipeline only via ALIGN_READS or INGEST_BAM_OR_CRAM (BAM/CRAM input rows); every

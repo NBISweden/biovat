@@ -21,17 +21,18 @@ include { CALL_VARIANTS             } from '../subworkflows/local/call_variants/
 workflow BIOVAT {
 
     take:
-    ch_samplesheet   // channel: samplesheet read in from --input
-    reference        // channel: reference fasta read in from --reference
-    enable           // map: gating flags
-    requires         // map: defines internal dependency relationships
-    adapter_fasta    // channel: adapter fasta file read in from --adapter_fasta
-    aligner          // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    duplicate_marker // string: Duplicate marking tool to use (e.g. picard, samtools)
-    variant_caller   // string: Variant calling tool to use (e.g. bcftools_multisample)
-    chunk_size       // integer: Genome chunk size (bp) used for parallelization
-    min_length       // integer: Minimum contig/scaffold length to be kept
-    dataset_name     // string: File name prefix for VCF/BCF file containing all samples
+    ch_samplesheet     // channel: samplesheet read in from --input
+    ch_sample_metadata // channel: per-sample metadata read in from --sample_metadata
+    reference          // channel: reference fasta read in from --reference
+    enable             // map: gating flags
+    requires           // map: defines internal dependency relationships
+    adapter_fasta      // channel: adapter fasta file read in from --adapter_fasta
+    aligner            // string: Aligner to use for read alignment (e.g. bwa, parabricks)
+    duplicate_marker   // string: Duplicate marking tool to use (e.g. picard, samtools)
+    variant_caller     // string: Variant calling tool to use (e.g. bcftools_multisample)
+    chunk_size         // integer: Genome chunk size (bp) used for parallelization
+    min_length         // integer: Minimum contig/scaffold length to be kept
+    dataset_name       // string: File name prefix for VCF/BCF file containing all samples
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -195,7 +196,7 @@ workflow BIOVAT {
             chunk_size,
             min_length,
             alignments_to_process,
-            ch_samplesheet,
+            ch_sample_metadata,
             ch_reference_and_optional_fai,
             dataset_name,
             enable,

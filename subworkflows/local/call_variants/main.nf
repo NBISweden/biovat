@@ -13,7 +13,7 @@ workflow CALL_VARIANTS {
     chunk_size
     min_length
     ch_alignment_and_index
-    ch_samplesheet
+    ch_sample_metadata
     ch_reference_and_fai
     dataset_name
     enable
@@ -21,22 +21,20 @@ workflow CALL_VARIANTS {
 
     main:
     // Split the reference genome into chunks of chromosomes for parallelization
-    ch_fai = ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] }
-    splitgenome_out = SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
+    ch_fai           = ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] }
+    splitgenome_out  = SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
     ch_genome_chunks = splitgenome_out.chunks
 
     // Call variants with four alternative variant callers
     ch_variant_calls_indexed = channel.empty()
-    ch_mpileup = channel.empty()
+    ch_mpileup               = channel.empty()
 
     if (variant_caller == 'bcftools_multisample') {
-        // Provide the option to pass population information to bcftools call
-        // TODO: If ch_population_file is re-used in future modules, move the following code to PIPELINE_INITIALISATION
+        // Provide the option to pass population information to bcftools call (-G)
         ch_population_file = channel.value([])
         if (enable.group_samples) {
-            ch_population_file = ch_samplesheet
-                .map { meta, _reads -> "${meta.id}\t${meta.population}" }
-                .unique()
+            ch_population_file = ch_sample_metadata
+                .map { meta -> "${meta.id}\t${meta.population}" }
                 .collectFile(
                     name: 'sample_population.tsv',
                     newLine: true,
@@ -63,8 +61,11 @@ workflow CALL_VARIANTS {
         ch_joint_alignments_per_chunk = ch_joint_alignments
             .combine(ch_intervals)
             .map { meta, alignments, indexes, chunk_bed ->
-                [[id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName],
-                alignments, indexes, chunk_bed]}
+                [
+                    [id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName],
+                    alignments, indexes, chunk_bed
+                ]
+            }
 
         // Multi-sample variant calling
         bcftools_mpileup_multisample_out = BCFTOOLS_MPILEUP_MULTISAMPLE(

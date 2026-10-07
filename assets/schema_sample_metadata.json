@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/NBISweden/biovat/main/assets/schema_sample_metadata.json",
+    "title": "BioVAT pipeline - params.sample_metadata schema",
+    "description": "Schema for the file provided with params.sample_metadata: one row per sample, keyed on the sample column of params.input",
+    "type": "array",
+    "uniqueEntries": ["sample"],
+    "items": {
+        "type": "object",
+        "properties": {
+            "sample": {
+                "type": "string",
+                "pattern": "^[^\\s.]+$",
+                "errorMessage": "Sample name must be provided, cannot contain spaces or full stops",
+                "meta": ["id"]
+            },
+            "population": {
+                "type": "string",
+                "pattern": "^[^\\s.]+$",
+                "errorMessage": "Population ID, if provided, cannot contain spaces or full stops",
+                "meta": ["population"]
+            }
+        },
+        "required": ["sample"]
+    }
+}

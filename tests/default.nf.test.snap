@@ -1058,13 +1058,13 @@
                 "sample_PUN-Y-LO_ILLUMINA.flagstat:md5,a91a3e68e35dc6628bbbc9165dcc89b8",
                 "chunk_00001.bed:md5,ea7f8af552d42f96b6676372376e8d86",
                 "chunk_00002.bed:md5,bc8de844fa5c4658b0810038f8962fe6",
-                "bcftools-stats-subtypes.txt:md5,c6d2467ed593f2fcddda8fd075f75e3e",
-                "bcftools_stats_indel-lengths.txt:md5,834b3bce2aa620850b62958a12256716",
-                "bcftools_stats_variant_depths.txt:md5,92ab43a7bc9fe47d4a71ff4b51a70665",
-                "bcftools_stats_vqc_Count_Indels.txt:md5,857698a36e25622c2afd89106537e7c5",
-                "bcftools_stats_vqc_Count_SNP.txt:md5,d04f8249ecdccb89e9bbabd581a161e0",
-                "bcftools_stats_vqc_Count_Transitions.txt:md5,b76d46dc4a135acf70aebac48f91a3a8",
-                "bcftools_stats_vqc_Count_Transversions.txt:md5,12ea6af62b3b6d01c7e8918d35e71774",
+                "bcftools-stats-subtypes.txt:md5,ea78b7408fe5f66219609f6080827f35",
+                "bcftools_stats_indel-lengths.txt:md5,dccb6b4ef159426ff8d5dd9689f5fb58",
+                "bcftools_stats_variant_depths.txt:md5,76b25d0b0f722d2d111826ce2d019603",
+                "bcftools_stats_vqc_Count_Indels.txt:md5,1b4a8007da38ed58dde78e9220657fa9",
+                "bcftools_stats_vqc_Count_SNP.txt:md5,d0b6572268787281374be5d120b74af3",
+                "bcftools_stats_vqc_Count_Transitions.txt:md5,bb2939a41e2c608f68e7c5fc64b016ed",
+                "bcftools_stats_vqc_Count_Transversions.txt:md5,c584e187bace8350b5f5f0b687e9668d",
                 "fastp-insert-size-plot.txt:md5,53c6551f7576aa702901109472aa7d1c",
                 "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,f6000163362a96c1f1e42c25d8e7b2cb",
                 "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,b177515f2f23975753ee231da30c09a9",
@@ -1090,11 +1090,11 @@
                 "fastqc_raw_sequence_counts_plot.txt:md5,9b04e8fd370f75fdb167dddf0cd8ff32",
                 "fastqc_raw_sequence_duplication_levels_plot.txt:md5,70c2b8d8a4a92e6f85631f6403c79994",
                 "fastqc_raw_top_overrepresented_sequences_table.txt:md5,592adcf154f8e2aad2045a89a90dec5f",
-                "multiqc_bcftools_stats_bcftools.txt:md5,9b059973bde567517ac83f497c7d76f7",
+                "multiqc_bcftools_stats_bcftools.txt:md5,783523a1681188a70283f71835bd98f7",
                 "multiqc_citations.txt:md5,5f191b693fe416b9bf4fc88421bb4c64",
                 "multiqc_fastp_fastp.txt:md5,d15479e9e321202006e8155a6ddb057a",
                 "multiqc_fastqc_fastqc_raw.txt:md5,92c4a02050f24853e7687298ab6db9f4",
-                "multiqc_general_stats.txt:md5,24312437af80cd234296a83ec027a65a",
+                "multiqc_general_stats.txt:md5,450ab8a43084ac7c67981aae38afb776",
                 "multiqc_riker_input_alignment_riker_input.txt:md5,3897e4055e4849dec47daac669459f59",
                 "multiqc_riker_input_basic_base_distribution_riker_input.txt:md5,d8877a876e15184479e4622c365f9e61",
                 "multiqc_riker_input_basic_mean_quality_by_cycle_riker_input.txt:md5,4dd2558a98531756f747a2f8e5f1ddf9",
@@ -1248,10 +1248,10 @@
                 "06_merged_samples/PUN-Y-LO_ILLUMINA.bam:9c8ab4d7c206ee5545f1b583519206a7"
             ],
             [
-                "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz:8fa805563a2b1b6506678080bdbe22ca"
+                "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz:e1c08532a1d0d0ff8afdad99982cbfa0"
             ]
         ],
-        "timestamp": "2026-10-06T10:51:28.201090316",
+        "timestamp": "2026-10-06T15:23:44.754177998",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

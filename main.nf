@@ -18,6 +18,7 @@ params {
     // Input options
     input                       : String
     reference                   : String?
+    sample_metadata             : String?
 
     // Workflow stage gating options
     enable_raw_read_qc          : Boolean
@@ -92,8 +93,9 @@ params {
 workflow NBISWEDEN_BIOVAT {
 
     take:
-    samplesheet // channel: samplesheet read in from --input
-    reference   // channel: reference fasta read in from --reference
+    samplesheet     // channel: samplesheet read in from --input
+    sample_metadata // channel: per-sample metadata read in from --sample_metadata
+    reference       // channel: reference fasta read in from --reference
 
     main:
     // Gating parameters, passed as a single map
@@ -116,6 +118,7 @@ workflow NBISWEDEN_BIOVAT {
 
     biovat_out = BIOVAT(
         samplesheet,
+        sample_metadata,
         reference,
         enable,
         requires,
@@ -177,12 +180,14 @@ workflow {
         args,
         params.outdir,
         params.input,
+        params.sample_metadata,
         params.help,
         params.help_full,
         params.show_hidden,
     )
     nbisweden_biovat_out = NBISWEDEN_BIOVAT(
         pipeline_initialisation_out.samplesheet,
+        pipeline_initialisation_out.sample_metadata_sheet,
         pipeline_initialisation_out.reference
     )
     PIPELINE_COMPLETION(

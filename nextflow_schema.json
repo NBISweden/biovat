@@ -30,6 +30,17 @@
                     "description": "Path to reference genome FASTA file.",
                     "help_text": "Provide a reference genome FASTA file against which reads will be aligned."
                 },
+                "sample_metadata": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "schema": "assets/schema_sample_metadata.json",
+                    "mimetype": "text/csv",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "Path to comma-separated file with per-sample metadata (e.g. population), keyed on the sample column of --input.",
+                    "help_text": "One row per sample, with a 'sample' column matching the 'sample' column of --input, plus optional metadata columns. Required when --enable_group_samples is set, in which case every sample must have a 'population'.",
+                    "fa_icon": "fas fa-file-csv"
+                },
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",

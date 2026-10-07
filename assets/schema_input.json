@@ -76,15 +76,9 @@
                 "type": "boolean",
                 "errorMessage": "BAM/CRAM input only: must be true (single-end data) or false (paired-end data)",
                 "meta": ["single_end"]
-            },
-            "population": {
-                "type": "string",
-                "pattern": "^[^\\s.]+$",
-                "errorMessage": "Population ID for grouping of samples must be provided, cannot contain spaces or full stops",
-                "meta": ["population"]
             }
         },
-        "required": ["sample", "library_id", "flowcell_id", "lane", "platform", "population"],
+        "required": ["sample", "library_id", "flowcell_id", "lane", "platform"],
         "oneOf": [
             {
                 "required": ["fastq_1"],

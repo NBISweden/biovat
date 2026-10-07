@@ -1,4 +1,4 @@
-sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end,population
-SAMPLE_1,1,AEG588A1,2,ILLUMINA,/path/to/fastq/files/AEG588A1_S1_L002_R1_001.fastq.gz,/path/to/fastq/files/AEG588A1_S1_L002_R2_001.fastq.gz,,,popA
-SAMPLE_1,1,AEG588A1,3,ILLUMINA,/path/to/fastq/files/AEG588A1_S1_L003_R1_001.fastq.gz,/path/to/fastq/files/AEG588A1_S1_L003_R2_001.fastq.gz,,,popA
-SAMPLE_2,1,AEG588A2,2,ILLUMINA,,,/path/to/bam/files/AEG588A2_S2_L002.bam,false,popA
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end
+SAMPLE_1,1,AEG588A1,2,ILLUMINA,/path/to/fastq/files/AEG588A1_S1_L002_R1_001.fastq.gz,/path/to/fastq/files/AEG588A1_S1_L002_R2_001.fastq.gz,,
+SAMPLE_1,1,AEG588A1,3,ILLUMINA,/path/to/fastq/files/AEG588A1_S1_L003_R1_001.fastq.gz,/path/to/fastq/files/AEG588A1_S1_L003_R2_001.fastq.gz,,
+SAMPLE_2,1,AEG588A2,2,ILLUMINA,,,/path/to/bam/files/AEG588A2_S2_L002.bam,false
