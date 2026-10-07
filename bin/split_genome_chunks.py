@@ -10,7 +10,9 @@ chromosome order.
 Input: a BED file specifying reference genome chromosomes
 or regions or a samtools FAI index.
 Output: one or more BED files named `chunk_00001.bed` through
-`chunk_XXXXX.bed`.
+`chunk_XXXXX.bed`, plus `excluded_regions.tsv` (regions dropped by
+--min_length) and `genome_chunking_mqc.tsv` (a MultiQC custom-content
+summary table).
 
 Code was written with assistance from Claude.
 """
@@ -56,15 +58,54 @@ def main(argv=None):
 
     def kept_regions(region_list):
         kept = []
+        dropped = []
         for chrom, start, end, length in region_list:
             if length < args.min_length:
+                dropped.append((chrom, length))
                 continue
             kept.append((chrom, start, end, length))
         if not kept:
             sys.exit(
                 f"ERROR: all chromosomes were filtered out by --min_length={args.min_length}."
             )
-        return kept
+        if dropped:
+            # Kept on stderr for the task log; the pipeline also reports exclusions via the output files
+            dropped_bp = sum(length for _, length in dropped)
+            total_bp = dropped_bp + sum(length for *_, length in kept)
+            shown = ", ".join(chrom for chrom, _ in dropped[:10])
+            more = f" and {len(dropped) - 10} more" if len(dropped) > 10 else ""
+            print(
+                f"[split_genome_chunks] WARNING: --min_length ({args.min_length}) "
+                f"excluded {len(dropped)} of {len(region_list)} regions "
+                f"({dropped_bp} of {total_bp} bp, {100 * dropped_bp / total_bp:.2f}%) "
+                f"from variant calling: {shown}{more}.",
+                file=sys.stderr,
+            )
+        return kept, dropped
+
+    def write_excluded(dropped):
+        with (args.output_dir / "excluded_regions.tsv").open("w") as out:
+            out.write("chrom\tlength\n")
+            for chrom, length in dropped:
+                out.write(f"{chrom}\t{length}\n")
+
+    def write_mqc_summary(kept, dropped, chunk_size, chunks):
+        kept_bp = sum(length for *_, length in kept)
+        dropped_bp = sum(length for _, length in dropped)
+        excluded_pct = 100 * dropped_bp / (kept_bp + dropped_bp)
+        reference = args.input.name.removesuffix(".fai")
+        with (args.output_dir / "genome_chunking_mqc.tsv").open("w") as out:
+            out.write(
+                "# id: 'genome_chunking'\n"
+                "# section_name: 'Genome chunking'\n"
+                f"# description: 'Reference regions used for variant calling. Regions shorter than --min_length ({args.min_length} bp) are excluded and listed in genome_chunk_bed_files/excluded_regions.tsv.'\n"
+                "# plot_type: 'table'\n"
+                "# pconfig:\n"
+                "#     id: 'genome_chunking_table'\n"
+                "#     namespace: 'Genome chunking'\n"
+            )
+            out.write("Reference\tRegions kept\tRegions excluded\tBp kept\tBp excluded\tExcluded %\tChunk size\tChunks\n")
+            out.write(f"{reference}\t{len(kept)}\t{len(dropped)}\t{kept_bp}\t{dropped_bp}\t{excluded_pct:.2f}\t{chunk_size}\t{chunks}\n")
 
     def find_chunk_size(chunk_size, longest):
         if chunk_size is None:
@@ -83,7 +124,7 @@ def main(argv=None):
     regions = list(read_regions(args.input))
 
     # Filter by min_length and find the longest chromosome
-    kept = kept_regions(regions)
+    kept, dropped = kept_regions(regions)
     longest = max(length for *_, length in kept)
 
     # Resolve chunk size
@@ -116,6 +157,9 @@ def main(argv=None):
 
     if current_lines:
         write_chunk()  # write the final chunk
+
+    write_excluded(dropped)
+    write_mqc_summary(kept, dropped, chunk_size, written_chunks)
 
     # stderr report
     print(

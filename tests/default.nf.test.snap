@@ -590,6 +590,7 @@
                 "07_variant_calls/genome_chunk_bed_files",
                 "07_variant_calls/genome_chunk_bed_files/chunk_00001.bed",
                 "07_variant_calls/genome_chunk_bed_files/chunk_00002.bed",
+                "07_variant_calls/genome_chunk_bed_files/excluded_regions.tsv",
                 "07_variant_calls/qc",
                 "07_variant_calls/qc/bcftools_stats",
                 "07_variant_calls/qc/bcftools_stats/Diplacus_puniceus_red_yellow.bcftools_stats.txt",
@@ -641,6 +642,7 @@
                 "multiqc/multiqc_data/multiqc_fastp_fastp.txt",
                 "multiqc/multiqc_data/multiqc_fastqc_fastqc_raw.txt",
                 "multiqc/multiqc_data/multiqc_general_stats.txt",
+                "multiqc/multiqc_data/multiqc_genome_chunking_table.txt",
                 "multiqc/multiqc_data/multiqc_riker_input_alignment_riker_input.txt",
                 "multiqc/multiqc_data/multiqc_riker_input_basic_base_distribution_riker_input.txt",
                 "multiqc/multiqc_data/multiqc_riker_input_basic_mean_quality_by_cycle_riker_input.txt",
@@ -1058,6 +1060,7 @@
                 "sample_PUN-Y-LO_ILLUMINA.flagstat:md5,a91a3e68e35dc6628bbbc9165dcc89b8",
                 "chunk_00001.bed:md5,ea7f8af552d42f96b6676372376e8d86",
                 "chunk_00002.bed:md5,bc8de844fa5c4658b0810038f8962fe6",
+                "excluded_regions.tsv:md5,33d86121abc621cf925583b0407bb452",
                 "bcftools-stats-subtypes.txt:md5,ea78b7408fe5f66219609f6080827f35",
                 "bcftools_stats_indel-lengths.txt:md5,dccb6b4ef159426ff8d5dd9689f5fb58",
                 "bcftools_stats_variant_depths.txt:md5,76b25d0b0f722d2d111826ce2d019603",
@@ -1095,6 +1098,7 @@
                 "multiqc_fastp_fastp.txt:md5,d15479e9e321202006e8155a6ddb057a",
                 "multiqc_fastqc_fastqc_raw.txt:md5,92c4a02050f24853e7687298ab6db9f4",
                 "multiqc_general_stats.txt:md5,450ab8a43084ac7c67981aae38afb776",
+                "multiqc_genome_chunking_table.txt:md5,d6bdcd7bc3f42aef45ad834cf1a4d165",
                 "multiqc_riker_input_alignment_riker_input.txt:md5,3897e4055e4849dec47daac669459f59",
                 "multiqc_riker_input_basic_base_distribution_riker_input.txt:md5,d8877a876e15184479e4622c365f9e61",
                 "multiqc_riker_input_basic_mean_quality_by_cycle_riker_input.txt:md5,4dd2558a98531756f747a2f8e5f1ddf9",
@@ -1251,7 +1255,7 @@
                 "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz:e1c08532a1d0d0ff8afdad99982cbfa0"
             ]
         ],
-        "timestamp": "2026-10-06T15:23:44.754177998",
+        "timestamp": "2026-10-07T14:59:53.157786258",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

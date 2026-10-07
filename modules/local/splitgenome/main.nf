@@ -14,6 +14,8 @@ process SPLITGENOME {
 
     output:
     tuple val(meta), path("chunk_*.bed"), emit: chunks
+    tuple val(meta), path("excluded_regions.tsv"), emit: excluded
+    tuple val(meta), path("genome_chunking_mqc.tsv"), emit: summary
     tuple val("${task.process}"), val('python'), eval("python --version | sed '1!d;s/.* //'"), topic: versions, emit: versions_python
 
     when:
@@ -35,5 +37,7 @@ process SPLITGENOME {
     stub:
     """
     touch chunk_00001.bed
+    touch excluded_regions.tsv
+    touch genome_chunking_mqc.tsv
     """
 }

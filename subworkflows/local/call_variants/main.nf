@@ -24,6 +24,22 @@ workflow CALL_VARIANTS {
         chunk_size ?: '',
         min_length ?: ''
     )
+    ch_multiqc_files = ch_multiqc_files.mix(splitgenome_out.summary.map { _meta, file -> [file] })
+
+    // Make --min_length exclusions visible on the console when they cover more than 5% of the reference
+    splitgenome_out.summary.subscribe { _meta, summary ->
+        def rows = summary.readLines().findAll { line -> line && !line.startsWith('#') }.collect { line -> line.tokenize('\t') }
+        if (rows.size() == 2) {
+            def stats = [rows[0], rows[1]].transpose().collectEntries { header, value -> [(header): value] }
+            if (stats['Excluded %'].toDouble() > 5) {
+                log.warn(
+                    "--min_length (${min_length} bp) excluded ${stats['Regions excluded']} reference regions " +
+                    "(${stats['Bp excluded']} bp, ${stats['Excluded %']}% of the reference) from variant calling. " +
+                    "They are listed in genome_chunk_bed_files/excluded_regions.tsv."
+                )
+            }
+        }
+    }
 
     // Call variants with four alternative variant callers
     ch_variant_calls_indexed = channel.empty()
@@ -133,7 +149,7 @@ workflow CALL_VARIANTS {
     }
 
     emit:
-    ch_genome_chunks         = splitgenome_out.chunks
+    ch_genome_chunks         = splitgenome_out.chunks.join(splitgenome_out.excluded) // channel: [ meta, chunk_*.bed, excluded_regions.tsv ]
     ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.tbi/csi ]
     ch_mpileup               // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
     ch_multiqc_files

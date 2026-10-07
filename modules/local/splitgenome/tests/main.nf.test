@@ -39,9 +39,15 @@ nextflow_process {
                 .with { it instanceof List ? it : [it] }
                 .collectMany { bed -> path(bed).readLines() }
                 .collect { line -> line.tokenize('\t')[0] }
+            def stderr = path(process.out.chunks[0][1][0]).getParent().resolve('.command.err').text
+            def excluded = path(process.out.excluded[0][1]).readLines()
+            def summary = path(process.out.summary[0][1]).readLines().findAll { line -> !line.startsWith('#') }
             assertAll(
                 { assert process.success },
-                { assert contigs == ['LG4_1', 'LG4_2'] }
+                { assert contigs == ['LG4_1', 'LG4_2'] },
+                { assert excluded == ['chrom\tlength', 'LG4_3\t940'] },
+                { assert summary[1].tokenize('\t') == ['M_aurantiacus_v1_splitline_ordered.fasta', '2', '1', '99060', '940', '0.94', '51180', '2'] },
+                { assert stderr.contains('excluded 1 of 3 regions (940 of 100000 bp') && stderr.contains('LG4_3') }
             )
         }
     }
@@ -65,7 +71,8 @@ nextflow_process {
                 .collect { line -> line.tokenize('\t')[0] }
             assertAll(
                 { assert process.success },
-                { assert contigs == ['LG4_1', 'LG4_2', 'LG4_3'] }
+                { assert contigs == ['LG4_1', 'LG4_2', 'LG4_3'] },
+                { assert path(process.out.excluded[0][1]).readLines() == ['chrom\tlength'] }
             )
         }
     }

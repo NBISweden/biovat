@@ -8,6 +8,10 @@ report_section_order:
     order: -1001
   "NBISweden-biovat-summary":
     order: -1002
+  # Custom content from SPLITGENOME (genome_chunking_mqc.tsv), placed right before the variant calling metrics.
+  # MultiQC (1.35) renders module-level positions in reverse, so `after` here places it *before* bcftools.
+  genome_chunking:
+    after: "bcftools"
 
 module_order:
   - fastqc:

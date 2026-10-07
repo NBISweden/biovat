@@ -181,12 +181,14 @@
                 },
                 "chunk_size": {
                     "type": "integer",
-                    "description": "Genome chunk size (bp) used for parallelization. Defaults to the longest chromosome. Increase to run variant calling on fewer and larger chunks."
+                    "description": "Genome chunk size (bp) used for parallelization. Defaults to the longest chromosome; can only be raised, not lowered.",
+                    "help_text": "Whole chromosomes/scaffolds are grouped, in reference order, into chunks of about this many bp; each chunk is called as a separate task. Chromosomes are never split, so the chunk size can't be smaller than the longest chromosome: a smaller value is raised to that length (with a warning in the SPLITGENOME task log). Increase it to run variant calling on fewer, larger chunks. A value at or above the total genome size gives a single chunk."
                 },
                 "min_length": {
                     "type": "integer",
                     "default": 1000,
-                    "description": "Minimum contig/scaffold length to be kept."
+                    "description": "Minimum contig/scaffold length (bp) to be kept for variant calling.",
+                    "help_text": "Chromosomes/scaffolds shorter than this are excluded from variant calling and will not appear in the VCF. Excluded regions are listed in genome_chunk_bed_files/excluded_regions.tsv and summarised in the MultiQC report, with a console warning if they exceed 5% of the reference. Set to 0 to keep all regions."
                 },
                 "enable_save_mpileup": {
                     "type": "boolean",
