@@ -19,6 +19,7 @@
 
 input: "assets/samplesheet.csv" # Path to comma-separated file containing information about the samples
 reference: "tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta" # Path to reference genome FASTA file
+# sample_metadata: "assets/sample_metadata.csv" # Path to comma-separated file with per-sample metadata (e.g. population). Providing it groups samples by population during variant calling
 outdir: "results" # The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.
 # publish_dir_mode: "copy" # How to publish results to the output directory (accepted: copy, symlink, move, rellink, link, copyNoFollow). Default: copy
 
@@ -39,6 +40,7 @@ enable_mark_duplicates: true # Boolean: mark or remove duplicate reads in alignm
 
 ## Variant calling
 enable_variant_calling: true # Boolean: call variants from alignment files (BAM/CRAM)
+enable_variant_qc: true # Boolean: run quality checks on variant files (VCF)
 
 
 ## =============================================================================
@@ -49,6 +51,8 @@ enable_variant_calling: true # Boolean: call variants from alignment files (BAM/
 
 ## Read trimming
 # adapter_fasta: "/path/to/custom_adapters.fasta"
+# enable_save_trimmed_fail: true # Boolean: save reads that failed trimming thresholds (*.fail.fastq.gz). Default: false
+# enable_save_merged: true # Boolean: save merged reads (*.merged.fastq.gz). Default: false
 
 ## Read trimming and alignment
 

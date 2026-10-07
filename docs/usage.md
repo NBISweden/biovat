@@ -89,12 +89,29 @@ For a full list of available parameters and their defaults, run:
 nextflow main.nf --help
 ```
 
-### Genome chunking for variant calling
+### Variant calling
+
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. 
+
+- `--variant_caller` selects the caller
+- `--enable_variant_qc` (default `true`) runs quality checks on the final VCF
+
+#### Genome chunking
 
 Variant calling is parallelised over genome chunks. The reference `.fai` index is split into chunks by grouping whole chromosomes/scaffolds, in reference order, until a chunk reaches `--chunk_size` bp; each chunk is then called as a separate task and the results are concatenated into one VCF. Chromosomes are never split across chunks, so reads spanning a chunk boundary can't affect calls. As a result, chunk sizes vary.
 
 - `--chunk_size` defaults to the length of the longest chromosome, which gives the most chunks (and parallel tasks) possible. It can only be raised: a value below the longest chromosome is reset to that length, with a warning in the `SPLITGENOME` task log. Raise it to run fewer, larger chunks; a value at or above the total genome size gives a single chunk.
 - `--min_length` (default `1000`) excludes chromosomes/scaffolds shorter than this many bp from variant calling, so they won't appear in the VCF. Set it to `0` to keep everything. Excluded regions are listed in `07_variant_calls/genome_chunk_bed_files/excluded_regions.tsv` (next to the `chunk_*.bed` files listing the regions that were kept) and summarised in the "Genome chunking" table of the MultiQC report. If they make up more than 5% of the reference, the pipeline also prints a warning on the console.
+
+#### BCFtools multi-sample calling
+
+Alignments are first merged to one per sample (see [Samplesheet input](#samplesheet-input)), and all samples are then called jointly into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.vcf.gz`.
+
+- `--dataset_name` (default `all_samples`) sets the file name prefix of the joint VCF and its index.
+- `--sample_metadata` groups samples into populations during calling; see [Sample metadata](#sample-metadata).
+- `--bcftools_mpileup_extra` (default `--no-BAQ`) is passed to `bcftools mpileup`, e.g. `'--no-BAQ --min-BQ 20 --min-MQ 20'` to filter on base and mapping quality. The reference, output type and genome-chunk regions are set by the pipeline and shouldn't be given here.
+- `--bcftools_call_extra` (default `--multiallelic-caller --variants-only`) is passed to `bcftools call`. Setting it **replaces** the default rather than adding to it, so keep a calling model (`--multiallelic-caller` or `--consensus-caller`), which `bcftools call` requires, and keep `--variants-only` unless you want every site (including invariant ones) in the VCF, which makes it far larger.
+- `--enable_save_mpileup` (default `false`) also saves the intermediate `bcftools mpileup` output (BCF with genotype likelihoods for all sites), one file per genome chunk. These files can get very large.
 
 ## Running the pipeline
 
