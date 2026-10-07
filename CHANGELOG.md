@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Variant calling workflow with BCFtools (multi-sample variant calling)
 - Genome chunking support for parallelized variant calling
 - Variant QC workflow
+- Optional sample-level metadata sheet (`--sample_metadata`, one row per sample) kept separate from the samplesheet; currently holds `population`. When provided with variant calling enabled, samples are grouped into populations in `bcftools call` (`--group-samples`), replacing a dedicated `--enable_group_samples` flag
 - BAM/CRAM samplesheet input (`bam` column): each file's `@RG` header is validated against its samplesheet row; files with no `@RG` line get one built from the samplesheet (`samtools addreplacerg`), and files with several `@RG` lines or missing/mismatched tags are rejected (`PL` is matched case-insensitively, per the SAM spec)
 - Samplesheet `platform` restricted to the uppercase SAM spec `@RG PL` values (e.g. `ILLUMINA`)
 
