@@ -53,7 +53,6 @@ params {
     chunk_size                  : Integer?
     min_length                  : Integer
     enable_save_mpileup         : Boolean
-    enable_group_samples        : Boolean
     bcftools_mpileup_extra      : String
     bcftools_call_extra         : String
 
@@ -108,7 +107,9 @@ workflow NBISWEDEN_BIOVAT {
         // MERGE_TO_LIBRARY (readgroup -> library) and MERGE_TO_SAMPLE (library -> sample, post-deduplication)
         // are triggered when a downstream consumer needs alignments merged to respective levels
         merge_to_library: enable.mark_duplicates,
-        merge_to_sample : enable.variant_calling
+        merge_to_sample : enable.variant_calling,
+        // Providing --sample_metadata groups samples into populations during variant calling
+        group_samples   : enable.variant_calling && params.sample_metadata as boolean
     ]
     def merge_active = requires.merge_to_library || requires.merge_to_sample
 

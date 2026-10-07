@@ -197,6 +197,7 @@ workflow BIOVAT {
             min_length,
             alignments_to_process,
             ch_sample_metadata,
+            requires,
             ch_reference_and_optional_fai,
             dataset_name,
             enable,

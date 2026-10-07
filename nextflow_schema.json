@@ -38,7 +38,7 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file with per-sample metadata (e.g. population), keyed on the sample column of --input.",
-                    "help_text": "One row per sample, with a 'sample' column matching the 'sample' column of --input, plus optional metadata columns. Required when --enable_group_samples is set, in which case every sample must have a 'population'.",
+                    "help_text": "One row per sample, with a 'sample' column matching the 'sample' column of --input, plus optional metadata columns. When variant calling with bcftools_multisample, providing this sheet groups samples into populations (bcftools call --group-samples), so every sample must then have a 'population'.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -191,10 +191,6 @@
                 "enable_save_mpileup": {
                     "type": "boolean",
                     "description": "BCFtools multi-sample: save the intermediate bcftools mpileup output. Note that this file can get very large."
-                },
-                "enable_group_samples": {
-                    "type": "boolean",
-                    "description": "BCFtools multi-sample: group samples into populations and apply the HWE assumption within but not across the populations in bcftools call."
                 },
                 "bcftools_mpileup_extra": {
                     "type": "string",

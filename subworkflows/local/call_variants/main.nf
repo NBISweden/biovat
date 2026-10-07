@@ -1,7 +1,3 @@
-//
-// Variant calling subworkflow
-//
-
 include { SPLITGENOME                  } from '../../../modules/local/splitgenome/main'
 include { BCFTOOLS_MPILEUP_MULTISAMPLE } from '../../../modules/local/bcftools/mpileup_multisample/main'
 include { BCFTOOLS_CONCAT              } from '../../../modules/nf-core/bcftools/concat/main'
@@ -9,11 +5,12 @@ include { VARIANT_QC                   } from '../variant_qc/main'
 
 workflow CALL_VARIANTS {
     take:
-    variant_caller
-    chunk_size
-    min_length
+    variant_caller         // string: variant caller to use
+    chunk_size             // string: chunk size for splitting genome into chunks for parallelization
+    min_length             // string: minimum contig length when splitting genome into chunks for parallelization
     ch_alignment_and_index
-    ch_sample_metadata
+    ch_sample_metadata     // channel: sample metadata for population grouping during variant calling
+    requires               // map: stage/tool gating flags
     ch_reference_and_fai
     dataset_name
     enable
@@ -22,7 +19,11 @@ workflow CALL_VARIANTS {
     main:
     // Split the reference genome into chunks of chromosomes for parallelization
     ch_fai           = ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] }
-    splitgenome_out  = SPLITGENOME(ch_fai, chunk_size ?: '', min_length ?: '')
+    splitgenome_out  = SPLITGENOME(
+        ch_fai,
+        chunk_size ?: '',
+        min_length ?: ''
+    )
     ch_genome_chunks = splitgenome_out.chunks
 
     // Call variants with four alternative variant callers
@@ -32,7 +33,7 @@ workflow CALL_VARIANTS {
     if (variant_caller == 'bcftools_multisample') {
         // Provide the option to pass population information to bcftools call (-G)
         ch_population_file = channel.value([])
-        if (enable.group_samples) {
+        if (requires.group_samples) {
             ch_population_file = ch_sample_metadata
                 .map { meta -> "${meta.id}\t${meta.population}" }
                 .collectFile(
@@ -72,11 +73,11 @@ workflow CALL_VARIANTS {
             ch_joint_alignments_per_chunk,
             ch_reference_and_fai,
             enable.save_mpileup,
-            enable.group_samples,
+            requires.group_samples,
             ch_population_file,
         )
         ch_chunk_variant_calls_indexed = bcftools_mpileup_multisample_out.vcf.join(bcftools_mpileup_multisample_out.index)
-        ch_mpileup = bcftools_mpileup_multisample_out.mpileup
+        ch_mpileup                     = bcftools_mpileup_multisample_out.mpileup
 
         // Concatenate the genome chunks using BCFTOOLS_CONCAT
         ch_variant_calls = ch_chunk_variant_calls_indexed

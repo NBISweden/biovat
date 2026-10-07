@@ -216,18 +216,11 @@ def validateMergeGroups(rows) {
         }
 }
 
-// --sample_metadata is used for population grouping during variant calling
-// A sample must have a corresponding entry in the metadata file. We warn if extras are found.
+// --sample_metadata, when provided, groups samples into populations during variant calling (unused otherwise)
+// Every sample must then have a population in the metadata file. We warn if extras are found.
 def validateSampleMetadata(rows, metadata_rows) {
-    def group_samples = params.enable_variant_calling && params.enable_group_samples
-    if ( !group_samples ) {
-        if ( params.sample_metadata ) {
-            log.warn("--sample_metadata is only used for population grouping (--enable_variant_calling with --enable_group_samples), and will be ignored.")
-        }
+    if ( !(params.enable_variant_calling && params.sample_metadata) ) {
         return
-    }
-    if ( !params.sample_metadata ) {
-        validationError("Grouping samples into populations (--enable_group_samples) requires --sample_metadata, with a 'population' value for every sample.")
     }
     def samplesheet_samples = rows.collect { meta, _files -> meta.id }.unique()
     def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
@@ -237,7 +230,7 @@ def validateSampleMetadata(rows, metadata_rows) {
     }
     def missing_metadata    = samplesheet_samples - metadata_rows.findAll { meta -> meta.population }.collect { meta -> meta.id }
     if ( missing_metadata ) {
-        validationError("Grouping samples into populations (--enable_group_samples) requires a 'population' in --sample_metadata for every sample. Missing for: ${missing_metadata.join(', ')}")
+        validationError("Variant calling with --sample_metadata groups samples into populations, which requires a 'population' for every sample. Missing for: ${missing_metadata.join(', ')}")
     }
 }
 

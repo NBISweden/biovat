@@ -70,12 +70,12 @@ S2,popA
 S3,popB
 ```
 
-| Column       | Description                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------- |
-| `sample`     | Sample identifier, matching the `sample` column of `--input`. Each sample may appear only once                |
-| `population` | Population identifier for grouping of samples. Required for every sample when `--enable_group_samples` is set |
+| Column       | Description                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| `sample`     | Sample identifier, matching the `sample` column of `--input`. Each sample may appear only once |
+| `population` | Population identifier for grouping of samples. Required for every sample when used             |
 
-`--sample_metadata` is used for population grouping in variant calling (`--enable_group_samples`), which requires a `population` for every sample in `--input`. Samples listed in `--sample_metadata` but not in `--input` are ignored with a warning. An [example sample metadata sheet](../assets/sample_metadata.csv) has been provided with the pipeline.
+Providing `--sample_metadata` turns on population grouping in variant calling (`bcftools call --group-samples`, which applies the HWE assumption within but not across populations), and so requires a `population` for every sample in `--input`. It is ignored when `--enable_variant_calling` is off. Samples listed in `--sample_metadata` but not in `--input` are ignored with a warning. An [example sample metadata sheet](../assets/sample_metadata.csv) has been provided with the pipeline.
 
 ## Configuring the pipeline
 

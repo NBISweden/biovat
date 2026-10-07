@@ -33,7 +33,7 @@ SAMPLE_2,1,AEG588A2,2,ILLUMINA,,,/path/to/AEG588A2_S2_L002.bam,false
 
 Each row represents a set of paired-end FASTQ files generated from a specific sample library and run on a specific flowcell lane. A row can instead supply an already-aligned BAM/CRAM file via the `bam` column, in which case `single_end` must also be set; see the [usage documentation](docs/usage.md#samplesheet-input) for details.
 
-Per-sample information, such as population, goes in a separate samplesheet with one row per sample, passed via `--sample_metadata`. It is only required when grouping samples into populations for variant calling (`--enable_group_samples`); see [sample metadata](docs/usage.md#sample-metadata) and the example sheet `assets/sample_metadata.csv`.
+Per-sample information, such as population, goes in a separate samplesheet with one row per sample, passed via `--sample_metadata`. When provided with variant calling enabled, samples are grouped into populations for variant calling; see [sample metadata](docs/usage.md#sample-metadata) and the example sheet `assets/sample_metadata.csv`.
 
 `sample_metadata.csv`:
 
