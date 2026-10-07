@@ -314,7 +314,11 @@ output {
         path '07_variant_calls/genome_chunk_bed_files'
     }
     outputs_variant_calls {
-        path '07_variant_calls'
+        path { meta, vcf, index ->
+            // Named from the group meta, as a single-chunk call skips BCFTOOLS_CONCAT and keeps its chunk file name
+            vcf   >> "07_variant_calls/${meta.id}.vcf.gz"
+            index >> "07_variant_calls/${meta.id}.vcf.gz.${index.extension}"
+        }
     }
     outputs_mpileup {
         path '07_variant_calls'

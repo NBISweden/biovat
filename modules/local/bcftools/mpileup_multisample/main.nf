@@ -25,14 +25,14 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
-    def args2 = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def intervals_cmd = intervals ? "-T ${intervals}" : ""
-    def mpileup = save_mpileup ? "| tee ${prefix}.mpileup" : ""
-    def bgzip_mpileup = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
+    def args                   = task.ext.args ?: ''
+    def args2                  = task.ext.args2 ?: ''
+    def prefix                 = task.ext.prefix ?: "${meta.id}"
+    def intervals_cmd          = intervals ? "-T ${intervals}" : ""
+    def mpileup                = save_mpileup ? "| tee ${prefix}.mpileup" : ""
+    def bgzip_mpileup          = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
     def annotate_format_ad_cmd = group_samples ? "-a AD" : ""
-    def group_samples_cmd = group_samples ? "--group-samples ${population_file}" : ""
+    def group_samples_cmd      = group_samples ? "--group-samples ${population_file}" : ""
     """
     bcftools \\
         mpileup \\

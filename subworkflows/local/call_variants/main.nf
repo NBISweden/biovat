@@ -97,6 +97,7 @@ workflow CALL_VARIANTS {
                 def sorted_indexes = order.collect { idx -> indexes[idx] }
                     return [meta, sorted_vcfs, sorted_indexes]
             }
+            // A single chunk skips concatenation; it is renamed to the group meta id when published (main.nf)
             .branch { meta, vcfs, indexes ->
                 skip_concat: vcfs.size() == 1
                     return [meta, vcfs[0], indexes[0]]
