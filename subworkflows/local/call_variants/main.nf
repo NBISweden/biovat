@@ -88,13 +88,8 @@ workflow CALL_VARIANTS {
             .groupTuple()
             .map { meta, chunk_ids, vcfs, indexes ->
                 // sort files by chunk_id to preserve genomic order
-                def order = chunk_ids
-                    .withIndex()
-                    .sort { a, b -> a[0] <=> b[0] }
-                    .collect { pair -> pair[1] }
-                def sorted_vcfs = order.collect { idx -> vcfs[idx] }
-                def sorted_indexes = order.collect { idx -> indexes[idx] }
-                    return [meta, sorted_vcfs, sorted_indexes]
+                def sorted = [chunk_ids, vcfs, indexes].transpose().sort { row -> row[0] }
+                [meta, sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
             }
             // A single chunk skips concatenation; it is renamed to the group meta id when published (main.nf)
             .branch { meta, vcfs, indexes ->

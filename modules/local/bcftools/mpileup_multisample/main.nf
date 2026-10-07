@@ -16,7 +16,7 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     path population_file
 
     output:
-    tuple val(meta), path("*vcf.gz"), emit: vcf
+    tuple val(meta), path("*.vcf.gz"), emit: vcf
     tuple val(meta), path("*.{tbi,csi}"), emit: index, optional: true
     tuple val(meta), path("*.mpileup.gz"), emit: mpileup, optional: true
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version | sed '1!d; s/^.*bcftools //'"), topic: versions, emit: versions_bcftools
@@ -28,7 +28,6 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     def args                   = task.ext.args ?: ''
     def args2                  = task.ext.args2 ?: ''
     def prefix                 = task.ext.prefix ?: "${meta.id}"
-    def intervals_cmd          = intervals ? "-T ${intervals}" : ""
     def mpileup                = save_mpileup ? "| tee ${prefix}.mpileup" : ""
     def bgzip_mpileup          = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
     def annotate_format_ad_cmd = group_samples ? "-a AD" : ""
@@ -40,13 +39,12 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         --output-type u \\
         ${args} \\
         ${bams} \\
-        ${intervals_cmd} \\
+        -R ${intervals} \\
         ${annotate_format_ad_cmd} \\
         ${mpileup} \\
         | bcftools call \\
         --output-type z \\
         ${args2} \\
-        ${intervals_cmd} \\
         ${group_samples_cmd} \\
         --output ${prefix}.vcf.gz
 
