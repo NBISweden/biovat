@@ -36,6 +36,7 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         mpileup \\
         --fasta-ref ${fasta} \\
         --output-type u \\
+        --annotate FORMAT/DP \\
         ${args} \\
         ${bams} \\
         -R ${intervals} \\

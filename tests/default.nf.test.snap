@@ -1252,10 +1252,10 @@
                 "06_merged_samples/PUN-Y-LO_ILLUMINA.bam:9c8ab4d7c206ee5545f1b583519206a7"
             ],
             [
-                "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz:e1c08532a1d0d0ff8afdad99982cbfa0"
+                "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz:595340ad8ab1034adf11cd022d38ec84"
             ]
         ],
-        "timestamp": "2026-10-07T14:59:53.157786258",
+        "timestamp": "2026-10-08T14:40:06.933142804",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
