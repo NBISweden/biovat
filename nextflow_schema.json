@@ -203,7 +203,7 @@
                 },
                 "bcftools_call_extra": {
                     "type": "string",
-                    "default": "--multiallelic-caller --variants-only",
+                    "default": "--variants-only",
                     "description": "BCFtools multi-sample: additional command line arguments passed to bcftools call."
                 }
             }

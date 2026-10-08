@@ -105,13 +105,25 @@ Variant calling is parallelised over genome chunks. The reference `.fai` index i
 
 #### BCFtools multi-sample calling
 
-Alignments are first merged to one per sample (see [Samplesheet input](#samplesheet-input)), and all samples are then called jointly into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.vcf.gz`.
+Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). All samples are called jointly: for each genome chunk, `bcftools mpileup` computes genotype likelihoods for every sample, `bcftools call` turns them into genotypes, and the chunks are then concatenated into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.vcf.gz`.
+
+The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
 
 - `--dataset_name` (default `all_samples`) sets the file name prefix of the joint VCF and its index.
-- `--sample_metadata` groups samples into populations during calling; see [Sample metadata](#sample-metadata).
-- `--bcftools_mpileup_extra` (default `--no-BAQ`) is passed to `bcftools mpileup`, e.g. `'--no-BAQ --min-BQ 20 --min-MQ 20'` to filter on base and mapping quality. The reference, output type, genome-chunk regions and per-sample read depth (`--annotate FORMAT/DP`) are set by the pipeline and shouldn't be given here. The per-sample (`FORMAT`) tags in the VCF are `GT`, `PL` and `AD` (bcftools defaults) plus `DP`. Further `--annotate` tags are added to these rather than replacing them.
-- `--bcftools_call_extra` (default `--multiallelic-caller --variants-only`) is passed to `bcftools call`. Setting it **replaces** the default rather than adding to it, so keep a calling model (`--multiallelic-caller` or `--consensus-caller`), which `bcftools call` requires, and keep `--variants-only` unless you want every site (including invariant ones) in the VCF, which makes it far larger.
+- `--sample_metadata` groups samples into populations during calling; see [Sample metadata](#sample-metadata) and [`bcftools call`](#bcftools-call).
+
+**bcftools mpileup**
+
+Computes per-sample genotype likelihoods from the alignments. It writes the per-sample (`FORMAT`) tags `PL` (genotype likelihoods) and `AD` (allelic depths) by default. The pipeline also adds `DP` (read depth, `--annotate FORMAT/DP`).
+
+- `--bcftools_mpileup_extra` (default `--no-BAQ`) is passed to `bcftools mpileup`, e.g. `'--no-BAQ --min-BQ 20 --min-MQ 20'` to filter on base and mapping quality. Further `--annotate` tags given here are added to the tags above rather than replacing them.
 - `--enable_save_mpileup` (default `false`) also saves the intermediate `bcftools mpileup` output (BCF with genotype likelihoods for all sites), one file per genome chunk. These files can get very large.
+
+**bcftools call**
+
+Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag and the per-site `AC`/`AN` (allele count/number) tags. The pipeline always uses the multiallelic caller (`--multiallelic-caller`), and adds `--group-samples` when `--sample_metadata` is given.
+
+- `--bcftools_call_extra` (default `--variants-only`) is passed to `bcftools call`. Keep `--variants-only` unless you want every site (including invariant ones) in the VCF, which makes it far larger. All sites are called as diploid unless you add `--ploidy` or `--ploidy-file`.
 
 ## Running the pipeline
 
