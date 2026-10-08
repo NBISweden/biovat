@@ -17,6 +17,25 @@ workflow CALL_VARIANTS {
     ch_multiqc_files
 
     main:
+
+    // Branch on platform to avoid calling mixed-platform samples together
+    platform_alignments_for_calling = ch_alignment_and_index
+        .branch { meta, _alignment, _index ->
+            illumina: meta.pl == 'ILLUMINA'
+            unsupported: true
+        }
+
+    // Only Illumina is currently called; warn once, listing every sample/platform left out
+    platform_alignments_for_calling.unsupported
+        .map { meta, _alignment, _index -> "${meta.id} (${meta.pl})" }
+        .collect(sort: true)
+        .subscribe { skipped ->
+            log.warn(
+                "Variant calling currently supports only ILLUMINA alignments. " +
+                "These sample alignments are excluded from variant calling: ${skipped.join(', ')}"
+            )
+        }
+
     // Split the reference genome into chunks of chromosomes for parallelization
     ch_fai           = ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] }
     splitgenome_out  = SPLITGENOME(
@@ -60,7 +79,7 @@ workflow CALL_VARIANTS {
         }
 
         // Group all samples into a single joint call
-        ch_alignments_for_joint_call = ch_alignment_and_index
+        ch_alignments_for_joint_call = platform_alignments_for_calling.illumina
             .map { meta, alignment, index -> [dataset_name, meta.id, alignment, index] }
             .groupTuple()
             .map { group, samples, alignments, indexes ->
