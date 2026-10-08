@@ -91,7 +91,7 @@ nextflow main.nf --help
 
 ### Variant calling
 
-Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. 
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`.
 
 - `--variant_caller` selects the caller
 - `--enable_variant_qc` (default `true`) runs quality checks on the final VCF
@@ -109,7 +109,7 @@ Alignments are first merged to one per sample (see [Samplesheet input](#samplesh
 
 - `--dataset_name` (default `all_samples`) sets the file name prefix of the joint VCF and its index.
 - `--sample_metadata` groups samples into populations during calling; see [Sample metadata](#sample-metadata).
-- `--bcftools_mpileup_extra` (default `--no-BAQ`) is passed to `bcftools mpileup`, e.g. `'--no-BAQ --min-BQ 20 --min-MQ 20'` to filter on base and mapping quality. The reference, output type and genome-chunk regions are set by the pipeline and shouldn't be given here.
+- `--bcftools_mpileup_extra` (default `--no-BAQ`) is passed to `bcftools mpileup`, e.g. `'--no-BAQ --min-BQ 20 --min-MQ 20'` to filter on base and mapping quality. The reference, output type and genome-chunk regions are set by the pipeline and shouldn't be given here. `bcftools mpileup` writes the per-sample allelic depth tag (`FORMAT/AD`) by default; don't remove it (`-a -FORMAT/AD`), as population grouping via `--sample_metadata` requires it.
 - `--bcftools_call_extra` (default `--multiallelic-caller --variants-only`) is passed to `bcftools call`. Setting it **replaces** the default rather than adding to it, so keep a calling model (`--multiallelic-caller` or `--consensus-caller`), which `bcftools call` requires, and keep `--variants-only` unless you want every site (including invariant ones) in the VCF, which makes it far larger.
 - `--enable_save_mpileup` (default `false`) also saves the intermediate `bcftools mpileup` output (BCF with genotype likelihoods for all sites), one file per genome chunk. These files can get very large.
 

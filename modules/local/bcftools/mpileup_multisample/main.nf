@@ -30,7 +30,6 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     def prefix                 = task.ext.prefix ?: "${meta.id}"
     def mpileup                = save_mpileup ? "| tee ${prefix}.mpileup" : ""
     def bgzip_mpileup          = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
-    def annotate_format_ad_cmd = group_samples ? "-a AD" : ""
     def group_samples_cmd      = group_samples ? "--group-samples ${population_file}" : ""
     """
     bcftools \\
@@ -40,7 +39,6 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         ${args} \\
         ${bams} \\
         -R ${intervals} \\
-        ${annotate_format_ad_cmd} \\
         ${mpileup} \\
         | bcftools call \\
         --output-type z \\
