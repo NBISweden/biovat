@@ -586,7 +586,7 @@
                 "06_merged_samples/qc/samtools_flagstat/sample_PUN-Y-LO_ILLUMINA.flagstat",
                 "07_variant_calls",
                 "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz",
-                "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz.tbi",
+                "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz.csi",
                 "07_variant_calls/genome_chunk_bed_files",
                 "07_variant_calls/genome_chunk_bed_files/chunk_00001.bed",
                 "07_variant_calls/genome_chunk_bed_files/chunk_00002.bed",
@@ -1255,7 +1255,7 @@
                 "07_variant_calls/Diplacus_puniceus_red_yellow.vcf.gz:595340ad8ab1034adf11cd022d38ec84"
             ]
         ],
-        "timestamp": "2026-10-08T14:40:06.933142804",
+        "timestamp": "2026-10-09T15:37:23.168184214",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

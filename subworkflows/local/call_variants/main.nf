@@ -88,16 +88,18 @@ workflow CALL_VARIANTS {
                 [[id: group, samples: sorted.collect { row -> row[0] }], sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
             }
 
-        // Split into genome chunks for parallelization
+        // Split into genome chunks for parallelization, carrying the chunk count so concatenation can group without waiting on unrelated work
         ch_intervals = splitgenome_out.chunks
-            .transpose()
-            .map { _meta_ref, chunk_bed -> chunk_bed }
+            .flatMap { _meta_ref, chunk_beds ->
+                def beds = [chunk_beds].flatten()
+                beds.collect { chunk_bed -> [chunk_bed, beds.size()] }
+            }
 
         ch_alignments_for_bcftools_mpileup = ch_alignments_for_joint_call
             .combine(ch_intervals)
-            .map { meta, alignments, indexes, chunk_bed ->
+            .map { meta, alignments, indexes, chunk_bed, n_chunks ->
                 [
-                    [id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName],
+                    [id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName, n_chunks: n_chunks],
                     alignments, indexes, chunk_bed
                 ]
             }
@@ -116,7 +118,8 @@ workflow CALL_VARIANTS {
         // Concatenate the genome chunks using BCFTOOLS_CONCAT
         ch_chunk_vcfs = ch_bcftools_mpileup_for_concat
             .map { meta, vcf, index ->
-                def group_meta = [id: meta.group_id, samples: meta.samples]
+                // groupKey with the chunk count lets each group be released as soon as its last chunk arrives
+                def group_meta = groupKey([id: meta.group_id, samples: meta.samples], meta.n_chunks)
                 // keep chunk id (e.g. "chunk_00002") for sorting later
                     return [group_meta, meta.chunk, vcf, index]
             }
@@ -124,7 +127,7 @@ workflow CALL_VARIANTS {
             .map { meta, chunk_ids, vcfs, indexes ->
                 // sort files by chunk_id to preserve genomic order
                 def sorted = [chunk_ids, vcfs, indexes].transpose().sort { row -> row[0] }
-                [meta, sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
+                [meta.getGroupTarget(), sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
             }
             // A single chunk skips concatenation; it is renamed to the group meta id when published (main.nf)
             .branch { meta, vcfs, indexes ->
@@ -169,7 +172,7 @@ workflow CALL_VARIANTS {
 
     emit:
     ch_genome_chunks         = splitgenome_out.chunks.join(splitgenome_out.excluded) // channel: [ meta, chunk_*.bed, excluded_regions.tsv ]
-    ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.tbi/csi ]
+    ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.csi ]
     ch_mpileup               // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
     ch_multiqc_files
     outputs_bcftools_stats

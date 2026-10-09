@@ -17,7 +17,7 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
 
     output:
     tuple val(meta), path("*.vcf.gz"), emit: vcf
-    tuple val(meta), path("*.{tbi,csi}"), emit: index, optional: true
+    tuple val(meta), path("*.csi"), emit: index, optional: true
     tuple val(meta), path("*.mpileup.gz"), emit: mpileup, optional: true
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version | sed '1!d; s/^.*bcftools //'"), topic: versions, emit: versions_bcftools
 
@@ -49,14 +49,14 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
 
     ${bgzip_mpileup}
 
-    tabix -p vcf -f ${prefix}.vcf.gz
+    bcftools index --csi -f ${prefix}.vcf.gz
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     echo "" | gzip > ${prefix}.vcf.gz
-    touch ${prefix}.vcf.gz.tbi
+    touch ${prefix}.vcf.gz.csi
     echo "" | gzip > ${prefix}.mpileup.gz
     """
 }
