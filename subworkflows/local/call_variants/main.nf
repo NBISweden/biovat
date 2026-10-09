@@ -2,6 +2,7 @@ include { SPLITGENOME                  } from '../../../modules/local/splitgenom
 include { BCFTOOLS_MPILEUP_MULTISAMPLE } from '../../../modules/local/bcftools/mpileup_multisample/main'
 include { BCFTOOLS_CONCAT              } from '../../../modules/nf-core/bcftools/concat/main'
 include { GATK4_HAPLOTYPECALLER        } from '../../../modules/nf-core/gatk4/haplotypecaller/main'
+include { GATK4_GENOMICSDBIMPORT       } from '../../../modules/nf-core/gatk4/genomicsdbimport/main'
 include { VARIANT_QC                   } from '../variant_qc/main'
 
 workflow CALL_VARIANTS {
@@ -154,7 +155,7 @@ workflow CALL_VARIANTS {
                 ]
             }
         // GATK4_HAPLOTYPECALLER in gvcf mode
-        GATK4_HAPLOTYPECALLER(
+        gatk4_haplotypecaller_out = GATK4_HAPLOTYPECALLER(
             ch_alignments_for_gatk4,
             ch_reference_and_fai.map { meta, fasta, _fai -> [meta, fasta] },
             ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] },
@@ -162,14 +163,35 @@ workflow CALL_VARIANTS {
             [ [], [] ], // dbsnp
             [ [], [] ], // dbsbp_tbi index
         )
-
-
-        //Consolidate into a genomicsDB datastore (GenomicsDBImport)
+        // Consolidate GVCFs into one GenomicsDB workspace per chunk
+        ch_bed_intervals_by_chunk = ch_bed_intervals.map { chunk_bed -> [chunk_bed.baseName, chunk_bed] }
+        ch_gvcfs_for_genomicsdbimport = gatk4_haplotypecaller_out.vcf
+            .join(gatk4_haplotypecaller_out.tbi, failOnMismatch: true, failOnDuplicate: true)
+            .map { meta, gvcf, tbi -> [meta.chunk, meta.id, gvcf, tbi] }
+            .groupTuple()
+            .join(ch_bed_intervals_by_chunk, failOnMismatch: true, failOnDuplicate: true)
+            .map { chunk, samples, gvcfs, tbis, chunk_bed ->
+                // sort by sample id so the workspace sample order doesn't depend on channel arrival order
+                def sorted = [samples, gvcfs, tbis].transpose().sort { row -> row[0] }
+                [
+                    [id: "${dataset_name}.${chunk}", group_id: dataset_name, samples: sorted.collect { row -> row[0] }, chunk: chunk],
+                    sorted.collect { row -> row[1] },
+                    sorted.collect { row -> row[2] },
+                    chunk_bed,
+                    [],        // val: interval_value (chunk_bed is used instead)
+                    []         // path: wspace (only used when updating an existing workspace)
+                ]
+            }
+        gatk4_genomicsdbimport_out = GATK4_GENOMICSDBIMPORT(
+            ch_gvcfs_for_genomicsdbimport,
+            false, // run_intlist: create a new workspace rather than list an existing one's intervals
+            false, // run_updatewspace: create a new workspace rather than add samples to an existing one
+            false, // input_map: pass GVCFs as --variant rather than a sample name map
+        )
 
         //Joint genotyping (GenotypeGVCFs)
 
-        //VQSR filtering
-
+        // Hard filtering...
     }
 
     // TODO: add parabricks haplotype caller and genotype gvcfs
