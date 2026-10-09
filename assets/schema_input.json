@@ -80,7 +80,10 @@
         },
         "required": ["sample", "library_id", "flowcell_id", "lane", "platform"],
         "oneOf": [
-            { "required": ["fastq_1"], "not": { "anyOf": [{ "required": ["bam"] }, { "required": ["single_end"] }] } },
+            {
+                "required": ["fastq_1"],
+                "not": { "anyOf": [{ "required": ["bam"] }, { "required": ["single_end"] }] }
+            },
             {
                 "required": ["bam", "single_end"],
                 "not": { "anyOf": [{ "required": ["fastq_1"] }, { "required": ["fastq_2"] }] }

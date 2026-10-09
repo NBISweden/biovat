@@ -4,6 +4,13 @@ Reference sequence and fastq files with read data from study "Widespread selecti
 
 The tiny monkeyflower data set was downloaded from https://github.com/NBISweden/pgip-data/tree/main/data/monkeyflower/tiny. This github repository contains reference sequence and read data for 37 monkeyflower individuals for the region LG4:12,000,000-12,100,000.
 
+The reference (`M_aurantiacus_v1_splitline_ordered.fasta`) splits this region into three contigs, `LG4_1`, `LG4_2`, and `LG4_3`.
+Each header description gives the contig's 1-based coordinates on LG4.
+Having more than one contig means variant calling produces several genome chunks, so the test also exercises VCF concatenation.
+`LG4_3` is deliberately only 940 bp, shorter than the default `--min_length` of 1000.
+`SPLITGENOME` therefore drops it, so the reads that map to it (including some in the BAM/CRAM fixtures) are never variant-called.
+This is intended: it tests `min_length` filtering, which `modules/local/splitgenome/tests/main.nf.test` checks directly.
+
 For testing, six samples of the subspecies Diplacus puniceus were selected, representing the red and the yellow ecotype:
 
 | Sample     | Run        | ScientificName    | SampleName      | AuthorSample | SampleAlias  | Taxon                  | Latitude | Longitude | % Reads aligned | Seq. Depth |

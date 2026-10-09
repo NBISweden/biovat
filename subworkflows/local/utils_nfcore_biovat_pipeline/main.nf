@@ -31,6 +31,7 @@ workflow PIPELINE_INITIALISATION {
     nextflow_cli_args // array: List of positional nextflow CLI args
     outdir            // string: The output directory where the results will be saved
     input             // string: Path to input samplesheet
+    sample_metadata   // string: Path to sample-level metadata sheet (optional)
     help              // boolean: Display help message and exit
     help_full         // boolean: Show the full help message
     show_hidden       // boolean: Show hidden parameters in the help message
@@ -39,7 +40,7 @@ workflow PIPELINE_INITIALISATION {
     //
     // Print version and exit if required and dump pipeline parameters to JSON file
     //
-    UTILS_NEXTFLOW_PIPELINE (
+    UTILS_NEXTFLOW_PIPELINE(
         version,
         true,
         outdir,
@@ -62,7 +63,7 @@ workflow PIPELINE_INITIALISATION {
 
     command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --outdir <OUTDIR>"
 
-    UTILS_NFSCHEMA_PLUGIN (
+    UTILS_NFSCHEMA_PLUGIN(
         workflow,
         validate_params,
         null,
@@ -77,7 +78,7 @@ workflow PIPELINE_INITIALISATION {
     //
     // Check config provided to the pipeline
     //
-    UTILS_NFCORE_PIPELINE (
+    UTILS_NFCORE_PIPELINE(
         nextflow_cli_args
     )
 
@@ -99,10 +100,21 @@ workflow PIPELINE_INITIALISATION {
             [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
         }
 
-    // Alignments are merged from read group to library to sample levels. Every row sharing a library, and every
-    // library sharing a sample, must agree on single_end or the merge produces a BAM with
-    // inconsistent read pairing
-    validateSampleEndedness(samplesheet_rows)
+    // Alignments are merged from read group to library to sample levels. A specific library must not mix platforms, and
+    // every alignment in a merge group must agree on single_end
+    validateMergeGroups(samplesheet_rows)
+
+    // Sample-level metadata (one row per sample) is loaded separately from readgroup level metadata.
+    // Uniqueness of sample data is enforced by the "uniqueEntries" key in assets/schema_sample_metadata.json
+    def sample_metadata_rows = sample_metadata
+        ? samplesheetToList(sample_metadata, "${projectDir}/assets/schema_sample_metadata.json").collect { row -> row[0] }
+        : []
+    // Correctness of --sample_metadata is checked against the samplesheet rows
+    validateSampleMetadata(samplesheet_rows, sample_metadata_rows)
+    def samples = samplesheet_rows.collect { meta, _files -> meta.id }.toSet()
+
+    // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
+    validateAlignmentConsumers(samplesheet_rows)
 
     // Report every reason --reference is needed (params and samplesheet rows) in one error
     validateReferenceRequirements(samplesheet_rows)
@@ -118,7 +130,8 @@ workflow PIPELINE_INITIALISATION {
     }
 
     emit:
-    samplesheet = channel.fromList(samplesheet_rows)
+    samplesheet           = channel.fromList(samplesheet_rows)
+    sample_metadata_sheet = channel.fromList(sample_metadata_rows.findAll { meta -> meta.id in samples })
     reference
 }
 
@@ -172,44 +185,53 @@ def validateInputParameters() {
     if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
         validationError("Qualimap cannot be run when CRAM output is enabled.")
     }
-
-    // Stage dependency map
-    def stage_dependencies = [
-        'raw_read_qc': [],
-        'trim': [],
-        'align': [],
-        'mark_duplicates': [],
-    ]
-    stage_dependencies.each { step, dependencies ->
-        if (enable[step]) {
-            dependencies.each { dependency ->
-                if (!enable[dependency]) {
-                    validationError("The '${step}' stage requires the '${dependency}' stage to be enabled.")
-                }
-            }
-        }
-    }
 }
 
-// Reject a samplesheet where read groups of the same library, or libraries of the same sample, mix
-// single-end and paired-end reads. Alignments are merged read-group -> library -> sample, so a mismatch
-// here would otherwise be merged into a single BAM with inconsistent read pairing.
-def validateSampleEndedness(rows) {
+// Reject a samplesheet whose rows can't be merged consistently. Alignments are merged from read group -> library
+// (grouped on sample, library and platform) -> sample (grouped on sample and platform):
+//  - a library is prepared for a single sequencing platform. Its read groups must agree on platform
+//  - every alignment in a merge group must agree on single_end, or it is merged into a single BAM with
+//    inconsistent read pairing. A sample may span platforms (e.g. paired-end ILLUMINA and single-end ONT),
+//    so libraries are only compared within a platform
+def validateMergeGroups(rows) {
     rows
         .groupBy { meta, _reads -> [ meta.id, meta.library ] }
         .each { key, group ->
             def (sample_id, library_id) = key
+            def platforms = group.collect { meta, _reads -> meta.pl }.unique()
+            if (platforms.size() > 1) {
+                validationError("Sample '${sample_id}', library '${library_id}' mixes sequencing platforms (${platforms.join(', ')}) - all lanes of a library must share the same platform.")
+            }
             if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
                 validationError("Sample '${sample_id}', library '${library_id}' mixes single-end and paired-end reads across lanes - all lanes of a library must share the same read layout.")
             }
         }
     rows
-        .groupBy { meta, _reads -> meta.id }
-        .each { sample_id, group ->
+        .groupBy { meta, _reads -> [ meta.id, meta.pl ] }
+        .each { key, group ->
+            def (sample_id, platform) = key
             if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
-                validationError("Sample '${sample_id}' mixes single-end and paired-end reads across libraries - all libraries of a sample must share the same read layout.")
+                validationError("Sample '${sample_id}' mixes single-end and paired-end reads across its ${platform} libraries - all libraries of a sample sequenced on the same platform must share the same read layout.")
             }
         }
+}
+
+// --sample_metadata, when provided, groups samples into populations during variant calling (unused otherwise)
+// Every sample must then have a population in the metadata file. We warn if extras are found.
+def validateSampleMetadata(rows, metadata_rows) {
+    if ( !(params.enable_variant_calling && params.sample_metadata) ) {
+        return
+    }
+    def samplesheet_samples = rows.collect { meta, _files -> meta.id }.unique()
+    def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
+    def extra_samples       = metadata_supplied - samplesheet_samples
+    if ( extra_samples ) {
+        log.warn("--sample_metadata lists sample(s) not in --input, which will be ignored: ${extra_samples.join(', ')}")
+    }
+    def missing_metadata    = samplesheet_samples - metadata_rows.findAll { meta -> meta.population }.collect { meta -> meta.id }
+    if ( missing_metadata ) {
+        validationError("Variant calling with --sample_metadata groups samples into populations, which requires a 'population' for every sample. Missing for: ${missing_metadata.join(', ')}")
+    }
 }
 
 // Alignments enter the pipeline only via ALIGN_READS or INGEST_BAM_OR_CRAM (BAM/CRAM input rows); every
@@ -222,6 +244,22 @@ def hasAlignmentSource(enable, has_bam_cram_rows) {
 // Callers that can't see the samplesheet rows (main.nf) pass has_bam_cram_rows = true to stay conservative
 def rikerActive(enable, has_bam_cram_rows) {
     enable.align_qc && enable.riker && hasAlignmentSource(enable, has_bam_cram_rows)
+}
+
+// Stages that consume alignments need a source of them: ALIGN_READS or BAM/CRAM input rows
+def validateAlignmentConsumers(rows) {
+    def enable            = params
+        .findAll { k, _v -> k.startsWith('enable_') }
+        .collectEntries { k, v -> [(k - 'enable_'): v] }
+    def has_bam_cram_rows = rows.any { meta, _files -> meta.input_type == 'bam_cram' }
+    if ( hasAlignmentSource(enable, has_bam_cram_rows) ) {
+        return
+    }
+    def stages = [ mark_duplicates: '--enable_mark_duplicates', variant_calling: '--enable_variant_calling' ]
+        .findAll { stage, _flag -> enable[stage] }
+    if ( stages ) {
+        validationError("No alignments to process for ${stages.values().join(', ')}. Either enable alignment, provide 'BAM/CRAM' files, or disable these stage(s).")
+    }
 }
 
 // Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
@@ -249,6 +287,9 @@ def validateReferenceRequirements(rows) {
     }
     if ( rikerActive(enable, has_bam_cram_rows) ) {
         reasons.add("RIKER (--enable_riker)")
+    }
+    if ( enable.variant_calling && hasAlignmentSource(enable, has_bam_cram_rows) ) {
+        reasons.add("variant calling (--enable_variant_calling)")
     }
     if ( !reasons.isEmpty() ) {
         validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")

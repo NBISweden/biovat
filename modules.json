@@ -5,6 +5,16 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "bcftools/concat": {
+                        "branch": "master",
+                        "git_sha": "feef37435aea56816adf4b3bde1fc76aac327a8d",
+                        "installed_by": ["modules"]
+                    },
+                    "bcftools/stats": {
+                        "branch": "master",
+                        "git_sha": "feef37435aea56816adf4b3bde1fc76aac327a8d",
+                        "installed_by": ["modules"]
+                    },
                     "bwa/index": {
                         "branch": "master",
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
@@ -27,7 +37,7 @@
                     },
                     "fastqc": {
                         "branch": "master",
-                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "git_sha": "b013fb6d627f036b0b61a4b361f0debb50865127",
                         "installed_by": ["modules"]
                     },
                     "multiqc": {
@@ -37,7 +47,7 @@
                     },
                     "parabricks/fq2bam": {
                         "branch": "master",
-                        "git_sha": "3e0ec6464725c64d81abe928e15a6750d5fdd272",
+                        "git_sha": "4bfaaac6e5818b452040366ed85a42eeddcf46a2",
                         "installed_by": ["modules"]
                     },
                     "picard/markduplicates": {
@@ -47,7 +57,7 @@
                     },
                     "qualimap/bamqc": {
                         "branch": "master",
-                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "git_sha": "0befdd9db2975ee04a97decc1672a4304387e9a7",
                         "installed_by": ["modules"]
                     },
                     "riker/multi": {
@@ -77,7 +87,7 @@
                     },
                     "samtools/merge": {
                         "branch": "master",
-                        "git_sha": "8fd5fe1c1e410ea530995d243bf49cd91e401d87",
+                        "git_sha": "972faf6f783fe9685267220965a91690741465f9",
                         "installed_by": ["modules"]
                     },
                     "samtools/sormadup": {
@@ -88,6 +98,11 @@
                     "samtools/sort": {
                         "branch": "master",
                         "git_sha": "9339809fcb90af8a8b7051e6cd914894d5c52002",
+                        "installed_by": ["modules"]
+                    },
+                    "vcftools": {
+                        "branch": "master",
+                        "git_sha": "094186cc8b196ebdded57d596d741611ff571cf3",
                         "installed_by": ["modules"]
                     }
                 }

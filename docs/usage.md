@@ -19,6 +19,8 @@ The samplesheet can have as many columns as you desire, however, it must contain
 The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. Sequencing library IDs, flowcell IDs, and lane numbers are specified in the columns `library_id`,
 `flowcell_id`, and `lane`. Each combination of `sample`, `library_id`, `flowcell_id`, and `lane` has to be unique. When deduplication is enabled, alignments belonging to the same sample and library are first merged and deduplicated. If variant calling is enabled, libraries are further merged to sample level.
 
+A library is prepared for a single sequencing platform, so all read groups of a library must share the same `platform`. A sample may combine libraries from different platforms; these are merged per platform.
+
 Each row must provide raw reads via `fastq_1` (optionally `fastq_2`), **or** an already-aligned `BAM`/`CRAM` file via `bam`. If providing `BAM`/`CRAM`, users must also fill-out the `single_end` column (`false` for paired-end reads). When providing pre-aligned files, trimming and alignment are skipped. All read groups of a library, and all libraries of a sample, must agree on `single_end` (mixing single- and paired-end reads at the same merge level is rejected).
 
 Each `BAM`/`CRAM` file is treated as a single read group, and its `@RG` header is checked against its samplesheet row. The pipeline expects `ID` and `PU` to be GATK format (`<flowcell_id>.<lane>.<sample>_<library_id>`), `SM` to be `sample`, `LB` to be `library_id`, and `PL` to be `platform`. `PL` is matched case-insensitively (the SAM specification asks tools to accept lowercase `PL` values); all other tags must match exactly. This is the read group the pipeline writes itself when aligning `fastq` rows. Consequently:
@@ -27,7 +29,7 @@ Each `BAM`/`CRAM` file is treated as a single read group, and its `@RG` header i
 - A file with **more than one** `@RG` line is rejected. Split it by read group (e.g. `samtools split`) and give each part its own samplesheet row.
 - A file whose `@RG` line is missing any of the tags, or disagrees with the samplesheet, is rejected. Correct the samplesheet, or the file with e.g. `samtools addreplacerg -m overwrite_all -r '@RG\tID:...'`.
 
-A final samplesheet file consisting of paired-end data for 6 samples may look something like the one below. A single library of sample `S1` has been sequenced across three lanes. Two independent libraries of sample `S6` have been sequenced. Sample `S7` supplies a pre-aligned CRAM instead of raw reads.
+A final samplesheet file consisting of paired-end data for 7 samples may look something like the one below. A single library of sample `S1` has been sequenced across three lanes. Two independent libraries of sample `S6` have been sequenced. Sample `S7` supplies a pre-aligned CRAM instead of raw reads.
 
 ```csv title="samplesheet.csv"
 sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end
@@ -57,6 +59,24 @@ S7,1,AEG588A7,2,ILLUMINA,,,/data/AEG588A7_S7_L002.cram,false
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
+### Sample metadata
+
+Information describing a whole sample rather than a single sequencing run, such as its population, is supplied in a separate, optional samplesheet via `--sample_metadata`. It has one row per sample, keyed on the `sample` column of `--input`:
+
+```csv title="sample_metadata.csv"
+sample,population
+S1,popA
+S2,popA
+S3,popB
+```
+
+| Column       | Description                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| `sample`     | Sample identifier, matching the `sample` column of `--input`. Each sample may appear only once |
+| `population` | Population identifier for grouping of samples. Required for every sample when used             |
+
+Providing `--sample_metadata` turns on population grouping in variant calling (`bcftools call --group-samples`, which applies the HWE assumption within but not across populations), and so requires a `population` for every sample in `--input`. It is ignored when `--enable_variant_calling` is off. Samples listed in `--sample_metadata` but not in `--input` are ignored with a warning. An [example sample metadata sheet](../assets/sample_metadata.csv) has been provided with the pipeline.
+
 ## Configuring the pipeline
 
 Pipeline settings and parameters can be provided on the command-line but for better reproducibility and documentation, an example parameter file is provided in `assets/nf-params.yml`.
@@ -68,6 +88,42 @@ For a full list of available parameters and their defaults, run:
 ```bash
 nextflow main.nf --help
 ```
+
+### Variant calling
+
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`.
+
+- `--variant_caller` selects the caller
+- `--enable_variant_qc` (default `true`) runs quality checks on the final VCF
+
+#### Genome chunking
+
+Variant calling is parallelised over genome chunks. The reference `.fai` index is split into chunks by grouping whole chromosomes/scaffolds, in reference order, until a chunk reaches `--chunk_size` bp; each chunk is then called as a separate task and the results are concatenated into one VCF. Chromosomes are never split across chunks, so reads spanning a chunk boundary can't affect calls. As a result, chunk sizes vary.
+
+- `--chunk_size` defaults to the length of the longest chromosome, which gives the most chunks (and parallel tasks) possible. It can only be raised: a value below the longest chromosome is reset to that length, with a warning in the `SPLITGENOME` task log. Raise it to run fewer, larger chunks; a value at or above the total genome size gives a single chunk.
+- `--min_length` (default `1000`) excludes chromosomes/scaffolds shorter than this many bp from variant calling, so they won't appear in the VCF. Set it to `0` to keep everything. Excluded regions are listed in `07_variant_calls/genome_chunk_bed_files/excluded_regions.tsv` (next to the `chunk_*.bed` files listing the regions that were kept) and summarised in the "Genome chunking" table of the MultiQC report. If they make up more than 5% of the reference, the pipeline also prints a warning on the console.
+
+#### BCFtools multi-sample calling
+
+Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). All samples are called jointly: for each genome chunk, `bcftools mpileup` computes genotype likelihoods for every sample, `bcftools call` turns them into genotypes, and the chunks are then concatenated into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.vcf.gz`.
+
+The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
+
+- `--dataset_name` (default `all_samples`) sets the file name prefix of the joint VCF and its index.
+- `--sample_metadata` groups samples into populations during calling; see [Sample metadata](#sample-metadata) and [`bcftools call`](#bcftools-call).
+
+**bcftools mpileup**
+
+Computes per-sample genotype likelihoods from the alignments. It writes the per-sample (`FORMAT`) tags `PL` (genotype likelihoods) and `AD` (allelic depths) by default. The pipeline also adds `DP` (read depth, `--annotate FORMAT/DP`).
+
+- `--bcftools_mpileup_extra` (default `--no-BAQ`) is passed to `bcftools mpileup`, e.g. `'--no-BAQ --min-BQ 20 --min-MQ 20'` to filter on base and mapping quality. Further `--annotate` tags given here are added to the tags above rather than replacing them.
+- `--enable_save_mpileup` (default `false`) also saves the intermediate `bcftools mpileup` output (BCF with genotype likelihoods for all sites), one file per genome chunk. These files can get very large.
+
+**bcftools call**
+
+Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag and the per-site `AC`/`AN` (allele count/number) tags. The pipeline always uses the multiallelic caller (`--multiallelic-caller`), and adds `--group-samples` when `--sample_metadata` is given.
+
+- `--bcftools_call_extra` (default `--variants-only`) is passed to `bcftools call`. Keep `--variants-only` unless you want every site (including invariant ones) in the VCF, which makes it far larger. All sites are called as diploid unless you add `--ploidy` or `--ploidy-file`.
 
 ## Running the pipeline
 

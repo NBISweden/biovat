@@ -21,7 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented workflow outputs (replaced publishDir)
 - nft-bam plugin for BAM content snapshots
 - Reference utilities subworkflow for creating generic reference supplementary files used across many subworkflows (currently gated on `params.reference`)
-- BAM QC workflow ()
+- BAM QC workflow
+- Test dataset composed of reference and multiple samples per population
+- Variant calling workflow with BCFtools (multi-sample variant calling)
+- Genome chunking support for parallelized variant calling; regions excluded by `--min_length` are published (`excluded_regions.tsv`), summarised in MultiQC, and warned about on the console when over 5% of the reference
+- Variant QC workflow
+- Optional sample-level metadata sheet (`--sample_metadata`, one row per sample) kept separate from the samplesheet; currently holds `population`. When provided with variant calling enabled, samples are grouped into populations in `bcftools call` (`--group-samples`), replacing a dedicated `--enable_group_samples` flag
 - BAM/CRAM samplesheet input (`bam` column): each file's `@RG` header is validated against its samplesheet row; files with no `@RG` line get one built from the samplesheet (`samtools addreplacerg`), and files with several `@RG` lines or missing/mismatched tags are rejected (`PL` is matched case-insensitively, per the SAM spec)
 - Samplesheet `platform` restricted to the uppercase SAM spec `@RG PL` values (e.g. `ILLUMINA`)
 
