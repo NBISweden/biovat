@@ -50,6 +50,11 @@
                         "git_sha": "b2bcd8312599aacd849e69721e20ac8138018f83",
                         "installed_by": ["modules"]
                     },
+                    "gatk4/genotypegvcfs": {
+                        "branch": "master",
+                        "git_sha": "b2bcd8312599aacd849e69721e20ac8138018f83",
+                        "installed_by": ["modules"]
+                    },
                     "gatk4/haplotypecaller": {
                         "branch": "master",
                         "git_sha": "b2bcd8312599aacd849e69721e20ac8138018f83",

@@ -3,6 +3,7 @@ include { BCFTOOLS_MPILEUP_MULTISAMPLE } from '../../../modules/local/bcftools/m
 include { BCFTOOLS_CONCAT              } from '../../../modules/nf-core/bcftools/concat/main'
 include { GATK4_HAPLOTYPECALLER        } from '../../../modules/nf-core/gatk4/haplotypecaller/main'
 include { GATK4_GENOMICSDBIMPORT       } from '../../../modules/nf-core/gatk4/genomicsdbimport/main'
+include { GATK4_GENOTYPEGVCFS          } from '../../../modules/nf-core/gatk4/genotypegvcfs/main'
 include { VARIANT_QC                   } from '../variant_qc/main'
 
 workflow CALL_VARIANTS {
@@ -20,10 +21,9 @@ workflow CALL_VARIANTS {
     ch_multiqc_files
 
     main:
-
-    ch_chunk_vcfs = channel.empty()
-    ch_mpileup    = channel.empty()
-    ch_variant_calls_indexed = channel.empty() // TODO remove, this should be produced by any path
+    // Every caller emits per-chunk calls as [ meta (id, group_id, samples, chunk), vcf, index ], gathered below
+    ch_chunk_vcfs_indexed = channel.empty()
+    ch_mpileup            = channel.empty()
 
     // Branch on platform to avoid calling mixed-platform samples together
     platform_alignments_for_calling = ch_alignment_and_index
@@ -110,32 +110,8 @@ workflow CALL_VARIANTS {
             requires.group_samples,
             ch_population_file,
         )
-        ch_bcftools_mpileup_for_concat = bcftools_mpileup_multisample_out.vcf.join(bcftools_mpileup_multisample_out.index)
-        ch_mpileup                     = bcftools_mpileup_multisample_out.mpileup
-        // Concatenate the genome chunks using BCFTOOLS_CONCAT
-        ch_chunk_vcfs = ch_bcftools_mpileup_for_concat
-            .map { meta, vcf, index ->
-                def group_meta = [id: meta.group_id, samples: meta.samples]
-                // keep chunk id (e.g. "chunk_00002") for sorting later
-                    return [group_meta, meta.chunk, vcf, index]
-            }
-            .groupTuple()
-            .map { meta, chunk_ids, vcfs, indexes ->
-                // sort files by chunk_id to preserve genomic order
-                def sorted = [chunk_ids, vcfs, indexes].transpose().sort { row -> row[0] }
-                [meta, sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
-            }
-            // A single chunk skips concatenation; it is renamed to the group meta id when published (main.nf)
-            .branch { meta, vcfs, indexes ->
-                skip_concat: vcfs.size() == 1
-                    return [meta, vcfs[0], indexes[0]]
-                for_concat: vcfs.size() > 1
-            }
-        bcftools_concat_out = BCFTOOLS_CONCAT(ch_chunk_vcfs.for_concat)
-        // Join concatenated vcf files with their indexes, for variant QC and publishing.
-        ch_variant_calls_indexed = bcftools_concat_out.vcf
-            .join(bcftools_concat_out.index)
-            .mix(ch_chunk_vcfs.skip_concat)
+        ch_chunk_vcfs_indexed = bcftools_mpileup_multisample_out.vcf.join(bcftools_mpileup_multisample_out.index)
+        ch_mpileup            = bcftools_mpileup_multisample_out.mpileup
     }
 
     // TODO: add bcftools mpileup/call per sample calling and merging/joint genotyping
@@ -188,15 +164,58 @@ workflow CALL_VARIANTS {
             false, // run_updatewspace: create a new workspace rather than add samples to an existing one
             false, // input_map: pass GVCFs as --variant rather than a sample name map
         )
-
-        //Joint genotyping (GenotypeGVCFs)
-
-        // Hard filtering...
+        // Joint genotyping per chunk, from the GenomicsDB workspace
+        ch_genomicsdb_for_genotypegvcfs = gatk4_genomicsdbimport_out.genomicsdb
+            .map { meta, workspace -> [meta.chunk, meta, workspace] }
+            .join(ch_bed_intervals_by_chunk, failOnMismatch: true, failOnDuplicate: true)
+            .map { _chunk, meta, workspace, chunk_bed ->
+                [
+                    meta,
+                    workspace,
+                    [],        // path: gvcf_index (not used with a GenomicsDB workspace)
+                    chunk_bed,
+                    []         // path: intervals_index (not needed for a BED file)
+                ]
+            }
+        gatk4_genotypegvcfs_out = GATK4_GENOTYPEGVCFS(
+            ch_genomicsdb_for_genotypegvcfs,
+            ch_reference_and_fai.map { meta, fasta, _fai -> [meta, fasta] },
+            ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] },
+            ch_reference_dict,
+            [ [], [] ], // dbsnp
+            [ [], [] ], // dbsnp_tbi index
+        )
+        ch_chunk_vcfs_indexed = gatk4_genotypegvcfs_out.vcf.join(gatk4_genotypegvcfs_out.tbi, failOnMismatch: true, failOnDuplicate: true)
     }
 
     // TODO: add parabricks haplotype caller and genotype gvcfs
 
     // TODO: convert *.vcf from parabricks to *vcf.gz and index
+
+    // Concatenate the genome chunks of each group using BCFTOOLS_CONCAT
+    ch_chunk_vcfs = ch_chunk_vcfs_indexed
+        .map { meta, vcf, index ->
+            def group_meta = [id: meta.group_id, samples: meta.samples]
+            // keep chunk id (e.g. "chunk_00002") for sorting later
+            return [group_meta, meta.chunk, vcf, index]
+        }
+        .groupTuple()
+        .map { meta, chunk_ids, vcfs, indexes ->
+            // sort files by chunk_id to preserve genomic order
+            def sorted = [chunk_ids, vcfs, indexes].transpose().sort { row -> row[0] }
+            [meta, sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
+        }
+        // A single chunk skips concatenation; it is renamed to the group meta id when published (main.nf)
+        .branch { meta, vcfs, indexes ->
+            skip_concat: vcfs.size() == 1
+                return [meta, vcfs[0], indexes[0]]
+            for_concat: vcfs.size() > 1
+        }
+    bcftools_concat_out = BCFTOOLS_CONCAT(ch_chunk_vcfs.for_concat)
+    // Join concatenated vcf files with their indexes, for variant QC and publishing.
+    ch_variant_calls_indexed = bcftools_concat_out.vcf
+        .join(bcftools_concat_out.index)
+        .mix(ch_chunk_vcfs.skip_concat)
 
     // CALL_VARIANTS:VARIANT_QC
     outputs_bcftools_stats          = channel.empty()
