@@ -177,7 +177,7 @@
                     "type": "string",
                     "default": "bcftools_multisample",
                     "description": "Variant calling tool choice.",
-                    "enum": ["bcftools_multisample"]
+                    "enum": ["bcftools_multisample", "gatk"]
                 },
                 "chunk_size": {
                     "type": "integer",

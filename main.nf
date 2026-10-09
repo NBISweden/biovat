@@ -109,7 +109,9 @@ workflow NBISWEDEN_BIOVAT {
         merge_to_library: enable.mark_duplicates,
         merge_to_sample : enable.variant_calling,
         // Providing --sample_metadata groups samples into populations during variant calling
-        group_samples   : enable.variant_calling && params.sample_metadata as boolean
+        group_samples   : enable.variant_calling && params.sample_metadata as boolean,
+        // GATK tools need a sequence dictionary alongside the reference fasta
+        dict            : enable.variant_calling && params.variant_caller == 'gatk'
     ]
     def merge_active = requires.merge_to_library || requires.merge_to_sample
 
