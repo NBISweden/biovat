@@ -50,12 +50,14 @@ workflow BIOVAT {
 
     // Reference utilities
     ch_reference_and_optional_fai = channel.value([[], [], []])
+    ch_reference_dict             = channel.value([[], []])
     if ( params.reference ) {
         reference_utils_out = REFERENCE_UTILS(
             reference,
             requires,
         )
         ch_reference_and_optional_fai = reference_utils_out.ch_reference_and_optional_fai
+        ch_reference_dict             = reference_utils_out.ch_reference_dict
     }
 
     // Raw read quality checks
@@ -199,6 +201,7 @@ workflow BIOVAT {
             ch_sample_metadata,
             requires,
             ch_reference_and_optional_fai,
+            ch_reference_dict,
             dataset_name,
             enable,
             ch_multiqc_files,
