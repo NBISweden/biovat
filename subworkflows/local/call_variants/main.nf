@@ -195,7 +195,8 @@ workflow CALL_VARIANTS {
     // Concatenate the genome chunks of each group using BCFTOOLS_CONCAT
     ch_chunk_vcfs = ch_chunk_vcfs_indexed
         .map { meta, vcf, index ->
-            def group_meta = [id: meta.group_id, samples: meta.samples]
+            // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <dataset_name>.gatk
+            def group_meta = [id: "${meta.group_id}.${variant_caller}", samples: meta.samples]
             // keep chunk id (e.g. "chunk_00002") for sorting later
             return [group_meta, meta.chunk, vcf, index]
         }

@@ -105,11 +105,11 @@ Variant calling is parallelised over genome chunks. The reference `.fai` index i
 
 #### BCFtools multi-sample calling
 
-Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). All samples are called jointly: for each genome chunk, `bcftools mpileup` computes genotype likelihoods for every sample, `bcftools call` turns them into genotypes, and the chunks are then concatenated into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.vcf.gz`.
+Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). All samples are called jointly: for each genome chunk, `bcftools mpileup` computes genotype likelihoods for every sample, `bcftools call` turns them into genotypes, and the chunks are then concatenated into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.<variant_caller>.vcf.gz` (e.g. `all_samples.bcftools_multisample.vcf.gz`).
 
 The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
 
-- `--dataset_name` (default `all_samples`) sets the file name prefix of the joint VCF and its index.
+- `--dataset_name` (default `all_samples`) sets the file name prefix of the joint VCF and its index; the caller name (`--variant_caller`) is appended to it.
 - `--sample_metadata` groups samples into populations during calling; see [Sample metadata](#sample-metadata) and [`bcftools call`](#bcftools-call).
 
 **bcftools mpileup**
