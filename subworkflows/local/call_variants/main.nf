@@ -1,6 +1,7 @@
 include { SPLITGENOME                  } from '../../../modules/local/splitgenome/main'
 include { BCFTOOLS_MPILEUP_MULTISAMPLE } from '../../../modules/local/bcftools/mpileup_multisample/main'
 include { BCFTOOLS_CONCAT              } from '../../../modules/nf-core/bcftools/concat/main'
+include { GATK4_HAPLOTYPECALLER        } from '../../../modules/nf-core/gatk4/haplotypecaller/main'
 include { VARIANT_QC                   } from '../variant_qc/main'
 
 workflow CALL_VARIANTS {
@@ -12,11 +13,16 @@ workflow CALL_VARIANTS {
     ch_sample_metadata     // channel: sample metadata for population grouping during variant calling
     requires               // map: stage/tool gating flags
     ch_reference_and_fai
+    ch_reference_dict      // channel: [ meta, dict ] sequence dictionary, [[], []] unless requires.dict
     dataset_name
     enable
     ch_multiqc_files
 
     main:
+
+    ch_chunk_vcfs = channel.empty()
+    ch_mpileup    = channel.empty()
+    ch_variant_calls_indexed = channel.empty() // TODO remove, this should be produced by any path
 
     // Branch on platform to avoid calling mixed-platform samples together
     platform_alignments_for_calling = ch_alignment_and_index
@@ -36,16 +42,18 @@ workflow CALL_VARIANTS {
             )
         }
 
-    // Split the reference genome into chunks of chromosomes for parallelization
-    ch_fai           = ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] }
+    // Split the reference genome into chunks (BED intervals) for parallelization
     splitgenome_out  = SPLITGENOME(
-        ch_fai,
+        ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] },
         chunk_size ?: '',
         min_length ?: ''
     )
+    ch_bed_intervals = splitgenome_out.chunks
+        .transpose()
+        .map { _meta_ref, chunk_bed -> chunk_bed }
     ch_multiqc_files = ch_multiqc_files.mix(splitgenome_out.summary.map { _meta, file -> [file] })
 
-    // Make --min_length exclusions visible on the console when they cover more than 5% of the reference
+    // Make contig exclusions visible on the console when they cover more than 5% of the reference
     splitgenome_out.summary.subscribe { _meta, summary ->
         def rows = summary.readLines().findAll { line -> line && !line.startsWith('#') }.collect { line -> line.tokenize('\t') }
         if (rows.size() == 2) {
@@ -60,26 +68,23 @@ workflow CALL_VARIANTS {
         }
     }
 
-    // Call variants with four alternative variant callers
-    ch_variant_calls_indexed = channel.empty()
-    ch_mpileup               = channel.empty()
+    // Prepare population metadata file (used by bcftools mpileup --group-samples)
+    ch_population_file = channel.value([])
+    if (requires.group_samples) {
+        ch_population_file = ch_sample_metadata
+            .map { meta -> "${meta.id}\t${meta.population}" }
+            .collectFile(
+                name: 'sample_population.tsv',
+                newLine: true,
+                sort: true,
+                cache: true,)
+            .collect()
+    }
 
+    // bcftools: multi-sample joint calling
     if (variant_caller == 'bcftools_multisample') {
-        // Provide the option to pass population information to bcftools call (-G)
-        ch_population_file = channel.value([])
-        if (requires.group_samples) {
-            ch_population_file = ch_sample_metadata
-                .map { meta -> "${meta.id}\t${meta.population}" }
-                .collectFile(
-                    name: 'sample_population.tsv',
-                    newLine: true,
-                    sort: true,
-                    cache: true,)
-                .collect()
-        }
-
-        // Group all samples into a single joint call
-        ch_alignments_for_joint_call = platform_alignments_for_calling.illumina
+        // Group all samples
+        ch_grouped_alignments = platform_alignments_for_calling.illumina
             .map { meta, alignment, index -> [dataset_name, meta.id, alignment, index] }
             .groupTuple()
             .map { group, samples, alignments, indexes ->
@@ -87,21 +92,15 @@ workflow CALL_VARIANTS {
                 def sorted = [samples, alignments, indexes].transpose().sort { row -> row[0] }
                 [[id: group, samples: sorted.collect { row -> row[0] }], sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
             }
-
-        // Split into genome chunks for parallelization
-        ch_intervals = splitgenome_out.chunks
-            .transpose()
-            .map { _meta_ref, chunk_bed -> chunk_bed }
-
-        ch_alignments_for_bcftools_mpileup = ch_alignments_for_joint_call
-            .combine(ch_intervals)
+        // Combine group with BED intervals for region-specific parallel calling
+        ch_alignments_for_bcftools_mpileup = ch_grouped_alignments
+            .combine(ch_bed_intervals)
             .map { meta, alignments, indexes, chunk_bed ->
                 [
                     [id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName],
                     alignments, indexes, chunk_bed
                 ]
             }
-
         // Multi-sample variant calling
         bcftools_mpileup_multisample_out = BCFTOOLS_MPILEUP_MULTISAMPLE(
             ch_alignments_for_bcftools_mpileup,
@@ -112,7 +111,6 @@ workflow CALL_VARIANTS {
         )
         ch_bcftools_mpileup_for_concat = bcftools_mpileup_multisample_out.vcf.join(bcftools_mpileup_multisample_out.index)
         ch_mpileup                     = bcftools_mpileup_multisample_out.mpileup
-
         // Concatenate the genome chunks using BCFTOOLS_CONCAT
         ch_chunk_vcfs = ch_bcftools_mpileup_for_concat
             .map { meta, vcf, index ->
@@ -132,7 +130,6 @@ workflow CALL_VARIANTS {
                     return [meta, vcfs[0], indexes[0]]
                 for_concat: vcfs.size() > 1
             }
-
         bcftools_concat_out = BCFTOOLS_CONCAT(ch_chunk_vcfs.for_concat)
         // Join concatenated vcf files with their indexes, for variant QC and publishing.
         ch_variant_calls_indexed = bcftools_concat_out.vcf
@@ -142,7 +139,38 @@ workflow CALL_VARIANTS {
 
     // TODO: add bcftools mpileup/call per sample calling and merging/joint genotyping
 
-    // TODO: add GATK4 haplotype caller and genotype gvcfs
+    // GATK4: per-sample calling and joint genotyping
+    if (variant_caller == 'gatk') {
+        // Combine each sample with BED intervals for region-specific parallel calling
+        ch_alignments_for_gatk4 = platform_alignments_for_calling.illumina
+            .combine(ch_bed_intervals)
+            .map { meta, alignments, indexes, chunk_bed ->
+                [
+                    meta + [chunk: chunk_bed.baseName],
+                    alignments,
+                    indexes,
+                    chunk_bed,
+                    []         // path: dragstr_model
+                ]
+            }
+        // GATK4_HAPLOTYPECALLER in gvcf mode
+        GATK4_HAPLOTYPECALLER(
+            ch_alignments_for_gatk4,
+            ch_reference_and_fai.map { meta, fasta, _fai -> [meta, fasta] },
+            ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] },
+            ch_reference_dict,
+            [ [], [] ], // dbsnp
+            [ [], [] ], // dbsbp_tbi index
+        )
+
+
+        //Consolidate into a genomicsDB datastore (GenomicsDBImport)
+
+        //Joint genotyping (GenotypeGVCFs)
+
+        //VQSR filtering
+
+    }
 
     // TODO: add parabricks haplotype caller and genotype gvcfs
 
