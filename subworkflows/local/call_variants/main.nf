@@ -140,7 +140,7 @@ workflow CALL_VARIANTS {
             ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] },
             ch_reference_dict,
             [ [], [] ], // dbsnp
-            [ [], [] ], // dbsbp_tbi index
+            [ [], [] ], // dbsnp_tbi index
         )
         // Consolidate GVCFs into one GenomicsDB workspace per chunk
         ch_bed_intervals_by_chunk = ch_bed_intervals.map { chunk_bed, n_chunks -> [chunk_bed.baseName, chunk_bed, n_chunks] }
