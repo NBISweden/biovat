@@ -48,7 +48,7 @@ params {
     optical_distance            : Integer
 
     // Variant calling options
-    dataset_name                : String
+    callset_prefix              : String
     variant_caller              : String
     chunk_size                  : Integer?
     min_length                  : Integer
@@ -131,7 +131,7 @@ workflow NBISWEDEN_BIOVAT {
         params.variant_caller,
         params.chunk_size,
         params.min_length,
-        params.dataset_name,
+        params.callset_prefix,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,

@@ -32,7 +32,7 @@ workflow BIOVAT {
     variant_caller     // string: Variant calling tool to use (e.g. bcftools_multisample)
     chunk_size         // integer: Genome chunk size (bp) used for parallelization
     min_length         // integer: Minimum contig/scaffold length to be kept
-    dataset_name       // string: File name prefix for VCF/BCF file containing all samples
+    callset_prefix     // string: File name prefix for VCF/BCF file containing all samples
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -202,7 +202,7 @@ workflow BIOVAT {
             requires,
             ch_reference_and_optional_fai,
             ch_reference_dict,
-            dataset_name,
+            callset_prefix,
             enable,
             ch_multiqc_files,
         )

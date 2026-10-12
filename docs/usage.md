@@ -91,10 +91,10 @@ nextflow main.nf --help
 
 ### Variant calling
 
-Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.<variant_caller>.vcf.gz` (e.g. `all_samples.gatk.vcf.gz`). The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into a single multi-sample VCF, published as `07_variant_calls/<callset_prefix>.<variant_caller>.vcf.gz` (e.g. `all_samples.gatk.vcf.gz`). The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
 
 - `--variant_caller` selects the caller: `bcftools_multisample` (default; see [BCFtools multi-sample calling](#bcftools-multi-sample-calling)) or `gatk` (see [GATK](#gatk))
-- `--dataset_name` (default `all_samples`) sets the file name prefix of the joint VCF and its index; the caller name is appended to it
+- `--callset_prefix` (default `all_samples`) sets the file name prefix of the joint VCF and its index; the caller name is appended to it
 - `--enable_variant_qc` (default `true`) runs quality checks on the final VCF
 
 #### Genome chunking

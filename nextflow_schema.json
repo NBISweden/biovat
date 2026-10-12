@@ -168,7 +168,7 @@
             "description": "",
             "default": "",
             "properties": {
-                "dataset_name": {
+                "callset_prefix": {
                     "type": "string",
                     "default": "all_samples",
                     "description": "File name prefix used for VCF/BCF files containing all samples."

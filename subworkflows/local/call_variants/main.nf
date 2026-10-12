@@ -16,7 +16,7 @@ workflow CALL_VARIANTS {
     requires               // map: stage/tool gating flags
     ch_reference_and_fai
     ch_reference_dict      // channel: [ meta, dict ] sequence dictionary, [[], []] unless requires.dict
-    dataset_name
+    callset_prefix
     enable
     ch_multiqc_files
 
@@ -80,8 +80,8 @@ workflow CALL_VARIANTS {
             .collectFile(
                 name: 'sample_population.tsv',
                 newLine: true,
-                sort: true,
-                cache: true,)
+                sort: true
+            )
             .collect()
     }
 
@@ -89,7 +89,7 @@ workflow CALL_VARIANTS {
     if (variant_caller == 'bcftools_multisample') {
         // Group all samples
         ch_grouped_alignments = platform_alignments_for_calling.illumina
-            .map { meta, alignment, index -> [dataset_name, meta.id, alignment, index] }
+            .map { meta, alignment, index -> [callset_prefix, meta.id, alignment, index] }
             .groupTuple()
             .map { group, samples, alignments, indexes ->
                 // sort by sample id so VCF sample columns don't depend on channel arrival order
@@ -153,7 +153,7 @@ workflow CALL_VARIANTS {
                 // sort by sample id so the workspace sample order doesn't depend on channel arrival order
                 def sorted = [samples, gvcfs, tbis].transpose().sort { row -> row[0] }
                 [
-                    [id: "${dataset_name}.${chunk}", group_id: dataset_name, samples: sorted.collect { row -> row[0] }, chunk: chunk, n_chunks: n_chunks],
+                    [id: "${callset_prefix}.${chunk}", group_id: callset_prefix, samples: sorted.collect { row -> row[0] }, chunk: chunk, n_chunks: n_chunks],
                     sorted.collect { row -> row[1] },
                     sorted.collect { row -> row[2] },
                     chunk_bed,
@@ -198,7 +198,7 @@ workflow CALL_VARIANTS {
     // Concatenate the genome chunks of each group using BCFTOOLS_CONCAT
     ch_chunk_vcfs = ch_chunk_vcfs_indexed
         .map { meta, vcf, index ->
-            // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <dataset_name>.gatk
+            // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <callset_prefix>.gatk
             // groupKey with the chunk count lets each group be released as soon as its last chunk arrives
             def group_meta = groupKey([id: "${meta.group_id}.${variant_caller}", samples: meta.samples], meta.n_chunks)
             // keep chunk id (e.g. "chunk_00002") for sorting later
