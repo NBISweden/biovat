@@ -1,0 +1,46 @@
+nextflow_function {
+
+    name "Test reference utility functions"
+    script "../main.nf"
+    tag "subworkflows"
+    tag "utils_reference"
+
+    test("checkGatkContigLengths - contigs up to 2^29 bp pass") {
+        function "checkGatkContigLengths"
+
+        when {
+            function {
+                """
+                def fai = java.nio.file.Files.createTempFile('reference', '.fai')
+                fai.text = 'chr1\\t1000\\t6\\t60\\t61\\nchr2\\t536870912\\t1030\\t60\\t61\\n'
+                input[0] = fai
+                """
+            }
+        }
+
+        then {
+            assert function.success
+        }
+    }
+
+    test("checkGatkContigLengths - contig past 2^29 bp fails") {
+        function "checkGatkContigLengths"
+
+        when {
+            function {
+                """
+                def fai = java.nio.file.Files.createTempFile('reference', '.fai')
+                fai.text = 'chr1\\t1000\\t6\\t60\\t61\\nchrBig\\t536870913\\t1030\\t60\\t61\\n'
+                input[0] = fai
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert function.failed },
+                { assert function.stdout.any { line -> line.contains("does not support indexing contigs longer than 2^29 bp (536,870,912): chrBig (536870913 bp)") } }
+            )
+        }
+    }
+}
