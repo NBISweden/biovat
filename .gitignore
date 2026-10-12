@@ -13,4 +13,5 @@ null/
 .nf-test.log
 .pixi/
 .nf-test/
+.nf-test-*.nf
 .vscode/

@@ -91,9 +91,9 @@ nextflow main.nf --help
 
 ### Variant calling
 
-Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)); only `ILLUMINA` alignments are currently called, and any others are skipped with a console warning. Whichever caller is chosen, all samples are called jointly, one [genome chunk](#genome-chunking) at a time, and the per-chunk VCFs are concatenated into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.<variant_caller>.vcf.gz` (e.g. `all_samples.gatk.vcf.gz`). The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into a single multi-sample VCF, published as `07_variant_calls/<dataset_name>.<variant_caller>.vcf.gz` (e.g. `all_samples.gatk.vcf.gz`). The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
 
-- `--variant_caller` selects the caller: `bcftools_multisample` (default; see [BCFtools multi-sample calling](#bcftools-multi-sample-calling)) or `gatk` (see [GATK joint calling](#gatk-joint-calling))
+- `--variant_caller` selects the caller: `bcftools_multisample` (default; see [BCFtools multi-sample calling](#bcftools-multi-sample-calling)) or `gatk` (see [GATK](#gatk))
 - `--dataset_name` (default `all_samples`) sets the file name prefix of the joint VCF and its index; the caller name is appended to it
 - `--enable_variant_qc` (default `true`) runs quality checks on the final VCF
 
@@ -123,7 +123,7 @@ Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag 
 
 - `--bcftools_call_extra` (default `--variants-only`) is passed to `bcftools call`. Keep `--variants-only` unless you want every site (including invariant ones) in the VCF, which makes it far larger. All sites are called as diploid unless you add `--ploidy` or `--ploidy-file`.
 
-#### GATK joint calling
+#### GATK
 
 Follows the joint-calling workflow of the GATK [germline short variant discovery](https://gatk.broadinstitute.org/hc/en-us/articles/360035535932-Germline-short-variant-discovery-SNPs-Indels) Best Practices, run per genome chunk:
 
@@ -133,11 +133,7 @@ Follows the joint-calling workflow of the GATK [germline short variant discovery
 
 The reference sequence dictionary (`.dict`) that GATK needs is created automatically. The per-sample GVCFs are intermediate files and are not published.
 
-Compared with the Best Practices, which are designed for human data:
-
-- No known-variant resources are used: base quality score recalibration (BQSR) is not run and no `--dbsnp` file is given.
-- The VCF is not filtered. VQSR needs truth/training sets that non-model organisms usually lack; GATK's recommended alternative, hard filtering, is not yet implemented.
-- All sites are called as diploid, and `--sample_metadata` has no effect on calling.
+Compared with the Best Practices, which are designed for human data, no known-variant resources are used: base quality score recalibration (BQSR) is not run and no `--dbsnp` file is given.
 
 ## Running the pipeline
 

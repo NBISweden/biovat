@@ -21,7 +21,7 @@ workflow CALL_VARIANTS {
     ch_multiqc_files
 
     main:
-    // Every caller emits per-chunk calls as [ meta (id, group_id, samples, chunk), vcf, index ], gathered below
+    // Every caller emits per-chunk calls as [ meta (id, group_id, samples, chunk, n_chunks), vcf, index ], gathered below
     ch_chunk_vcfs_indexed = channel.empty()
     ch_mpileup            = channel.empty()
 
@@ -49,9 +49,12 @@ workflow CALL_VARIANTS {
         chunk_size ?: '',
         min_length ?: ''
     )
+    // Carry the chunk count so concatenation can group without waiting on unrelated work
     ch_bed_intervals = splitgenome_out.chunks
-        .transpose()
-        .map { _meta_ref, chunk_bed -> chunk_bed }
+        .flatMap { _meta_ref, chunk_beds ->
+            def beds = [chunk_beds].flatten()
+            beds.collect { chunk_bed -> [chunk_bed, beds.size()] }
+        }
     ch_multiqc_files = ch_multiqc_files.mix(splitgenome_out.summary.map { _meta, file -> [file] })
 
     // Make contig exclusions visible on the console when they cover more than 5% of the reference
@@ -93,12 +96,12 @@ workflow CALL_VARIANTS {
                 def sorted = [samples, alignments, indexes].transpose().sort { row -> row[0] }
                 [[id: group, samples: sorted.collect { row -> row[0] }], sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
             }
-        // Combine group with BED intervals for region-specific parallel calling
+        // Combine each group with BED intervals for region-specific parallel calling
         ch_alignments_for_bcftools_mpileup = ch_grouped_alignments
             .combine(ch_bed_intervals)
-            .map { meta, alignments, indexes, chunk_bed ->
+            .map { meta, alignments, indexes, chunk_bed, n_chunks ->
                 [
-                    [id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName],
+                    [id: "${meta.id}.${chunk_bed.baseName}", group_id: meta.id, samples: meta.samples, chunk: chunk_bed.baseName, n_chunks: n_chunks],
                     alignments, indexes, chunk_bed
                 ]
             }
@@ -121,7 +124,7 @@ workflow CALL_VARIANTS {
         // Combine each sample with BED intervals for region-specific parallel calling
         ch_alignments_for_gatk4 = platform_alignments_for_calling.illumina
             .combine(ch_bed_intervals)
-            .map { meta, alignments, indexes, chunk_bed ->
+            .map { meta, alignments, indexes, chunk_bed, _n_chunks ->
                 [
                     meta + [chunk: chunk_bed.baseName],
                     alignments,
@@ -140,17 +143,17 @@ workflow CALL_VARIANTS {
             [ [], [] ], // dbsbp_tbi index
         )
         // Consolidate GVCFs into one GenomicsDB workspace per chunk
-        ch_bed_intervals_by_chunk = ch_bed_intervals.map { chunk_bed -> [chunk_bed.baseName, chunk_bed] }
+        ch_bed_intervals_by_chunk = ch_bed_intervals.map { chunk_bed, n_chunks -> [chunk_bed.baseName, chunk_bed, n_chunks] }
         ch_gvcfs_for_genomicsdbimport = gatk4_haplotypecaller_out.vcf
             .join(gatk4_haplotypecaller_out.tbi, failOnMismatch: true, failOnDuplicate: true)
             .map { meta, gvcf, tbi -> [meta.chunk, meta.id, gvcf, tbi] }
             .groupTuple()
             .join(ch_bed_intervals_by_chunk, failOnMismatch: true, failOnDuplicate: true)
-            .map { chunk, samples, gvcfs, tbis, chunk_bed ->
+            .map { chunk, samples, gvcfs, tbis, chunk_bed, n_chunks ->
                 // sort by sample id so the workspace sample order doesn't depend on channel arrival order
                 def sorted = [samples, gvcfs, tbis].transpose().sort { row -> row[0] }
                 [
-                    [id: "${dataset_name}.${chunk}", group_id: dataset_name, samples: sorted.collect { row -> row[0] }, chunk: chunk],
+                    [id: "${dataset_name}.${chunk}", group_id: dataset_name, samples: sorted.collect { row -> row[0] }, chunk: chunk, n_chunks: n_chunks],
                     sorted.collect { row -> row[1] },
                     sorted.collect { row -> row[2] },
                     chunk_bed,
@@ -168,7 +171,7 @@ workflow CALL_VARIANTS {
         ch_genomicsdb_for_genotypegvcfs = gatk4_genomicsdbimport_out.genomicsdb
             .map { meta, workspace -> [meta.chunk, meta, workspace] }
             .join(ch_bed_intervals_by_chunk, failOnMismatch: true, failOnDuplicate: true)
-            .map { _chunk, meta, workspace, chunk_bed ->
+            .map { _chunk, meta, workspace, chunk_bed, _n_chunks ->
                 [
                     meta,
                     workspace,
@@ -196,7 +199,8 @@ workflow CALL_VARIANTS {
     ch_chunk_vcfs = ch_chunk_vcfs_indexed
         .map { meta, vcf, index ->
             // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <dataset_name>.gatk
-            def group_meta = [id: "${meta.group_id}.${variant_caller}", samples: meta.samples]
+            // groupKey with the chunk count lets each group be released as soon as its last chunk arrives
+            def group_meta = groupKey([id: "${meta.group_id}.${variant_caller}", samples: meta.samples], meta.n_chunks)
             // keep chunk id (e.g. "chunk_00002") for sorting later
             return [group_meta, meta.chunk, vcf, index]
         }
@@ -204,7 +208,7 @@ workflow CALL_VARIANTS {
         .map { meta, chunk_ids, vcfs, indexes ->
             // sort files by chunk_id to preserve genomic order
             def sorted = [chunk_ids, vcfs, indexes].transpose().sort { row -> row[0] }
-            [meta, sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
+            [meta.getGroupTarget(), sorted.collect { row -> row[1] }, sorted.collect { row -> row[2] }]
         }
         // A single chunk skips concatenation; it is renamed to the group meta id when published (main.nf)
         .branch { meta, vcfs, indexes ->
@@ -239,7 +243,7 @@ workflow CALL_VARIANTS {
 
     emit:
     ch_genome_chunks         = splitgenome_out.chunks.join(splitgenome_out.excluded) // channel: [ meta, chunk_*.bed, excluded_regions.tsv ]
-    ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.tbi/csi ]
+    ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.csi ]
     ch_mpileup               // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
     ch_multiqc_files
     outputs_bcftools_stats

@@ -122,6 +122,8 @@ def main(argv=None):
 
     # First pass: read everything
     regions = list(read_regions(args.input))
+    if not regions:
+        sys.exit(f"ERROR: no regions in {args.input}.")
 
     # Filter by min_length and find the longest chromosome
     kept, dropped = kept_regions(regions)

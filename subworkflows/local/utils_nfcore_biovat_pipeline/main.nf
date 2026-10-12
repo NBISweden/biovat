@@ -116,6 +116,9 @@ workflow PIPELINE_INITIALISATION {
     // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
     validateAlignmentConsumers(samplesheet_rows)
 
+    // Variant calling is currently ILLUMINA-only; reject a run where it would call nothing
+    validateVariantCallingPlatforms(samplesheet_rows)
+
     // Report every reason --reference is needed (params and samplesheet rows) in one error
     validateReferenceRequirements(samplesheet_rows)
 
@@ -260,6 +263,16 @@ def validateAlignmentConsumers(rows) {
     if ( stages ) {
         validationError("No alignments to process for ${stages.values().join(', ')}. Either enable alignment, provide 'BAM/CRAM' files, or disable these stage(s).")
     }
+}
+
+// Placeholder until other platforms are supported: CALL_VARIANTS only calls ILLUMINA alignments (others are
+// excluded with a warning), so a samplesheet with no ILLUMINA rows would otherwise finish without a VCF
+def validateVariantCallingPlatforms(rows) {
+    if ( !params.enable_variant_calling || rows.any { meta, _files -> meta.pl == 'ILLUMINA' } ) {
+        return
+    }
+    def platforms = rows.collect { meta, _files -> meta.pl }.unique().sort()
+    validationError("Variant calling (--enable_variant_calling) currently supports only ILLUMINA alignments, but no samplesheet rows have platform ILLUMINA (found: ${platforms.join(', ')}). Disable variant calling or provide ILLUMINA data.")
 }
 
 // Collect every reason --reference is needed (from params and samplesheet rows) and report in one error

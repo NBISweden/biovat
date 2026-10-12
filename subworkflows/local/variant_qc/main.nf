@@ -6,7 +6,7 @@ include { VCFTOOLS as VCFTOOLS_RELATEDNESS2 } from '../../../modules/nf-core/vcf
 
 workflow VARIANT_QC {
     take:
-    ch_variant_calls_and_tbi
+    ch_variant_calls_and_index
     ch_reference_and_fai
 
     main:
@@ -14,7 +14,7 @@ workflow VARIANT_QC {
     // Remove fai for BCFTOOLS_STATS module
     ch_reference = ch_reference_and_fai.map { meta, fasta, _fai -> [meta, fasta] }
     bcftools_stats_out = BCFTOOLS_STATS(
-        ch_variant_calls_and_tbi,
+        ch_variant_calls_and_index,
         [[:], []],
         [[:], []],
         [[:], []],
@@ -23,8 +23,8 @@ workflow VARIANT_QC {
     )
 
     // VCFTOOLS:
-    // Remove tbi for VCFTOOLS module
-    ch_variant_calls = ch_variant_calls_and_tbi.map { meta, vcf, _tbi -> [meta, vcf] }
+    // Remove index for VCFTOOLS module
+    ch_variant_calls = ch_variant_calls_and_index.map { meta, vcf, _index -> [meta, vcf] }
     vcftools_tstv_count_out = VCFTOOLS_TSTV_COUNT(
         ch_variant_calls,
         [],
