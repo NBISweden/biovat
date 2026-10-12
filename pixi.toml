@@ -85,6 +85,10 @@ description = "Build the pipeline schema"
 cmd         = "nf-test test tests/default.nf.test --profile +docker"
 description = "Run the default nf-test profile with Docker"
 
+[tasks.subworkflow-tests]
+cmd         = "nf-test test subworkflows/local --profile +docker"
+description = "Run the local subworkflow and function nf-tests with Docker"
+
 [tasks.module-tests]
 cmd               = "nf-test test --filter process --profile +docker --verbose"
 description       = "Run the module nf-test profile with Docker"
@@ -92,3 +96,11 @@ description       = "Run the module nf-test profile with Docker"
 [target.osx-arm64.tasks.default-nf-test]
 cmd         = "nf-test test tests/default.nf.test --profile +docker,arm64"
 description = "Run the default nf-test profile with Docker (arm64)"
+
+[target.osx-arm64.tasks.subworkflow-tests]
+cmd         = "nf-test test subworkflows/local --profile +docker,arm64"
+description = "Run the local subworkflow and function nf-tests with Docker (arm64)"
+
+[target.osx-arm64.tasks.module-tests]
+cmd               = "nf-test test --filter process --profile +docker,arm64 --verbose"
+description       = "Run the module nf-test profile with Docker"

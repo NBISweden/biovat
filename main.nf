@@ -18,6 +18,7 @@ params {
     // Input options
     input                       : String
     reference                   : String?
+    sample_metadata             : String?
 
     // Workflow stage gating options
     enable_raw_read_qc          : Boolean
@@ -26,6 +27,7 @@ params {
     enable_align_qc             : Boolean
     enable_mark_duplicates      : Boolean
     enable_variant_calling      : Boolean
+    enable_variant_qc           : Boolean
 
     // Read trimming options
     adapter_fasta               : String?
@@ -44,6 +46,15 @@ params {
     duplicate_marker            : String
     enable_remove_duplicates    : Boolean
     optical_distance            : Integer
+
+    // Variant calling options
+    dataset_name                : String
+    variant_caller              : String
+    chunk_size                  : Integer?
+    min_length                  : Integer
+    enable_save_mpileup         : Boolean
+    bcftools_mpileup_extra      : String
+    bcftools_call_extra         : String
 
     // MultiQC options
     multiqc_config              : String?
@@ -81,12 +92,14 @@ params {
 workflow NBISWEDEN_BIOVAT {
 
     take:
-    samplesheet // channel: samplesheet read in from --input
-    reference   // channel: reference fasta read in from --reference
+    samplesheet     // channel: samplesheet read in from --input
+    sample_metadata // channel: per-sample metadata read in from --sample_metadata
+    reference       // channel: reference fasta read in from --reference
 
     main:
     // Gating parameters, passed as a single map
-    def enable = params.findAll { k, _v -> k.startsWith('enable_') }
+    def enable = params
+        .findAll { k, _v -> k.startsWith('enable_') }
         .collectEntries { k, v -> [(k - 'enable_'): v] }
 
     // 'requires' is a map of internal dependency relationships
@@ -94,51 +107,66 @@ workflow NBISWEDEN_BIOVAT {
         // MERGE_TO_LIBRARY (readgroup -> library) and MERGE_TO_SAMPLE (library -> sample, post-deduplication)
         // are triggered when a downstream consumer needs alignments merged to respective levels
         merge_to_library: enable.mark_duplicates,
-        merge_to_sample : enable.variant_calling
+        merge_to_sample : enable.variant_calling,
+        // Providing --sample_metadata groups samples into populations during variant calling
+        group_samples   : enable.variant_calling && params.sample_metadata as boolean
     ]
     def merge_active = requires.merge_to_library || requires.merge_to_sample
 
-    // .fai is used for certain CRAM processes, and unconditionally by riker. The samplesheet rows aren't
+    // .fai is used for certain CRAM processes, and unconditionally by riker & CALL_VARIANTS. Samplesheet rows aren't
     // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
-    requires.fai = (enable.cram_format && merge_active) || rikerActive(enable, true)
+    requires.fai = (enable.cram_format && merge_active) || rikerActive(enable, true) || enable.variant_calling
 
     biovat_out = BIOVAT(
         samplesheet,
+        sample_metadata,
         reference,
         enable,
         requires,
         params.adapter_fasta,
         params.aligner,
         params.duplicate_marker,
+        params.variant_caller,
+        params.chunk_size,
+        params.min_length,
+        params.dataset_name,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
-        params.outdir
+        params.outdir,
     )
 
     emit:
-    outputs_raw_read_qc              = biovat_out.outputs_raw_read_qc
-    outputs_trim_reads               = biovat_out.outputs_trim_reads
-    outputs_input_flagstat           = biovat_out.outputs_input_flagstat
-    outputs_input_riker              = biovat_out.outputs_input_riker
-    outputs_input_qualimap           = biovat_out.outputs_input_qualimap
-    outputs_read_group               = biovat_out.outputs_read_group
-    outputs_read_group_flagstat      = biovat_out.outputs_read_group_flagstat
-    outputs_read_group_riker         = biovat_out.outputs_read_group_riker
-    outputs_read_group_qualimap      = biovat_out.outputs_read_group_qualimap
-    outputs_library                  = biovat_out.outputs_library
-    outputs_library_flagstat         = biovat_out.outputs_library_flagstat
-    outputs_library_riker            = biovat_out.outputs_library_riker
-    outputs_library_qualimap         = biovat_out.outputs_library_qualimap
-    outputs_mark_duplicates          = biovat_out.outputs_mark_duplicates
-    outputs_mark_duplicates_flagstat = biovat_out.outputs_mark_duplicates_flagstat
-    outputs_mark_duplicates_riker    = biovat_out.outputs_mark_duplicates_riker
-    outputs_mark_duplicates_qualimap = biovat_out.outputs_mark_duplicates_qualimap
-    outputs_sample                   = biovat_out.outputs_sample
-    outputs_sample_flagstat          = biovat_out.outputs_sample_flagstat
-    outputs_sample_riker             = biovat_out.outputs_sample_riker
-    outputs_sample_qualimap          = biovat_out.outputs_sample_qualimap
-    outputs_multiqc                  = biovat_out.outputs_multiqc
+    outputs_raw_read_qc                           = biovat_out.outputs_raw_read_qc
+    outputs_trim_reads                            = biovat_out.outputs_trim_reads
+    outputs_input_flagstat                        = biovat_out.outputs_input_flagstat
+    outputs_input_riker                           = biovat_out.outputs_input_riker
+    outputs_input_qualimap                        = biovat_out.outputs_input_qualimap
+    outputs_read_group                            = biovat_out.outputs_read_group
+    outputs_read_group_flagstat                   = biovat_out.outputs_read_group_flagstat
+    outputs_read_group_riker                      = biovat_out.outputs_read_group_riker
+    outputs_read_group_qualimap                   = biovat_out.outputs_read_group_qualimap
+    outputs_library                               = biovat_out.outputs_library
+    outputs_library_flagstat                      = biovat_out.outputs_library_flagstat
+    outputs_library_riker                         = biovat_out.outputs_library_riker
+    outputs_library_qualimap                      = biovat_out.outputs_library_qualimap
+    outputs_mark_duplicates                       = biovat_out.outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat              = biovat_out.outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker                 = biovat_out.outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap              = biovat_out.outputs_mark_duplicates_qualimap
+    outputs_sample                                = biovat_out.outputs_sample
+    outputs_sample_flagstat                       = biovat_out.outputs_sample_flagstat
+    outputs_sample_riker                          = biovat_out.outputs_sample_riker
+    outputs_sample_qualimap                       = biovat_out.outputs_sample_qualimap
+    outputs_genome_chunks                         = biovat_out.outputs_genome_chunks
+    outputs_variant_calls                         = biovat_out.outputs_variant_calls
+    outputs_mpileup                               = biovat_out.outputs_mpileup
+    outputs_call_variants_bcftools_stats          = biovat_out.outputs_call_variants_bcftools_stats
+    outputs_call_variants_vcftools_tstv_counts    = biovat_out.outputs_call_variants_vcftools_tstv_counts
+    outputs_call_variants_vcftools_tstv_qual      = biovat_out.outputs_call_variants_vcftools_tstv_qual
+    outputs_call_variants_vcftools_filter_summary = biovat_out.outputs_call_variants_vcftools_filter_summary
+    outputs_call_variants_vcftools_relatedness2   = biovat_out.outputs_call_variants_vcftools_relatedness2
+    outputs_multiqc                               = biovat_out.outputs_multiqc
 
 }
 
@@ -153,41 +181,51 @@ workflow {
         args,
         params.outdir,
         params.input,
+        params.sample_metadata,
         params.help,
         params.help_full,
-        params.show_hidden
+        params.show_hidden,
     )
     nbisweden_biovat_out = NBISWEDEN_BIOVAT(
         pipeline_initialisation_out.samplesheet,
+        pipeline_initialisation_out.sample_metadata_sheet,
         pipeline_initialisation_out.reference
     )
-    PIPELINE_COMPLETION (
-        params.monochrome_logs,
+    PIPELINE_COMPLETION(
+        params.monochrome_logs
     )
 
     publish:
-    outputs_raw_read_qc              = nbisweden_biovat_out.outputs_raw_read_qc
-    outputs_trim_reads               = nbisweden_biovat_out.outputs_trim_reads
-    outputs_input_flagstat           = nbisweden_biovat_out.outputs_input_flagstat
-    outputs_input_riker              = nbisweden_biovat_out.outputs_input_riker
-    outputs_input_qualimap           = nbisweden_biovat_out.outputs_input_qualimap
-    outputs_read_group               = nbisweden_biovat_out.outputs_read_group
-    outputs_read_group_flagstat      = nbisweden_biovat_out.outputs_read_group_flagstat
-    outputs_read_group_riker         = nbisweden_biovat_out.outputs_read_group_riker
-    outputs_read_group_qualimap      = nbisweden_biovat_out.outputs_read_group_qualimap
-    outputs_library                  = nbisweden_biovat_out.outputs_library
-    outputs_library_flagstat         = nbisweden_biovat_out.outputs_library_flagstat
-    outputs_library_riker            = nbisweden_biovat_out.outputs_library_riker
-    outputs_library_qualimap         = nbisweden_biovat_out.outputs_library_qualimap
-    outputs_mark_duplicates          = nbisweden_biovat_out.outputs_mark_duplicates
-    outputs_mark_duplicates_flagstat = nbisweden_biovat_out.outputs_mark_duplicates_flagstat
-    outputs_mark_duplicates_riker    = nbisweden_biovat_out.outputs_mark_duplicates_riker
-    outputs_mark_duplicates_qualimap = nbisweden_biovat_out.outputs_mark_duplicates_qualimap
-    outputs_sample                   = nbisweden_biovat_out.outputs_sample
-    outputs_sample_flagstat          = nbisweden_biovat_out.outputs_sample_flagstat
-    outputs_sample_riker             = nbisweden_biovat_out.outputs_sample_riker
-    outputs_sample_qualimap          = nbisweden_biovat_out.outputs_sample_qualimap
-    outputs_multiqc                  = nbisweden_biovat_out.outputs_multiqc
+    outputs_raw_read_qc                           = nbisweden_biovat_out.outputs_raw_read_qc
+    outputs_trim_reads                            = nbisweden_biovat_out.outputs_trim_reads
+    outputs_input_flagstat                        = nbisweden_biovat_out.outputs_input_flagstat
+    outputs_input_riker                           = nbisweden_biovat_out.outputs_input_riker
+    outputs_input_qualimap                        = nbisweden_biovat_out.outputs_input_qualimap
+    outputs_read_group                            = nbisweden_biovat_out.outputs_read_group
+    outputs_read_group_flagstat                   = nbisweden_biovat_out.outputs_read_group_flagstat
+    outputs_read_group_riker                      = nbisweden_biovat_out.outputs_read_group_riker
+    outputs_read_group_qualimap                   = nbisweden_biovat_out.outputs_read_group_qualimap
+    outputs_library                               = nbisweden_biovat_out.outputs_library
+    outputs_library_flagstat                      = nbisweden_biovat_out.outputs_library_flagstat
+    outputs_library_riker                         = nbisweden_biovat_out.outputs_library_riker
+    outputs_library_qualimap                      = nbisweden_biovat_out.outputs_library_qualimap
+    outputs_mark_duplicates                       = nbisweden_biovat_out.outputs_mark_duplicates
+    outputs_mark_duplicates_flagstat              = nbisweden_biovat_out.outputs_mark_duplicates_flagstat
+    outputs_mark_duplicates_riker                 = nbisweden_biovat_out.outputs_mark_duplicates_riker
+    outputs_mark_duplicates_qualimap              = nbisweden_biovat_out.outputs_mark_duplicates_qualimap
+    outputs_sample                                = nbisweden_biovat_out.outputs_sample
+    outputs_sample_flagstat                       = nbisweden_biovat_out.outputs_sample_flagstat
+    outputs_sample_riker                          = nbisweden_biovat_out.outputs_sample_riker
+    outputs_sample_qualimap                       = nbisweden_biovat_out.outputs_sample_qualimap
+    outputs_genome_chunks                         = nbisweden_biovat_out.outputs_genome_chunks
+    outputs_variant_calls                         = nbisweden_biovat_out.outputs_variant_calls
+    outputs_mpileup                               = nbisweden_biovat_out.outputs_mpileup
+    outputs_call_variants_bcftools_stats          = nbisweden_biovat_out.outputs_call_variants_bcftools_stats
+    outputs_call_variants_vcftools_tstv_counts    = nbisweden_biovat_out.outputs_call_variants_vcftools_tstv_counts
+    outputs_call_variants_vcftools_tstv_qual      = nbisweden_biovat_out.outputs_call_variants_vcftools_tstv_qual
+    outputs_call_variants_vcftools_filter_summary = nbisweden_biovat_out.outputs_call_variants_vcftools_filter_summary
+    outputs_call_variants_vcftools_relatedness2   = nbisweden_biovat_out.outputs_call_variants_vcftools_relatedness2
+    outputs_multiqc                               = nbisweden_biovat_out.outputs_multiqc
 
 }
 
@@ -271,7 +309,36 @@ output {
     outputs_sample_qualimap {
         path '06_merged_samples/qc/qualimap'
     }
-    // MultiQC
+    // VARIANT_CALLING
+    outputs_genome_chunks {
+        path '07_variant_calls/genome_chunk_bed_files'
+    }
+    outputs_variant_calls {
+        path { meta, vcf, index ->
+            // Named from the group meta, as a single-chunk call skips BCFTOOLS_CONCAT and keeps its chunk file name
+            vcf   >> "07_variant_calls/${meta.id}.vcf.gz"
+            index >> "07_variant_calls/${meta.id}.vcf.gz.${index.extension}"
+        }
+    }
+    outputs_mpileup {
+        path '07_variant_calls'
+    }
+    outputs_call_variants_bcftools_stats {
+        path '07_variant_calls/qc/bcftools_stats'
+    }
+    outputs_call_variants_vcftools_tstv_counts {
+        path '07_variant_calls/qc/vcftools'
+    }
+    outputs_call_variants_vcftools_tstv_qual {
+        path '07_variant_calls/qc/vcftools'
+    }
+    outputs_call_variants_vcftools_filter_summary {
+        path '07_variant_calls/qc/vcftools'
+    }
+    outputs_call_variants_vcftools_relatedness2 {
+        path '07_variant_calls/qc/vcftools'
+    }
+    // MULTIQC
     outputs_multiqc {
         path 'multiqc'
     }

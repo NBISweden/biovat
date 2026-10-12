@@ -1,0 +1,165 @@
+nextflow_function {
+
+    name "Test samplesheet validation functions"
+    script "../main.nf"
+    tag "subworkflows"
+    tag "utils_nfcore_biovat_pipeline"
+
+    test("validateSampleMetadata - extra samples warn") {
+        function "validateSampleMetadata"
+
+        when {
+            params {
+                enable_variant_calling = true
+                sample_metadata        = "metadata.csv"
+            }
+            function {
+                """
+                input[0] = [ [ [ id:'A' ], [] ] ]
+                input[1] = [ [ id:'A', population:'red' ], [ id:'B', population:'red' ] ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert function.success },
+                // log.warn reaches nextflow.log, not the captured stdout
+                { assert new File("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata lists sample(s) not in --input, which will be ignored: B") }
+            )
+        }
+    }
+
+    test("validateSampleMetadata - missing population fails") {
+        function "validateSampleMetadata"
+
+        when {
+            params {
+                enable_variant_calling = true
+                sample_metadata        = "metadata.csv"
+            }
+            function {
+                """
+                input[0] = [ [ [ id:'A' ], [] ], [ [ id:'B' ], [] ] ]
+                input[1] = [ [ id:'A', population:'red' ], [ id:'B' ] ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert function.failed },
+                { assert function.stdout.any { line -> line.contains("requires a 'population' for every sample. Missing for: B") } }
+            )
+        }
+    }
+
+    test("validateSampleMetadata - skipped without --sample_metadata") {
+        function "validateSampleMetadata"
+
+        when {
+            params {
+                enable_variant_calling = true
+                sample_metadata        = null
+            }
+            function {
+                """
+                input[0] = [ [ [ id:'A' ], [] ] ]
+                input[1] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+        }
+    }
+
+    test("validateAlignmentConsumers - no alignment source fails") {
+        function "validateAlignmentConsumers"
+
+        when {
+            params {
+                enable_align           = false
+                enable_mark_duplicates = true
+                enable_variant_calling = true
+            }
+            function {
+                """
+                input[0] = [ [ [ id:'A', input_type:'fastq' ], [] ] ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert function.failed },
+                { assert function.stdout.any { line -> line.contains("No alignments to process for --enable_mark_duplicates, --enable_variant_calling") } }
+            )
+        }
+    }
+
+    test("validateAlignmentConsumers - BAM/CRAM rows are an alignment source") {
+        function "validateAlignmentConsumers"
+
+        when {
+            params {
+                enable_align           = false
+                enable_mark_duplicates = true
+                enable_variant_calling = true
+            }
+            function {
+                """
+                input[0] = [ [ [ id:'A', input_type:'fastq' ], [] ], [ [ id:'B', input_type:'bam_cram' ], [] ] ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+        }
+    }
+
+    // TEMP: support other platforms
+    test("validateVariantCallingPlatforms - no ILLUMINA rows fails") {
+        function "validateVariantCallingPlatforms"
+
+        when {
+            params {
+                enable_variant_calling = true
+            }
+            function {
+                """
+                input[0] = [ [ [ id:'A', pl:'ONT' ], [] ], [ [ id:'B', pl:'PACBIO' ], [] ] ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert function.failed },
+                { assert function.stdout.any { line -> line.contains("no samplesheet rows have platform ILLUMINA (found: ONT, PACBIO)") } }
+            )
+        }
+    }
+
+    // TEMP: support other platforms
+    test("validateVariantCallingPlatforms - mixed platforms pass") {
+        function "validateVariantCallingPlatforms"
+
+        when {
+            params {
+                enable_variant_calling = true
+            }
+            function {
+                """
+                input[0] = [ [ [ id:'A', pl:'ONT' ], [] ], [ [ id:'B', pl:'ILLUMINA' ], [] ] ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+        }
+    }
+}

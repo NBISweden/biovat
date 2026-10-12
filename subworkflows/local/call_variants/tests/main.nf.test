@@ -1,0 +1,67 @@
+nextflow_workflow {
+
+    name "Test CALL_VARIANTS"
+    script "../main.nf"
+    workflow "CALL_VARIANTS"
+    tag "subworkflows"
+    tag "call_variants"
+
+    setup {
+        run("SAMTOOLS_INDEX") {
+            script "../../../../modules/nf-core/samtools/index/main.nf"
+            process {
+                """
+                input[0] = channel.of([ [ id:'PUN-R-ELF' ], file("${projectDir}/tests/data/monkeyflower/PUN-R-ELF_2.bam", checkIfExists: true) ])
+                """
+            }
+        }
+        run("SAMTOOLS_FAIDX") {
+            script "../../../../modules/nf-core/samtools/faidx/main.nf"
+            process {
+                """
+                input[0] = channel.of([ [ id:'M_aurantiacus' ], file("${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta", checkIfExists: true), [] ])
+                input[1] = false
+                """
+            }
+        }
+    }
+
+    // Without --sample_metadata no population file is built, so bcftools call runs without --group-samples
+    test("bcftools_multisample - no population grouping") {
+
+        when {
+            workflow {
+                """
+                input[0] = 'bcftools_multisample'
+                input[1] = null
+                input[2] = 1000
+                input[3] = channel.of([ [ id:'PUN-R-ELF', pl:'ILLUMINA' ], file("${projectDir}/tests/data/monkeyflower/PUN-R-ELF_2.bam", checkIfExists: true) ])
+                    .join(SAMTOOLS_INDEX.out.index.map { meta, index -> [ [ id:meta.id, pl:'ILLUMINA' ], index ] })
+                input[4] = channel.empty()
+                input[5] = [ group_samples: false ]
+                input[6] = SAMTOOLS_FAIDX.out.fai
+                    .map { meta, fai -> [ meta, file("${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"), fai ] }
+                    .collect()
+                input[7] = 'test_dataset'
+                input[8] = [ save_mpileup: false, variant_qc: false ]
+                input[9] = channel.empty()
+                """
+            }
+        }
+
+        then {
+            def calls = workflow.out.ch_variant_calls_indexed
+            assertAll(
+                { assert workflow.success },
+                // The test reference yields two chunks, so BCFTOOLS_CONCAT must join them
+                { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_MPILEUP_MULTISAMPLE') } == 2 },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_CONCAT') } },
+                { assert calls.size() == 1 },
+                { assert calls[0][0] == [ id:'test_dataset', samples:[ 'PUN-R-ELF' ] ] },
+                { assert file(calls[0][2]).name.endsWith('.vcf.gz.csi') },
+                { assert path(calls[0][1]).vcf.sampleCount == 1 },
+                { assert path(calls[0][1]).vcf.variantCount > 0 }
+            )
+        }
+    }
+}

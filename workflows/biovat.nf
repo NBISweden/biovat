@@ -16,17 +16,23 @@ include { ALIGN_READS               } from '../subworkflows/local/align_reads/ma
 include { MERGE as MERGE_TO_LIBRARY } from '../subworkflows/local/merge/main'
 include { MARK_DUPLICATES           } from '../subworkflows/local/mark_duplicates/main'
 include { MERGE as MERGE_TO_SAMPLE  } from '../subworkflows/local/merge/main'
+include { CALL_VARIANTS             } from '../subworkflows/local/call_variants/main'
 
 workflow BIOVAT {
 
     take:
-    ch_samplesheet         // channel: samplesheet read in from --input
-    reference              // channel: reference fasta read in from --reference
-    enable                 // map: gating flags
-    requires               // map: defines internal dependency relationships
-    adapter_fasta          // channel: adapter fasta file read in from --adapter_fasta
-    aligner                // string: Aligner to use for read alignment (e.g. bwa, parabricks)
-    duplicate_marker       // string: Duplicate marking tool to use (e.g. picard, samtools)
+    ch_samplesheet     // channel: samplesheet read in from --input
+    ch_sample_metadata // channel: per-sample metadata read in from --sample_metadata
+    reference          // channel: reference fasta read in from --reference
+    enable             // map: gating flags
+    requires           // map: defines internal dependency relationships
+    adapter_fasta      // channel: adapter fasta file read in from --adapter_fasta
+    aligner            // string: Aligner to use for read alignment (e.g. bwa, parabricks)
+    duplicate_marker   // string: Duplicate marking tool to use (e.g. picard, samtools)
+    variant_caller     // string: Variant calling tool to use (e.g. bcftools_multisample)
+    chunk_size         // integer: Genome chunk size (bp) used for parallelization
+    min_length         // integer: Minimum contig/scaffold length to be kept
+    dataset_name       // string: File name prefix for VCF/BCF file containing all samples
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -71,7 +77,7 @@ workflow BIOVAT {
         // FASTP
         trim_reads_out = TRIM_READS(
             ch_reads_and_adapters,
-            enable
+            enable,
         )
         reads_to_preprocess = trim_reads_out.trimmed_reads
         ch_multiqc_files    = ch_multiqc_files.mix(trim_reads_out.fastp_json.map { _meta, file -> file })
@@ -90,7 +96,7 @@ workflow BIOVAT {
             ch_reference_and_optional_fai,
             reads_to_preprocess,
             enable,
-            ch_multiqc_files
+            ch_multiqc_files,
         )
         ch_read_group_alignments_indexed = align_reads_out.ch_read_group_alignments_indexed
         ch_multiqc_files                 = align_reads_out.ch_multiqc_files
@@ -122,7 +128,7 @@ workflow BIOVAT {
             ch_reference_and_optional_fai,
             enable,
             ch_multiqc_files,
-            'library'
+            'library',
         )
         alignments_to_process    = merge_to_library_out.ch_merged_alignments_indexed
         ch_multiqc_files         = merge_to_library_out.ch_multiqc_files
@@ -143,7 +149,7 @@ workflow BIOVAT {
             alignments_to_process,
             ch_reference_and_optional_fai,
             ch_multiqc_files,
-            enable
+            enable,
         )
         alignments_to_process            = mark_duplicates_out.ch_from_markdups_alignments_indexed
         ch_multiqc_files                 = mark_duplicates_out.ch_multiqc_files
@@ -165,7 +171,7 @@ workflow BIOVAT {
             ch_reference_and_optional_fai,
             enable,
             ch_multiqc_files,
-            'sample'
+            'sample',
         )
         alignments_to_process   = merge_to_sample_out.ch_merged_alignments_indexed
         ch_multiqc_files        = merge_to_sample_out.ch_multiqc_files
@@ -173,6 +179,39 @@ workflow BIOVAT {
         outputs_sample_flagstat = merge_to_sample_out.outputs_flagstat
         outputs_sample_riker    = merge_to_sample_out.outputs_riker
         outputs_sample_qualimap = merge_to_sample_out.outputs_qualimap
+    }
+
+    // Variant calling
+    outputs_genome_chunks                         = channel.empty()
+    outputs_variant_calls                         = channel.empty()
+    outputs_mpileup                               = channel.empty()
+    outputs_call_variants_bcftools_stats          = channel.empty()
+    outputs_call_variants_vcftools_tstv_counts    = channel.empty()
+    outputs_call_variants_vcftools_tstv_qual      = channel.empty()
+    outputs_call_variants_vcftools_filter_summary = channel.empty()
+    outputs_call_variants_vcftools_relatedness2   = channel.empty()
+    if (enable.variant_calling) {
+        call_variants_out = CALL_VARIANTS(
+            variant_caller,
+            chunk_size,
+            min_length,
+            alignments_to_process,
+            ch_sample_metadata,
+            requires,
+            ch_reference_and_optional_fai,
+            dataset_name,
+            enable,
+            ch_multiqc_files,
+        )
+        ch_multiqc_files                              = call_variants_out.ch_multiqc_files
+        outputs_genome_chunks                         = call_variants_out.ch_genome_chunks
+        outputs_variant_calls                         = call_variants_out.ch_variant_calls_indexed
+        outputs_mpileup                               = call_variants_out.ch_mpileup
+        outputs_call_variants_bcftools_stats          = call_variants_out.outputs_bcftools_stats
+        outputs_call_variants_vcftools_tstv_counts    = call_variants_out.outputs_vcftools_tstv_counts
+        outputs_call_variants_vcftools_tstv_qual      = call_variants_out.outputs_vcftools_tstv_qual
+        outputs_call_variants_vcftools_filter_summary = call_variants_out.outputs_vcftools_filter_summary
+        outputs_call_variants_vcftools_relatedness2   = call_variants_out.outputs_vcftools_relatedness2
     }
 
     // Collate and save software versions
@@ -195,9 +234,9 @@ workflow BIOVAT {
         .mix(topic_versions_string)
         .collectFile(
             storeDir: "${outdir}/pipeline_info",
-            name:  'biovat_software_'  + 'mqc_'  + 'versions.yml',
+            name: 'biovat_software_' + 'mqc_' + 'versions.yml',
             sort: true,
-            newLine: true
+            newLine: true,
         )
 
     // MultiQC
@@ -228,9 +267,9 @@ workflow BIOVAT {
     emit:
     outputs_raw_read_qc
     outputs_trim_reads
-    outputs_input_flagstat           = ingest_bam_or_cram_out.outputs_input_flagstat
-    outputs_input_riker              = ingest_bam_or_cram_out.outputs_input_riker
-    outputs_input_qualimap           = ingest_bam_or_cram_out.outputs_input_qualimap
+    outputs_input_flagstat                        = ingest_bam_or_cram_out.outputs_input_flagstat
+    outputs_input_riker                           = ingest_bam_or_cram_out.outputs_input_riker
+    outputs_input_qualimap                        = ingest_bam_or_cram_out.outputs_input_qualimap
     outputs_read_group
     outputs_read_group_flagstat
     outputs_read_group_riker
@@ -247,6 +286,14 @@ workflow BIOVAT {
     outputs_sample_flagstat
     outputs_sample_riker
     outputs_sample_qualimap
-    outputs_multiqc                  = multiqc_out.report.mix(multiqc_out.data, multiqc_out.plots)
+    outputs_genome_chunks
+    outputs_variant_calls
+    outputs_mpileup
+    outputs_call_variants_bcftools_stats
+    outputs_call_variants_vcftools_tstv_counts
+    outputs_call_variants_vcftools_tstv_qual
+    outputs_call_variants_vcftools_filter_summary
+    outputs_call_variants_vcftools_relatedness2
+    outputs_multiqc                               = multiqc_out.report.mix(multiqc_out.data, multiqc_out.plots)
 
 }

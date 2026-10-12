@@ -34,8 +34,8 @@ workflow ALIGN_READS {
             reads,
             reference,
             bwa_index_out.index,
-            [[],[]], // intervals
-            [[],[]], // known_sites
+            [[],[]],    // intervals
+            [[],[],[]], // known_sites
             enable.cram_format ? 'cram' : 'bam'
         )
         samtools_index_out = SAMTOOLS_INDEX(parabricks_fq2bam_out.bam)
