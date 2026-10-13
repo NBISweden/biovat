@@ -72,7 +72,10 @@ workflow CALL_VARIANTS {
         }
     }
 
-    // Prepare population metadata file (used by bcftools mpileup --group-samples)
+    // Population file for bcftools call --group-samples, listing every sample in --sample_metadata.
+    // Names in the population file but not in the VCF are ignored.
+    // The run will fail on no match between VCF samples and population file,
+    // however that's avoided via validation checks (validateSampleMetadata/validateVariantCallingPlatforms).
     ch_population_file = channel.value([])
     if (requires.group_samples) {
         ch_population_file = ch_sample_metadata
@@ -213,7 +216,7 @@ workflow CALL_VARIANTS {
         // A single chunk skips concatenation; it is renamed to the group meta id when published (main.nf)
         .branch { meta, vcfs, indexes ->
             skip_concat: vcfs.size() == 1
-                return [meta, vcfs[0], indexes[0]]
+            return [meta, vcfs[0], indexes[0]]
             for_concat: vcfs.size() > 1
         }
     bcftools_concat_out = BCFTOOLS_CONCAT(ch_chunk_vcfs.for_concat)

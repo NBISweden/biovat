@@ -21,11 +21,13 @@ import argparse
 import sys
 from pathlib import Path
 
+# Default chunk size aims for about this many chunks, so fragmented assemblies don't yield thousands of tiny chunks
+DEFAULT_TARGET_CHUNKS = 50
 
 def parse_args(argv=None):
     p = argparse.ArgumentParser(description="Split a reference BED/FAI into approximately evenly-sized genome chunks (BED format).",)
     p.add_argument("--input", required=True, type=Path, help="Input file listing reference genome regions in either BED or FAI format.",)
-    p.add_argument("--chunk_size", type=int, default=None, help="Target chunk size in bp. Default: length of the longest region. If smaller than the longest region, chunk size will be automatically set to the longest region length.",)
+    p.add_argument("--chunk_size", type=int, default=None, help=f"Target chunk size in bp. Default: the larger between 1) the longest region and 2) retained total bp / {DEFAULT_TARGET_CHUNKS}. If set under the longest region, chunk size will be automatically set to the longest region length.",)
     p.add_argument("--min_length", type=int, default=0, help="Skip regions shorter than this length (bp). Default: 0 (keep all).",)
     p.add_argument("--output_dir", type=Path, default=Path("."), help="Directory to write chunk_*.bed files into. Default: current working directory.",)
     return p.parse_args(argv)
@@ -107,9 +109,10 @@ def main(argv=None):
             out.write("Reference\tRegions kept\tRegions excluded\tBp kept\tBp excluded\tExcluded %\tChunk size\tChunks\n")
             out.write(f"{reference}\t{len(kept)}\t{len(dropped)}\t{kept_bp}\t{dropped_bp}\t{excluded_pct:.2f}\t{chunk_size}\t{chunks}\n")
 
-    def find_chunk_size(chunk_size, longest):
+    def find_chunk_size(chunk_size, longest, total):
         if chunk_size is None:
-            chunk_size = longest
+            # Ceiling division, so the target count isn't exceeded just by rounding down
+            chunk_size = max(longest, -(-total // DEFAULT_TARGET_CHUNKS))
         elif chunk_size < longest:
             print(
                 f"[split_genome_chunks] WARNING: --chunk_size ({chunk_size}) is "
@@ -128,9 +131,10 @@ def main(argv=None):
     # Filter by min_length and find the longest chromosome
     kept, dropped = kept_regions(regions)
     longest = max(length for *_, length in kept)
+    kept_bp = sum(length for *_, length in kept)
 
     # Resolve chunk size
-    chunk_size = find_chunk_size(args.chunk_size, longest)
+    chunk_size = find_chunk_size(args.chunk_size, longest, kept_bp)
 
     # Ensure output directory exists
     args.output_dir.mkdir(parents=True, exist_ok=True)

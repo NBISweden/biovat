@@ -171,7 +171,10 @@
                 "callset_prefix": {
                     "type": "string",
                     "default": "all_samples",
-                    "description": "File name prefix used for VCF/BCF files containing all samples."
+                    "description": "File name prefix used for VCF/BCF files containing all samples.",
+                    "help_text": "Used in output file names and on tool command lines, so only letters, digits, underscores and hyphens are allowed.",
+                    "pattern": "^[A-Za-z0-9_-]+$",
+                    "errorMessage": "--callset_prefix may only contain letters, digits, underscores and hyphens."
                 },
                 "variant_caller": {
                     "type": "string",
@@ -182,8 +185,8 @@
                 "chunk_size": {
                     "type": "integer",
                     "minimum": 1,
-                    "description": "Genome chunk size (bp) used for parallelization. Defaults to the longest chromosome; can only be raised, not lowered.",
-                    "help_text": "Whole chromosomes/scaffolds are grouped, in reference order, into chunks of about this many bp; each chunk is called as a separate task. Chromosomes are never split, so the chunk size can't be smaller than the longest chromosome: a smaller value is raised to that length (with a warning in the SPLITGENOME task log). Increase it to run variant calling on fewer, larger chunks. A value at or above the total genome size gives a single chunk."
+                    "description": "Genome chunk size (bp) used for parallelization. Defaults to the larger between 1) the longest chromosome and 2) 1/50 of the genome after minimum length filtering.",
+                    "help_text": "Whole chromosomes/scaffolds are grouped, in reference order, into chunks of about this many bp; each chunk is called as a separate task. Chromosomes are never split, so a chunk size below the longest chromosome is raised to that length with a warning in the task log. The default will be the larger between 1) the longest chromosome or 2) 1/50 of the retained length after --min_length filtering. This gives the most chunks possible for chromosome-level assemblies and around 50 for fragmented ones. The value can be increased for fewer, larger chunks (e.g., a value at or above the total genome size gives a single chunk)."
                 },
                 "min_length": {
                     "type": "integer",
