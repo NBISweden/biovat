@@ -247,7 +247,7 @@ workflow CALL_VARIANTS {
     emit:
     ch_genome_chunks         = splitgenome_out.chunks.join(splitgenome_out.excluded) // channel: [ meta, chunk_*.bed, excluded_regions.tsv ]
     ch_variant_calls_indexed // channel: [ meta, *.vcf.gz ] and [ meta, *.csi ]
-    ch_mpileup               // channel: [ meta, *.mpileup.gz ], empty unless enable_save_mpileup
+    ch_mpileup               // channel: [ meta, *.mpileup.bcf ], empty unless enable_save_mpileup
     ch_multiqc_files
     outputs_bcftools_stats
     outputs_vcftools_tstv_counts
