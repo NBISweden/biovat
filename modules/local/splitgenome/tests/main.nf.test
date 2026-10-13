@@ -52,31 +52,6 @@ nextflow_process {
         }
     }
 
-    test("min_length below 940 - LG4_3 is kept") {
-
-        when {
-            process {
-                """
-                input[0] = SAMTOOLS_FAIDX.out.fai
-                input[1] = ''
-                input[2] = 500
-                """
-            }
-        }
-
-        then {
-            def contigs = process.out.chunks[0][1]
-                .with { it instanceof List ? it : [it] }
-                .collectMany { bed -> path(bed).readLines() }
-                .collect { line -> line.tokenize('\t')[0] }
-            assertAll(
-                { assert process.success },
-                { assert contigs == ['LG4_1', 'LG4_2', 'LG4_3'] },
-                { assert path(process.out.excluded[0][1]).readLines() == ['chrom\tlength'] }
-            )
-        }
-    }
-
     test("chunk_size below longest contig - raised, one contig per chunk") {
 
         when {
@@ -99,6 +74,83 @@ nextflow_process {
                 // Contigs are never split, so each one gets a chunk to itself
                 { assert chunks == [['LG4_1'], ['LG4_2'], ['LG4_3']] },
                 { assert stderr.contains('raising --chunk_size to 51180') }
+            )
+        }
+    }
+
+    test("default chunk_size, fragmented assembly - capped at DEFAULT_TARGET_CHUNKS") {
+
+        when {
+            process {
+                """
+                // 200 x 1000 bp scaffolds: longest (1000) is below total / 50 (4000), so the default is 4000
+                def fai = file("\${workDir}/fragmented.fasta.fai")
+                fai.text = (1..200).collect { i -> "scaffold_\${i}\\t1000\\t0\\t60\\t61\\n" }.join()
+                input[0] = channel.of([ [ id:'fragmented' ], fai ])
+                input[1] = ''
+                input[2] = 0
+                """
+            }
+        }
+
+        then {
+            def beds = process.out.chunks[0][1]
+            def summary = path(process.out.summary[0][1]).readLines().findAll { line -> !line.startsWith('#') }
+            assertAll(
+                { assert process.success },
+                // Chunk size, Chunks
+                { assert summary[1].tokenize('\t')[6..7] == ['4000', '50'] },
+                { assert beds.size() == 50 },
+                { assert beds.every { bed -> path(bed).readLines().size() == 4 } }
+            )
+        }
+    }
+
+    test("min_length below 940, default chunk_size on contiguous assembly - LG4_3 kept, longest contig") {
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_FAIDX.out.fai
+                input[1] = ''
+                input[2] = 500 // keep all contigs: 100000 bp total, so total / 50 (2000) is below the longest (51180)
+                """
+            }
+        }
+
+        then {
+            def chunks = process.out.chunks[0][1].collect { bed -> path(bed).readLines().collect { line -> line.tokenize('\t')[0] } }
+            def summary = path(process.out.summary[0][1]).readLines().findAll { line -> !line.startsWith('#') }
+            assertAll(
+                { assert process.success },
+                { assert summary[1].tokenize('\t')[6..7] == ['51180', '3'] },
+                { assert chunks == [['LG4_1'], ['LG4_2'], ['LG4_3']] },
+                { assert path(process.out.excluded[0][1]).readLines() == ['chrom\tlength'] }
+            )
+        }
+    }
+
+    test("chunk_size above total genome size - single chunk") {
+
+        when {
+            process {
+                """
+                input[0] = SAMTOOLS_FAIDX.out.fai
+                input[1] = 200000 // total is 100000 bp
+                input[2] = 500
+                """
+            }
+        }
+
+        then {
+            // A single output file is emitted as a path, not a list
+            def beds = process.out.chunks[0][1].with { it instanceof List ? it : [it] }
+            def summary = path(process.out.summary[0][1]).readLines().findAll { line -> !line.startsWith('#') }
+            assertAll(
+                { assert process.success },
+                { assert summary[1].tokenize('\t')[6..7] == ['200000', '1'] },
+                { assert beds.size() == 1 },
+                { assert path(beds[0]).readLines().collect { line -> line.tokenize('\t')[0] } == ['LG4_1', 'LG4_2', 'LG4_3'] }
             )
         }
     }
