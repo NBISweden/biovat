@@ -219,10 +219,14 @@ def validateMergeGroups(rows) {
         }
 }
 
-// --sample_metadata, when provided, groups samples into populations during variant calling (unused otherwise)
+// --sample_metadata, when provided, groups samples into populations during bcftools_multisample variant calling (unused otherwise)
 // Every sample must then have a population in the metadata file. We warn if extras are found.
 def validateSampleMetadata(rows, metadata_rows) {
     if ( !(params.enable_variant_calling && params.sample_metadata) ) {
+        return
+    }
+    if ( params.variant_caller != 'bcftools_multisample' ) {
+        log.warn("--sample_metadata is only used by --variant_caller bcftools_multisample, so it is ignored with --variant_caller ${params.variant_caller}")
         return
     }
     def samplesheet_samples = rows.collect { meta, _files -> meta.id }.unique()
