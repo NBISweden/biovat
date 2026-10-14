@@ -128,7 +128,7 @@ Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag 
 Follows the joint-calling workflow of the GATK [germline short variant discovery](https://gatk.broadinstitute.org/hc/en-us/articles/360035535932-Germline-short-variant-discovery-SNPs-Indels) Best Practices, run per genome chunk:
 
 1. `HaplotypeCaller` calls each sample separately in GVCF mode (`--emit-ref-confidence GVCF`).
-2. `GenomicsDBImport` combines the GVCFs of all samples into one GenomicsDB workspace, importing samples in batches of 50.
+2. `GenomicsDBImport` combines the GVCFs of all samples into one GenomicsDB workspace, importing samples in batches of 50. All contigs of a chunk are stored together (`--merge-contigs-into-num-partitions 1`), which keeps the import fast when a chunk holds many small scaffolds.
 3. `GenotypeGVCFs` jointly genotypes all samples from the workspace.
 
 The reference sequence dictionary (`.dict`) that GATK needs is created automatically. The per-sample GVCFs are intermediate files and are not published.
