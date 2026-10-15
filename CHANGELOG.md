@@ -24,11 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BAM QC workflow
 - Test dataset composed of reference and multiple samples per population
 - Variant calling workflow with BCFtools (multi-sample variant calling)
-- Genome chunking support for parallelized variant calling; regions excluded by `--min_length` are published (`excluded_regions.tsv`), summarised in MultiQC, and warned about on the console when over 5% of the reference
+- Genome chunking support for parallelized variant calling; `--chunk_size` defaults to the largest of either: 1) the longest chromosome or 2) 1/50 of the genome (after min-length removal). This is to avoid excessive chunk count for highly fragmented assemblies. Regions excluded by `--min_length` are published (`excluded_regions.tsv`), summarised in MultiQC, and warned about on the console when over 5% of the reference
 - Variant QC workflow
 - Optional sample-level metadata sheet (`--sample_metadata`, one row per sample) kept separate from the samplesheet; currently holds `population`. When provided with variant calling enabled, samples are grouped into populations in `bcftools call` (`--group-samples`), replacing a dedicated `--enable_group_samples` flag
 - BAM/CRAM samplesheet input (`bam` column): each file's `@RG` header is validated against its samplesheet row; files with no `@RG` line get one built from the samplesheet (`samtools addreplacerg`), and files with several `@RG` lines or missing/mismatched tags are rejected (`PL` is matched case-insensitively, per the SAM spec)
 - Samplesheet `platform` restricted to the uppercase SAM spec `@RG PL` values (e.g. `ILLUMINA`)
+- GATK4 joint variant calling (`--variant_caller gatk`), following the GATK germline short variant Best Practices: per-sample `HaplotypeCaller` in GVCF mode, then `GenomicsDBImport` and `GenotypeGVCFs`, each run per genome chunk. The reference sequence dictionary is created by `REFERENCE_UTILS` when needed. Output is not yet filtered
+- Genome chunk concatenation is shared by all variant callers, and the joint VCF and its variant QC outputs are named after the caller (`<callset_prefix>.<variant_caller>.vcf.gz`)
+- Bcftools mpileup output: change from the pattern used by nf-core. Instead of bgzipping compressed output, output uncompressed, then recompress with bcftools. This leads to equivalent compression on the test files, plus it's directly readable by bcftools (previously it had to be unzipped and piped into bcftools)
 
 ### `Fixed`
 

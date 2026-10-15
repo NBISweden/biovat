@@ -18,7 +18,7 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     output:
     tuple val(meta), path("*.vcf.gz"), emit: vcf
     tuple val(meta), path("*.csi"), emit: index, optional: true
-    tuple val(meta), path("*.mpileup.gz"), emit: mpileup, optional: true
+    tuple val(meta), path("*.mpileup.bcf"), emit: mpileup, optional: true
     tuple val("${task.process}"), val('bcftools'), eval("bcftools --version | sed '1!d; s/^.*bcftools //'"), topic: versions, emit: versions_bcftools
 
     when:
@@ -28,8 +28,8 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     def args                   = task.ext.args ?: ''
     def args2                  = task.ext.args2 ?: ''
     def prefix                 = task.ext.prefix ?: "${meta.id}"
-    def mpileup                = save_mpileup ? "| tee ${prefix}.mpileup" : ""
-    def bgzip_mpileup          = save_mpileup ? "bgzip ${prefix}.mpileup" : ""
+    def mpileup                = save_mpileup ? "| tee ${prefix}.mpileup.u.bcf" : ""
+    def compress_mpileup       = save_mpileup ? "bcftools view --output-type b --output ${prefix}.mpileup.bcf ${prefix}.mpileup.u.bcf && rm ${prefix}.mpileup.u.bcf" : ""
     def group_samples_cmd      = group_samples ? "--group-samples ${population_file}" : ""
     """
     bcftools \\
@@ -47,7 +47,7 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         ${group_samples_cmd} \\
         --output ${prefix}.vcf.gz
 
-    ${bgzip_mpileup}
+    ${compress_mpileup}
 
     bcftools index --csi -f ${prefix}.vcf.gz
     """
@@ -57,6 +57,6 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     """
     echo "" | gzip > ${prefix}.vcf.gz
     touch ${prefix}.vcf.gz.csi
-    echo "" | gzip > ${prefix}.mpileup.gz
+    echo "" | gzip > ${prefix}.mpileup.bcf
     """
 }

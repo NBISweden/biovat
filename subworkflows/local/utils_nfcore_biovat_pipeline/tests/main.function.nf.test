@@ -75,6 +75,32 @@ nextflow_function {
         }
     }
 
+    test("validateSampleMetadata - ignored with a caller other than bcftools_multisample") {
+        function "validateSampleMetadata"
+
+        when {
+            params {
+                enable_variant_calling = true
+                variant_caller         = "gatk"
+                sample_metadata        = "metadata.csv"
+            }
+            function {
+                """
+                input[0] = [ [ [ id:'A' ], [] ], [ [ id:'B' ], [] ] ]
+                input[1] = [ [ id:'A', population:'red' ], [ id:'B' ] ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                // B has no population, which would fail under bcftools_multisample
+                { assert function.success },
+                { assert new File("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata is only used by --variant_caller bcftools_multisample, so it is ignored with --variant_caller gatk") }
+            )
+        }
+    }
+
     test("validateAlignmentConsumers - no alignment source fails") {
         function "validateAlignmentConsumers"
 

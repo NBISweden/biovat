@@ -74,9 +74,9 @@ enable_variant_qc: true # Boolean: run quality checks on variant files (VCF)
 
 ## Variant calling
 
-# dataset_name: "M_aurantiacus_v1" # Default: all_samples
+# callset_prefix: "M_aurantiacus_v1" # Default: all_samples
 # variant_caller: "bcftools_multisample" # Default: bcftools_multisample
-# chunk_size: 10000000 # Target chunk size (bp) used for splitting the genome to enable parallelization of variant calling. Default: length of the longest chromosome.
+# chunk_size: 10000000 # Target chunk size (bp) used for splitting the genome into parallel variant calling tasks. Defaults to whichever is largest between 1) the longest chromosome or 2) 1/50 of the genome after minimum length filtering.
 # min_length: 0 # Minimum length of a contig to be kept for variant calling. Default: 1000
 
 ## BCFtools multi-sample variant calling

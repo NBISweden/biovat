@@ -32,7 +32,7 @@ workflow BIOVAT {
     variant_caller     // string: Variant calling tool to use (e.g. bcftools_multisample)
     chunk_size         // integer: Genome chunk size (bp) used for parallelization
     min_length         // integer: Minimum contig/scaffold length to be kept
-    dataset_name       // string: File name prefix for VCF/BCF file containing all samples
+    callset_prefix     // string: File name prefix for VCF/BCF file containing all samples
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -50,12 +50,14 @@ workflow BIOVAT {
 
     // Reference utilities
     ch_reference_and_optional_fai = channel.value([[], [], []])
+    ch_reference_dict             = channel.value([[], []])
     if ( params.reference ) {
         reference_utils_out = REFERENCE_UTILS(
             reference,
             requires,
         )
         ch_reference_and_optional_fai = reference_utils_out.ch_reference_and_optional_fai
+        ch_reference_dict             = reference_utils_out.ch_reference_dict
     }
 
     // Raw read quality checks
@@ -199,7 +201,8 @@ workflow BIOVAT {
             ch_sample_metadata,
             requires,
             ch_reference_and_optional_fai,
-            dataset_name,
+            ch_reference_dict,
+            callset_prefix,
             enable,
             ch_multiqc_files,
         )
