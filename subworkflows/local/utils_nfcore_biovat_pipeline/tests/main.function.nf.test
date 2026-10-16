@@ -145,47 +145,4 @@ nextflow_function {
             assert function.success
         }
     }
-
-    // TEMP: support other platforms
-    test("validateVariantCallingPlatforms - no ILLUMINA rows fails") {
-        function "validateVariantCallingPlatforms"
-
-        when {
-            params {
-                enable_variant_calling = true
-            }
-            function {
-                """
-                input[0] = [ [ [ id:'A', pl:'ONT' ], [] ], [ [ id:'B', pl:'PACBIO' ], [] ] ]
-                """
-            }
-        }
-
-        then {
-            assertAll(
-                { assert function.failed },
-                { assert function.stdout.any { line -> line.contains("no samplesheet rows have platform ILLUMINA (found: ONT, PACBIO)") } }
-            )
-        }
-    }
-
-    // TEMP: support other platforms
-    test("validateVariantCallingPlatforms - mixed platforms pass") {
-        function "validateVariantCallingPlatforms"
-
-        when {
-            params {
-                enable_variant_calling = true
-            }
-            function {
-                """
-                input[0] = [ [ [ id:'A', pl:'ONT' ], [] ], [ [ id:'B', pl:'ILLUMINA' ], [] ] ]
-                """
-            }
-        }
-
-        then {
-            assert function.success
-        }
-    }
 }

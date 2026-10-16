@@ -19,7 +19,9 @@ The samplesheet can have as many columns as you desire, however, it must contain
 The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. Sequencing library IDs, flowcell IDs, and lane numbers are specified in the columns `library_id`,
 `flowcell_id`, and `lane`. Each combination of `sample`, `library_id`, `flowcell_id`, and `lane` has to be unique. When deduplication is enabled, alignments belonging to the same sample and library are first merged and deduplicated. If variant calling is enabled, libraries are further merged to sample level.
 
-A library is prepared for a single sequencing platform, so all read groups of a library must share the same `platform`. A sample may combine libraries from different platforms; these are merged per platform.
+A library is prepared for a single sequencing platform, so all read groups of a library must share the same `platform`. A sample may combine libraries from different platforms; these are merged per platform. Variant calling then calls each platform separately (see [Variant calling](#variant-calling)), so such a sample appears in one VCF per platform.
+
+Only short-read platforms are currently processed. Long-read data (`ONT`, `PACBIO`) needs its own preprocessing path (QC, trimming, alignment and variant calling, without duplicate marking), which the pipeline doesn't provide yet, so long-read rows are excluded at the start of the run with a warning. A samplesheet with only long-read rows runs to completion but produces no alignments or variant calls.
 
 Each row must provide raw reads via `fastq_1` (optionally `fastq_2`), **or** an already-aligned `BAM`/`CRAM` file via `bam`. If providing `BAM`/`CRAM`, users must also fill-out the `single_end` column (`false` for paired-end reads). When providing pre-aligned files, trimming and alignment are skipped. All read groups of a library, and all libraries of a sample, must agree on `single_end` (mixing single- and paired-end reads at the same merge level is rejected).
 
@@ -91,10 +93,10 @@ nextflow main.nf --help
 
 ### Variant calling
 
-Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into a single multi-sample VCF, published as `07_variant_calls/<callset_prefix>.<variant_caller>.vcf.gz` (e.g. `all_samples.gatk.vcf.gz`). The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into one multi-sample VCF per sequencing platform, published as `07_variant_calls/<callset_prefix>.<platform>.<variant_caller>.vcf.gz` (e.g. `all_samples.ILLUMINA.gatk.vcf.gz`). Platforms are never called together: a run with Illumina and DNBSEQ data produces two VCFs, and a sample sequenced on both appears in each. The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
 
 - `--variant_caller` selects the caller: `bcftools_multisample` (default; see [BCFtools multi-sample calling](#bcftools-multi-sample-calling)) or `gatk` (see [GATK](#gatk))
-- `--callset_prefix` (default `all_samples`) sets the file name prefix of the joint VCF and its index; the caller name is appended to it
+- `--callset_prefix` (default `all_samples`) sets the file name prefix of the joint VCFs and their indexes; the platform and caller name are appended to it
 - `--enable_variant_qc` (default `true`) runs quality checks on the final VCF
 
 #### Genome chunking
