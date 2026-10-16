@@ -199,14 +199,28 @@
                     "type": "boolean",
                     "description": "BCFtools multi-sample: save the intermediate bcftools mpileup output. Note that this file can get very large."
                 },
+                "enable_baq": {
+                    "type": "boolean",
+                    "description": "BCFtools multi-sample: compute base alignment quality (BAQ) in bcftools mpileup. When false (default), --no-BAQ is passed."
+                },
+                "enable_multiallelic_caller": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "BCFtools multi-sample: use the multiallelic caller in bcftools call (--multiallelic-caller). When false, the original consensus caller (--consensus-caller) is used."
+                },
+                "enable_variants_only": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "BCFtools multi-sample: output variant sites only in bcftools call (--variants-only). When false, every site, including invariant ones, is written to the VCF, which makes it far larger."
+                },
                 "bcftools_mpileup_extra": {
                     "type": "string",
-                    "default": "--no-BAQ",
+                    "default": "",
                     "description": "BCFtools multi-sample: additional command line arguments passed to bcftools mpileup."
                 },
                 "bcftools_call_extra": {
                     "type": "string",
-                    "default": "--variants-only",
+                    "default": "",
                     "description": "BCFtools multi-sample: additional command line arguments passed to bcftools call."
                 }
             }

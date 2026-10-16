@@ -116,14 +116,17 @@ For each genome chunk, `bcftools mpileup` computes genotype likelihoods for ever
 
 Computes per-sample genotype likelihoods from the alignments. It writes the per-sample (`FORMAT`) tags `PL` (genotype likelihoods) and `AD` (allelic depths) by default. The pipeline also adds `DP` (read depth, `--annotate FORMAT/DP`).
 
-- `--bcftools_mpileup_extra` (default `--no-BAQ`) is passed to `bcftools mpileup`, e.g. `'--no-BAQ --min-BQ 20 --min-MQ 20'` to filter on base and mapping quality. Further `--annotate` tags given here are added to the tags above rather than replacing them.
+- `--enable_baq` (default `false`) computes base alignment quality (BAQ). By default the pipeline passes `--no-BAQ`.
+- `--bcftools_mpileup_extra` (no default) allows users to provide custom flags in string format.
 - `--enable_save_mpileup` (default `false`) also saves the intermediate `bcftools mpileup` output (BCF with genotype likelihoods for all sites), one file per genome chunk. These files can get very large.
 
 **bcftools call**
 
-Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag and the per-site `AC`/`AN` (allele count/number) tags. The pipeline always uses the multiallelic caller (`--multiallelic-caller`), and adds `--group-samples` when `--sample_metadata` is given.
+Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag and the per-site `AC`/`AN` (allele count/number) tags. The pipeline applies `--group-samples` when `--sample_metadata` is given.
 
-- `--bcftools_call_extra` (default `--variants-only`) is passed to `bcftools call`. Keep `--variants-only` unless you want every site (including invariant ones) in the VCF, which makes it far larger. All sites are called as diploid unless you add `--ploidy` or `--ploidy-file`.
+- `--enable_multiallelic_caller` (default `true`) uses the multiallelic caller (`--multiallelic-caller`). Set it to `false` to use the original consensus caller (`--consensus-caller`) instead.
+- `--enable_variants_only` (default `true`) writes only variant sites (`--variants-only`). Set it to `false` to write every site (including invariant ones) to the VCF, which makes it far larger.
+- `--bcftools_call_extra` (no default) allows users to provide custom flags in string format. All sites are called as diploid unless you add `--ploidy` or `--ploidy-file` here.
 
 #### GATK
 
