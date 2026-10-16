@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Samplesheet `platform` restricted to the uppercase SAM spec `@RG PL` values (e.g. `ILLUMINA`)
 - GATK4 joint variant calling (`--variant_caller gatk`), following the GATK germline short variant Best Practices: per-sample `HaplotypeCaller` in GVCF mode, then `GenomicsDBImport` and `GenotypeGVCFs`, each run per genome chunk. The reference sequence dictionary is created by `REFERENCE_UTILS` when needed. Output is not yet filtered
 - Genome chunk concatenation is shared by all variant callers, and the joint VCF and its variant QC outputs are named after the caller (`<callset_prefix>.<variant_caller>.vcf.gz`)
+- Long-read samplesheet rows (`ONT`, `PACBIO`) are branched off at the start of the workflow, ahead of any preprocessing, and excluded with a warning until a long-read path exists. All short-read platforms continue through preprocessing and variant calling (previously only `ILLUMINA` alignments were variant called), each platform is variant called as its own callset, so the joint VCF is now named `<callset_prefix>.<platform>.<variant_caller>.vcf.gz` and a sample sequenced on several platforms appears in each platform's VCF
 - Bcftools mpileup output: change from the pattern used by nf-core. Instead of bgzipping compressed output, output uncompressed, then recompress with bcftools. This leads to equivalent compression on the test files, plus it's directly readable by bcftools (previously it had to be unzipped and piped into bcftools)
 
 ### `Fixed`

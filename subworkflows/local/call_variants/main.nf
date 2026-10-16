@@ -25,24 +25,6 @@ workflow CALL_VARIANTS {
     ch_chunk_vcfs_indexed = channel.empty()
     ch_mpileup            = channel.empty()
 
-    // Branch on platform to avoid calling mixed-platform samples together
-    platform_alignments_for_calling = ch_alignment_and_index
-        .branch { meta, _alignment, _index ->
-            illumina: meta.pl == 'ILLUMINA'
-            unsupported: true
-        }
-
-    // Only Illumina is currently called; warn once, listing every sample/platform left out
-    platform_alignments_for_calling.unsupported
-        .map { meta, _alignment, _index -> "${meta.id} (${meta.pl})" }
-        .collect(sort: true)
-        .subscribe { skipped ->
-            log.warn(
-                "Variant calling currently supports only ILLUMINA alignments. " +
-                "These sample alignments are excluded from variant calling: ${skipped.join(', ')}"
-            )
-        }
-
     // Split the reference genome into chunks (BED intervals) for parallelization
     splitgenome_out  = SPLITGENOME(
         ch_reference_and_fai.map { meta, _fasta, fai -> [meta, fai] },
@@ -75,7 +57,7 @@ workflow CALL_VARIANTS {
     // Population file for bcftools call --group-samples, listing every sample in --sample_metadata.
     // Names in the population file but not in the VCF are ignored.
     // The run will fail on no match between VCF samples and population file,
-    // however that's avoided via validation checks (validateSampleMetadata/validateVariantCallingPlatforms).
+    // however that's avoided via validation checks (validateSampleMetadata).
     ch_population_file = channel.value([])
     if (requires.group_samples) {
         ch_population_file = ch_sample_metadata
@@ -90,9 +72,9 @@ workflow CALL_VARIANTS {
 
     // bcftools: multi-sample joint calling
     if (variant_caller == 'bcftools_multisample') {
-        // Group all samples
-        ch_grouped_alignments = platform_alignments_for_calling.illumina
-            .map { meta, alignment, index -> [callset_prefix, meta.id, alignment, index] }
+        // Group all samples of a platform into one callset
+        ch_grouped_alignments = ch_alignment_and_index
+            .map { meta, alignment, index -> ["${callset_prefix}.${meta.pl}".toString(), meta.id, alignment, index] }
             .groupTuple()
             .map { group, samples, alignments, indexes ->
                 // sort by sample id so VCF sample columns don't depend on channel arrival order
@@ -125,7 +107,7 @@ workflow CALL_VARIANTS {
     // GATK4: per-sample calling and joint genotyping
     if (variant_caller == 'gatk') {
         // Combine each sample with BED intervals for region-specific parallel calling
-        ch_alignments_for_gatk4 = platform_alignments_for_calling.illumina
+        ch_alignments_for_gatk4 = ch_alignment_and_index
             .combine(ch_bed_intervals)
             .map { meta, alignments, indexes, chunk_bed, _n_chunks ->
                 [
@@ -145,18 +127,19 @@ workflow CALL_VARIANTS {
             [ [], [] ], // dbsnp
             [ [], [] ], // dbsnp_tbi index
         )
-        // Consolidate GVCFs into one GenomicsDB workspace per chunk
+        // Consolidate GVCFs into one GenomicsDB workspace per chunk and platform callset
         ch_bed_intervals_by_chunk = ch_bed_intervals.map { chunk_bed, n_chunks -> [chunk_bed.baseName, chunk_bed, n_chunks] }
         ch_gvcfs_for_genomicsdbimport = gatk4_haplotypecaller_out.vcf
             .join(gatk4_haplotypecaller_out.tbi, failOnMismatch: true, failOnDuplicate: true)
-            .map { meta, gvcf, tbi -> [meta.chunk, meta.id, gvcf, tbi] }
+            .map { meta, gvcf, tbi -> [[meta.chunk, "${callset_prefix}.${meta.pl}".toString()], meta.id, gvcf, tbi] }
             .groupTuple()
-            .join(ch_bed_intervals_by_chunk, failOnMismatch: true, failOnDuplicate: true)
-            .map { chunk, samples, gvcfs, tbis, chunk_bed, n_chunks ->
+            .map { key, samples, gvcfs, tbis -> [key[0], key[1], samples, gvcfs, tbis] }
+            .combine(ch_bed_intervals_by_chunk, by: 0)
+            .map { chunk, callset_id, samples, gvcfs, tbis, chunk_bed, n_chunks ->
                 // sort by sample id so the workspace sample order doesn't depend on channel arrival order
                 def sorted = [samples, gvcfs, tbis].transpose().sort { row -> row[0] }
                 [
-                    [id: "${callset_prefix}.${chunk}", group_id: callset_prefix, samples: sorted.collect { row -> row[0] }, chunk: chunk, n_chunks: n_chunks],
+                    [id: "${callset_id}.${chunk}", group_id: callset_id, samples: sorted.collect { row -> row[0] }, chunk: chunk, n_chunks: n_chunks],
                     sorted.collect { row -> row[1] },
                     sorted.collect { row -> row[2] },
                     chunk_bed,
@@ -173,7 +156,7 @@ workflow CALL_VARIANTS {
         // Joint genotyping per chunk, from the GenomicsDB workspace
         ch_genomicsdb_for_genotypegvcfs = gatk4_genomicsdbimport_out.genomicsdb
             .map { meta, workspace -> [meta.chunk, meta, workspace] }
-            .join(ch_bed_intervals_by_chunk, failOnMismatch: true, failOnDuplicate: true)
+            .combine(ch_bed_intervals_by_chunk, by: 0)
             .map { _chunk, meta, workspace, chunk_bed, _n_chunks ->
                 [
                     meta,
@@ -201,7 +184,7 @@ workflow CALL_VARIANTS {
     // Concatenate the genome chunks of each group using BCFTOOLS_CONCAT
     ch_chunk_vcfs = ch_chunk_vcfs_indexed
         .map { meta, vcf, index ->
-            // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <callset_prefix>.gatk
+            // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <callset_prefix>.<platform>.gatk
             // groupKey with the chunk count lets each group be released as soon as its last chunk arrives
             def group_meta = groupKey([id: "${meta.group_id}.${variant_caller}", samples: meta.samples], meta.n_chunks)
             // keep chunk id (e.g. "chunk_00002") for sorting later

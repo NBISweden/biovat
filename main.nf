@@ -53,6 +53,9 @@ params {
     chunk_size                  : Integer?
     min_length                  : Integer
     enable_save_mpileup         : Boolean
+    enable_baq                  : Boolean
+    enable_multiallelic_caller  : Boolean
+    enable_variants_only        : Boolean
     bcftools_mpileup_extra      : String
     bcftools_call_extra         : String
 

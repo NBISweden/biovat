@@ -8,6 +8,7 @@ include { paramsSummaryMap          } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText    } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { isLongReadPlatform        } from '../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { INGEST_BAM_OR_CRAM        } from '../subworkflows/local/utils_bam'
 include { REFERENCE_UTILS           } from '../subworkflows/local/utils_reference'
 include { READ_QC                   } from '../subworkflows/local/read_qc/main'
@@ -41,12 +42,31 @@ workflow BIOVAT {
     main:
     def ch_versions      = channel.empty()
     def ch_multiqc_files = channel.empty()
-    ch_input             = ch_samplesheet
+
+    // Branch short-read from long-read paths
+    // NOTE: Until long-reads are supported, exclude with a warning
+    ch_platform_types    = ch_samplesheet
+        .branch { meta, _data ->
+            long_read : isLongReadPlatform(meta.pl)
+            short_read: true
+        }
+    ch_platform_types.long_read
+        .map { meta, _data -> "${meta.read_group} (${meta.pl})" }
+        .collect(sort: true)
+        .subscribe { skipped ->
+            log.warn(
+                "Long-read platforms are not yet supported. " +
+                "These samplesheet read groups are excluded from the pipeline: ${skipped.join(', ')}"
+            )
+        }
+
+    // Short read path: branch on whether preprocessing or BAM/CRAM ingestion is needed
+    ch_short_read_input = ch_platform_types.short_read
         .branch { meta, _data ->
             bam_cram: meta.input_type == 'bam_cram'
             fastq   : meta.input_type == 'fastq'
         }
-    reads_to_preprocess = ch_input.fastq
+    reads_to_preprocess = ch_short_read_input.fastq
 
     // Reference utilities
     ch_reference_and_optional_fai = channel.value([[], [], []])
@@ -111,7 +131,7 @@ workflow BIOVAT {
     // User input BAM/CRAMs enter here
     // We assume they are aligned, but enforce sorting/indexing to ensure compatibility
     ingest_bam_or_cram_out = INGEST_BAM_OR_CRAM(
-        ch_input.bam_cram,
+        ch_short_read_input.bam_cram,
         ch_reference_and_optional_fai,
         enable,
         ch_multiqc_files
