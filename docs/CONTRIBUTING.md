@@ -19,13 +19,13 @@ This page describes the recommended way to contribute to BioVAT, based on genera
 
 To contribute code to the pipeline:
 
-- [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) for instructions.
+- [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) for instructions. Alternatively, install pixi to be able to use the `pixi.toml` provided with the pipeline.
 - [ ] Check whether a GitHub [issue](https://github.com/NBISweden/biovat/issues) about your idea already exists. If an issue does not exist, create one based on the [issue template](https://github.com/NBISweden/biovat/.github/ISSUE_TEMPLATE) so that others are aware you are working on it. Tag the issue with the relevant label and milestone and assign yourself to the issue.
 - [ ] Create a branch from `dev` and make your changes following [pipeline conventions](#pipeline-contribution-conventions) (if applicable) and [our Nextflow best practice recommendations](https://nbisweden.github.io/Training-Tech-shorts/posts/2025-12-11-nextflow-best-practices/)
 - [ ] To fix major bugs, name your branch `patch` and follow the [patch release](#patch-release) process.
-- [ ] Update relevant documentation within the `docs/` folder, use nf-core/tools to update `nextflow_schema.json`, and update `CITATIONS.md`.
+- [ ] [Lint](#lint-tests) your code with [nf-core/tools](https://github.com/nf-core/tools).
 - [ ] Run and/or update tests. See [Testing](#testing) for more information.
-- [ ] [Lint](#lint-tests) your code with nf-core/tools.
+- [ ] Update relevant documentation within the `docs/` folder, use [nf-core/tools](https://github.com/nf-core/tools) to update `nextflow_schema.json`, and update `CITATIONS.md`.
 - [ ] Submit a pull request (PR) against the `dev` branch using the [pull request template](https://github.com/NBISweden/biovat/.github/PULL_REQUEST_TEMPLATE.md) and request a code review from one of the main BioVAT contributors.
 
 If you are not used to this workflow with Git, see the [GitHub documentation](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests) or [Git resources](https://try.github.io/) for more information.
@@ -34,14 +34,14 @@ If you are not used to this workflow with Git, see the [GitHub documentation](ht
 
 To contribute code to the pipeline:
 
-- [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) for instructions.
+- [ ] Ensure you have Nextflow, nf-core tools, and nf-test installed. See the [nf-core/tools repository](https://github.com/nf-core/tools) for instructions. Alternatively, install pixi to be able to use the `pixi.toml` provided with the pipeline.
 - [ ] Check whether a GitHub [issue](https://github.com/NBISweden/biovat/issues) about your idea already exists. If an issue does not exist, create one based on the [issue template](https://github.com/NBISweden/biovat/.github/ISSUE_TEMPLATE) so that others are aware you are working on it. Tag the issue with the relevant label and assign yourself to the issue.
 - [ ] [Fork](https://help.github.com/en/github/getting-started-with-github/fork-a-repo) the [BioVAT repository](https://github.com/NBISweden/biovat) to your GitHub account.
-- [ ] Create a branch on your forked repository and make your changes following [pipeline conventions](#pipeline-contribution-conventions) (if applicable) and [our Nextflow best practice recommendations](https://nbisweden.github.io/Training-Tech-shorts/posts/2025-12-11-nextflow-best-practices/)
+- [ ] Create a branch on your forked repository and make your changes following [pipeline conventions](#pipeline-contribution-conventions) (if applicable) and [our Nextflow best practice recommendations](https://nbisweden.github.io/Training-Tech-shorts/posts/2025-12-11-nextflow-best-practices/).
 - [ ] To fix major bugs, name your branch `patch` and follow the [patch release](#patch-release) process.
-- [ ] Update relevant documentation within the `docs/` folder, use nf-core/tools to update `nextflow_schema.json`, and update `CITATIONS.md`.
+- [ ] [Lint](#lint-tests) your code with [nf-core/tools](https://github.com/nf-core/tools).
 - [ ] Run and/or update tests. See [Testing](#testing) for more information.
-- [ ] [Lint](#lint-tests) your code with nf-core/tools.
+- [ ] Update relevant documentation within the `docs/` folder, use [nf-core/tools](https://github.com/nf-core/tools) to update `nextflow_schema.json`, and update `CITATIONS.md`.
 - [ ] Submit a pull request (PR) against the `dev` branch and request a review.
 
 If you are not used to this workflow with Git, see the [GitHub documentation](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests) or [Git resources](https://try.github.io/) for more information.
@@ -84,6 +84,12 @@ nf-core pipelines lint <pipeline_directory>
 If you encounter failures or warnings, follow the linked documentation printed to screen.
 For more information about linting tests, see [nf-core/tools API documentation](https://nf-co.re/docs/nf-core-tools/api_reference/latest/pipeline_lint_tests/actions_awsfulltest).
 
+GitHub Actions will run prek to ensure the code is formatted accordingly. Run prek locally to ensure consistent code formatting:
+
+```bash
+prek run --all-files --show-diff-on-failure --color=always
+```
+
 ### Pipeline tests
 
 The BioVAT pipeline is set up with a minimal set of test data.
@@ -118,7 +124,7 @@ To contribute a new step to the pipeline, follow these guidelines:
 - [ ] Perform local tests to validate that the new code works as expected.
 - [ ] If applicable, add a new test in the `tests` directory.
 - [ ] Update `usage.md`, `output.md`, and `citation.md` as appropriate.
-- [ ] [Lint](lint) the code with nf-core/tools.
+- [ ] [Lint](#lint-tests) the code with nf-core/tools.
 - [ ] Update any diagrams or pipeline images as necessary.
 - [ ] Update MultiQC config `assets/multiqc_config.yml` so relevant suffixes, file name cleanup, and module plots are in the appropriate order if applicable.
 - [ ] Add a description of the output files and, if relevant, images from the MultiQC report to `docs/output.md`.
@@ -138,7 +144,11 @@ Parameters should have their default values defined within the `params` scope in
 
 In addition, they should have their type defined in the `params` block in `main.nf` ([see here for the ADR](https://github.com/NBISweden/biovat/issues/61)), e.g.: `aligner: String`.
 
-Finally, they should also be documented in the pipeline `nextflow_schema.json`. To update this automatically, run `nf-core pipelines schema build`.
+Finally, they should also be documented in the pipeline `nextflow_schema.json`. To update this automatically, run 
+
+```bash
+nf-core pipelines schema build
+```
 
 Boolean parameters used to enable/disable stages, tools, or tool behaviours must be prefixed with `enable_`, for example, `enable_align`. The pipeline automatically groups these parameters into a map called `enable`, where each key is the parameter name with the `enable_` prefix removed. For example, the value of the parameter `enable_align` becomes accessible in scripts via `enable.align`.
 
