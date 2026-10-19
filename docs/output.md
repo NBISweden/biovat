@@ -188,7 +188,7 @@ Variant QC executes at several workflow stages. The outputs will be in the direc
     - `bcftools_stats/`
       - `*.bcftools_stats.txt`: variant metrics.
     - `vcftools/`
-      - `*.FILTER.summary`: summary of the number of SNPs and Ts/Tv ratio for each FILTER category.
+      - `*.TsTv.summary`: summary of all Transitions and Transversions.
       - `*.relatedness2`: heatmap of pairwise sample relatedness, based on Manichaikul et al., BIOINFORMATICS 2010 (doi:10.1093/bioinformatics/btq559).
       - `*.TsTv.count`: transition to transversion ratio as a function of alternative allele count (using only bi-allelic SNPs).
       - `*.TsTv.qual`: transition to transversion ratio as a function of SNP quality threshold (using only bi-allelic SNPs).
