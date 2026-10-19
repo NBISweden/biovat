@@ -54,13 +54,13 @@
                 "VCFTOOLS_RELATEDNESS2": {
                     "vcftools": "0.1.17"
                 },
-                "VCFTOOLS_SUMMARY": {
-                    "vcftools": "0.1.17"
-                },
                 "VCFTOOLS_TSTV_COUNT": {
                     "vcftools": "0.1.17"
                 },
                 "VCFTOOLS_TSTV_QUAL": {
+                    "vcftools": "0.1.17"
+                },
+                "VCFTOOLS_TSTV_SUMMARY": {
                     "vcftools": "0.1.17"
                 },
                 "Workflow": {
@@ -595,9 +595,9 @@
                 "07_variant_calls/qc/bcftools_stats",
                 "07_variant_calls/qc/bcftools_stats/Diplacus_puniceus_red_yellow.bcftools_multisample.bcftools_stats.txt",
                 "07_variant_calls/qc/vcftools",
-                "07_variant_calls/qc/vcftools/Diplacus_puniceus_red_yellow.bcftools_multisample.FILTER.summary",
                 "07_variant_calls/qc/vcftools/Diplacus_puniceus_red_yellow.bcftools_multisample.TsTv.count",
                 "07_variant_calls/qc/vcftools/Diplacus_puniceus_red_yellow.bcftools_multisample.TsTv.qual",
+                "07_variant_calls/qc/vcftools/Diplacus_puniceus_red_yellow.bcftools_multisample.TsTv.summary",
                 "07_variant_calls/qc/vcftools/Diplacus_puniceus_red_yellow.bcftools_multisample.relatedness2",
                 "multiqc",
                 "multiqc/multiqc_data",
@@ -779,6 +779,8 @@
                 "multiqc/multiqc_data/vcftools_tstv_by_count_vcftools_tstv_by_count.txt",
                 "multiqc/multiqc_data/vcftools_tstv_by_qual.txt",
                 "multiqc/multiqc_data/vcftools_tstv_by_qual_vcftools_tstv_by_qual.txt",
+                "multiqc/multiqc_data/vcftools_tstv_summary.txt",
+                "multiqc/multiqc_data/vcftools_tstv_summary_vcftools_tstv_summary.txt",
                 "multiqc/multiqc_report.html",
                 "pipeline_info",
                 "pipeline_info/biovat_software_mqc_versions.yml"
@@ -1227,7 +1229,9 @@
                 "samtools-flagstat-pct-table.txt:md5,00bf791d0521bf7bd80f04a68a1777d2",
                 "samtools-flagstat-table.txt:md5,082b4f1fef820a0d837c755e02bffd94",
                 "samtools-markdup-fraction.txt:md5,61ce48290f14aab58ad66212d802e95a",
-                "samtools-markdup-table.txt:md5,710f76528492ae8e9734e1d7f5d98440"
+                "samtools-markdup-table.txt:md5,710f76528492ae8e9734e1d7f5d98440",
+                "vcftools_tstv_summary.txt:md5,14346df77277ac61d4cdde29b84299a0",
+                "vcftools_tstv_summary_vcftools_tstv_summary.txt:md5,b743b7546a50f802beb3fb4c60b61c76"
             ],
             [
                 "03_read_alignment/PUN-R-ELF.1.SRR9309791.1.bam:218385b0a8aab22af01d3bad1ca60367",
@@ -1255,7 +1259,7 @@
                 "07_variant_calls/Diplacus_puniceus_red_yellow.bcftools_multisample.vcf.gz:595340ad8ab1034adf11cd022d38ec84"
             ]
         ],
-        "timestamp": "2026-10-09T15:37:23.168184214",
+        "timestamp": "2026-10-19T16:59:40.100577",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

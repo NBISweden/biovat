@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prettier formatting drift; excluded `pixi.lock` from prettier since its format is owned by pixi (#37)
 - Sample/library_id/flowcell/lane uniqueness is now enforced via nf-schema's `uniqueEntries` keyword instead of custom dedup code (#43)
 - Experimental: switches to typed params
+- Switched from `vcftools --FILTER-summary` to `vcftools --TsTv-summary` which is implemented in MultiQC modules and runs also on unfiltered variants
 
 ### `Dependencies`
 
