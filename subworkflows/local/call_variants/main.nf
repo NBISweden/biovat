@@ -229,7 +229,7 @@ workflow CALL_VARIANTS {
     outputs_bcftools_stats          = channel.empty()
     outputs_vcftools_tstv_counts    = channel.empty()
     outputs_vcftools_tstv_qual      = channel.empty()
-    outputs_vcftools_filter_summary = channel.empty()
+    outputs_vcftools_tstv_summary   = channel.empty()
     outputs_vcftools_relatedness2   = channel.empty()
     if (enable.variant_qc) {
         variant_qc_out = VARIANT_QC(
@@ -240,7 +240,7 @@ workflow CALL_VARIANTS {
         outputs_bcftools_stats          = variant_qc_out.outputs_bcftools_stats
         outputs_vcftools_tstv_counts    = variant_qc_out.outputs_vcftools_tstv_counts
         outputs_vcftools_tstv_qual      = variant_qc_out.outputs_vcftools_tstv_qual
-        outputs_vcftools_filter_summary = variant_qc_out.outputs_vcftools_filter_summary
+        outputs_vcftools_tstv_summary   = variant_qc_out.outputs_vcftools_tstv_summary
         outputs_vcftools_relatedness2   = variant_qc_out.outputs_vcftools_relatedness2
     }
 
@@ -252,6 +252,6 @@ workflow CALL_VARIANTS {
     outputs_bcftools_stats
     outputs_vcftools_tstv_counts
     outputs_vcftools_tstv_qual
-    outputs_vcftools_filter_summary
+    outputs_vcftools_tstv_summary
     outputs_vcftools_relatedness2
 }

@@ -166,7 +166,7 @@ workflow NBISWEDEN_BIOVAT {
     outputs_call_variants_bcftools_stats          = biovat_out.outputs_call_variants_bcftools_stats
     outputs_call_variants_vcftools_tstv_counts    = biovat_out.outputs_call_variants_vcftools_tstv_counts
     outputs_call_variants_vcftools_tstv_qual      = biovat_out.outputs_call_variants_vcftools_tstv_qual
-    outputs_call_variants_vcftools_filter_summary = biovat_out.outputs_call_variants_vcftools_filter_summary
+    outputs_call_variants_vcftools_tstv_summary   = biovat_out.outputs_call_variants_vcftools_tstv_summary
     outputs_call_variants_vcftools_relatedness2   = biovat_out.outputs_call_variants_vcftools_relatedness2
     outputs_multiqc                               = biovat_out.outputs_multiqc
 
@@ -225,7 +225,7 @@ workflow {
     outputs_call_variants_bcftools_stats          = nbisweden_biovat_out.outputs_call_variants_bcftools_stats
     outputs_call_variants_vcftools_tstv_counts    = nbisweden_biovat_out.outputs_call_variants_vcftools_tstv_counts
     outputs_call_variants_vcftools_tstv_qual      = nbisweden_biovat_out.outputs_call_variants_vcftools_tstv_qual
-    outputs_call_variants_vcftools_filter_summary = nbisweden_biovat_out.outputs_call_variants_vcftools_filter_summary
+    outputs_call_variants_vcftools_tstv_summary   = nbisweden_biovat_out.outputs_call_variants_vcftools_tstv_summary
     outputs_call_variants_vcftools_relatedness2   = nbisweden_biovat_out.outputs_call_variants_vcftools_relatedness2
     outputs_multiqc                               = nbisweden_biovat_out.outputs_multiqc
 
@@ -334,7 +334,7 @@ output {
     outputs_call_variants_vcftools_tstv_qual {
         path '07_variant_calls/qc/vcftools'
     }
-    outputs_call_variants_vcftools_filter_summary {
+    outputs_call_variants_vcftools_tstv_summary {
         path '07_variant_calls/qc/vcftools'
     }
     outputs_call_variants_vcftools_relatedness2 {

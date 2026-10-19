@@ -190,7 +190,7 @@ workflow BIOVAT {
     outputs_call_variants_bcftools_stats          = channel.empty()
     outputs_call_variants_vcftools_tstv_counts    = channel.empty()
     outputs_call_variants_vcftools_tstv_qual      = channel.empty()
-    outputs_call_variants_vcftools_filter_summary = channel.empty()
+    outputs_call_variants_vcftools_tstv_summary   = channel.empty()
     outputs_call_variants_vcftools_relatedness2   = channel.empty()
     if (enable.variant_calling) {
         call_variants_out = CALL_VARIANTS(
@@ -213,7 +213,7 @@ workflow BIOVAT {
         outputs_call_variants_bcftools_stats          = call_variants_out.outputs_bcftools_stats
         outputs_call_variants_vcftools_tstv_counts    = call_variants_out.outputs_vcftools_tstv_counts
         outputs_call_variants_vcftools_tstv_qual      = call_variants_out.outputs_vcftools_tstv_qual
-        outputs_call_variants_vcftools_filter_summary = call_variants_out.outputs_vcftools_filter_summary
+        outputs_call_variants_vcftools_tstv_summary   = call_variants_out.outputs_vcftools_tstv_summary
         outputs_call_variants_vcftools_relatedness2   = call_variants_out.outputs_vcftools_relatedness2
     }
 
@@ -295,7 +295,7 @@ workflow BIOVAT {
     outputs_call_variants_bcftools_stats
     outputs_call_variants_vcftools_tstv_counts
     outputs_call_variants_vcftools_tstv_qual
-    outputs_call_variants_vcftools_filter_summary
+    outputs_call_variants_vcftools_tstv_summary
     outputs_call_variants_vcftools_relatedness2
     outputs_multiqc                               = multiqc_out.report.mix(multiqc_out.data, multiqc_out.plots)
 
