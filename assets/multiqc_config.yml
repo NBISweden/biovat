@@ -111,15 +111,15 @@ module_order:
       path_filters:
         - "*bcftools_stats.txt"
   - vcftools:
-      name: "Vcftools: variant calling metrics"
+      name: "Vcftools: transitions and transversions summary"
       anchor: "vcftools_tstv_summary"
       path_filters: "*.TsTv.summary"
   - vcftools:
-      name: "Vcftools: Ti/Tv ratio by count"
+      name: "Vcftools: transitions/transversions by count"
       anchor: "vcftools_tstv_by_count"
       path_filters: "*.TsTv.count"
   - vcftools:
-      name: "Vcftools: Ti/Tv ratio by quality"
+      name: "Vcftools: transitions/transversions by quality"
       anchor: "vcftools_tstv_by_qual"
       path_filters: "*.TsTv.qual"
   - vcftools:
