@@ -1,0 +1,52 @@
+{
+    "one callset - stub": {
+        "content": [
+            5,
+            [
+                "bcftools_stats",
+                "bcftools_stats/callset.bcftools_multisample.bcftools_stats.txt",
+                "multiqc_files",
+                "multiqc_files/callset.bcftools_multisample.FILTER.summary",
+                "multiqc_files/callset.bcftools_multisample.TsTv.count",
+                "multiqc_files/callset.bcftools_multisample.TsTv.qual",
+                "multiqc_files/callset.bcftools_multisample.bcftools_stats.txt",
+                "multiqc_files/callset.bcftools_multisample.relatedness2",
+                "vcftools",
+                "vcftools/callset.bcftools_multisample.FILTER.summary",
+                "vcftools/callset.bcftools_multisample.TsTv.count",
+                "vcftools/callset.bcftools_multisample.TsTv.qual",
+                "vcftools/callset.bcftools_multisample.relatedness2"
+            ]
+        ],
+        "timestamp": "2026-10-20T15:03:18.807844",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    },
+    "one callset, from a CSV samplesheet - stub": {
+        "content": [
+            5,
+            [
+                "bcftools_stats",
+                "bcftools_stats/callset.bcftools_multisample.bcftools_stats.txt",
+                "multiqc_files",
+                "multiqc_files/callset.bcftools_multisample.FILTER.summary",
+                "multiqc_files/callset.bcftools_multisample.TsTv.count",
+                "multiqc_files/callset.bcftools_multisample.TsTv.qual",
+                "multiqc_files/callset.bcftools_multisample.bcftools_stats.txt",
+                "multiqc_files/callset.bcftools_multisample.relatedness2",
+                "vcftools",
+                "vcftools/callset.bcftools_multisample.FILTER.summary",
+                "vcftools/callset.bcftools_multisample.TsTv.count",
+                "vcftools/callset.bcftools_multisample.TsTv.qual",
+                "vcftools/callset.bcftools_multisample.relatedness2"
+            ]
+        ],
+        "timestamp": "2026-10-21T13:53:39.529388",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    }
+}

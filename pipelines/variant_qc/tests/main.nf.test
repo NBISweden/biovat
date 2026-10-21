@@ -1,0 +1,101 @@
+nextflow_pipeline {
+
+    name "Test pipeline variant_qc"
+    script "../main.nf"
+    tag "pipelines"
+    tag "pipelines/variant_qc"
+
+    test("one callset - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            // Stub mode does not read the files, so empty files are enough
+            new File("${launchDir}/callset.vcf.gz").text = ""
+            new File("${launchDir}/callset.vcf.gz.csi").text = ""
+            new File("${launchDir}/variant_calls.yml").text = "- {meta: {id: callset.bcftools_multisample}, vcf: ${launchDir}/callset.vcf.gz, index: ${launchDir}/callset.vcf.gz.csi}\n"
+            new File("${launchDir}/variant_calls.csv").text = "id,vcf,index\ncallset.bcftools_multisample,${launchDir}/callset.vcf.gz,${launchDir}/callset.vcf.gz.csi\n"
+        }
+
+        when {
+            params {
+                variant_calls = "${launchDir}/variant_calls.yml"
+                fasta         = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert workflow.trace.succeeded().size() == 5 },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    test("one callset, from a CSV samplesheet - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/callset.vcf.gz").text = ""
+            new File("${launchDir}/callset.vcf.gz.csi").text = ""
+            new File("${launchDir}/variant_calls.csv").text = "id,vcf,index\ncallset.bcftools_multisample,${launchDir}/callset.vcf.gz,${launchDir}/callset.vcf.gz.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/variant_calls.csv"
+                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert workflow.trace.succeeded().size() == 5 },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    test("--samplesheet and --variant_calls together fail") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/callset.vcf.gz").text = ""
+            new File("${launchDir}/callset.vcf.gz.csi").text = ""
+            new File("${launchDir}/variant_calls.csv").text = "id,vcf,index\ncallset.bcftools_multisample,${launchDir}/callset.vcf.gz,${launchDir}/callset.vcf.gz.csi\n"
+            new File("${launchDir}/variant_calls.yml").text = "- {meta: {id: callset.bcftools_multisample}, vcf: ${launchDir}/callset.vcf.gz, index: ${launchDir}/callset.vcf.gz.csi}\n"
+        }
+
+        when {
+            params {
+                samplesheet   = "${launchDir}/variant_calls.csv"
+                variant_calls = "${launchDir}/variant_calls.yml"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Provide either --samplesheet or --variant_calls, not both")
+        }
+    }
+
+    test("missing --samplesheet fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Missing required parameter --samplesheet")
+        }
+    }
+}

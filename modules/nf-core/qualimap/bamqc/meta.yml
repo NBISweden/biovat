@@ -18,13 +18,17 @@ tools:
         - "GPL-2.0-only"
       identifier: biotools:qualimap
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Sample identifier, used for the task tag and the default output prefix
+    - meta:
         type: map
         description: |
-          Groovy Map containing sample information
-          e.g. [ id:'test', single_end:false, strandedness:'forward' ]
-          meta.strandedness can be use in ext.args to set `-p` argument
-          (see ./tests/nextflow.config)
+          Optional Groovy Map with sample information, passed on to the output.
+          It is not used by the process itself
+    - single_end:
+        type: boolean
+        description: Whether the reads are single-end (false for paired-end)
     - bam:
         type: file
         description: BAM file

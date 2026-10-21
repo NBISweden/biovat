@@ -1,0 +1,126 @@
+nextflow_pipeline {
+
+    name "Test pipeline align_reads"
+    script "../main.nf"
+    tag "pipeline"
+    tag "pipelines/align_reads"
+
+    test("stub, from a YAML samplesheet") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/reads.yml").text = """\
+                - meta: {id: PUN-R-ELF, library: "1", flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}
+                  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]
+                - meta: {id: PUN-R-JMC, library: "1", flowcell: SRR9309467, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-JMC.1.SRR9309467.1, platform_unit: SRR9309467.1.PUN-R-JMC_1}
+                  reads: [${data}/PUN-R-JMC_1_R1.fastq.gz, ${data}/PUN-R-JMC_1_R2.fastq.gz]
+                """.stripIndent()
+        }
+
+        when {
+            params {
+                reads = "${launchDir}/reads.yml"
+                fasta = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert snapshot(
+                    // Tasks that ran, by process
+                    workflow.trace.succeeded().collect { t -> t.name.replaceAll(/ \(.*\)/, '') }.sort(),
+                    // All stable path names, relative to the output directory
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true)
+                ).match() }
+            )
+        }
+    }
+
+    test("stub, from a samplesheet - the bam row is skipped") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/samplesheet.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
+                // A row with a bam instead of fastq files is skipped
+                "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false",
+                "PUN-R-JMC,1,SRR9309467,1,ILLUMINA,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+                fasta = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            def tasks = workflow.trace.succeeded().collect { t -> t.name.replaceAll(/ \(.*\)/, '') }
+            assertAll(
+                // two fastq rows are aligned. The bam row did not run
+                { assert tasks.count { name -> name.endsWith('BWAMEM3_MEM') } == 2 },
+                { assert snapshot(
+                    tasks.sort(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true)
+                ).match() }
+            )
+        }
+    }
+
+    test("--samplesheet and --reads fail") {
+
+        options "-stub"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/samplesheet.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
+                // A row with a bam instead of fastq files is skipped
+                "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false",
+                "PUN-R-JMC,1,SRR9309467,1,ILLUMINA,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
+            ].join("\n") + "\n"
+            new File("${launchDir}/reads.yml").text = [
+                "- meta: {id: PUN-R-ELF, library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}",
+                "  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+                reads       = "${launchDir}/reads.yml"
+                fasta = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.toString().contains("Provide either --samplesheet or --reads, not both") || workflow.stderr.toString().contains("Provide either --samplesheet or --reads, not both")
+        }
+    }
+
+    test("missing --samplesheet") {
+
+        options "-stub"
+
+        when {
+            params {
+                fasta = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.toString().contains("Missing required parameter --samplesheet") || workflow.stderr.toString().contains("Missing required parameter --samplesheet")
+        }
+    }
+}

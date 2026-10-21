@@ -16,10 +16,13 @@ tools:
       licence: ["GPL-3.0-or-later"]
       identifier: "biotools:bwa"
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample or reference, used to name the outputs
+    - meta:
         type: map
         description: |
-          Groovy Map containing reference information.
+          Optional groovy Map containing reference information.
           e.g. [ id:'test', single_end:false ]
     - fasta:
         type: file
@@ -29,10 +32,13 @@ input:
           - edam: "http://edamontology.org/format_1929" # FASTA
 output:
   index:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference, used to name the outputs
+      - meta:
           type: map
           description: |
-            Groovy Map containing reference information.
+            Optional groovy Map containing reference information.
             e.g. [ id:'test', single_end:false ]
       - bwa:
           type: map

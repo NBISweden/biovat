@@ -33,24 +33,6 @@
             "nextflow": "25.10.2"
         }
     },
-    "versions": {
-        "content": [
-            {
-                "versions_bcftools": [
-                    [
-                        "BCFTOOLS_STATS",
-                        "bcftools",
-                        "1.23.1"
-                    ]
-                ]
-            }
-        ],
-        "timestamp": "2026-03-20T18:21:53.228681614",
-        "meta": {
-            "nf-test": "0.9.4",
-            "nextflow": "25.10.2"
-        }
-    },
     "sarscov2 - vcf_gz - targets": {
         "content": [
             [
@@ -68,117 +50,22 @@
             "nextflow": "25.10.2"
         }
     },
-    "regions_versions": {
-        "content": [
-            {
-                "versions_bcftools": [
-                    [
-                        "BCFTOOLS_STATS",
-                        "bcftools",
-                        "1.23.1"
-                    ]
-                ]
-            }
-        ],
-        "timestamp": "2026-03-20T18:22:01.713819348",
-        "meta": {
-            "nf-test": "0.9.4",
-            "nextflow": "25.10.2"
-        }
-    },
-    "targets_versions": {
-        "content": [
-            {
-                "versions_bcftools": [
-                    [
-                        "BCFTOOLS_STATS",
-                        "bcftools",
-                        "1.23.1"
-                    ]
-                ]
-            }
-        ],
-        "timestamp": "2026-03-20T18:22:10.32795863",
-        "meta": {
-            "nf-test": "0.9.4",
-            "nextflow": "25.10.2"
-        }
-    },
     "sarscov2 - vcf_gz - stub": {
         "content": [
-            {
-                "0": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.bcftools_stats.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
-                    ]
-                ],
-                "1": [
-                    [
-                        "BCFTOOLS_STATS",
-                        "bcftools",
-                        "1.23.1"
-                    ]
-                ],
-                "stats": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.bcftools_stats.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
-                    ]
-                ],
-                "versions_bcftools": [
-                    [
-                        "BCFTOOLS_STATS",
-                        "bcftools",
-                        "1.23.1"
-                    ]
+            [
+                [
+                    "test",
+                    {
+                        "id": "test"
+                    },
+                    "test.bcftools_stats.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                 ]
-            }
+            ]
         ],
-        "timestamp": "2026-03-20T18:22:36.639614055",
+        "timestamp": "2026-10-21T09:37:03.40799",
         "meta": {
-            "nf-test": "0.9.4",
-            "nextflow": "25.10.2"
-        }
-    },
-    "exon_versions": {
-        "content": [
-            {
-                "versions_bcftools": [
-                    [
-                        "BCFTOOLS_STATS",
-                        "bcftools",
-                        "1.23.1"
-                    ]
-                ]
-            }
-        ],
-        "timestamp": "2026-03-20T18:22:18.899161374",
-        "meta": {
-            "nf-test": "0.9.4",
-            "nextflow": "25.10.2"
-        }
-    },
-    "ref_versions": {
-        "content": [
-            {
-                "versions_bcftools": [
-                    [
-                        "BCFTOOLS_STATS",
-                        "bcftools",
-                        "1.23.1"
-                    ]
-                ]
-            }
-        ],
-        "timestamp": "2026-03-20T18:22:27.810279032",
-        "meta": {
-            "nf-test": "0.9.4",
-            "nextflow": "25.10.2"
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
         }
     },
     "sarscov2 - vcf_gz": {

@@ -1,0 +1,1122 @@
+Changes in component 'nf-core/samtools/sort'
+'modules/nf-core/samtools/sort/environment.yml' is unchanged
+Changes in 'samtools/sort/meta.yml':
+--- modules/nf-core/samtools/sort/meta.yml
++++ modules/nf-core/samtools/sort/meta.yml
+@@ -17,7 +17,11 @@
+       licence: ["MIT"]
+       identifier: biotools:samtools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample or reference. Used as the default prefix of the output files
++    - meta:
++        optional: true
+         type: map
+         description: |
+           Groovy Map containing sample information
+@@ -50,7 +54,11 @@
+       pattern: "bai|csi|crai"
+ output:
+   bam:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -61,7 +69,11 @@
+           pattern: "*.{bam}"
+           ontologies: []
+   cram:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -72,7 +84,11 @@
+           pattern: "*.{cram}"
+           ontologies: []
+   sam:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -83,7 +99,11 @@
+           pattern: "*.{sam}"
+           ontologies: []
+   index:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+
+Changes in 'samtools/sort/main.nf':
+--- modules/nf-core/samtools/sort/main.nf
++++ modules/nf-core/samtools/sort/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process SAMTOOLS_SORT {
+-    tag "${meta.id}"
++    tag "${id}"
+     label 'process_medium'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,62 +9,72 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
+         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { samtools_sort_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(bam, stageAs: "?/*")
+-    tuple val(meta2), path(fasta), path(fai)
+-    val index_format
++    record(
++        id: String,
++        meta: Record?,
++        bam: List<Path>,
++        fasta: Path?,
++        fai: Path?,
++        index_format: String?,
++        samtools_sort_args: String?,
++        output_prefix: String?
++    )
++
++    stage:
++    stageAs bam, "?/*"
+ 
+     output:
+-    tuple val(meta), path("${prefix}.bam"), emit: bam, optional: true
+-    tuple val(meta), path("${prefix}.cram"), emit: cram, optional: true
+-    tuple val(meta), path("${prefix}.sam"), emit: sam, optional: true
+-    tuple val(meta), path("${prefix}.${extension}.{crai,csi,bai}"), emit: index, optional: true
+-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
++    record(
++        id: id,
++        meta: meta,
++        bam: file("${task.ext.prefix}.bam", optional: true),
++        cram: file("${task.ext.prefix}.cram", optional: true),
++        sam: file("${task.ext.prefix}.sam", optional: true),
++        index: file("${task.ext.prefix}.*.{crai,csi,bai}", optional: true)
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+-    prefix = task.ext.prefix ?: "${meta.id}"
+-    extension = args.contains("--output-fmt sam")
++    def extension = task.ext.args.contains("--output-fmt sam")
+         ? "sam"
+-        : args.contains("--output-fmt cram")
++        : task.ext.args.contains("--output-fmt cram")
+             ? "cram"
+             : "bam"
+     def reference = fasta ? "--reference ${fasta}" : ""
+     //setting default values
+     def write_index = ""
+-    def output_file = "${prefix}.${extension}"
+-
++    def output_file = "${task.ext.prefix}.${extension}"
+     // Update if index is requested
+     if (index_format != '' && index_format) {
+         write_index = "--write-index"
+-        output_file = "${prefix}.${extension}##idx##${prefix}.${extension}.${index_format}"
++        output_file = "${task.ext.prefix}.${extension}##idx##${task.ext.prefix}.${extension}.${index_format}"
+     }
+-    def is_sam = (bam instanceof List ? bam[0] : bam).name.endsWith('.sam')
++    def is_sam = bam[0].name.endsWith('.sam')
+     if (index_format) {
+-        if (!index_format.matches('bai|csi|crai')) {
++        if (!(index_format ==~ /bai|csi|crai/)) {
+             error("Index format not one of bai, csi, crai.")
+         }
+         else if (extension == "sam") {
+             error("Indexing not compatible with SAM output")
+         }
+     }
+-    if ("${bam}" == "${prefix}.bam") {
++    if ("${bam.join(' ')}" == "${task.ext.prefix}.bam") {
+         error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
+     }
+-    if ("${bam}" == "${prefix}.bam") {
+-        error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
+-    }
+-
+-    def input_source = is_sam ? "${bam}" : "-"
+-    def pre_command = is_sam ? "" : "samtools cat ${bam} | "
+-
++    def input_source = is_sam ? "${bam.join(' ')}" : "-"
++    def pre_command = is_sam ? "" : "samtools cat ${bam.join(' ')} | "
+     """
+     ${pre_command}samtools sort \\
+-        ${args} \\
+-        -T ${prefix} \\
++        ${task.ext.args} \\
++        -T ${task.ext.prefix} \\
+         --threads ${task.cpus} \\
+         ${reference} \\
+         -o ${output_file} \\
+@@ -71,27 +83,22 @@
+     """
+ 
+     stub:
+-    def args = task.ext.args ?: ''
+-    prefix = task.ext.prefix ?: "${meta.id}"
+-    extension = args.contains("--output-fmt sam")
++    def extension = task.ext.args.contains("--output-fmt sam")
+         ? "sam"
+-        : args.contains("--output-fmt cram")
++        : task.ext.args.contains("--output-fmt cram")
+             ? "cram"
+             : "bam"
+-
+     if (index_format) {
+-        if (!index_format.matches('bai|csi|crai')) {
++        if (!(index_format ==~ /bai|csi|crai/)) {
+             error("Index format not one of bai, csi, crai.")
+         }
+         else if (extension == "sam") {
+             error("Indexing not compatible with SAM output")
+         }
+     }
+-
+-    index = index_format ? "touch ${prefix}.${extension}.${index_format}" : ""
+-
++    def index = index_format ? "touch ${task.ext.prefix}.${extension}.${index_format}" : ""
+     """
+-    touch ${prefix}.${extension}
++    touch ${task.ext.prefix}.${extension}
+     ${index}
+     """
+ }
+
+Changes in 'samtools/sort/tests/main.nf.test.snap':
+--- modules/nf-core/samtools/sort/tests/main.nf.test.snap
++++ modules/nf-core/samtools/sort/tests/main.nf.test.snap
+@@ -18,21 +18,12 @@
+                     },
+                     "test.sorted.cram.crai"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-07-10T07:15:51.469358",
+-        "meta": {
+-            "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            ]
++        ],
++        "timestamp": "2026-10-19T11:18:29.386936",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "bam_csi_index": {
+@@ -48,39 +39,33 @@
+                     },
+                     "test.sorted.bam.csi:md5,43f545200e545ca2075c475d194a5130"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-07-10T17:05:03.136300204",
+-        "meta": {
+-            "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            ]
++        ],
++        "timestamp": "2026-10-19T11:36:37.381318",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "bam - stub": {
+         "content": [
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-03-19T09:04:43.558376",
+-        "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            [
++                [
++                    {
++                        "id": "test",
++                        "single_end": false
++                    },
++                    "test.sorted.bam",
++                    null,
++                    null,
++                    null
++                ]
++            ]
++        ],
++        "timestamp": "2026-10-19T11:21:50.228661",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "multiple bam bai index": {
+@@ -96,39 +81,33 @@
+                     },
+                     "test.sorted.bam.bai"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-07-10T17:05:14.840145298",
+-        "meta": {
+-            "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            ]
++        ],
++        "timestamp": "2026-10-19T11:36:53.791926",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "cram - stub": {
+         "content": [
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-03-19T09:04:54.684578",
+-        "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            [
++                [
++                    {
++                        "id": "test",
++                        "single_end": false
++                    },
++                    null,
++                    "test.sorted.cram",
++                    null,
++                    null
++                ]
++            ]
++        ],
++        "timestamp": "2026-10-19T11:22:02.28773",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "multiple bam": {
+@@ -137,40 +116,40 @@
+                 "test.sorted.bam:readsMD5,c4525b95f05075208347295e6a1fb232"
+             ],
+             [
+-                
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-07-10T17:05:09.324351486",
+-        "meta": {
+-            "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++                [
++                    {
++                        "id": "test",
++                        "single_end": false
++                    },
++                    null
++                ]
++            ]
++        ],
++        "timestamp": "2026-10-19T11:36:45.408549",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "multiple bam - stub": {
+         "content": [
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-03-19T09:04:48.874947",
+-        "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            [
++                [
++                    {
++                        "id": "test",
++                        "single_end": false
++                    },
++                    "test.sorted.bam",
++                    null,
++                    null,
++                    null
++                ]
++            ]
++        ],
++        "timestamp": "2026-10-19T11:21:55.969352",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "bam_no_index": {
+@@ -179,22 +158,19 @@
+                 "test.sorted.bam:readsMD5,894549ee3ced6b5ca2eed2563a985217"
+             ],
+             [
+-                
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-07-10T17:04:53.194840222",
+-        "meta": {
+-            "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++                [
++                    {
++                        "id": "test",
++                        "single_end": false
++                    },
++                    null
++                ]
++            ]
++        ],
++        "timestamp": "2026-10-19T11:36:22.607782",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "multiple bam csi index": {
+@@ -210,45 +186,39 @@
+                     },
+                     "test.sorted.bam.csi"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-07-10T17:05:22.574450685",
+-        "meta": {
+-            "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            ]
++        ],
++        "timestamp": "2026-10-19T11:37:00.466354",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "sam": {
+         "content": [
+             [
+-                
+-            ],
+-            [
+-                
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-07-10T07:19:30.478625",
+-        "meta": {
+-            "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++                [
++                    {
++                        "id": "test",
++                        "single_end": false
++                    },
++                    "test.sorted.sam"
++                ]
++            ],
++            [
++                [
++                    {
++                        "id": "test",
++                        "single_end": false
++                    },
++                    null
++                ]
++            ]
++        ],
++        "timestamp": "2026-10-19T11:18:52.47084",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "bam_bai_index": {
+@@ -264,21 +234,12 @@
+                     },
+                     "test.sorted.bam.bai:md5,4810374728f259a493e1e61c90847da3"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORT",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-07-10T17:04:58.163543444",
+-        "meta": {
+-            "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            ]
++        ],
++        "timestamp": "2026-10-19T11:36:30.154934",
++        "meta": {
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+'modules/nf-core/samtools/sort/tests/nextflow_sam.config' is unchanged
+'modules/nf-core/samtools/sort/tests/nextflow_cram.config' is unchanged
+'modules/nf-core/samtools/sort/tests/nextflow.config' is unchanged
+Changes in 'samtools/sort/tests/main.nf.test':
+--- modules/nf-core/samtools/sort/tests/main.nf.test
++++ modules/nf-core/samtools/sort/tests/main.nf.test
+@@ -15,27 +15,26 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(
+-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
+-                    process.out.index,
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: '',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(
++                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
++                    process.out[0].collect { r -> [ r.meta, r.index ] }
+                 ).match() }
+             )
+         }
+@@ -48,27 +47,26 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = 'bai'
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(
+-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
+-                    process.out.index,
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: 'bai',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(
++                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
++                    process.out[0].collect { r -> [ r.meta, r.index ] }
+                 ).match() }
+             )
+         }
+@@ -81,27 +79,26 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = 'csi'
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(
+-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
+-                    process.out.index,
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: 'csi',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(
++                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
++                    process.out[0].collect { r -> [ r.meta, r.index ] }
+                 ).match() }
+             )
+         }
+@@ -114,30 +111,29 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    [
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [
+                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam', checkIfExists: true)
+-                    ]
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(
+-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
+-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                    ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: '',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(
++                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
++                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
+                 ).match() }
+             )
+         }
+@@ -150,30 +146,29 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    [
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [
+                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam', checkIfExists: true)
+-                    ]
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = 'bai'
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(
+-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
+-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                    ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: 'bai',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(
++                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
++                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
+                 ).match() }
+             )
+         }
+@@ -186,30 +181,29 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    [
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [
+                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam', checkIfExists: true)
+-                    ]
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = 'csi'
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(
+-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
+-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                    ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: 'csi',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(
++                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
++                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
+                 ).match() }
+             )
+         }
+@@ -222,27 +216,26 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true)
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(
+-                    process.out.cram.collect { it.collect { it instanceof Map ? it : file(it).name } },
+-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: '',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(
++                    process.out[0].collect { r -> [ r.meta, file(r.cram).name ] },
++                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
+                 ).match() }
+             )
+         }
+@@ -256,24 +249,24 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match() }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: '',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.sam ? file(r.sam).name : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -285,27 +278,27 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    [
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [
+                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam', checkIfExists: true)
+-                    ]
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match() }
++                    ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: '',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.sam ? file(r.sam).name : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -318,24 +311,24 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true)
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match() }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: '',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.sam ? file(r.sam).name : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -347,27 +340,26 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/pairtools/mock.sam', checkIfExists: true)
+-                ])
+-                input[1] = channel.of([
+-                    [ id:'fasta' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(
+-                    process.out.bam.collect { it.collect { it instanceof Map ? it : file(it).name } },
+-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    bam: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/pairtools/mock.sam', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    index_format: '',
++                    samtools_sort_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(
++                    process.out[0].collect { r -> [ r.meta, r.sam ? file(r.sam).name : null ] },
++                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
+                 ).match() }
+             )
+         }
+
+************************************************************

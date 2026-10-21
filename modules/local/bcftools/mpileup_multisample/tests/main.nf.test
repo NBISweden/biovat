@@ -1,0 +1,121 @@
+nextflow_process {
+
+    name "Test Process BCFTOOLS_MPILEUP_MULTISAMPLE"
+    script "../main.nf"
+    process "BCFTOOLS_MPILEUP_MULTISAMPLE"
+    tag "modules_local"
+    tag "bcftools"
+    tag "bcftools/mpileup_multisample"
+
+    test("sarscov2 - bam") {
+
+        when {
+            process {
+                """
+                def bed = file("\${workDir}/mpileup_test.bed")
+                bed.text = "MT192765.1\\t0\\t10000\\n"
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    bams: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true) ],
+                    indexes: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam' + '.bai', checkIfExists: true) ],
+                    intervals: bed,
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    save_mpileup: false,
+                    group_samples: false,
+                    population_file: null,
+                    bcftools_mpileup_args: '--no-BAQ',
+                    bcftools_call_args: '--multiallelic-caller --variants-only',
+                    output_prefix: null
+                ))
+                """
+            }
+        }
+
+        then {
+            def out = process.out[0][0]
+            assertAll(
+                { assert process.success },
+                { assert file(out.vcf).name == 'test.vcf.gz' },
+                { assert file(out.index).name == 'test.vcf.gz.csi' },
+                { assert out.mpileup == null }
+            )
+        }
+    }
+
+    test("sarscov2 - bam - save_mpileup") {
+
+        when {
+            process {
+                """
+                def bed = file("\${workDir}/mpileup_test.bed")
+                bed.text = "MT192765.1\\t0\\t10000\\n"
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    bams: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true) ],
+                    indexes: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam' + '.bai', checkIfExists: true) ],
+                    intervals: bed,
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    save_mpileup: true,
+                    group_samples: false,
+                    population_file: null,
+                    bcftools_mpileup_args: '--no-BAQ',
+                    bcftools_call_args: '--multiallelic-caller --variants-only',
+                    output_prefix: null
+                ))
+                """
+            }
+        }
+
+        then {
+            def out = process.out[0][0]
+            assertAll(
+                { assert process.success },
+                { assert file(out.vcf).name == 'test.vcf.gz' },
+                { assert file(out.mpileup).name == 'test.mpileup.bcf' }
+            )
+        }
+    }
+
+    test("sarscov2 - bam - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                def bed = file("\${workDir}/mpileup_test.bed")
+                bed.text = "MT192765.1\\t0\\t10000\\n"
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    bams: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true) ],
+                    indexes: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam' + '.bai', checkIfExists: true) ],
+                    intervals: bed,
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    save_mpileup: true,
+                    group_samples: false,
+                    population_file: null,
+                    bcftools_mpileup_args: '--no-BAQ',
+                    bcftools_call_args: '--multiallelic-caller --variants-only',
+                    output_prefix: null
+                ))
+                """
+            }
+        }
+
+        then {
+            def out = process.out[0][0]
+            assertAll(
+                { assert process.success },
+                { assert file(out.vcf).name == 'test.vcf.gz' },
+                { assert file(out.index).name == 'test.vcf.gz.csi' },
+                { assert file(out.mpileup).name == 'test.mpileup.bcf' }
+            )
+        }
+    }
+}

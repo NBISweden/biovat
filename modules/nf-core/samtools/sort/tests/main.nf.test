@@ -15,16 +15,16 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = ''
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true) ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: '',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -33,9 +33,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
-                    process.out.index,
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
+                    process.out[0].collect { r -> [ r.meta, r.index ] }
                 ).match() }
             )
         }
@@ -48,16 +47,16 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = 'bai'
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true) ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: 'bai',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -66,9 +65,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
-                    process.out.index,
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
+                    process.out[0].collect { r -> [ r.meta, r.index ] }
                 ).match() }
             )
         }
@@ -81,16 +79,16 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = 'csi'
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true) ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: 'csi',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -99,9 +97,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
-                    process.out.index,
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
+                    process.out[0].collect { r -> [ r.meta, r.index ] }
                 ).match() }
             )
         }
@@ -114,19 +111,19 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam', checkIfExists: true)
-                    ]
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = ''
+                    ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: '',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -135,9 +132,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
+                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
                 ).match() }
             )
         }
@@ -150,19 +146,19 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam', checkIfExists: true)
-                    ]
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = 'bai'
+                    ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: 'bai',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -171,9 +167,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
+                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
                 ).match() }
             )
         }
@@ -186,19 +181,19 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam', checkIfExists: true)
-                    ]
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = 'csi'
+                    ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: 'csi',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -207,9 +202,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
+                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
                 ).match() }
             )
         }
@@ -222,16 +216,16 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true)
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = ''
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true) ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: '',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -240,9 +234,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.cram.collect { it.collect { it instanceof Map ? it : file(it).name } },
-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    process.out[0].collect { r -> [ r.meta, file(r.cram).name ] },
+                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
                 ).match() }
             )
         }
@@ -256,16 +249,16 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = ''
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true) ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: '',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -273,7 +266,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match() }
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.sam ? file(r.sam).name : null, r.index ? file(r.index).name : null ] }).match() }
             )
         }
     }
@@ -285,19 +278,19 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam', checkIfExists: true)
-                    ]
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = ''
+                    ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: '',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -305,7 +298,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match() }
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.sam ? file(r.sam).name : null, r.index ? file(r.index).name : null ] }).match() }
             )
         }
     }
@@ -318,16 +311,16 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true)
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = ''
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true) ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: '',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -335,7 +328,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match() }
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.sam ? file(r.sam).name : null, r.index ? file(r.index).name : null ] }).match() }
             )
         }
     }
@@ -347,16 +340,16 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/pairtools/mock.sam', checkIfExists: true)
-                ])
-                input[1] = channel.of([
-                    [ id:'fasta' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
-                ])
-                input[2] = ''
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    bam: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/pairtools/mock.sam', checkIfExists: true) ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    index_format: '',
+                    samtools_sort_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -365,9 +358,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.bam.collect { it.collect { it instanceof Map ? it : file(it).name } },
-                    process.out.index.collect { it.collect { it instanceof Map ? it : file(it).name } },
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    process.out[0].collect { r -> [ r.meta, r.sam ? file(r.sam).name : null ] },
+                    process.out[0].collect { r -> [ r.meta, r.index ? file(r.index).name : null ] }
                 ).match() }
             )
         }

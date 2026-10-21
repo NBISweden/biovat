@@ -1,0 +1,23 @@
+nextflow_pipeline {
+
+    name "Test pipeline help"
+    script "../main.nf"
+    tag "pipeline"
+    tag "help"
+
+    test("--help") {
+
+        when {
+            params {
+                help = true
+            }
+        }
+
+        then {
+            // The help message itself is not captured by nf-test. This checks that --help is reached and exits
+            // cleanly, i.e. that no required parameter blocks it
+            assert workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+}

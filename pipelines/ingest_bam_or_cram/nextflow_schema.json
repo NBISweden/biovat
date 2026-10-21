@@ -1,0 +1,103 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/NBISweden/biovat/main/pipelines/ingest_bam_or_cram/nextflow_schema.json",
+    "title": "BioVAT ingest_bam_or_cram pipeline parameters",
+    "description": "Validate, sort and index user-provided BAM/CRAM files, with optional alignment QC",
+    "type": "object",
+    "$defs": {
+        "input_options": {
+            "title": "Input options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data.",
+            "properties": {
+                "samplesheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "BioVAT samplesheet (CSV) with the columns sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, bam and single_end. Rows with a bam are used and rows with fastq files are skipped. Read group information is built from the columns.",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "bam_cram": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per BAM/CRAM file. Fields: meta (a map with id, library, pl, platform_unit and read_group) and bam_cram (the file). Use either --samplesheet or --bam_cram.",
+                    "fa_icon": "fas fa-file"
+                },
+                "fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Reference fasta file. Needed to decode CRAM files.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "fai": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Fai index of the reference fasta. Used by Riker. Created from --fasta when it is needed and not given.",
+                    "fa_icon": "fas fa-file"
+                }
+            }
+        },
+        "stage_options": {
+            "title": "Stage options",
+            "type": "object",
+            "fa_icon": "fas fa-cogs",
+            "description": "Options of the stage.",
+            "properties": {
+                "cram_format": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Write CRAM instead of BAM.",
+                    "fa_icon": "fas fa-file-archive"
+                },
+                "align_qc": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run quality checks on the alignments (BAM/CRAM).",
+                    "fa_icon": "fas fa-check"
+                },
+                "riker": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run Riker during the alignment QC. Needs --fasta, and its fai index, which is created when not given.",
+                    "fa_icon": "fas fa-tools"
+                },
+                "qualimap": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run Qualimap during the alignment QC. Not compatible with cram_format.",
+                    "fa_icon": "fas fa-tools"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "properties": {
+                "help": {
+                    "type": ["boolean", "string"],
+                    "description": "Display the help message.",
+                    "fa_icon": "fas fa-question-circle"
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full help message.",
+                    "fa_icon": "fas fa-question-circle"
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_options"
+        },
+        {
+            "$ref": "#/$defs/stage_options"
+        },
+        {
+            "$ref": "#/$defs/generic_options"
+        }
+    ]
+}

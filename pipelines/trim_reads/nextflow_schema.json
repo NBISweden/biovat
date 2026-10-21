@@ -1,0 +1,86 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/NBISweden/biovat/main/pipelines/trim_reads/nextflow_schema.json",
+    "title": "BioVAT trim_reads pipeline parameters",
+    "description": "Read trimming with fastp",
+    "type": "object",
+    "$defs": {
+        "input_options": {
+            "title": "Input options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data.",
+            "properties": {
+                "samplesheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "BioVAT samplesheet (CSV), the same file as for the main pipeline. Columns: sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, bam, single_end. Rows with a bam instead of fastq files are skipped.",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "reads": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alternative to --samplesheet, for YAML or JSON files and for calling pipelines. One entry per read group, with meta (a map with at least read_group) and reads (a list of fastq files, in order). Give either --samplesheet or --reads.",
+                    "fa_icon": "fas fa-file"
+                },
+                "adapter_fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Path to FASTA file containing adapter sequences.",
+                    "fa_icon": "fas fa-file"
+                }
+            }
+        },
+        "trimming_options": {
+            "title": "Read trimming options",
+            "type": "object",
+            "fa_icon": "fas fa-cut",
+            "description": "Options for fastp.",
+            "properties": {
+                "save_trimmed_fail": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save files that failed to pass trimming thresholds ending in *.fail.fastq.gz.",
+                    "fa_icon": "fas fa-save"
+                },
+                "save_merged": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save all merged reads to a file ending in *.merged.fastq.gz.",
+                    "fa_icon": "fas fa-save"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "properties": {
+                "help": {
+                    "type": ["boolean", "string"],
+                    "description": "Display the help message.",
+                    "fa_icon": "fas fa-question-circle"
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full help message.",
+                    "fa_icon": "fas fa-question-circle"
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_options"
+        },
+        {
+            "$ref": "#/$defs/trimming_options"
+        },
+        {
+            "$ref": "#/$defs/generic_options"
+        }
+    ]
+}

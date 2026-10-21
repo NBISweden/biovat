@@ -2,55 +2,43 @@
     "BAM - stub": {
         "content": [
             {
-                "flagstat": [
-                    [
-                        {
+                "0": [
+                    {
+                        "flagstat": "test.flagstat:md5,67394650dbae96d1a4fcc70484822159",
+                        "id": "test",
+                        "meta": {
                             "id": "test",
                             "single_end": false
-                        },
-                        "test.flagstat:md5,67394650dbae96d1a4fcc70484822159"
-                    ]
-                ],
-                "versions_samtools": [
-                    [
-                        "SAMTOOLS_FLAGSTAT",
-                        "samtools",
-                        "1.24"
-                    ]
+                        }
+                    }
                 ]
             }
         ],
-        "timestamp": "2026-07-10T15:53:38.552555213",
+        "timestamp": "2026-10-21T09:38:29.537046",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.10.0"
         }
     },
     "BAM": {
         "content": [
             {
-                "flagstat": [
-                    [
-                        {
+                "0": [
+                    {
+                        "flagstat": "test.flagstat:md5,4f7ffd1e6a5e85524d443209ac97d783",
+                        "id": "test",
+                        "meta": {
                             "id": "test",
                             "single_end": false
-                        },
-                        "test.flagstat:md5,4f7ffd1e6a5e85524d443209ac97d783"
-                    ]
-                ],
-                "versions_samtools": [
-                    [
-                        "SAMTOOLS_FLAGSTAT",
-                        "samtools",
-                        "1.24"
-                    ]
+                        }
+                    }
                 ]
             }
         ],
-        "timestamp": "2026-07-10T15:53:33.931611374",
+        "timestamp": "2026-10-21T09:38:23.927835",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.10.0"
         }
     }
 }

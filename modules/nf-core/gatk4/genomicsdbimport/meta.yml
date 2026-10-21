@@ -18,7 +18,11 @@ tools:
       doi: 10.1158/1538-7445.AM2017-3590
       identifier: ""
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Sample identifier, used for the task tag and as the default output prefix
+    - meta:
+        optional: true
         type: map
         description: |
           Groovy Map containing sample information
@@ -67,7 +71,11 @@ input:
       pattern: "*.sample_map"
 output:
   genomicsdb:
-    - - meta:
+    - - id:
+          type: string
+          description: Sample identifier from the input record
+      - meta:
+          optional: true
           type: map
           description: A Groovy map containing sample information
       - ${prefix}:
@@ -75,7 +83,11 @@ output:
           description: genomicsdb
           ontologies: []
   updatedb:
-    - - meta:
+    - - id:
+          type: string
+          description: Sample identifier from the input record
+      - meta:
+          optional: true
           type: map
           description: A Groovy map containing sample information
       - ${updated_db}:
@@ -83,7 +95,11 @@ output:
           description: updated genomicsdb
           ontologies: []
   intervallist:
-    - - meta:
+    - - id:
+          type: string
+          description: Sample identifier from the input record
+      - meta:
+          optional: true
           type: map
           description: A Groovy map containing sample information
       - "*.interval_list":
