@@ -1,0 +1,337 @@
+Changes in component 'nf-core/qualimap/bamqc'
+'modules/nf-core/qualimap/bamqc/environment.yml' is unchanged
+Changes in 'qualimap/bamqc/meta.yml':
+--- modules/nf-core/qualimap/bamqc/meta.yml
++++ modules/nf-core/qualimap/bamqc/meta.yml
+@@ -18,13 +18,17 @@
+         - "GPL-2.0-only"
+       identifier: biotools:qualimap
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Sample identifier, used for the task tag and the default output prefix
++    - meta:
+         type: map
+         description: |
+-          Groovy Map containing sample information
+-          e.g. [ id:'test', single_end:false, strandedness:'forward' ]
+-          meta.strandedness can be use in ext.args to set `-p` argument
+-          (see ./tests/nextflow.config)
++          Optional Groovy Map with sample information, passed on to the output.
++          It is not used by the process itself
++    - single_end:
++        type: boolean
++        description: Whether the reads are single-end (false for paired-end)
+     - bam:
+         type: file
+         description: BAM file
+
+Changes in 'qualimap/bamqc/main.nf':
+--- modules/nf-core/qualimap/bamqc/main.nf
++++ modules/nf-core/qualimap/bamqc/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process QUALIMAP_BAMQC {
+-    tag "$meta.id"
++    tag "${id}"
+     label 'process_medium'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,47 +9,57 @@
+         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/2b/2b795495fdae4cb3319d19ed4a694302366aa574ba15a0613b85c602f0de4911/data' :
+         'community.wave.seqera.io/library/qualimap:2.3--c1797c2253925b3a' }"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { qualimap_bamqc_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(bam)
+-    path gff
++    record(
++        id: String,
++        meta: Record?,
++        single_end: Boolean,
++        bam: Path,
++        gff: Path?,
++        qualimap_bamqc_args: String?,
++        output_prefix: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("${prefix}"), emit: results
+-    tuple val("${task.process}"), val('qualimap'), eval("qualimap -h | sed -n 's/^QualiMap v.//p'"), topic: versions, emit: versions_qualimap
++    record(
++        id: id,
++        meta: meta,
++        results: file(task.ext.prefix)
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'qualimap', version: eval("qualimap -h | sed -n 's/^QualiMap v.//p'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args   ?: ''
+-    prefix   = task.ext.prefix ?: "${meta.id}"
+-
+-    def collect_pairs = meta.single_end ? '' : '--collect-overlap-pairs'
+-    def memory = (task.memory.mega*0.8).intValue() + 'M'
+-    def regions = gff ? "--gff ${gff}" : ''
+-
++    def collect_pairs = single_end ? '' : '--collect-overlap-pairs'
++    def memory = "${(task.memory.toMega() * 0.8).intValue()}M"
++    def regions = gff ? "--gff $gff" : ''
+     """
+     unset DISPLAY
+     mkdir -p tmp
+     export _JAVA_OPTIONS=-Djava.io.tmpdir=./tmp
+     qualimap \\
+-        --java-mem-size=${memory} \\
++        --java-mem-size=$memory \\
+         bamqc \\
+-        ${args} \\
+-        -bam ${bam} \\
+-        ${regions} \\
+-        ${collect_pairs} \\
+-        -outdir ${prefix} \\
+-        -nt ${task.cpus}
++        ${task.ext.args} \\
++        -bam $bam \\
++        $regions \\
++        $collect_pairs \\
++        -outdir ${task.ext.prefix} \\
++        -nt $task.cpus
+     """
+ 
+     stub:
+-    prefix = task.ext.prefix ?: "${meta.id}"
+     """
+-    mkdir -p ${prefix}/css
+-    mkdir ${prefix}/images_qualimapReport
+-    mkdir ${prefix}/raw_data_qualimapReport
+-    cd ${prefix}/css
++    mkdir -p ${task.ext.prefix}/css
++    mkdir ${task.ext.prefix}/images_qualimapReport
++    mkdir ${task.ext.prefix}/raw_data_qualimapReport
++    cd ${task.ext.prefix}/css
+     touch agogo.css
+     touch basic.css
+     touch bgtop.png
+
+Changes in 'qualimap/bamqc/tests/main.nf.test.snap':
+--- modules/nf-core/qualimap/bamqc/tests/main.nf.test.snap
++++ modules/nf-core/qualimap/bamqc/tests/main.nf.test.snap
+@@ -2,13 +2,14 @@
+     "homo_sapiens [bam] - stub": {
+         "content": [
+             {
+-                "results": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "id": "test",
++                        "meta": {
+                             "id": "test",
+                             "single_end": false
+                         },
+-                        [
++                        "results": [
+                             [
+                                 "agogo.css:md5,d41d8cd98f00b204e9800998ecf8427e",
+                                 "ajax-loader.gif:md5,d41d8cd98f00b204e9800998ecf8427e",
+@@ -66,105 +67,25 @@
+                                 "mapping_quality_histogram.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                             ]
+                         ]
+-                    ]
+-                ],
+-                "versions_qualimap": [
+-                    [
+-                        "QUALIMAP_BAMQC",
+-                        "qualimap",
+-                        "2.3"
+-                    ]
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-08-10T17:20:29.62252359",
++        "timestamp": "2026-10-21T09:33:33.477046",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "homo_sapiens [bam]": {
+         "content": [
+-            {
+-                "results": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        [
+-                            [
+-                                "agogo.css",
+-                                "ajax-loader.gif",
+-                                "basic.css",
+-                                "bgfooter.png",
+-                                "bgtop.png",
+-                                "comment-bright.png",
+-                                "comment-close.png",
+-                                "comment.png",
+-                                "doctools.js",
+-                                "down-pressed.png",
+-                                "down.png",
+-                                "file.png",
+-                                "jquery.js",
+-                                "minus.png",
+-                                "plus.png",
+-                                "pygments.css",
+-                                "qualimap_logo_small.png",
+-                                "report.css",
+-                                "searchtools.js",
+-                                "underscore.js",
+-                                "up-pressed.png",
+-                                "up.png",
+-                                "websupport.js"
+-                            ],
+-                            "genome_results.txt",
+-                            [
+-                                "genome_coverage_0to50_histogram.png",
+-                                "genome_coverage_across_reference.png",
+-                                "genome_coverage_histogram.png",
+-                                "genome_coverage_quotes.png",
+-                                "genome_gc_content_per_window.png",
+-                                "genome_homopolymer_indels.png",
+-                                "genome_insert_size_across_reference.png",
+-                                "genome_insert_size_histogram.png",
+-                                "genome_mapping_quality_across_reference.png",
+-                                "genome_mapping_quality_histogram.png",
+-                                "genome_reads_clipping_profile.png",
+-                                "genome_reads_content_per_read_position.png",
+-                                "genome_uniq_read_starts_histogram.png"
+-                            ],
+-                            "qualimapReport.html",
+-                            [
+-                                "coverage_across_reference.txt",
+-                                "coverage_histogram.txt",
+-                                "duplication_rate_histogram.txt",
+-                                "genome_fraction_coverage.txt",
+-                                "homopolymer_indels.txt",
+-                                "insert_size_across_reference.txt",
+-                                "insert_size_histogram.txt",
+-                                "mapped_reads_clipping_profile.txt",
+-                                "mapped_reads_gc-content_distribution.txt",
+-                                "mapped_reads_nucleotide_content.txt",
+-                                "mapping_quality_across_reference.txt",
+-                                "mapping_quality_histogram.txt"
+-                            ]
+-                        ]
+-                    ]
+-                ],
+-                "versions_qualimap": [
+-                    [
+-                        "QUALIMAP_BAMQC",
+-                        "qualimap",
+-                        "2.3"
+-                    ]
+-                ]
+-            }
++            "qualimapReport.html",
++            "genome_results.txt:md5,45103d63ba82df2b905eb04819c32dd3"
+         ],
+-        "timestamp": "2026-09-14T22:58:50.481672177",
++        "timestamp": "2026-10-19T11:38:05.265389",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.3"
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+'modules/nf-core/qualimap/bamqc/tests/nextflow.config' is unchanged
+Changes in 'qualimap/bamqc/tests/main.nf.test':
+--- modules/nf-core/qualimap/bamqc/tests/main.nf.test
++++ modules/nf-core/qualimap/bamqc/tests/main.nf.test
+@@ -2,7 +2,6 @@
+ 
+     name "Test Process QUALIMAP_BAMQC"
+     script "../main.nf"
+-    config "./nextflow.config"
+     process "QUALIMAP_BAMQC"
+     tag "modules"
+     tag "modules_nfcore"
+@@ -13,11 +12,15 @@
+         when {
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test', single_end:false ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+-                ]
+-                input[1] = []
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    single_end: false,
++                    bam: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    gff: null,
++                    qualimap_bamqc_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -25,7 +28,10 @@
+         then {
+             assertAll (
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out, unstableKeys:["results"])).match() }
++                { assert snapshot(
++                    file("${process.out[0][0].results}/qualimapReport.html").name,
++                    path("${process.out[0][0].results}/genome_results.txt"))
++                    .match() }
+             )
+         }
+     }
+@@ -35,11 +41,15 @@
+         when {
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test', single_end:false ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+-                ]
+-                input[1] = []
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    single_end: false,
++                    bam: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    gff: null,
++                    qualimap_bamqc_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -47,7 +57,7 @@
+         then {
+             assertAll (
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                { assert snapshot(process.out).match() }
+             )
+         }
+     }
+
+************************************************************

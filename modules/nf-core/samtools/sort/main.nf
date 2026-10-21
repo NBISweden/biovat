@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process SAMTOOLS_SORT {
-    tag "${meta.id}"
+    tag "${id}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -7,62 +9,72 @@ process SAMTOOLS_SORT {
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
 
+    ext [
+        prefix: { output_prefix ?: "${id}" },
+        args: { samtools_sort_args ?: '' }
+    ]
+
     input:
-    tuple val(meta), path(bam, stageAs: "?/*")
-    tuple val(meta2), path(fasta), path(fai)
-    val index_format
+    record(
+        id: String,
+        meta: Record?,
+        bam: List<Path>,
+        fasta: Path?,
+        fai: Path?,
+        index_format: String?,
+        samtools_sort_args: String?,
+        output_prefix: String?
+    )
+
+    stage:
+    stageAs bam, "?/*"
 
     output:
-    tuple val(meta), path("${prefix}.bam"), emit: bam, optional: true
-    tuple val(meta), path("${prefix}.cram"), emit: cram, optional: true
-    tuple val(meta), path("${prefix}.sam"), emit: sam, optional: true
-    tuple val(meta), path("${prefix}.${extension}.{crai,csi,bai}"), emit: index, optional: true
-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
+    record(
+        id: id,
+        meta: meta,
+        bam: file("${task.ext.prefix}.bam", optional: true),
+        cram: file("${task.ext.prefix}.cram", optional: true),
+        sam: file("${task.ext.prefix}.sam", optional: true),
+        index: file("${task.ext.prefix}.*.{crai,csi,bai}", optional: true)
+    )
 
-    when:
-    task.ext.when == null || task.ext.when
+    topic:
+    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
 
     script:
-    def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
-    extension = args.contains("--output-fmt sam")
+    def extension = task.ext.args.contains("--output-fmt sam")
         ? "sam"
-        : args.contains("--output-fmt cram")
+        : task.ext.args.contains("--output-fmt cram")
             ? "cram"
             : "bam"
     def reference = fasta ? "--reference ${fasta}" : ""
     //setting default values
     def write_index = ""
-    def output_file = "${prefix}.${extension}"
-
+    def output_file = "${task.ext.prefix}.${extension}"
     // Update if index is requested
     if (index_format != '' && index_format) {
         write_index = "--write-index"
-        output_file = "${prefix}.${extension}##idx##${prefix}.${extension}.${index_format}"
+        output_file = "${task.ext.prefix}.${extension}##idx##${task.ext.prefix}.${extension}.${index_format}"
     }
-    def is_sam = (bam instanceof List ? bam[0] : bam).name.endsWith('.sam')
+    def is_sam = bam[0].name.endsWith('.sam')
     if (index_format) {
-        if (!index_format.matches('bai|csi|crai')) {
+        if (!(index_format ==~ /bai|csi|crai/)) {
             error("Index format not one of bai, csi, crai.")
         }
         else if (extension == "sam") {
             error("Indexing not compatible with SAM output")
         }
     }
-    if ("${bam}" == "${prefix}.bam") {
+    if ("${bam.join(' ')}" == "${task.ext.prefix}.bam") {
         error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
     }
-    if ("${bam}" == "${prefix}.bam") {
-        error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
-    }
-
-    def input_source = is_sam ? "${bam}" : "-"
-    def pre_command = is_sam ? "" : "samtools cat ${bam} | "
-
+    def input_source = is_sam ? "${bam.join(' ')}" : "-"
+    def pre_command = is_sam ? "" : "samtools cat ${bam.join(' ')} | "
     """
     ${pre_command}samtools sort \\
-        ${args} \\
-        -T ${prefix} \\
+        ${task.ext.args} \\
+        -T ${task.ext.prefix} \\
         --threads ${task.cpus} \\
         ${reference} \\
         -o ${output_file} \\
@@ -71,27 +83,22 @@ process SAMTOOLS_SORT {
     """
 
     stub:
-    def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
-    extension = args.contains("--output-fmt sam")
+    def extension = task.ext.args.contains("--output-fmt sam")
         ? "sam"
-        : args.contains("--output-fmt cram")
+        : task.ext.args.contains("--output-fmt cram")
             ? "cram"
             : "bam"
-
     if (index_format) {
-        if (!index_format.matches('bai|csi|crai')) {
+        if (!(index_format ==~ /bai|csi|crai/)) {
             error("Index format not one of bai, csi, crai.")
         }
         else if (extension == "sam") {
             error("Indexing not compatible with SAM output")
         }
     }
-
-    index = index_format ? "touch ${prefix}.${extension}.${index_format}" : ""
-
+    def index = index_format ? "touch ${task.ext.prefix}.${extension}.${index_format}" : ""
     """
-    touch ${prefix}.${extension}
+    touch ${task.ext.prefix}.${extension}
     ${index}
     """
 }

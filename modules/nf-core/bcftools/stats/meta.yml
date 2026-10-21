@@ -16,11 +16,14 @@ tools:
         - "MIT"
       identifier: biotools:bcftools
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample, used for the default output prefix
+    - meta:
         type: map
         description: |
-          Groovy Map containing sample information
-          e.g. [ id:'test', single_end:false ]
+          Optional Groovy Map with sample metadata, passed through to the output.
+          It is not used by the module itself.
     - vcf:
         type: file
         description: VCF input file
@@ -87,11 +90,14 @@ input:
         ontologies: []
 output:
   stats:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*stats.txt":
           type: file
           description: Text output file containing stats

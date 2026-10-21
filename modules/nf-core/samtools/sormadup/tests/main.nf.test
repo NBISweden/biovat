@@ -13,15 +13,19 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = [
-                    [id: 'test'],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
-                ]
-                input[1] = [
-                    [ id:'fasta' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ]
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [id: 'test'],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    samtools_cat_args: null,
+                    samtools_collate_args: null,
+                    samtools_fixmate_args: null,
+                    samtools_sort_args: null,
+                    samtools_markdup_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -42,15 +46,19 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [id: 'test'],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
-                ]
-                input[1] = [
-                    [ id:'fasta' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ]
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [id: 'test'],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    samtools_cat_args: null,
+                    samtools_collate_args: null,
+                    samtools_fixmate_args: null,
+                    samtools_sort_args: null,
+                    samtools_markdup_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -58,13 +66,13 @@ nextflow_process {
         then {
             def fasta = params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta'
             assert process.success
+            def out = process.out[0][0]
             assertAll(
                 {
                     assert snapshot(
-                        cram(process.out.cram[0][1], fasta).getReadsMD5(),
-                        file(process.out.crai[0][1]).name,
-                        process.out.metrics,
-                        process.out.findAll { key, val -> key.startsWith("versions") }
+                        cram(out.cram, fasta).getReadsMD5(),
+                        file(out.crai).name,
+                        out.metrics
                     ).match()
                 }
             )
@@ -79,15 +87,19 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = [
-                    [id: 'test'],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
-                ]
-                input[1] = [
-                    [ id:'fasta' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ]
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [id: 'test'],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    samtools_cat_args: null,
+                    samtools_collate_args: null,
+                    samtools_fixmate_args: null,
+                    samtools_sort_args: null,
+                    samtools_markdup_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }

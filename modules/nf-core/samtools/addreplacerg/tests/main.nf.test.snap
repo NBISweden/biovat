@@ -2,111 +2,58 @@
     "sarscov2 - bam - stub": {
         "content": [
             {
-                "bam": [
-                    [
-                        {
+                "0": [
+                    {
+                        "bam": "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "cram": null,
+                        "id": "test",
+                        "index": null,
+                        "meta": {
                             "id": "test"
                         },
-                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
-                    ]
-                ],
-                "cram": [
-                    
-                ],
-                "index": [
-                    
-                ],
-                "sam": [
-                    
-                ],
-                "versions_samtools": [
-                    [
-                        "SAMTOOLS_ADDREPLACERG",
-                        "samtools",
-                        "1.24"
-                    ]
+                        "sam": null
+                    }
                 ]
             }
         ],
-        "timestamp": "2026-07-10T15:47:55.607754847",
+        "timestamp": "2026-10-21T09:38:17.995138",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.10.0"
         }
     },
     "homo-sapiens - cram - output bam": {
         "content": [
             {
-                "bam": [
-                    [
-                        {
+                "0": [
+                    {
+                        "bam": "test.bam:md5,62b17148e4d01ed5e6037944410f55cf",
+                        "cram": null,
+                        "id": "test",
+                        "index": "test.bam.csi:md5,8b681445a826210081c8446f705031e7",
+                        "meta": {
                             "id": "test"
                         },
-                        "test.bam:md5,62b17148e4d01ed5e6037944410f55cf"
-                    ]
-                ],
-                "cram": [
-                    
-                ],
-                "index": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.bam.csi:md5,8b681445a826210081c8446f705031e7"
-                    ]
-                ],
-                "sam": [
-                    
-                ],
-                "versions_samtools": [
-                    [
-                        "SAMTOOLS_ADDREPLACERG",
-                        "samtools",
-                        "1.24"
-                    ]
+                        "sam": null
+                    }
                 ]
             }
         ],
-        "timestamp": "2026-07-10T15:47:51.337152318",
+        "timestamp": "2026-10-21T09:38:12.5687",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.10.0"
         }
     },
     "homo-sapiens - cram": {
         "content": [
-            {
-                "bam": [
-                    
-                ],
-                "cram": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.cram"
-                    ]
-                ],
-                "index": [
-                    [
-                        {
-                            "id": "test"
-                        },
-                        "test.cram.crai"
-                    ]
-                ],
-                "sam": [
-                    
-                ],
-                "versions_samtools": [
-                    [
-                        "SAMTOOLS_ADDREPLACERG",
-                        "samtools",
-                        "1.24"
-                    ]
-                ]
-            },
+            [
+                {
+                    "id": "test"
+                },
+                "test.cram",
+                "test.cram.crai"
+            ],
             [
                 [
                     "@HD\tVN:1.6\tSO:coordinate",
@@ -118,45 +65,33 @@
                 ]
             ]
         ],
-        "timestamp": "2026-07-09T22:03:13.90612",
+        "timestamp": "2026-10-21T09:38:06.828653",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.10.0"
         }
     },
     "sarscov2 - bam": {
         "content": [
             {
-                "bam": [
-                    [
-                        {
+                "0": [
+                    {
+                        "bam": "test.bam:md5,3971cd96ae6ae8e011cdff3dd1c5b9b5",
+                        "cram": null,
+                        "id": "test",
+                        "index": null,
+                        "meta": {
                             "id": "test"
                         },
-                        "test.bam:md5,3971cd96ae6ae8e011cdff3dd1c5b9b5"
-                    ]
-                ],
-                "cram": [
-                    
-                ],
-                "index": [
-                    
-                ],
-                "sam": [
-                    
-                ],
-                "versions_samtools": [
-                    [
-                        "SAMTOOLS_ADDREPLACERG",
-                        "samtools",
-                        "1.24"
-                    ]
+                        "sam": null
+                    }
                 ]
             }
         ],
-        "timestamp": "2026-07-10T15:47:41.720356463",
+        "timestamp": "2026-10-21T09:38:01.165936",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.10.0"
         }
     }
 }

@@ -1,0 +1,266 @@
+Changes in component 'nf-core/bwamem3/index'
+'modules/nf-core/bwamem3/index/environment.yml' is unchanged
+Changes in 'bwamem3/index/meta.yml':
+--- modules/nf-core/bwamem3/index/meta.yml
++++ modules/nf-core/bwamem3/index/meta.yml
+@@ -16,10 +16,13 @@
+       licence: ["MIT AND Apache-2.0"]
+       identifier: ""
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample or reference, used to name the outputs
++    - meta:
+         type: map
+         description: |
+-          Groovy Map containing sample information
++          Optional groovy Map containing sample information
+           e.g. [ id:'test', single_end:false ]
+     - fasta:
+         type: file
+@@ -29,10 +32,13 @@
+           - edam: "http://edamontology.org/format_1929"
+ output:
+   index:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference, used to name the outputs
++      - meta:
+           type: map
+           description: |
+-            Groovy Map containing sample information
++            Optional groovy Map containing sample information
+             e.g. [ id:'test', single_end:false ]
+       - bwamem3:
+           type: directory
+
+Changes in 'bwamem3/index/main.nf':
+--- modules/nf-core/bwamem3/index/main.nf
++++ modules/nf-core/bwamem3/index/main.nf
+@@ -1,44 +1,57 @@
++nextflow.enable.types = true
++
+ process BWAMEM3_INDEX {
+-    tag "${meta.id}"
++    tag "${id}"
+     // NOTE bwa-mem3 builds an FM-index with libsais; peak memory scales with the reference size.
+-    memory { 280.MB * Math.ceil(fasta.size() / 10000000) * task.attempt }
++    memory 280.MB * Math.ceil(fasta.size() / 10000000) * task.attempt
+ 
+     conda "${moduleDir}/environment.yml"
+     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/09/09c0e84ac22ba722bae6f75c5c450d72dfdc06e7224ad2c0bd042849632ca70e/data'
+         : 'community.wave.seqera.io/library/bwa-mem3:0.8.0--a430e1e1df49a92e'}"
+ 
++    ext [
++        prefix: { output_prefix ?: "${fasta}" },
++        args: { bwamem3_index_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(fasta)
++    record(
++        id: String,
++        meta: Record?,
++        fasta: Path,
++        bwamem3_index_args: String?,
++        output_prefix: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("bwamem3"), emit: index
+-    tuple val("${task.process}"), val('bwamem3'), eval("bwa-mem3 version | sed -nE '1 s/^([0-9]+(\\.[0-9]+)+).*/\\1/p'"), emit: versions_bwamem3, topic: versions
++    record(
++        id: id,
++        meta: meta,
++        index: file("bwamem3")
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'bwamem3', version: eval("bwa-mem3 version | sed -nE '1 s/^([0-9]+(\\.[0-9]+)+).*/\\1/p'")) >> 'versions'
+ 
+     script:
+-    def prefix = task.ext.prefix ?: "${fasta}"
+-    def args = task.ext.args ?: ''
+     """
+     mkdir bwamem3
+     bwa-mem3 \\
+         index \\
+-        $args \\
++        ${task.ext.args} \\
+         -t ${task.cpus} \\
+-        -p bwamem3/${prefix} \\
++        -p bwamem3/${task.ext.prefix} \\
+         $fasta
+     """
+ 
+     stub:
+-    def prefix = task.ext.prefix ?: "${fasta}"
+     """
+     mkdir bwamem3
+-    touch bwamem3/${prefix}.0123
+-    touch bwamem3/${prefix}.amb
+-    touch bwamem3/${prefix}.ann
+-    touch bwamem3/${prefix}.bwt.2bit.64
+-    touch bwamem3/${prefix}.pac
++    touch bwamem3/${task.ext.prefix}.0123
++    touch bwamem3/${task.ext.prefix}.amb
++    touch bwamem3/${task.ext.prefix}.ann
++    touch bwamem3/${task.ext.prefix}.bwt.2bit.64
++    touch bwamem3/${task.ext.prefix}.pac
+     """
+ }
+
+Changes in 'bwamem3/index/tests/main.nf.test.snap':
+--- modules/nf-core/bwamem3/index/tests/main.nf.test.snap
++++ modules/nf-core/bwamem3/index/tests/main.nf.test.snap
+@@ -2,64 +2,52 @@
+     "sarscov2 - fasta - stub": {
+         "content": [
+             {
+-                "index": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        [
++                "0": [
++                    {
++                        "id": "test",
++                        "index": [
+                             "genome.fasta.0123:md5,d41d8cd98f00b204e9800998ecf8427e",
+                             "genome.fasta.amb:md5,d41d8cd98f00b204e9800998ecf8427e",
+                             "genome.fasta.ann:md5,d41d8cd98f00b204e9800998ecf8427e",
+                             "genome.fasta.bwt.2bit.64:md5,d41d8cd98f00b204e9800998ecf8427e",
+                             "genome.fasta.pac:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                        ]
+-                    ]
+-                ],
+-                "versions_bwamem3": [
+-                    [
+-                        "BWAMEM3_INDEX",
+-                        "bwamem3",
+-                        "0.8.0"
+-                    ]
++                        ],
++                        "meta": {
++                            "id": "test"
++                        }
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-08-04T09:45:25.497129",
++        "timestamp": "2026-10-21T09:39:17.049143",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.3"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - fasta": {
+         "content": [
+             {
+-                "index": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        [
++                "0": [
++                    {
++                        "id": "test",
++                        "index": [
+                             "genome.fasta.amb:md5,3a68b8b2287e07dd3f5f95f4344ba76e",
+                             "genome.fasta.ann:md5,c32e11f6c859f166c7525a9c1d583567",
+                             "genome.fasta.bwt.2bit.64:md5,d097a1b82dee375d41a1ea69895a9216",
+                             "genome.fasta.pac:md5,983e3d2cd6f36e2546e6d25a0da78d66"
+-                        ]
+-                    ]
+-                ],
+-                "versions_bwamem3": [
+-                    [
+-                        "BWAMEM3_INDEX",
+-                        "bwamem3",
+-                        "0.8.0"
+-                    ]
++                        ],
++                        "meta": {
++                            "id": "test"
++                        }
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-08-04T09:45:09.084464",
++        "timestamp": "2026-10-21T09:39:10.523926",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.3"
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+Changes in 'bwamem3/index/tests/main.nf.test':
+--- modules/nf-core/bwamem3/index/tests/main.nf.test
++++ modules/nf-core/bwamem3/index/tests/main.nf.test
+@@ -14,10 +14,13 @@
+         when {
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    bwamem3_index_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -25,7 +28,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                { assert snapshot(process.out).match() }
+             )
+         }
+ 
+@@ -38,10 +41,13 @@
+         when {
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    bwamem3_index_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -49,7 +55,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                { assert snapshot(process.out).match() }
+             )
+         }
+ 
+
+************************************************************

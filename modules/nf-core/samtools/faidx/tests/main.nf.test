@@ -18,12 +18,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    []
-                ]
-                input[1] = false
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: null,
+                    get_sizes: false,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -31,7 +33,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }
@@ -44,12 +46,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
-                    []
-                ]
-                input[1] = false
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
+                    fai: null,
+                    get_sizes: false,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -57,7 +61,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }
@@ -70,12 +74,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ]
-                input[1] = false
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    get_sizes: false,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -83,7 +89,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }
@@ -98,12 +104,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
-                ]
-                input[1] = false
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
+                    get_sizes: false,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -111,7 +119,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }
@@ -126,12 +134,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    []
-                ]
-                input[1] = false
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: null,
+                    get_sizes: false,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -139,7 +149,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }
@@ -152,12 +162,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    []
-                ]
-                input[1] = true
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: null,
+                    get_sizes: true,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -165,7 +177,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }
@@ -178,12 +190,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
-                    []
-                ]
-                input[1] = true
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
+                    fai: null,
+                    get_sizes: true,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -191,7 +205,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }
@@ -206,12 +220,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
-                    []
-                ]
-                input[1] = true
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    fai: null,
+                    get_sizes: true,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -219,7 +235,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }
@@ -234,12 +250,14 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
-                    []
-                ]
-                input[1] = true
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
+                    fai: null,
+                    get_sizes: true,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -247,7 +265,7 @@ nextflow_process {
         then {
             assert process.success
             assertAll(
-                { assert snapshot(sanitizeOutput(process.out)).match()}
+                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
             )
         }
     }

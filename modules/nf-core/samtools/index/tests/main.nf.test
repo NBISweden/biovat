@@ -12,10 +12,12 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
-                ])
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    samtools_index_args: null
+                ))
                 """
             }
         }
@@ -24,8 +26,7 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.index,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    process.out[0].collect { r -> [ r.meta, r.index ] }
                 ).match() }
             )
         }
@@ -35,10 +36,12 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.recalibrated.sorted.cram', checkIfExists: true)
-                ])
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    input: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.recalibrated.sorted.cram', checkIfExists: true),
+                    samtools_index_args: null
+                ))
                 """
             }
         }
@@ -47,8 +50,7 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.index,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    process.out[0].collect { r -> [ r.meta, r.index ] }
                 ).match() }
             )
         }
@@ -60,10 +62,12 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
-                ])
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    samtools_index_args: null
+                ))
                 """
             }
         }
@@ -72,8 +76,7 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    file(process.out.index[0][1]).name,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    file(process.out[0][0].index).name
                 ).match() }
             )
         }
@@ -86,10 +89,12 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
-                ])
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    samtools_index_args: null
+                ))
                 """
             }
         }
@@ -98,8 +103,7 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.index,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    process.out[0].collect { r -> [ r.meta, r.index ] }
                 ).match() }
             )
         }
@@ -112,10 +116,12 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.recalibrated.sorted.cram', checkIfExists: true)
-                ])
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    input: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.recalibrated.sorted.cram', checkIfExists: true),
+                    samtools_index_args: null
+                ))
                 """
             }
         }
@@ -124,8 +130,7 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.index,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    process.out[0].collect { r -> [ r.meta, r.index ] }
                 ).match() }
             )
         }
@@ -140,10 +145,12 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
-                ])
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    samtools_index_args: null
+                ))
                 """
             }
         }
@@ -152,8 +159,7 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    process.out.index,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    process.out[0].collect { r -> [ r.meta, r.index ] }
                 ).match() }
             )
         }
