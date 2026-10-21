@@ -1,0 +1,45 @@
+nextflow_pipeline {
+
+    name "Test pipeline multiqc"
+    script "../main.nf"
+    tag "pipeline"
+    tag "pipelines/multiqc"
+
+    test("three files - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def files = (1..3).collect { i ->
+                def f = new File("${launchDir}/file${i}.txt")
+                f.text = "dummy ${i}\n"
+                f
+            }
+            new File("${launchDir}/files.yml").text = files.collect { f -> "- file: ${f}" }.join("\n") + "\n"
+        }
+
+        when {
+            params {
+                multiqc_files = "${launchDir}/files.yml"
+            }
+        }
+
+        then {
+            assert workflow.success
+            def published = getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['multiqc/multiqc_plots/**'])
+            assertAll(
+                { assert snapshot(workflow.trace.succeeded().size(), published).match() }
+            )
+        }
+    }
+
+    test("missing --multiqc_files fails") {
+
+        options "-stub"
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.toString().contains("Missing required parameter --multiqc_files") || workflow.stderr.toString().contains("Missing required parameter --multiqc_files")
+        }
+    }
+}

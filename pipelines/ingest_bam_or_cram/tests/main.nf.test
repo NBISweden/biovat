@@ -1,0 +1,118 @@
+nextflow_pipeline {
+
+    name "Test pipeline ingest_bam_or_cram"
+    script "../main.nf"
+    tag "pipeline"
+    tag "pipelines/ingest_bam_or_cram"
+
+    test("stub, from a YAML samplesheet") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/bam_cram.yml").text = """\
+                - meta: {id: PUN-R-ELF, library: "2", flowcell: SRR9309891, lane: 3, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.2.SRR9309891.3, platform_unit: SRR9309891.3.PUN-R-ELF_2}
+                  bam_cram: ${data}/PUN-R-ELF_2.bam
+                - meta: {id: PUN-R-MT, library: "1", flowcell: SRR9309471, lane: 2, pl: ILLUMINA, single_end: false, read_group: PUN-R-MT.1.SRR9309471.2, platform_unit: SRR9309471.2.PUN-R-MT_1}
+                  bam_cram: ${data}/PUN-R-MT_1_repeat2.cram
+                """.stripIndent()
+        }
+
+        when {
+            params {
+                bam_cram = "${launchDir}/bam_cram.yml"
+                fasta    = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert snapshot(
+                    // Tasks that ran, by process
+                    workflow.trace.succeeded().collect { t -> t.name.replaceAll(/ \(.*\)/, '') }.sort(),
+                    // All stable path names, relative to the output directory
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true)
+                ).match() }
+            )
+        }
+    }
+
+    test("stub, from the BioVAT samplesheet - fastq rows are skipped") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/samplesheet.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
+                "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false",
+                "PUN-R-MT,1,SRR9309471,2,ILLUMINA,,,${data}/PUN-R-MT_1_repeat2.cram,false"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            def published = getAllFilesFromDir(outputDir, relative: true, includeDir: true)
+            assertAll(
+                // the fastq row of PUN-R-ELF library 1 is not an alignment, so only the two BAM/CRAM rows are ingested
+                { assert published.every { f -> !f.contains('PUN-R-ELF.1.SRR9309791.1') } },
+                { assert published.any { f -> f.contains('PUN-R-ELF.2.SRR9309891.3') } },
+                { assert published.any { f -> f.contains('PUN-R-MT.1.SRR9309471.2') } },
+                { assert snapshot(
+                    workflow.trace.succeeded().collect { t -> t.name.replaceAll(/ \(.*\)/, '') }.sort(),
+                    published
+                ).match() }
+            )
+        }
+    }
+
+    test("--samplesheet and --bam_cram together fail") {
+
+        options "-stub"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end\nPUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false\n"
+            new File("${launchDir}/bam_cram.yml").text = "- {meta: {id: PUN-R-ELF, library: '2', flowcell: SRR9309891, lane: 3, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.2.SRR9309891.3, platform_unit: SRR9309891.3.PUN-R-ELF_2}, bam_cram: ${data}/PUN-R-ELF_2.bam}\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+                bam_cram    = "${launchDir}/bam_cram.yml"
+                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.toString().contains("Provide either --samplesheet or --bam_cram, not both") || workflow.stderr.toString().contains("Provide either --samplesheet or --bam_cram, not both")
+        }
+    }
+
+    test("missing --samplesheet") {
+
+        options "-stub"
+
+        when {
+            params {
+                fasta = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.toString().contains("Missing required parameter --samplesheet") || workflow.stderr.toString().contains("Missing required parameter --samplesheet")
+        }
+    }
+}

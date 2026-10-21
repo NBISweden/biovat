@@ -1,0 +1,88 @@
+{
+    "bcftools_multisample, population grouping - stub": {
+        "content": [
+            2,
+            [
+                "genome_chunk_bed_files",
+                "genome_chunk_bed_files/chunk_00001.bed",
+                "genome_chunk_bed_files/excluded_regions.tsv",
+                "mpileup",
+                "mpileup/Diplacus_puniceus_red_yellow.chunk_00001.mpileup.bcf",
+                "multiqc_files",
+                "multiqc_files/genome_chunking_mqc.tsv",
+                "variant_calls",
+                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz.csi"
+            ]
+        ],
+        "timestamp": "2026-10-20T15:03:00.357926",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    },
+    "gatk - stub": {
+        "content": [
+            5,
+            [
+                "genome_chunk_bed_files",
+                "genome_chunk_bed_files/chunk_00001.bed",
+                "genome_chunk_bed_files/excluded_regions.tsv",
+                "multiqc_files",
+                "multiqc_files/genome_chunking_mqc.tsv",
+                "variant_calls",
+                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz.tbi"
+            ]
+        ],
+        "timestamp": "2026-10-20T15:05:24.516499",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    },
+    "bcftools_multisample - stub": {
+        "content": [
+            2,
+            [
+                "genome_chunk_bed_files",
+                "genome_chunk_bed_files/chunk_00001.bed",
+                "genome_chunk_bed_files/excluded_regions.tsv",
+                "mpileup",
+                "mpileup/Diplacus_puniceus_red_yellow.chunk_00001.mpileup.bcf",
+                "multiqc_files",
+                "multiqc_files/genome_chunking_mqc.tsv",
+                "variant_calls",
+                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz.csi"
+            ]
+        ],
+        "timestamp": "2026-10-20T15:04:57.587375",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    },
+    "bcftools_multisample, from a CSV samplesheet - stub": {
+        "content": [
+            2,
+            [
+                "genome_chunk_bed_files",
+                "genome_chunk_bed_files/chunk_00001.bed",
+                "genome_chunk_bed_files/excluded_regions.tsv",
+                "mpileup",
+                "mpileup/Diplacus_puniceus_red_yellow.chunk_00001.mpileup.bcf",
+                "multiqc_files",
+                "multiqc_files/genome_chunking_mqc.tsv",
+                "variant_calls",
+                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz.csi"
+            ]
+        ],
+        "timestamp": "2026-10-21T13:52:41.941203",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    }
+}

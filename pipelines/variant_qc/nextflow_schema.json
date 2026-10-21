@@ -1,0 +1,61 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/NBISweden/biovat/main/pipelines/variant_qc/nextflow_schema.json",
+    "title": "BioVAT variant_qc pipeline parameters",
+    "description": "Quality checks of variant calls with bcftools stats and vcftools",
+    "type": "object",
+    "$defs": {
+        "input_options": {
+            "title": "Input options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data.",
+            "properties": {
+                "samplesheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Variant calls to check, as a CSV with one row per VCF and the columns id, vcf and index.",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "variant_calls": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per VCF, with the keys meta (a map with at least id), vcf and index.",
+                    "fa_icon": "fas fa-file"
+                },
+                "fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Reference fasta, used by bcftools stats.",
+                    "fa_icon": "fas fa-file"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "properties": {
+                "help": {
+                    "type": ["boolean", "string"],
+                    "description": "Display the help message.",
+                    "fa_icon": "fas fa-question-circle"
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full help message.",
+                    "fa_icon": "fas fa-question-circle"
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_options"
+        },
+        {
+            "$ref": "#/$defs/generic_options"
+        }
+    ]
+}
