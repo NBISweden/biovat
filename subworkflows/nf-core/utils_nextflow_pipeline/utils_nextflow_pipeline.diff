@@ -1,0 +1,24 @@
+Changes in component 'nf-core/utils_nextflow_pipeline'
+'subworkflows/nf-core/utils_nextflow_pipeline/meta.yml' is unchanged
+Changes in 'utils_nextflow_pipeline/main.nf':
+--- subworkflows/nf-core/utils_nextflow_pipeline/main.nf
++++ subworkflows/nf-core/utils_nextflow_pipeline/main.nf
+@@ -74,7 +74,11 @@
+     def timestamp = new java.util.Date().format('yyyy-MM-dd_HH-mm-ss')
+     def filename  = "params_${timestamp}.json"
+     def temp_pf   = new File(workflow.launchDir.toString(), ".${filename}")
+-    def jsonStr   = groovy.json.JsonOutput.toJson(params)
++    // Typed params can be paths (which Groovy's JSON generator cannot serialise) or dataflow values (not serialisable)
++    def printable = params
++        .findAll { _k, v -> v == null || v instanceof CharSequence || v instanceof Number || v instanceof Boolean || v instanceof java.nio.file.Path }
++        .collectEntries { k, v -> [ k, v instanceof java.nio.file.Path ? v.toString() : v ] }
++    def jsonStr   = groovy.json.JsonOutput.toJson(printable)
+     temp_pf.text  = groovy.json.JsonOutput.prettyPrint(jsonStr)
+ 
+     nextflow.extension.FilesEx.copyTo(temp_pf.toPath(), "${outdir}/pipeline_info/params_${timestamp}.json")
+
+'subworkflows/nf-core/utils_nextflow_pipeline/tests/main.function.nf.test' is unchanged
+'subworkflows/nf-core/utils_nextflow_pipeline/tests/main.function.nf.test.snap' is unchanged
+'subworkflows/nf-core/utils_nextflow_pipeline/tests/nextflow.config' is unchanged
+'subworkflows/nf-core/utils_nextflow_pipeline/tests/main.workflow.nf.test' is unchanged
+************************************************************

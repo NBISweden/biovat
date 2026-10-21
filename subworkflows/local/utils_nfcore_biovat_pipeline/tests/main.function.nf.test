@@ -5,18 +5,18 @@ nextflow_function {
     tag "subworkflows"
     tag "utils_nfcore_biovat_pipeline"
 
+    // Rows are the records the entry workflow passes: meta and files. Maps behave the same in these functions
+
     test("validateSampleMetadata - extra samples warn") {
         function "validateSampleMetadata"
 
         when {
-            params {
-                enable_variant_calling = true
-                sample_metadata        = "metadata.csv"
-            }
             function {
                 """
-                input[0] = [ [ [ id:'A' ], [] ] ]
+                input[0] = [ [ meta: [ id:'A' ], files: [] ] ]
                 input[1] = [ [ id:'A', population:'red' ], [ id:'B', population:'red' ] ]
+                input[2] = [ variant_calling: true ]
+                input[3] = [ sample_metadata: true, variant_caller: 'bcftools_multisample' ]
                 """
             }
         }
@@ -34,14 +34,12 @@ nextflow_function {
         function "validateSampleMetadata"
 
         when {
-            params {
-                enable_variant_calling = true
-                sample_metadata        = "metadata.csv"
-            }
             function {
                 """
-                input[0] = [ [ [ id:'A' ], [] ], [ [ id:'B' ], [] ] ]
+                input[0] = [ [ meta: [ id:'A' ], files: [] ], [ meta: [ id:'B' ], files: [] ] ]
                 input[1] = [ [ id:'A', population:'red' ], [ id:'B' ] ]
+                input[2] = [ variant_calling: true ]
+                input[3] = [ sample_metadata: true, variant_caller: 'bcftools_multisample' ]
                 """
             }
         }
@@ -49,7 +47,7 @@ nextflow_function {
         then {
             assertAll(
                 { assert function.failed },
-                { assert function.stdout.any { line -> line.contains("requires a 'population' for every sample. Missing for: B") } }
+                { assert (function.stdout + function.stderr).any { line -> line.contains("requires a 'population' for every sample. Missing for: B") } }
             )
         }
     }
@@ -58,14 +56,12 @@ nextflow_function {
         function "validateSampleMetadata"
 
         when {
-            params {
-                enable_variant_calling = true
-                sample_metadata        = null
-            }
             function {
                 """
-                input[0] = [ [ [ id:'A' ], [] ] ]
+                input[0] = [ [ meta: [ id:'A' ], files: [] ] ]
                 input[1] = []
+                input[2] = [ variant_calling: true ]
+                input[3] = [ sample_metadata: false, variant_caller: 'bcftools_multisample' ]
                 """
             }
         }
@@ -79,15 +75,12 @@ nextflow_function {
         function "validateSampleMetadata"
 
         when {
-            params {
-                enable_variant_calling = true
-                variant_caller         = "gatk"
-                sample_metadata        = "metadata.csv"
-            }
             function {
                 """
-                input[0] = [ [ [ id:'A' ], [] ], [ [ id:'B' ], [] ] ]
+                input[0] = [ [ meta: [ id:'A' ], files: [] ], [ meta: [ id:'B' ], files: [] ] ]
                 input[1] = [ [ id:'A', population:'red' ], [ id:'B' ] ]
+                input[2] = [ variant_calling: true ]
+                input[3] = [ sample_metadata: true, variant_caller: 'gatk' ]
                 """
             }
         }
@@ -105,14 +98,10 @@ nextflow_function {
         function "validateAlignmentConsumers"
 
         when {
-            params {
-                enable_align           = false
-                enable_mark_duplicates = true
-                enable_variant_calling = true
-            }
             function {
                 """
-                input[0] = [ [ [ id:'A', input_type:'fastq' ], [] ] ]
+                input[0] = [ [ meta: [ id:'A', input_type:'fastq' ], files: [] ] ]
+                input[1] = [ align: false, mark_duplicates: true, variant_calling: true ]
                 """
             }
         }
@@ -120,7 +109,7 @@ nextflow_function {
         then {
             assertAll(
                 { assert function.failed },
-                { assert function.stdout.any { line -> line.contains("No alignments to process for --enable_mark_duplicates, --enable_variant_calling") } }
+                { assert (function.stdout + function.stderr).any { line -> line.contains("No alignments to process for --enable_mark_duplicates, --enable_variant_calling") } }
             )
         }
     }
@@ -129,14 +118,10 @@ nextflow_function {
         function "validateAlignmentConsumers"
 
         when {
-            params {
-                enable_align           = false
-                enable_mark_duplicates = true
-                enable_variant_calling = true
-            }
             function {
                 """
-                input[0] = [ [ [ id:'A', input_type:'fastq' ], [] ], [ [ id:'B', input_type:'bam_cram' ], [] ] ]
+                input[0] = [ [ meta: [ id:'A', input_type:'fastq' ], files: [] ], [ meta: [ id:'B', input_type:'bam_cram' ], files: [] ] ]
+                input[1] = [ align: false, mark_duplicates: true, variant_calling: true ]
                 """
             }
         }
@@ -151,12 +136,10 @@ nextflow_function {
         function "validateVariantCallingPlatforms"
 
         when {
-            params {
-                enable_variant_calling = true
-            }
             function {
                 """
-                input[0] = [ [ [ id:'A', pl:'ONT' ], [] ], [ [ id:'B', pl:'PACBIO' ], [] ] ]
+                input[0] = [ [ meta: [ id:'A', pl:'ONT' ], files: [] ], [ meta: [ id:'B', pl:'PACBIO' ], files: [] ] ]
+                input[1] = [ variant_calling: true ]
                 """
             }
         }
@@ -164,7 +147,7 @@ nextflow_function {
         then {
             assertAll(
                 { assert function.failed },
-                { assert function.stdout.any { line -> line.contains("no samplesheet rows have platform ILLUMINA (found: ONT, PACBIO)") } }
+                { assert (function.stdout + function.stderr).any { line -> line.contains("no samplesheet rows have platform ILLUMINA (found: ONT, PACBIO)") } }
             )
         }
     }
@@ -174,12 +157,10 @@ nextflow_function {
         function "validateVariantCallingPlatforms"
 
         when {
-            params {
-                enable_variant_calling = true
-            }
             function {
                 """
-                input[0] = [ [ [ id:'A', pl:'ONT' ], [] ], [ [ id:'B', pl:'ILLUMINA' ], [] ] ]
+                input[0] = [ [ meta: [ id:'A', pl:'ONT' ], files: [] ], [ meta: [ id:'B', pl:'ILLUMINA' ], files: [] ] ]
+                input[1] = [ variant_calling: true ]
                 """
             }
         }
