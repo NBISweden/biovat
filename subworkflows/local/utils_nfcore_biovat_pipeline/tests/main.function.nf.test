@@ -25,7 +25,7 @@ nextflow_function {
             assertAll(
                 { assert function.success },
                 // log.warn reaches nextflow.log, not the captured stdout
-                { assert new File("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata lists sample(s) not in --input, which will be ignored: B") }
+                { assert new File("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata lists sample(s) with no short-read rows in --input, which will be ignored: B") }
             )
         }
     }

@@ -235,7 +235,7 @@ def validateSampleMetadata(rows, metadata_rows) {
     def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
     def extra_samples       = metadata_supplied - samplesheet_samples
     if ( extra_samples ) {
-        log.warn("--sample_metadata lists sample(s) not in --input, which will be ignored: ${extra_samples.join(', ')}")
+        log.warn("--sample_metadata lists sample(s) with no short-read rows in --input, which will be ignored: ${extra_samples.join(', ')}")
     }
     def missing_metadata    = samplesheet_samples - metadata_rows.findAll { meta -> meta.population }.collect { meta -> meta.id }
     if ( missing_metadata ) {
