@@ -77,7 +77,7 @@ S3,popB
 | `sample`     | Sample identifier, matching the `sample` column of `--input`. Each sample may appear only once |
 | `population` | Population identifier for grouping of samples. Required for every sample when used             |
 
-Providing `--sample_metadata` turns on population grouping in variant calling (`bcftools call --group-samples`, which applies the HWE assumption within but not across populations), and so requires a `population` for every sample in `--input`. It is used only by `--variant_caller bcftools_multisample`: with any other caller it is ignored with a warning, and it is also ignored when `--enable_variant_calling` is off. Samples listed in `--sample_metadata` but not in `--input` are ignored with a warning. An [example sample metadata sheet](../assets/sample_metadata.csv) has been provided with the pipeline.
+Providing `--sample_metadata` turns on population grouping in variant calling (`bcftools call --group-samples`, which applies the HWE assumption within but not across populations), and so requires a `population` for every sample in `--input`. It is used only by `--variant_caller bcftools_multisample`, specifically with the `bcftools` multiallelic caller, as population grouping is not supported for the older `bcftools` consensus caller. With any other caller (e.g., `gatk`) it is ignored with a warning, and it is also ignored when `--enable_variant_calling` is off. Samples listed in `--sample_metadata` but not in `--input` are ignored with a warning. An [example sample metadata sheet](../assets/sample_metadata.csv) has been provided with the pipeline.
 
 ## Configuring the pipeline
 
@@ -124,7 +124,7 @@ Computes per-sample genotype likelihoods from the alignments. It writes the per-
 
 Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag and the per-site `AC`/`AN` (allele count/number) tags. The pipeline applies `--group-samples` when `--sample_metadata` is given.
 
-- `--enable_multiallelic_caller` (default `true`) uses the multiallelic caller (`--multiallelic-caller`). Set it to `false` to use the original consensus caller (`--consensus-caller`) instead.
+- `--enable_multiallelic_caller` (default `true`) uses the multiallelic caller (`--multiallelic-caller`). Set it to `false` to use the original consensus caller (`--consensus-caller`) instead. The consensus caller cannot be combined with `--sample_metadata`.
 - `--enable_variants_only` (default `true`) writes only variant sites (`--variants-only`). Set it to `false` to write every site (including invariant ones) to the VCF, which makes it far larger.
 - `--bcftools_call_extra` (no default) allows users to provide custom flags in string format. All sites are called as diploid unless you add `--ploidy` or `--ploidy-file` here.
 

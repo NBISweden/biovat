@@ -231,6 +231,10 @@ def validateSampleMetadata(rows, metadata_rows) {
         log.warn("--sample_metadata is only used by --variant_caller bcftools_multisample, so it is ignored with --variant_caller ${params.variant_caller}")
         return
     }
+    // bcftools call only supports --group-samples with the multiallelic caller (-m)
+    if ( !params.enable_multiallelic_caller ) {
+        validationError("Population grouping with '--sample_metadata' requires the multiallelic caller. Set '--enable_multiallelic_caller true' or remove '--sample_metadata'.")
+    }
     def samplesheet_samples = rows.collect { meta, _files -> meta.id }.unique()
     def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
     def extra_samples       = metadata_supplied - samplesheet_samples
