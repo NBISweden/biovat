@@ -36,9 +36,9 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Read trimming](#read-trimming) - Adapter and quality trimming of raw reads
 - [Alignment](#alignment) - Alignment of raw or trimmed reads
 - [Alignment quality checks](#alignment-qc) - BAM/CRAM alignment QC
-- [Merging readgroups](#merging-readgroups) - Readgroup alignments are merged to library level if necessary
+- [Merging readgroups per library](#merging-readgroups-per-library) - Readgroup alignments are merged to library level if necessary
 - [Deduplication](#deduplication) - Duplicates are marked or removed from library-level alignments
-- [Merging libraries](#merging-libraries) - Readgroup/library alignments are merged to sample level if necessary
+- [Merging libraries per sample and platform](#merging-libraries-per-sample-and-platform) - Readgroup/library alignments are merged to sample + platform level if necessary
 - [Variant calling](#variant-calling) - Variants are called
 - [Variant call quality checks](#variant-qc) - VCF/BCF QC
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
@@ -118,7 +118,7 @@ Samplesheet rows supplying an already-aligned `bam`/`cram` file are QC'd once in
 
 </details>
 
-### Merging readgroups
+### Merging readgroups per library
 
 <details markdown="1">
 <summary>Output files</summary>
@@ -147,16 +147,16 @@ Running with `--enable_cram_format` will produce `.cram` and `.crai` files inste
 
 </details>
 
-### Merging libraries
+### Merging libraries per sample and platform
 
 <details markdown="1">
 <summary>Output files</summary>
 
 - `06_merged_samples/`
-  - `*.bam`: Deduplicated alignment files merged at the sample level (libraries for the same sample merged together).
+  - `*.bam`: Deduplicated alignment files merged at the sample level (multiple libraries of the same sample and sequencing platform merged together).
   - `*.bam.csi`: Index file.
 
-These outputs are produced for a sample with more than one library. A sample with only one library remains identical to the file published under `05_duplicate_processed` or prior, and is thus not republished here.
+These outputs are produced for a sample with more than one library on a given platform. A sample with only one library (per platform) remains identical to the file published under `05_duplicate_processed` or prior, and is thus not republished here.
 
 Running with `--enable_cram_format` will produce `.cram` and `.crai` files instead.
 
