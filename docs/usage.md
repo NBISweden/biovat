@@ -19,7 +19,9 @@ The samplesheet can have as many columns as you desire, however, it must contain
 The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. Sequencing library IDs, flowcell IDs, and lane numbers are specified in the columns `library_id`,
 `flowcell_id`, and `lane`. Each combination of `sample`, `library_id`, `flowcell_id`, and `lane` has to be unique. When deduplication is enabled, alignments belonging to the same sample and library are first merged and deduplicated. If variant calling is enabled, libraries are further merged to sample level.
 
-A library is prepared for a single sequencing platform, so all read groups of a library must share the same `platform`. A sample may combine libraries from different platforms; these are merged per platform.
+A library is prepared for a single sequencing platform, so all read groups of a library must share the same `platform`. A sample may combine libraries from different platforms; these are merged per platform. Variant calling then calls each platform separately (see [Variant calling](#variant-calling)), so such a sample appears in one VCF per platform.
+
+Only short-read platforms are currently processed. Long-read data (`ONT`, `PACBIO`) needs its own preprocessing path (QC, trimming, alignment and variant calling, without duplicate marking), which the pipeline doesn't provide yet, so long-read rows are excluded at the start of the run with a warning. A samplesheet with only long-read rows runs to completion but produces no alignments or variant calls.
 
 Each row must provide raw reads via `fastq_1` (optionally `fastq_2`), **or** an already-aligned `BAM`/`CRAM` file via `bam`. If providing `BAM`/`CRAM`, users must also fill-out the `single_end` column (`false` for paired-end reads). When providing pre-aligned files, trimming and alignment are skipped. All read groups of a library, and all libraries of a sample, must agree on `single_end` (mixing single- and paired-end reads at the same merge level is rejected).
 
@@ -75,7 +77,7 @@ S3,popB
 | `sample`     | Sample identifier, matching the `sample` column of `--input`. Each sample may appear only once |
 | `population` | Population identifier for grouping of samples. Required for every sample when used             |
 
-Providing `--sample_metadata` turns on population grouping in variant calling (`bcftools call --group-samples`, which applies the HWE assumption within but not across populations), and so requires a `population` for every sample in `--input`. It is used only by `--variant_caller bcftools_multisample`: with any other caller it is ignored with a warning, and it is also ignored when `--enable_variant_calling` is off. Samples listed in `--sample_metadata` but not in `--input` are ignored with a warning. An [example sample metadata sheet](../assets/sample_metadata.csv) has been provided with the pipeline.
+Providing `--sample_metadata` turns on population grouping in variant calling (`bcftools call --group-samples`, which applies the HWE assumption within but not across populations), and so requires a `population` for every sample in `--input`. It is used only by `--variant_caller bcftools_multisample`, specifically with the `bcftools` multiallelic caller, as population grouping is not supported for the older `bcftools` consensus caller. With any other caller (e.g., `gatk`) it is ignored with a warning, and it is also ignored when `--enable_variant_calling` is off. Samples listed in `--sample_metadata` but not in `--input` are ignored with a warning. An [example sample metadata sheet](../assets/sample_metadata.csv) has been provided with the pipeline.
 
 ## Configuring the pipeline
 
@@ -91,10 +93,10 @@ nextflow main.nf --help
 
 ### Variant calling
 
-Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into a single multi-sample VCF, published as `07_variant_calls/<callset_prefix>.<variant_caller>.vcf.gz` (e.g. `all_samples.gatk.vcf.gz`). The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into one multi-sample VCF per sequencing platform, published as `07_variant_calls/<callset_prefix>.<platform>.<variant_caller>.vcf.gz` (e.g. `all_samples.ILLUMINA.gatk.vcf.gz`). Platforms are never called together: a run with Illumina and DNBSEQ data produces two VCFs, and a sample sequenced on both appears in each. The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
 
 - `--variant_caller` selects the caller: `bcftools_multisample` (default; see [BCFtools multi-sample calling](#bcftools-multi-sample-calling)) or `gatk` (see [GATK](#gatk))
-- `--callset_prefix` (default `all_samples`) sets the file name prefix of the joint VCF and its index; the caller name is appended to it
+- `--callset_prefix` (default `all_samples`) sets the file name prefix of the joint VCFs and their indexes; the platform and caller name are appended to it
 - `--enable_variant_qc` (default `true`) runs quality checks on the final VCF
 
 #### Genome chunking
@@ -114,14 +116,17 @@ For each genome chunk, `bcftools mpileup` computes genotype likelihoods for ever
 
 Computes per-sample genotype likelihoods from the alignments. It writes the per-sample (`FORMAT`) tags `PL` (genotype likelihoods) and `AD` (allelic depths) by default. The pipeline also adds `DP` (read depth, `--annotate FORMAT/DP`).
 
-- `--bcftools_mpileup_extra` (default `--no-BAQ`) is passed to `bcftools mpileup`, e.g. `'--no-BAQ --min-BQ 20 --min-MQ 20'` to filter on base and mapping quality. Further `--annotate` tags given here are added to the tags above rather than replacing them.
+- `--enable_baq` (default `false`) computes base alignment quality (BAQ). By default the pipeline passes `--no-BAQ`.
+- `--bcftools_mpileup_extra` (no default) allows users to provide custom flags in string format.
 - `--enable_save_mpileup` (default `false`) also saves the intermediate `bcftools mpileup` output (BCF with genotype likelihoods for all sites), one file per genome chunk. These files can get very large.
 
 **bcftools call**
 
-Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag and the per-site `AC`/`AN` (allele count/number) tags. The pipeline always uses the multiallelic caller (`--multiallelic-caller`), and adds `--group-samples` when `--sample_metadata` is given.
+Calls genotypes from the likelihoods, adding the per-sample `GT` (genotype) tag and the per-site `AC`/`AN` (allele count/number) tags. The pipeline applies `--group-samples` when `--sample_metadata` is given.
 
-- `--bcftools_call_extra` (default `--variants-only`) is passed to `bcftools call`. Keep `--variants-only` unless you want every site (including invariant ones) in the VCF, which makes it far larger. All sites are called as diploid unless you add `--ploidy` or `--ploidy-file`.
+- `--enable_multiallelic_caller` (default `true`) uses the multiallelic caller (`--multiallelic-caller`). Set it to `false` to use the original consensus caller (`--consensus-caller`) instead. The consensus caller cannot be combined with `--sample_metadata`.
+- `--enable_variants_only` (default `true`) writes only variant sites (`--variants-only`). Set it to `false` to write every site (including invariant ones) to the VCF, which makes it far larger.
+- `--bcftools_call_extra` (no default) allows users to provide custom flags in string format. All sites are called as diploid unless you add `--ploidy` or `--ploidy-file` here.
 
 #### GATK
 

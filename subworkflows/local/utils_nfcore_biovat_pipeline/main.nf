@@ -82,12 +82,11 @@ workflow PIPELINE_INITIALISATION {
         nextflow_cli_args
     )
 
-    // Validation pipeline parameters
+    // Validation of pipeline parameters
     validateInputParameters()
 
-    // Build list of samplesheet rows, run validation checks, & then create a channel from it
-    // Uniqueness of the sample/library_id/flowcell_id/lane
-    // combination is enforced by the "uniqueEntries" key in assets/schema_input.json
+    // Parse samplesheet 1 of 2
+    // Build list of samplesheet rows (channel will be created after validation checks)
     def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
         .collect { meta, fastq_1, fastq_2, bam ->
             // We define read_group separately as an intuitive/readable @RG-level file prefix
@@ -100,27 +99,30 @@ workflow PIPELINE_INITIALISATION {
             [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
         }
 
+    // Parse samplesheet 2 of 2
+    // Build sample level metadata (e.g. population) if --sample_metadata is provided, one row per sample
+    def sample_metadata_rows = sample_metadata
+        ? samplesheetToList(sample_metadata, "${projectDir}/assets/schema_sample_metadata.json").collect { row -> row[0] }
+        : []
+
+    // Validation checks
+
     // Alignments are merged from read group to library to sample levels. A specific library must not mix platforms, and
     // every alignment in a merge group must agree on single_end
     validateMergeGroups(samplesheet_rows)
 
-    // Sample-level metadata (one row per sample) is loaded separately from readgroup level metadata.
-    // Uniqueness of sample data is enforced by the "uniqueEntries" key in assets/schema_sample_metadata.json
-    def sample_metadata_rows = sample_metadata
-        ? samplesheetToList(sample_metadata, "${projectDir}/assets/schema_sample_metadata.json").collect { row -> row[0] }
-        : []
+    // Long-read rows are temporarily excluded in BIOVAT, so stage-level checks currently consider only short-read rows
+    def short_read_rows = samplesheet_rows.findAll { meta, _files -> !isLongReadPlatform(meta.pl) }
+
     // Correctness of --sample_metadata is checked against the samplesheet rows
-    validateSampleMetadata(samplesheet_rows, sample_metadata_rows)
-    def samples = samplesheet_rows.collect { meta, _files -> meta.id }.toSet()
+    validateSampleMetadata(short_read_rows, sample_metadata_rows)
+    def samples = short_read_rows.collect { meta, _files -> meta.id }.toSet()
 
     // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
-    validateAlignmentConsumers(samplesheet_rows)
-
-    // Variant calling is currently ILLUMINA-only; reject a run where it would call nothing
-    validateVariantCallingPlatforms(samplesheet_rows)
+    validateAlignmentConsumers(short_read_rows)
 
     // Report every reason --reference is needed (params and samplesheet rows) in one error
-    validateReferenceRequirements(samplesheet_rows)
+    validateReferenceRequirements(short_read_rows)
 
     // Create reference channel from input file provided through params.reference
     reference = channel.empty()
@@ -229,11 +231,15 @@ def validateSampleMetadata(rows, metadata_rows) {
         log.warn("--sample_metadata is only used by --variant_caller bcftools_multisample, so it is ignored with --variant_caller ${params.variant_caller}")
         return
     }
+    // bcftools call only supports --group-samples with the multiallelic caller (-m)
+    if ( !params.enable_multiallelic_caller ) {
+        validationError("Population grouping with '--sample_metadata' requires the multiallelic caller. Set '--enable_multiallelic_caller true' or remove '--sample_metadata'.")
+    }
     def samplesheet_samples = rows.collect { meta, _files -> meta.id }.unique()
     def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
     def extra_samples       = metadata_supplied - samplesheet_samples
     if ( extra_samples ) {
-        log.warn("--sample_metadata lists sample(s) not in --input, which will be ignored: ${extra_samples.join(', ')}")
+        log.warn("--sample_metadata lists sample(s) with no short-read rows in --input, which will be ignored: ${extra_samples.join(', ')}")
     }
     def missing_metadata    = samplesheet_samples - metadata_rows.findAll { meta -> meta.population }.collect { meta -> meta.id }
     if ( missing_metadata ) {
@@ -269,14 +275,10 @@ def validateAlignmentConsumers(rows) {
     }
 }
 
-// Placeholder until other platforms are supported: CALL_VARIANTS only calls ILLUMINA alignments (others are
-// excluded with a warning), so a samplesheet with no ILLUMINA rows would otherwise finish without a VCF
-def validateVariantCallingPlatforms(rows) {
-    if ( !params.enable_variant_calling || rows.any { meta, _files -> meta.pl == 'ILLUMINA' } ) {
-        return
-    }
-    def platforms = rows.collect { meta, _files -> meta.pl }.unique().sort()
-    validationError("Variant calling (--enable_variant_calling) currently supports only ILLUMINA alignments, but no samplesheet rows have platform ILLUMINA (found: ${platforms.join(', ')}). Disable variant calling or provide ILLUMINA data.")
+// Long-read platforms need their own preprocessing (QC, trimming, aligner, no duplicate marking) and variant callers.
+// Until that path exists, BIOVAT branches their rows off before READ_QC and excludes them with a warning
+def isLongReadPlatform(platform) {
+    platform in [ 'ONT', 'PACBIO' ]
 }
 
 // Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
@@ -312,6 +314,7 @@ def validateReferenceRequirements(rows) {
         validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")
     }
 }
+
 
 //
 // Generate methods description for MultiQC

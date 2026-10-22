@@ -66,7 +66,7 @@ nextflow_workflow {
                 { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_MPILEUP_MULTISAMPLE') } == 2 },
                 { assert workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_CONCAT') } },
                 { assert calls.size() == 1 },
-                { assert calls[0][0] == [ id:'test_dataset.bcftools_multisample', samples:[ 'PUN-R-MT' ] ] },
+                { assert calls[0][0] == [ id:'test_dataset.ILLUMINA.bcftools_multisample', samples:[ 'PUN-R-MT' ] ] },
                 { assert file(calls[0][2]).name.endsWith('.vcf.gz.csi') },
                 { assert path(calls[0][1]).vcf.sampleCount == 1 },
                 { assert path(calls[0][1]).vcf.variantCount > 0 }
@@ -109,9 +109,53 @@ nextflow_workflow {
                 { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_CONCAT') } == 1 },
                 { assert file(calls[0][2]).name.endsWith('.vcf.gz.csi') },
                 { assert calls.size() == 1 },
-                { assert calls[0][0] == [ id:'test_dataset.gatk', samples:[ 'PUN-R-MT' ] ] },
+                { assert calls[0][0] == [ id:'test_dataset.ILLUMINA.gatk', samples:[ 'PUN-R-MT' ] ] },
                 { assert path(calls[0][1]).vcf.sampleCount == 1 },
                 { assert path(calls[0][1]).vcf.variantCount > 0 }
+            )
+        }
+    }
+
+    // Each platform is its own callset: a sample on two platforms is called once per platform, never pooled
+    test("gatk - one callset per platform") {
+
+        when {
+            workflow {
+                """
+                input[0] = 'gatk'
+                input[1] = null
+                input[2] = 1000
+                input[3] = channel.of('ILLUMINA', 'DNBSEQ')
+                    .combine(SAMTOOLS_INDEX.out.index)
+                    .map { platform, meta, index -> [ [ id:meta.id, pl:platform ], file("${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram", checkIfExists: true), index ] }
+                input[4] = channel.empty()
+                input[5] = [ group_samples: false ]
+                input[6] = SAMTOOLS_FAIDX.out.fai
+                    .map { meta, fai -> [ meta, file("${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"), fai ] }
+                    .collect()
+                input[7] = GATK4_CREATESEQUENCEDICTIONARY.out.dict.collect()
+                input[8] = 'test_dataset'
+                input[9] = [ save_mpileup: false, variant_qc: false ]
+                input[10] = channel.empty()
+                """
+            }
+        }
+
+        then {
+            def calls = workflow.out.ch_variant_calls_indexed.sort { call -> call[0].id }
+            assertAll(
+                { assert workflow.success },
+                // Two chunks x two platforms at each GATK step, then one concat per platform
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_HAPLOTYPECALLER') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOMICSDBIMPORT') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_CONCAT') } == 2 },
+                { assert calls.collect { call -> call[0] } == [
+                    [ id:'test_dataset.DNBSEQ.gatk', samples:[ 'PUN-R-MT' ] ],
+                    [ id:'test_dataset.ILLUMINA.gatk', samples:[ 'PUN-R-MT' ] ]
+                ] },
+                { assert calls.every { call -> path(call[1]).vcf.sampleCount == 1 } },
+                { assert calls.every { call -> path(call[1]).vcf.variantCount > 0 } }
             )
         }
     }
@@ -148,7 +192,7 @@ nextflow_workflow {
                 { assert !workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_CONCAT') } },
                 { assert file(calls[0][2]).name.endsWith('.vcf.gz.tbi') },
                 { assert calls.size() == 1 },
-                { assert calls[0][0] == [ id:'test_dataset.gatk', samples:[ 'PUN-R-MT' ] ] },
+                { assert calls[0][0] == [ id:'test_dataset.ILLUMINA.gatk', samples:[ 'PUN-R-MT' ] ] },
                 { assert path(calls[0][1]).vcf.sampleCount == 1 },
                 { assert path(calls[0][1]).vcf.variantCount > 0 }
             )

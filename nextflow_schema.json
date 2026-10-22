@@ -38,7 +38,7 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file with per-sample metadata (e.g. population), keyed on the sample column of --input.",
-                    "help_text": "One row per sample, with a 'sample' column matching the 'sample' column of --input, plus optional metadata columns. When variant calling with bcftools_multisample, providing this sheet groups samples into populations (bcftools call --group-samples), so every sample must then have a 'population'.",
+                    "help_text": "One row per sample, with a 'sample' column matching the 'sample' column of --input, plus optional metadata columns. When variant calling with bcftools_multisample, providing this sheet groups samples into populations (bcftools call --group-samples), so every sample must then have a 'population'. Requires --enable_multiallelic_caller true.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -199,14 +199,28 @@
                     "type": "boolean",
                     "description": "BCFtools multi-sample: save the intermediate bcftools mpileup output. Note that this file can get very large."
                 },
+                "enable_baq": {
+                    "type": "boolean",
+                    "description": "BCFtools multi-sample: compute base alignment quality (BAQ) in bcftools mpileup. When false (default), --no-BAQ is passed."
+                },
+                "enable_multiallelic_caller": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "BCFtools multi-sample: use the multiallelic caller in bcftools call (--multiallelic-caller). When false, the original consensus caller is used (N.B.: cannot be combined with --sample_metadata)."
+                },
+                "enable_variants_only": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "BCFtools multi-sample: output variant sites only in bcftools call (--variants-only). When false, every site, including invariant ones, is written to the VCF, which makes it far larger."
+                },
                 "bcftools_mpileup_extra": {
                     "type": "string",
-                    "default": "--no-BAQ",
+                    "default": "",
                     "description": "BCFtools multi-sample: additional command line arguments passed to bcftools mpileup."
                 },
                 "bcftools_call_extra": {
                     "type": "string",
-                    "default": "--variants-only",
+                    "default": "",
                     "description": "BCFtools multi-sample: additional command line arguments passed to bcftools call."
                 }
             }
