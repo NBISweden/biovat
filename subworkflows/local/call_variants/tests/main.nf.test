@@ -125,7 +125,7 @@ nextflow_workflow {
                 input[0] = 'gatk'
                 input[1] = null
                 input[2] = 1000
-                input[3] = channel.of('ILLUMINA', 'DNBSEQ')
+                input[3] = channel.of('ILLUMINA', 'IONTORRENT')
                     .combine(SAMTOOLS_INDEX.out.index)
                     .map { platform, meta, index -> [ [ id:meta.id, pl:platform ], file("${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram", checkIfExists: true), index ] }
                 input[4] = channel.empty()
@@ -151,8 +151,8 @@ nextflow_workflow {
                 { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } == 4 },
                 { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_CONCAT') } == 2 },
                 { assert calls.collect { call -> call[0] } == [
-                    [ id:'test_dataset.DNBSEQ.gatk', samples:[ 'PUN-R-MT' ] ],
-                    [ id:'test_dataset.ILLUMINA.gatk', samples:[ 'PUN-R-MT' ] ]
+                    [ id:'test_dataset.ILLUMINA.gatk', samples:[ 'PUN-R-MT' ] ],
+                    [ id:'test_dataset.IONTORRENT.gatk', samples:[ 'PUN-R-MT' ] ]
                 ] },
                 { assert calls.every { call -> path(call[1]).vcf.sampleCount == 1 } },
                 { assert calls.every { call -> path(call[1]).vcf.variantCount > 0 } }
