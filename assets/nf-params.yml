@@ -81,5 +81,8 @@ enable_variant_qc: true # Boolean: run quality checks on variant files (VCF)
 
 ## BCFtools multi-sample variant calling
 # enable_save_mpileup: false # Boolean: save variants in mpileup format in addition to VCF. Default: false
-# bcftools_mpileup_extra: '--no-BAQ --min-BQ 30 --min-MQ 30' # Default: --no-BAQ
-# bcftools_call_extra: '--multiallelic-caller' # Default: --multiallelic-caller --variants-only
+# enable_baq: true # Boolean: compute base alignment quality in bcftools mpileup. Default: false
+# enable_multiallelic_caller: false # Boolean: bcftools call --multiallelic-caller (true) or --consensus-caller (false). Default: true
+# enable_variants_only: false # Boolean: bcftools call --variants-only; false writes every site, including invariant ones. Default: true
+# bcftools_mpileup_extra: '--min-BQ 30 --min-MQ 30' # Additional bcftools mpileup arguments. Default: none
+# bcftools_call_extra: '--ploidy 1' # Additional bcftools call arguments. Default: none

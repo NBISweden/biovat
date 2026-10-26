@@ -25,7 +25,7 @@ nextflow_function {
             assertAll(
                 { assert function.success },
                 // log.warn reaches nextflow.log, not the captured stdout
-                { assert new File("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata lists sample(s) not in --input, which will be ignored: B") }
+                { assert new File("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata lists sample(s) with no short-read rows in --input, which will be ignored: B") }
             )
         }
     }
@@ -137,49 +137,6 @@ nextflow_function {
             function {
                 """
                 input[0] = [ [ [ id:'A', input_type:'fastq' ], [] ], [ [ id:'B', input_type:'bam_cram' ], [] ] ]
-                """
-            }
-        }
-
-        then {
-            assert function.success
-        }
-    }
-
-    // TEMP: support other platforms
-    test("validateVariantCallingPlatforms - no ILLUMINA rows fails") {
-        function "validateVariantCallingPlatforms"
-
-        when {
-            params {
-                enable_variant_calling = true
-            }
-            function {
-                """
-                input[0] = [ [ [ id:'A', pl:'ONT' ], [] ], [ [ id:'B', pl:'PACBIO' ], [] ] ]
-                """
-            }
-        }
-
-        then {
-            assertAll(
-                { assert function.failed },
-                { assert function.stdout.any { line -> line.contains("no samplesheet rows have platform ILLUMINA (found: ONT, PACBIO)") } }
-            )
-        }
-    }
-
-    // TEMP: support other platforms
-    test("validateVariantCallingPlatforms - mixed platforms pass") {
-        function "validateVariantCallingPlatforms"
-
-        when {
-            params {
-                enable_variant_calling = true
-            }
-            function {
-                """
-                input[0] = [ [ [ id:'A', pl:'ONT' ], [] ], [ [ id:'B', pl:'ILLUMINA' ], [] ] ]
                 """
             }
         }

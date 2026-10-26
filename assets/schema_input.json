@@ -4,6 +4,7 @@
     "title": "BioVAT pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
+    "minItems": 1,
     "uniqueEntries": ["sample", "library_id", "flowcell_id", "lane"],
     "items": {
         "type": "object",
@@ -34,21 +35,8 @@
             },
             "platform": {
                 "type": "string",
-                "enum": [
-                    "CAPILLARY",
-                    "DNBSEQ",
-                    "ELEMENT",
-                    "HELICOS",
-                    "ILLUMINA",
-                    "IONTORRENT",
-                    "LS454",
-                    "ONT",
-                    "PACBIO",
-                    "SINGULAR",
-                    "SOLID",
-                    "ULTIMA"
-                ],
-                "errorMessage": "Sequencing platform must be one of the SAM specification @RG PL values, in uppercase: CAPILLARY, DNBSEQ, ELEMENT, HELICOS, ILLUMINA, IONTORRENT, LS454, ONT, PACBIO, SINGULAR, SOLID, ULTIMA",
+                "enum": ["ILLUMINA", "IONTORRENT", "ONT", "PACBIO"],
+                "errorMessage": "Sequencing platform must be one of the following SAM specification @RG:PL values (in uppercase): ILLUMINA, IONTORRENT, ONT, PACBIO. To request support of another platform, please log a GitHub issue",
                 "meta": ["pl"]
             },
             "fastq_1": {
