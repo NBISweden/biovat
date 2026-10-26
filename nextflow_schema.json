@@ -201,7 +201,7 @@
                 },
                 "enable_baq": {
                     "type": "boolean",
-                    "description": "BCFtools multi-sample: compute base alignment quality (BAQ) in bcftools mpileup. When false (default), --no-BAQ is passed."
+                    "description": "BCFtools multi-sample: compute base alignment quality (BAQ) in bcftools mpileup. Default: false."
                 },
                 "enable_multiallelic_caller": {
                     "type": "boolean",

@@ -116,7 +116,7 @@ For each genome chunk, `bcftools mpileup` computes genotype likelihoods for ever
 
 Computes per-sample genotype likelihoods from the alignments. It writes the per-sample (`FORMAT`) tags `PL` (genotype likelihoods) and `AD` (allelic depths) by default. The pipeline also adds `DP` (read depth, `--annotate FORMAT/DP`).
 
-- `--enable_baq` (default `false`) computes base alignment quality (BAQ). By default the pipeline passes `--no-BAQ`.
+- `--enable_baq` (default `false`) computes base alignment quality (BAQ).
 - `--bcftools_mpileup_extra` (no default) allows users to provide custom flags in string format.
 - `--enable_save_mpileup` (default `false`) also saves the intermediate `bcftools mpileup` output (BCF with genotype likelihoods for all sites), one file per genome chunk. These files can get very large.
 
