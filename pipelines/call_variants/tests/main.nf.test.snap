@@ -48,22 +48,46 @@
     },
     "gatk - stub": {
         "content": [
-            5,
+            18,
             [
+                "bcftools_stats",
+                "bcftools_stats/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.bcftools_stats.txt",
+                "bcftools_stats/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.bcftools_stats.txt",
                 "genome_chunk_bed_files",
                 "genome_chunk_bed_files/chunk_00001.bed",
                 "genome_chunk_bed_files/excluded_regions.tsv",
                 "multiqc_files",
+                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.FILTER.summary",
+                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.TsTv.count",
+                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.TsTv.qual",
+                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.bcftools_stats.txt",
+                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.relatedness2",
+                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.FILTER.summary",
+                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.TsTv.count",
+                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.TsTv.qual",
+                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.bcftools_stats.txt",
+                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.relatedness2",
                 "multiqc_files/genome_chunking_mqc.tsv",
                 "variant_calls",
-                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.chunk_00001.vcf.gz.tbi"
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz.tbi",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz.tbi",
+                "vcftools",
+                "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.FILTER.summary",
+                "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.TsTv.count",
+                "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.TsTv.qual",
+                "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.relatedness2",
+                "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.FILTER.summary",
+                "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.TsTv.count",
+                "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.TsTv.qual",
+                "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-20T15:05:24.516499",
+        "timestamp": "2026-10-27T16:14:12.25407266",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.10.0"
+            "nextflow": "26.10.4"
         }
     },
     "bcftools_multisample - stub": {
