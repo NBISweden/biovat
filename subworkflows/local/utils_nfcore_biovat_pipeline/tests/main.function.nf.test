@@ -16,7 +16,7 @@ nextflow_function {
                 input[0] = [ [ meta: [ id:'A' ], files: [] ] ]
                 input[1] = [ [ id:'A', population:'red' ], [ id:'B', population:'red' ] ]
                 input[2] = [ variant_calling: true ]
-                input[3] = [ sample_metadata: true, variant_caller: 'bcftools_multisample' ]
+                input[3] = [ sample_metadata: true, variant_caller: 'bcftools_multisample', multiallelic_caller: true ]
                 """
             }
         }
@@ -25,7 +25,7 @@ nextflow_function {
             assertAll(
                 { assert function.success },
                 // log.warn reaches nextflow.log, not the captured stdout
-                { assert new File("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata lists sample(s) not in --input, which will be ignored: B") }
+                { assert new File("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata lists sample(s) with no short-read rows in --input, which will be ignored: B") }
             )
         }
     }
@@ -39,7 +39,7 @@ nextflow_function {
                 input[0] = [ [ meta: [ id:'A' ], files: [] ], [ meta: [ id:'B' ], files: [] ] ]
                 input[1] = [ [ id:'A', population:'red' ], [ id:'B' ] ]
                 input[2] = [ variant_calling: true ]
-                input[3] = [ sample_metadata: true, variant_caller: 'bcftools_multisample' ]
+                input[3] = [ sample_metadata: true, variant_caller: 'bcftools_multisample', multiallelic_caller: true ]
                 """
             }
         }
@@ -48,6 +48,28 @@ nextflow_function {
             assertAll(
                 { assert function.failed },
                 { assert (function.stdout + function.stderr).any { line -> line.contains("requires a 'population' for every sample. Missing for: B") } }
+            )
+        }
+    }
+
+    test("validateSampleMetadata - population grouping needs the multiallelic caller") {
+        function "validateSampleMetadata"
+
+        when {
+            function {
+                """
+                input[0] = [ [ meta: [ id:'A' ], files: [] ], [ meta: [ id:'B' ], files: [] ] ]
+                input[1] = [ [ id:'A', population:'red' ], [ id:'B', population:'yellow' ] ]
+                input[2] = [ variant_calling: true ]
+                input[3] = [ sample_metadata: true, variant_caller: 'bcftools_multisample', multiallelic_caller: false ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert function.failed },
+                { assert (function.stdout + function.stderr).any { line -> line.contains("requires the multiallelic caller") } }
             )
         }
     }
@@ -122,45 +144,6 @@ nextflow_function {
                 """
                 input[0] = [ [ meta: [ id:'A', input_type:'fastq' ], files: [] ], [ meta: [ id:'B', input_type:'bam_cram' ], files: [] ] ]
                 input[1] = [ align: false, mark_duplicates: true, variant_calling: true ]
-                """
-            }
-        }
-
-        then {
-            assert function.success
-        }
-    }
-
-    // TEMP: support other platforms
-    test("validateVariantCallingPlatforms - no ILLUMINA rows fails") {
-        function "validateVariantCallingPlatforms"
-
-        when {
-            function {
-                """
-                input[0] = [ [ meta: [ id:'A', pl:'ONT' ], files: [] ], [ meta: [ id:'B', pl:'PACBIO' ], files: [] ] ]
-                input[1] = [ variant_calling: true ]
-                """
-            }
-        }
-
-        then {
-            assertAll(
-                { assert function.failed },
-                { assert (function.stdout + function.stderr).any { line -> line.contains("no samplesheet rows have platform ILLUMINA (found: ONT, PACBIO)") } }
-            )
-        }
-    }
-
-    // TEMP: support other platforms
-    test("validateVariantCallingPlatforms - mixed platforms pass") {
-        function "validateVariantCallingPlatforms"
-
-        when {
-            function {
-                """
-                input[0] = [ [ meta: [ id:'A', pl:'ONT' ], files: [] ], [ meta: [ id:'B', pl:'ILLUMINA' ], files: [] ] ]
-                input[1] = [ variant_calling: true ]
                 """
             }
         }

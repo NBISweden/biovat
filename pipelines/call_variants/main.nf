@@ -20,7 +20,7 @@ include { checkStageInput              } from '../../subworkflows/local/utils_st
 record AlignmentSample {
     sample    : String  // sample name
     library_id: String? // library of the alignment
-    platform  : String  // sequencing platform, only ILLUMINA is called
+    platform  : String  // sequencing platform, samples of different platforms are called in separate callsets
     single_end: Boolean // whether the reads are single-end
     alignment : Path    // BAM or CRAM file
     index     : Path    // index of the BAM or CRAM file
@@ -47,8 +47,11 @@ params {
     callset_prefix        : String = 'all_samples'  // file name prefix of the VCF with all samples
     group_samples         : Boolean = false         // group samples into populations (bcftools_multisample only), needs sample_metadata
     save_mpileup          : Boolean = false         // keep the bcftools mpileup output (bcftools_multisample only)
-    bcftools_mpileup_extra: String = '--no-BAQ'     // extra arguments for bcftools mpileup
-    bcftools_call_extra   : String = '--variants-only' // extra arguments for bcftools call
+    baq                   : Boolean = false         // compute base alignment quality in bcftools mpileup (bcftools_multisample only)
+    multiallelic_caller   : Boolean = true          // bcftools call --multiallelic-caller, else --consensus-caller (bcftools_multisample only)
+    variants_only         : Boolean = true          // bcftools call --variants-only, else write every site (bcftools_multisample only)
+    bcftools_mpileup_extra: String = ''             // additional arguments for bcftools mpileup
+    bcftools_call_extra   : String = ''             // additional arguments for bcftools call
     variant_qc            : Boolean = true          // run quality checks on the joint callset
     fasta                 : Value<Path>?            // reference fasta, required
     fai                   : Value<Path>?            // fai index of the reference fasta, required
@@ -74,6 +77,9 @@ workflow {
     if ( params.group_samples && !params.sample_metadata ) {
         error "--group_samples requires --sample_metadata"
     }
+    if ( params.group_samples && !params.multiallelic_caller ) {
+        error "Population grouping with --group_samples requires the multiallelic caller. Set --multiallelic_caller true or remove --group_samples"
+    }
     reference = REFERENCE_VALUE(params.fasta, params.fai, true)
 
     // Alignments: from the samplesheet, or given with their meta record
@@ -92,23 +98,6 @@ workflow {
         given_alignments = params.alignments.map { a -> record(meta: record(id: a.meta.id, pl: a.meta.pl), alignment: a.alignment, index: a.index) }
     }
     alignments = samplesheet_alignments.mix(given_alignments)
-
-    // Branch on platform to avoid calling mixed-platform samples together. Only Illumina is currently called
-    illumina    = alignments.filter { aln -> aln.meta.pl == 'ILLUMINA' }
-    unsupported = alignments.filter { aln -> aln.meta.pl != 'ILLUMINA' }
-
-    // Warn once, listing every sample/platform left out
-    unsupported
-        .map { aln -> "${aln.meta.id} (${aln.meta.pl})" }
-        .collect()
-        .subscribe { skipped ->
-            if ( skipped.size() > 0 ) {
-                log.warn(
-                    "Variant calling currently supports only ILLUMINA alignments. " +
-                    "These sample alignments are excluded from variant calling: ${skipped.toList().toSorted().join(', ')}"
-                )
-            }
-        }
 
     // Split the reference genome into chunks (BED intervals) for parallelization
     splitgenome = SPLITGENOME(
@@ -145,9 +134,9 @@ workflow {
 
     // bcftools: multi-sample joint calling
     if ( params.variant_caller == 'bcftools_multisample' ) {
-        // Group all samples
-        grouped = illumina
-            .map { aln -> tuple(params.callset_prefix, aln) }
+        // Group all samples of a platform into one callset
+        grouped = alignments
+            .map { aln -> tuple(params.callset_prefix + '.' + aln.meta.pl, aln) }
             .groupBy()
             .map { group, alns ->
                 // sort by sample id so the VCF sample columns don't depend on channel arrival order
@@ -178,8 +167,8 @@ workflow {
                         save_mpileup         : params.save_mpileup,
                         group_samples        : params.group_samples,
                         population_file      : pop.file,
-                        bcftools_mpileup_args: params.bcftools_mpileup_extra,
-                        bcftools_call_args   : [ '--multiallelic-caller', params.bcftools_call_extra ].findAll { arg -> arg != '' }.join(' '),
+                        bcftools_mpileup_args: [ params.baq ? '' : '--no-BAQ', params.bcftools_mpileup_extra ].findAll { arg -> arg != '' }.join(' '),
+                        bcftools_call_args   : [ params.multiallelic_caller ? '--multiallelic-caller' : '--consensus-caller', params.variants_only ? '--variants-only' : '', params.bcftools_call_extra ].findAll { arg -> arg != '' }.join(' '),
                         output_prefix        : null
                     )
                 }
@@ -194,14 +183,14 @@ workflow {
     if ( params.variant_caller == 'gatk' ) {
         // GATK4_HAPLOTYPECALLER in gvcf mode, for each sample and chunk
         haplotypecaller = GATK4_HAPLOTYPECALLER(
-            illumina
+            alignments
                 .combine(bed_intervals)
                 .combine(reference)
                 .combine(params.dict)
                 .map { aln, bed, ref, dict ->
                     record(
                         id                        : aln.meta.id,
-                        meta                      : record(id: aln.meta.id, chunk: bed.chunk),
+                        meta                      : record(id: aln.meta.id, pl: aln.meta.pl, chunk: bed.chunk),
                         input                     : aln.alignment,
                         input_index               : aln.index,
                         intervals                 : bed.chunk_bed,
@@ -217,28 +206,31 @@ workflow {
                     )
                 }
         )
-        // Consolidate the GVCFs of a chunk into one GenomicsDB workspace per chunk. The index files are only staged next
-        // to the GVCFs, so they are grouped on their own to get a bag
-        gvcfs_by_chunk = haplotypecaller
-            .map { out -> tuple(out.meta.chunk, record(sample: out.meta.id, gvcf: out.vcf)) }
+        // Consolidate the GVCFs of a chunk into one GenomicsDB workspace per chunk and platform callset. The index files
+        // are only staged next to the GVCFs, so they are grouped on their own to get a bag
+        gvcfs_by_workspace = haplotypecaller
+            .map { out ->
+                def callset = params.callset_prefix + '.' + out.meta.pl
+                tuple(record(id: callset + '.' + out.meta.chunk, callset: callset, chunk: out.meta.chunk), record(sample: out.meta.id, gvcf: out.vcf))
+            }
             .groupBy()
-            .map { chunk, gvcfs ->
+            .map { workspace, gvcfs ->
                 // sort by sample id so the workspace sample order doesn't depend on channel arrival order
                 def sorted = gvcfs.toSorted { a, b -> a.sample <=> b.sample }
-                record(chunk: chunk, samples: sorted.collect { g -> g.sample }.toList(), gvcfs: sorted.collect { g -> g.gvcf }.toList())
+                record(id: workspace.id, callset: workspace.callset, chunk: workspace.chunk, samples: sorted.collect { g -> g.sample }.toList(), gvcfs: sorted.collect { g -> g.gvcf }.toList())
             }
-        tbis_by_chunk = haplotypecaller
-            .map { out -> tuple(out.meta.chunk, out.tbi) }
+        tbis_by_workspace = haplotypecaller
+            .map { out -> tuple(record(id: params.callset_prefix + '.' + out.meta.pl + '.' + out.meta.chunk), out.tbi) }
             .groupBy()
-            .map { chunk, tbis -> record(chunk: chunk, tbis: tbis) }
+            .map { workspace, tbis -> record(id: workspace.id, tbis: tbis) }
         genomicsdbimport = GATK4_GENOMICSDBIMPORT(
-            gvcfs_by_chunk
-                .join(tbis_by_chunk, by: 'chunk')
+            gvcfs_by_workspace
+                .join(tbis_by_workspace, by: 'id')
                 .join(bed_intervals, by: 'chunk')
                 .map { chunk ->
                     record(
-                        id                         : "${params.callset_prefix}.${chunk.chunk}",
-                        meta                       : record(id: "${params.callset_prefix}.${chunk.chunk}", group_id: params.callset_prefix, samples: chunk.samples, chunk: chunk.chunk, n_chunks: chunk.n_chunks),
+                        id                         : chunk.id,
+                        meta                       : record(id: chunk.id, group_id: chunk.callset, samples: chunk.samples, chunk: chunk.chunk, n_chunks: chunk.n_chunks),
                         vcf                        : chunk.gvcfs,
                         tbi                        : chunk.tbis,
                         interval_file              : chunk.chunk_bed,
@@ -293,7 +285,7 @@ workflow {
     // Concatenate the genome chunks of each group using BCFTOOLS_CONCAT
     vcf_groups = chunk_calls
         .map { call ->
-            // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <callset_prefix>.gatk
+            // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <callset_prefix>.<platform>.gatk
             tuple(record(id: "${call.meta.group_id}.${params.variant_caller}", samples: call.meta.samples), call)
         }
         .groupBy()

@@ -5,11 +5,11 @@ nextflow_pipeline {
     tag "pipelines"
     tag "pipelines/call_variants"
 
-    // Stub mode does not read the files, so empty files are enough. The ONT alignment is left out of the calls
-    // with a warning, as only ILLUMINA alignments are called
+    // Stub mode does not read the files, so empty files are enough. Each platform is its own callset: the
+    // IONTORRENT alignment is called apart from the ILLUMINA ones
     def setupFiles = { launchDir ->
         def rows = []
-        [ [ 'A', 'ILLUMINA' ], [ 'B', 'ILLUMINA' ], [ 'C', 'ONT' ] ].each { sample, platform ->
+        [ [ 'A', 'ILLUMINA' ], [ 'B', 'ILLUMINA' ], [ 'C', 'IONTORRENT' ] ].each { sample, platform ->
             new File("${launchDir}/${sample}.bam").text = ""
             new File("${launchDir}/${sample}.bam.csi").text = ""
             rows << "- {meta: {id: ${sample}, pl: ${platform}}, alignment: ${launchDir}/${sample}.bam, index: ${launchDir}/${sample}.bam.csi}"
@@ -17,7 +17,7 @@ nextflow_pipeline {
         new File("${launchDir}/alignments.yml").text = rows.join("\n") + "\n"
         // The same alignments as a samplesheet, with the columns of the BioVAT samplesheet where they apply
         def csv = [ 'sample,library_id,platform,single_end,alignment,index' ]
-        [ [ 'A', 'ILLUMINA' ], [ 'B', 'ILLUMINA' ], [ 'C', 'ONT' ] ].each { sample, platform ->
+        [ [ 'A', 'ILLUMINA' ], [ 'B', 'ILLUMINA' ], [ 'C', 'IONTORRENT' ] ].each { sample, platform ->
             csv << "${sample},1,${platform},false,${launchDir}/${sample}.bam,${launchDir}/${sample}.bam.csi"
         }
         new File("${launchDir}/alignments.csv").text = csv.join("\n") + "\n"
@@ -180,6 +180,31 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert (workflow.stdout + workflow.stderr).toString().contains("Missing required parameter --samplesheet")
+        }
+    }
+
+    test("--group_samples without the multiallelic caller fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments          = "${launchDir}/alignments.yml"
+                sample_metadata     = "${launchDir}/sample_metadata.csv"
+                group_samples       = true
+                multiallelic_caller = false
+                fasta               = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai                 = "${launchDir}/reference.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("requires the multiallelic caller")
         }
     }
 

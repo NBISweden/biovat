@@ -20,6 +20,7 @@ include { readSampleMetadata         } from './subworkflows/local/utils_nfcore_b
 include { sampleToRow                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { validateSamplesheetRows    } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { rikerActive                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { isLongReadPlatform         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { REFERENCE_UTILS            } from './subworkflows/local/utils_reference/main'
 include { paramsSummaryMap           } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc       } from './subworkflows/nf-core/utils_nfcore_pipeline'
@@ -92,8 +93,11 @@ params {
 
     // BCFtools multi-sample variant calling options
     enable_save_mpileup         : Boolean = false
-    bcftools_mpileup_extra      : String = '--no-BAQ'
-    bcftools_call_extra         : String = '--variants-only'
+    enable_baq                  : Boolean = false
+    enable_multiallelic_caller  : Boolean = true
+    enable_variants_only        : Boolean = true
+    bcftools_mpileup_extra      : String = ''
+    bcftools_call_extra         : String = ''
 
     // MultiQC options
     multiqc_config              : Path?
@@ -190,11 +194,29 @@ workflow {
                 list,
                 sample_metadata_rows,
                 enable,
-                record(has_reference: params.reference != null, variant_caller: params.variant_caller, sample_metadata: params.sample_metadata != null)
+                record(has_reference: params.reference != null, variant_caller: params.variant_caller, multiallelic_caller: params.enable_multiallelic_caller, sample_metadata: params.sample_metadata != null)
             )
         }
-    fastq_rows    = samplesheet.filter { row -> row.meta.input_type == 'fastq' }
-    bam_cram_rows = samplesheet.filter { row -> row.meta.input_type == 'bam_cram' }
+
+    // Long-read rows (ONT, PACBIO) need their own preprocessing and variant callers. Until that path exists they are
+    // branched off ahead of any preprocessing and excluded with a warning
+    long_read_rows  = samplesheet.filter { row -> isLongReadPlatform(row.meta.pl) }
+    short_read_rows = samplesheet.filter { row -> !isLongReadPlatform(row.meta.pl) }
+    long_read_rows
+        .map { row -> "${row.meta.read_group} (${row.meta.pl})" }
+        .collect()
+        .subscribe { skipped ->
+            if ( skipped.size() > 0 ) {
+                log.warn(
+                    "Long-read platforms are not yet supported. " +
+                    "These samplesheet read groups are excluded from the pipeline: ${skipped.toList().toSorted().join(', ')}"
+                )
+            }
+        }
+
+    // Short read path: branch on whether preprocessing or BAM/CRAM ingestion is needed
+    fastq_rows    = short_read_rows.filter { row -> row.meta.input_type == 'fastq' }
+    bam_cram_rows = short_read_rows.filter { row -> row.meta.input_type == 'bam_cram' }
     reads         = fastq_rows.map { row -> record(meta: row.meta, reads: row.files) }
 
     // Reference: the fasta and, if needed, its fai index. Stages take them as separate Value params
@@ -383,6 +405,9 @@ workflow {
                 callset_prefix        : params.callset_prefix,
                 group_samples         : requires.group_samples,
                 save_mpileup          : params.enable_save_mpileup,
+                baq                   : params.enable_baq,
+                multiallelic_caller   : params.enable_multiallelic_caller,
+                variants_only         : params.enable_variants_only,
                 bcftools_mpileup_extra: params.bcftools_mpileup_extra,
                 bcftools_call_extra   : params.bcftools_call_extra,
                 fasta                 : fasta,

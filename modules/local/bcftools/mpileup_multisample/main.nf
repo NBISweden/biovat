@@ -50,11 +50,12 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
     def compress_mpileup       = save_mpileup ? "bcftools view --output-type b --output ${task.ext.prefix}.mpileup.bcf ${task.ext.prefix}.mpileup.u.bcf && rm ${task.ext.prefix}.mpileup.u.bcf" : ""
     def group_samples_cmd      = group_samples ? "--group-samples ${population_file}" : ""
     """
+    # Note: AD tag is a bcftools default, but we add it explicitly as a guard against future version changes
     bcftools \\
         mpileup \\
         --fasta-ref ${fasta} \\
         --output-type u \\
-        --annotate FORMAT/DP \\
+        --annotate FORMAT/DP,FORMAT/AD \\
         ${task.ext.args} \\
         ${bams.join(' ')} \\
         -R ${intervals} \\

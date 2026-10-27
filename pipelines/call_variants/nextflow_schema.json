@@ -14,7 +14,7 @@
                 "samplesheet": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alignments to call, as a CSV with one row per alignment and the columns sample, library_id, platform, single_end, alignment and index. Only ILLUMINA rows are called.",
+                    "description": "Alignments to call, as a CSV with one row per alignment and the columns sample, library_id, platform, single_end, alignment and index. Each platform is called as its own callset.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "alignments": {
@@ -105,16 +105,33 @@
                     "description": "Save the bcftools mpileup output.",
                     "fa_icon": "fas fa-save"
                 },
+                "baq": {
+                    "type": "boolean",
+                    "description": "Compute base alignment quality (BAQ) in bcftools mpileup.",
+                    "fa_icon": "fas fa-check"
+                },
+                "multiallelic_caller": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use the multiallelic caller in bcftools call (--multiallelic-caller). When false, the consensus caller is used. Population grouping (--group_samples) needs the multiallelic caller.",
+                    "fa_icon": "fas fa-check"
+                },
+                "variants_only": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Output variant sites only in bcftools call (--variants-only). When false, every site, including invariant ones, is written.",
+                    "fa_icon": "fas fa-check"
+                },
                 "bcftools_mpileup_extra": {
                     "type": "string",
-                    "default": "--no-BAQ",
-                    "description": "Extra arguments for bcftools mpileup.",
+                    "default": "",
+                    "description": "Additional arguments for bcftools mpileup.",
                     "fa_icon": "fas fa-terminal"
                 },
                 "bcftools_call_extra": {
                     "type": "string",
-                    "default": "--variants-only",
-                    "description": "Extra arguments for bcftools call.",
+                    "default": "",
+                    "description": "Additional arguments for bcftools call.",
                     "fa_icon": "fas fa-terminal"
                 }
             }

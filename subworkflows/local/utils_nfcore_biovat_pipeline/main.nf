@@ -232,11 +232,15 @@ def validateSampleMetadata(rows, metadata_rows, enable, options) {
         log.warn("--sample_metadata is only used by --variant_caller bcftools_multisample, so it is ignored with --variant_caller ${options.variant_caller}")
         return
     }
+    // bcftools call only supports --group-samples with the multiallelic caller (-m)
+    if ( !options.multiallelic_caller ) {
+        validationError("Population grouping with '--sample_metadata' requires the multiallelic caller. Set '--enable_multiallelic_caller true' or remove '--sample_metadata'.")
+    }
     def samplesheet_samples = rows.collect { row -> row.meta.id }.unique()
     def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
     def extra_samples       = metadata_supplied - samplesheet_samples
     if ( extra_samples ) {
-        log.warn("--sample_metadata lists sample(s) not in --input, which will be ignored: ${extra_samples.join(', ')}")
+        log.warn("--sample_metadata lists sample(s) with no short-read rows in --input, which will be ignored: ${extra_samples.join(', ')}")
     }
     def missing_metadata    = samplesheet_samples - metadata_rows.findAll { meta -> meta.population }.collect { meta -> meta.id }
     if ( missing_metadata ) {
@@ -269,14 +273,10 @@ def validateAlignmentConsumers(rows, enable) {
     }
 }
 
-// Placeholder until other platforms are supported: variant calling only calls ILLUMINA alignments (others are
-// excluded with a warning), so a samplesheet with no ILLUMINA rows would otherwise finish without a VCF
-def validateVariantCallingPlatforms(rows, enable) {
-    if ( !enable.variant_calling || rows.any { row -> row.meta.pl == 'ILLUMINA' } ) {
-        return
-    }
-    def platforms = rows.collect { row -> row.meta.pl }.unique().sort()
-    validationError("Variant calling (--enable_variant_calling) currently supports only ILLUMINA alignments, but no samplesheet rows have platform ILLUMINA (found: ${platforms.join(', ')}). Disable variant calling or provide ILLUMINA data.")
+// Long-read platforms need their own preprocessing (QC, trimming, aligner, no duplicate marking) and variant callers.
+// Until that path exists, BIOVAT branches their rows off before READ_QC and excludes them with a warning
+def isLongReadPlatform(platform) {
+    platform in [ 'ONT', 'PACBIO' ]
 }
 
 // Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
@@ -311,16 +311,19 @@ def validateReferenceRequirements(rows, has_reference, enable) {
 }
 
 // Check the rows of the samplesheet (a list of records with meta and files). options has has_reference,
-// variant_caller and sample_metadata (whether a sample metadata sheet was given)
+// variant_caller, multiallelic_caller and sample_metadata (whether a sample metadata sheet was given)
 def validateSamplesheetRows(rows, metadata_rows, enable, options) {
+    if ( rows.isEmpty() ) {
+        validationError("The samplesheet has no rows. Provide at least one sample.")
+    }
     validateMergeGroups(rows)
-    validateSampleMetadata(rows, metadata_rows, enable, options)
+    // Long-read rows are temporarily excluded in BIOVAT, so stage-level checks currently consider only short-read rows
+    def short_read_rows = rows.findAll { row -> !isLongReadPlatform(row.meta.pl) }
+    validateSampleMetadata(short_read_rows, metadata_rows, enable, options)
     // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
-    validateAlignmentConsumers(rows, enable)
-    // Variant calling is currently ILLUMINA-only; reject a run where it would call nothing
-    validateVariantCallingPlatforms(rows, enable)
+    validateAlignmentConsumers(short_read_rows, enable)
     // Report every reason --reference is needed (params and samplesheet rows) in one error
-    validateReferenceRequirements(rows, options.has_reference, enable)
+    validateReferenceRequirements(short_read_rows, options.has_reference, enable)
     return rows
 }
 
