@@ -336,7 +336,7 @@ Param defaults are in the `params` block of `main.nf`. `nextflow.config` keeps o
 
 ## Including BioVAT in another pipeline
 
-`examples/chaining` includes `main.nf` and gives its sample-level alignments to a downstream process.
+`examples/chaining` includes `main.nf` and gives its alignments to a downstream process.
 
 ```groovy
 include { workflow as BIOVAT } from '../../main.nf'
@@ -356,7 +356,7 @@ workflow {
         )
     )
     flagstat = SAMTOOLS_FLAGSTAT(
-        biovat.outputs_sample.map { aln -> record(meta: aln.meta, bam: aln.alignment, bai: aln.index, output_prefix: "downstream_${aln.meta.id}") }
+        biovat.outputs_alignments.map { aln -> record(meta: aln.meta, bam: aln.alignment, bai: aln.index, output_prefix: "downstream_${aln.meta.id}") }
     )
     ...
 }
@@ -377,7 +377,7 @@ What the including pipeline has to provide:
 - Container engine, resource limits and `outputDir`. The `nextflow.config` of an included pipeline is not loaded.
 - Process selectors with the plain process name (`'SAMTOOLS_SORT'`) still match. The full name is `ALIGN_READS:...`, with the alias of the include as the prefix, and it is only needed to give one stage different behaviour when several stages use the same module (for example `ALIGN_READS:ALIGNMENT_QC:RIKER_MULTI`).
 
-The outputs of BioVAT are the names in the `publish:` section of `main.nf` (`outputs_sample`, `outputs_multiqc`, and so on). The caller decides which of them it publishes.
+The outputs of BioVAT are the names in the `publish:` section of `main.nf` (`outputs_alignments`, `outputs_multiqc`, and so on). The caller decides which of them it publishes. Most keep the layout of the published directory, so `outputs_library` and `outputs_sample` hold only the alignments that were merged. `outputs_alignments` has the alignments of every sample after the enabled merge and deduplication stages, and is not published by BioVAT.
 
 ## Help and the parameter schemas
 

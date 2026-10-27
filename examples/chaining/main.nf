@@ -4,7 +4,7 @@
     Example: chaining BioVAT with a downstream pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     BioVAT is included as a pipeline. Its outputs are channels of records that the caller
-    can pass straight to its own processes. Here the sample-level alignments are given to
+    can pass straight to its own processes. Here the alignments of every sample are given to
     SAMTOOLS_FLAGSTAT, which stands in for any downstream pipeline.
 
     Run from this directory, so that only this example's nextflow.config is loaded:
@@ -49,16 +49,17 @@ workflow {
         )
     )
 
-    // Downstream step, consuming the merged sample-level alignments of BioVAT
+    // Downstream step, consuming the alignments of every sample. outputs_sample would leave out the samples that
+    // had nothing to merge
     flagstat = SAMTOOLS_FLAGSTAT(
-        biovat.outputs_sample.map { aln ->
+        biovat.outputs_alignments.map { aln ->
             record(id: aln.meta.id, meta: aln.meta, bam: aln.alignment, bai: aln.index, output_prefix: "downstream_${aln.meta.id}_${aln.meta.pl}")
         }
     )
 
     publish:
     biovat_multiqc   = biovat.outputs_multiqc
-    biovat_alignment = biovat.outputs_sample
+    biovat_alignment = biovat.outputs_alignments
     downstream_stats = flagstat
 
 }

@@ -333,6 +333,7 @@ workflow {
 
     // Deduplicate library alignments
     mark_duplicates_alignments = channel.empty()
+    mark_duplicates_metrics    = channel.empty()
     mark_duplicates_flagstat   = channel.empty()
     mark_duplicates_riker      = channel.empty()
     mark_duplicates_qualimap   = channel.empty()
@@ -352,7 +353,8 @@ workflow {
             )
         )
         alignments_to_process      = markdup.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
-        mark_duplicates_alignments = markdup.alignments.mix(markdup.metrics)
+        mark_duplicates_alignments = markdup.alignments
+        mark_duplicates_metrics    = markdup.metrics
         mark_duplicates_flagstat   = markdup.flagstat
         mark_duplicates_riker      = markdup.riker
         mark_duplicates_qualimap   = markdup.qualimap
@@ -456,6 +458,7 @@ workflow {
     outputs_library_riker            = library_riker
     outputs_library_qualimap         = library_qualimap
     outputs_mark_duplicates          = mark_duplicates_alignments
+    outputs_mark_duplicates_metrics  = mark_duplicates_metrics
     outputs_mark_duplicates_flagstat = mark_duplicates_flagstat
     outputs_mark_duplicates_riker    = mark_duplicates_riker
     outputs_mark_duplicates_qualimap = mark_duplicates_qualimap
@@ -463,6 +466,7 @@ workflow {
     outputs_sample_flagstat          = sample_flagstat
     outputs_sample_riker             = sample_riker
     outputs_sample_qualimap          = sample_qualimap
+    outputs_alignments               = alignments_to_process
     outputs_genome_chunks                         = genome_chunks
     outputs_variant_calls                         = variant_calls
     outputs_mpileup                               = mpileup
@@ -530,6 +534,9 @@ output {
     outputs_mark_duplicates: Channel<Record> {
         path '05_duplicate_processed'
     }
+    outputs_mark_duplicates_metrics: Channel<Record> {
+        path '05_duplicate_processed'
+    }
     outputs_mark_duplicates_flagstat: Channel<Record> {
         path '05_duplicate_processed/qc/samtools_flagstat'
     }
@@ -555,6 +562,13 @@ output {
     }
     outputs_sample_qualimap: Channel<Record> {
         path '06_merged_samples/qc/qualimap'
+    }
+    // All alignments after the enabled merge and deduplication stages, for a pipeline that includes BioVAT. A sample
+    // with nothing to merge passes through unchanged, which outputs_library and outputs_sample leave out. Their files
+    // are published above, so this output is not published
+    outputs_alignments: Channel<Record> {
+        path 'alignments'
+        enabled false
     }
     // VARIANT_CALLING
     outputs_genome_chunks: Channel<Record> {
