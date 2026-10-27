@@ -1,7 +1,8 @@
 nextflow.enable.types = true
 
 //
-// Subworkflow that prints the help message of a stage pipeline and exits.
+// Shared pieces of the stage pipelines: the --help message and the input check.
+// STAGE_HELP prints the help message of a stage pipeline and exits.
 // Stage pipelines call it from their entry workflow, so --help works when a stage is run on its own.
 // When the stage is included by another pipeline, help is false and nothing happens.
 //
@@ -28,5 +29,17 @@ workflow STAGE_HELP {
         )
         log.info message
         exit(0, '')
+    }
+}
+
+//
+// Check that a stage got its input from exactly one of the samplesheet or the records param (named by given_name)
+//
+def checkStageInput(samplesheet, given, given_name: String) {
+    if ( samplesheet && given ) {
+        error "Provide either --samplesheet or --${given_name}, not both"
+    }
+    if ( !samplesheet && !given ) {
+        error "Missing required parameter --samplesheet"
     }
 }

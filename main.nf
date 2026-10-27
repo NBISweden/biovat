@@ -33,7 +33,6 @@ include { workflow as MERGE_TO_LIBRARY   } from './pipelines/merge'
 include { workflow as MARK_DUPLICATES    } from './pipelines/mark_duplicates'
 include { workflow as MERGE_TO_SAMPLE    } from './pipelines/merge'
 include { workflow as CALL_VARIANTS      } from './pipelines/call_variants'
-include { workflow as VARIANT_QC         } from './pipelines/variant_qc'
 include { workflow as MULTIQC            } from './pipelines/multiqc'
 
 // A row of the samplesheet
@@ -388,29 +387,19 @@ workflow {
                 bcftools_call_extra   : params.bcftools_call_extra,
                 fasta                 : fasta,
                 fai                   : fai,
-                dict                  : dict
+                dict                  : dict,
+                variant_qc            : enable.variant_qc
             )
         )
         genome_chunks = channel.empty().mix(call_variants.genome_chunks)
         variant_calls = call_variants.variant_calls
         mpileup       = call_variants.mpileup
         multiqc_files = multiqc_files.mix(call_variants.multiqc_files)
-
-        // Variant QC
-        if ( enable.variant_qc ) {
-            variant_qc = VARIANT_QC(
-                record(
-                    variant_calls: call_variants.variant_calls.map { c -> record(meta: c.meta, vcf: c.vcf, index: c.index) },
-                    fasta        : fasta
-                )
-            )
-            bcftools_stats          = variant_qc.bcftools_stats
-            vcftools_tstv_counts    = variant_qc.vcftools_tstv_counts
-            vcftools_tstv_qual      = variant_qc.vcftools_tstv_qual
-            vcftools_filter_summary = variant_qc.vcftools_filter_summary
-            vcftools_relatedness2   = variant_qc.vcftools_relatedness2
-            multiqc_files           = multiqc_files.mix(variant_qc.multiqc_files)
-        }
+        bcftools_stats          = call_variants.bcftools_stats
+        vcftools_tstv_counts    = call_variants.vcftools_tstv_counts
+        vcftools_tstv_qual      = call_variants.vcftools_tstv_qual
+        vcftools_filter_summary = call_variants.vcftools_filter_summary
+        vcftools_relatedness2   = call_variants.vcftools_relatedness2
     }
 
     // MultiQC and software versions

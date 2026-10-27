@@ -11,8 +11,10 @@ include { BCFTOOLS_CONCAT              } from '../../modules/nf-core/bcftools/co
 include { GATK4_HAPLOTYPECALLER        } from '../../modules/nf-core/gatk4/haplotypecaller/main'
 include { GATK4_GENOMICSDBIMPORT       } from '../../modules/nf-core/gatk4/genomicsdbimport/main'
 include { GATK4_GENOTYPEGVCFS          } from '../../modules/nf-core/gatk4/genotypegvcfs/main'
+include { workflow as VARIANT_QC       } from '../variant_qc'
 include { REFERENCE_VALUE              } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
 record AlignmentSample {
@@ -47,6 +49,7 @@ params {
     save_mpileup          : Boolean = false         // keep the bcftools mpileup output (bcftools_multisample only)
     bcftools_mpileup_extra: String = '--no-BAQ'     // extra arguments for bcftools mpileup
     bcftools_call_extra   : String = '--variants-only' // extra arguments for bcftools call
+    variant_qc            : Boolean = true          // run quality checks on the joint callset
     fasta                 : Value<Path>?            // reference fasta, required
     fai                   : Value<Path>?            // fai index of the reference fasta, required
     dict                  : Value<Path>?            // sequence dictionary of the reference fasta, required for gatk
@@ -58,12 +61,7 @@ workflow {
 
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/call_variants --samplesheet alignments.csv --fasta reference.fasta --fai reference.fasta.fai')
-    if ( params.samplesheet && params.alignments ) {
-        error "Provide either --samplesheet or --alignments, not both"
-    }
-    if ( !params.samplesheet && !params.alignments ) {
-        error "Missing required parameter --samplesheet"
-    }
+    checkStageInput(params.samplesheet, params.alignments, 'alignments')
     if ( !params.fasta || !params.fai ) {
         error "Variant calling requires --fasta and --fai"
     }
@@ -332,19 +330,51 @@ workflow {
         .map { out -> record(meta: out.meta, vcf: out.vcf, index: out.index) }
         .mix(skipped)
 
+    // CALL_VARIANTS:VARIANT_QC
+    bcftools_stats          = channel.empty()
+    vcftools_tstv_counts    = channel.empty()
+    vcftools_tstv_qual      = channel.empty()
+    vcftools_filter_summary = channel.empty()
+    vcftools_relatedness2   = channel.empty()
+    qc_multiqc_files        = channel.empty()
+    if ( params.variant_qc ) {
+        variant_qc = VARIANT_QC(
+            record(
+                variant_calls: variant_calls,
+                fasta        : params.fasta
+            )
+        )
+        bcftools_stats          = variant_qc.bcftools_stats
+        vcftools_tstv_counts    = variant_qc.vcftools_tstv_counts
+        vcftools_tstv_qual      = variant_qc.vcftools_tstv_qual
+        vcftools_filter_summary = variant_qc.vcftools_filter_summary
+        vcftools_relatedness2   = variant_qc.vcftools_relatedness2
+        qc_multiqc_files        = variant_qc.multiqc_files
+    }
+
     publish:
-    genome_chunks = splitgenome.map { out -> record(meta: out.meta, chunks: out.chunks, excluded: out.excluded) } // record(meta, chunks, excluded)
-    variant_calls = variant_calls                                                                                  // record(meta, vcf, index)
-    mpileup       = mpileup                                                                                        // record(meta, mpileup)
-    multiqc_files = splitgenome.map { out -> out.summary }
+    genome_chunks           = splitgenome.map { out -> record(meta: out.meta, chunks: out.chunks, excluded: out.excluded) } // record(meta, chunks, excluded)
+    variant_calls           = variant_calls                                                                                  // record(meta, vcf, index)
+    mpileup                 = mpileup                                                                                        // record(meta, mpileup)
+    bcftools_stats          = bcftools_stats
+    vcftools_tstv_counts    = vcftools_tstv_counts
+    vcftools_tstv_qual      = vcftools_tstv_qual
+    vcftools_filter_summary = vcftools_filter_summary
+    vcftools_relatedness2   = vcftools_relatedness2
+    multiqc_files           = splitgenome.map { out -> out.summary }.mix(qc_multiqc_files)
 
 }
 
 output {
-    genome_chunks: Value<Record> { path 'genome_chunk_bed_files' }
-    variant_calls: Channel<Record> { path 'variant_calls' }
-    mpileup      : Channel<Record> { path 'mpileup' }
-    multiqc_files: Value<Path> { path 'multiqc_files' }
+    genome_chunks          : Value<Record> { path 'genome_chunk_bed_files' }
+    variant_calls          : Channel<Record> { path 'variant_calls' }
+    mpileup                : Channel<Record> { path 'mpileup' }
+    bcftools_stats         : Channel<Record> { path 'bcftools_stats' }
+    vcftools_tstv_counts   : Channel<Record> { path 'vcftools' }
+    vcftools_tstv_qual     : Channel<Record> { path 'vcftools' }
+    vcftools_filter_summary: Channel<Record> { path 'vcftools' }
+    vcftools_relatedness2  : Channel<Record> { path 'vcftools' }
+    multiqc_files          : Channel<Path> { path 'multiqc_files' }
 }
 
 // Warn when the contigs left out by min_length cover more than 5% of the reference

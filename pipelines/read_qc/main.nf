@@ -4,9 +4,10 @@ nextflow.enable.types = true
 // Read QC pipeline
 //
 
-include { FASTQC     } from '../../modules/nf-core/fastqc/main'
-include { STAGE_HELP } from '../../subworkflows/local/utils_stage_help/main'
-include { sampleToRow } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { FASTQC          } from '../../modules/nf-core/fastqc/main'
+include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
+include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
 record Sample {
@@ -37,12 +38,7 @@ workflow {
 
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/read_qc --samplesheet samplesheet.csv')
-    if ( params.samplesheet && params.reads ) {
-        error "Provide either --samplesheet or --reads, not both"
-    }
-    if ( !params.samplesheet && !params.reads ) {
-        error "Missing required parameter --samplesheet"
-    }
+    checkStageInput(params.samplesheet, params.reads, 'reads')
     reads = channel.empty()
     if ( params.samplesheet ) {
         reads = params.samplesheet

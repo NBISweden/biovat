@@ -31,20 +31,20 @@ Requires **Nextflow >= 26.10.0** (`pixi.toml` is updated). Composition is an exp
 
 ## What changed at a glance
 
-| Before                                                                                | After                                                                                                                                                                                                                                              |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `main.nf` runs `NBISWEDEN_BIOVAT`, which calls `workflows/biovat.nf`                  | `main.nf` is BioVAT: typed params with defaults, stage gates, the stage pipelines, the `output` block. It can be run or included                                                                                                                   |
-| `subworkflows/local/{read_qc,trim_reads,align_reads,merge,mark_duplicates,utils_bam}` | `pipelines/{read_qc,trim_reads,align_reads,merge,mark_duplicates,ingest_bam_or_cram}`, each runnable on its own                                                                                                                                    |
-| MultiQC and versions inside `BIOVAT`                                                  | `pipelines/multiqc`                                                                                                                                                                                                                                |
-| Tuples such as `[ meta, bam, bai ]`                                                   | Records such as `record(meta: ..., alignment: ..., index: ...)`                                                                                                                                                                                    |
-| `ch_versions` and `emit: versions`                                                    | `topic:` versions record                                                                                                                                                                                                                           |
-| `bin/split_genome_chunks.py`                                                          | `modules/local/splitgenome/bin/split_genome_chunks.py`, a plain Python script with argument parsing that the process stages into the task directory with `stage:`. It works for any pipeline that includes the module, and the root `bin/` is gone |
-| `conf/modules.config` `ext.args` / `ext.prefix` selectors                             | `<tool>_args` and `output_prefix` fields set by the stage pipelines                                                                                                                                                                                |
-| `meta` is a Map                                                                       | `meta` is a Record                                                                                                                                                                                                                                 |
-| `enable` and `requires` are Maps; stages get a map of gates                           | `enable` and `requires` are Records in `main.nf`. Each stage has its own Boolean params                                                                                                                                                            |
-| Param defaults in `nextflow.config`, types in `main.nf`                               | Defaults and types in the `params` block of `main.nf` and of each stage                                                                                                                                                                            |
+| Before                                                                                                                      | After                                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main.nf` runs `NBISWEDEN_BIOVAT`, which calls `workflows/biovat.nf`                                                        | `main.nf` is BioVAT: typed params with defaults, stage gates, the stage pipelines, the `output` block. It can be run or included                                                                                                                   |
+| `subworkflows/local/{read_qc,trim_reads,align_reads,alignment_qc,merge,mark_duplicates,utils_bam,call_variants,variant_qc}` | `pipelines/{read_qc,trim_reads,align_reads,alignment_qc,merge,mark_duplicates,ingest_bam_or_cram,call_variants,variant_qc}`, each runnable on its own                                                                                              |
+| MultiQC and versions inside `BIOVAT`                                                                                        | `pipelines/multiqc`                                                                                                                                                                                                                                |
+| Tuples such as `[ meta, bam, bai ]`                                                                                         | Records such as `record(meta: ..., alignment: ..., index: ...)`                                                                                                                                                                                    |
+| `ch_versions` and `emit: versions`                                                                                          | `topic:` versions record                                                                                                                                                                                                                           |
+| `bin/split_genome_chunks.py`                                                                                                | `modules/local/splitgenome/bin/split_genome_chunks.py`, a plain Python script with argument parsing that the process stages into the task directory with `stage:`. It works for any pipeline that includes the module, and the root `bin/` is gone |
+| `conf/modules.config` `ext.args` / `ext.prefix` selectors                                                                   | `<tool>_args` and `output_prefix` fields set by the stage pipelines                                                                                                                                                                                |
+| `meta` is a Map                                                                                                             | `meta` is a Record                                                                                                                                                                                                                                 |
+| `enable` and `requires` are Maps; stages get a map of gates                                                                 | `enable` and `requires` are Records in `main.nf`. Each stage has its own Boolean params                                                                                                                                                            |
+| Param defaults in `nextflow.config`, types in `main.nf`                                                                     | Defaults and types in the `params` block of `main.nf` and of each stage                                                                                                                                                                            |
 
-`subworkflows/local/alignment_qc` and `subworkflows/local/utils_reference` stay as shared typed subworkflows. `subworkflows/local/utils_stage_help` serves `--help` for the stages. `subworkflows/local/utils_nfcore_biovat_pipeline` keeps the initialisation and the samplesheet checks.
+`subworkflows/local/utils_reference` stays a shared typed subworkflow. `subworkflows/local/utils_stage_help` serves `--help` and checks the input params of the stages. `subworkflows/local/utils_nfcore_biovat_pipeline` keeps the initialisation and the samplesheet checks.
 
 ## Processes and modules
 
@@ -154,15 +154,15 @@ Notes for each module:
 
 ## Data model between stages
 
-| Name                      | Shape                                                                                                        |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Samplesheet row           | `record(meta, files)`. `files` are the reads, or `[ bam ]`                                                   |
-| Reads                     | `record(meta, reads)` with `reads: List<Path>`                                                               |
-| BAM/CRAM input            | `record(meta, bam_cram)`                                                                                     |
-| Alignment                 | `record(meta, alignment, index)`                                                                             |
-| Reference                 | The `fasta` and `fai` params of the stages, each a `Value<Path>?`. `fai` is only needed for Riker and CRAM   |
-| `enable` (in `main.nf`)   | `record(raw_read_qc, trim, align, align_qc, mark_duplicates, variant_calling, cram_format, riker, qualimap)` |
-| `requires` (in `main.nf`) | `record(merge_to_library, merge_to_sample, fai)`                                                             |
+| Name                      | Shape                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Samplesheet row           | `record(meta, files)`. `files` are the reads, or `[ bam ]`                                                               |
+| Reads                     | `record(meta, reads)` with `reads: List<Path>`                                                                           |
+| BAM/CRAM input            | `record(meta, bam_cram)`                                                                                                 |
+| Alignment                 | `record(meta, alignment, index)`                                                                                         |
+| Reference                 | The `fasta` and `fai` params of the stages, each a `Value<Path>?`. `fai` is only needed for Riker and CRAM               |
+| `enable` (in `main.nf`)   | `record(raw_read_qc, trim, align, align_qc, mark_duplicates, variant_calling, variant_qc, cram_format, riker, qualimap)` |
+| `requires` (in `main.nf`) | `record(merge_to_library, merge_to_sample, fai)`                                                                         |
 
 `meta` is a record. Its keys are `id`, `library`, `flowcell`, `lane`, `pl`, `single_end`, `read_group`, `platform_unit` and `input_type`. The merge stage builds a new `meta` with only `id`, `library`, `pl` and `single_end`. At sample level `library` is `null`.
 
@@ -177,6 +177,7 @@ nextflow.enable.types = true
 
 include { FASTQC     } from '../../modules/nf-core/fastqc/main'
 include { STAGE_HELP } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
 
 record Reads {
     meta : Record     // sample information, requires read_group
@@ -194,12 +195,7 @@ workflow {
 
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/read_qc --samplesheet samplesheet.csv')
-    if ( params.samplesheet && params.reads ) {
-        error "Provide either --samplesheet or --reads, not both"
-    }
-    if ( !params.samplesheet && !params.reads ) {
-        error "Missing required parameter --samplesheet"
-    }
+    checkStageInput(params.samplesheet, params.reads, 'reads')
     reads = params.reads ?: params.samplesheet
         .filter { sample -> sample.fastq_1 != null }
         .map { sample -> def row = sampleToRow(sample); record(meta: record(row[0]), reads: row[1]) }
@@ -220,28 +216,31 @@ output {
 }
 ```
 
-| Stage                | Data param                      | Other params (defaults)                                                                                                                                                                                                     | Required `meta` keys                                 |
-| -------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `read_qc`            | `reads`                         |                                                                                                                                                                                                                             | `read_group`                                         |
-| `trim_reads`         | `reads`                         | `adapter_fasta`, `save_trimmed_fail` (false), `save_merged` (false)                                                                                                                                                         | `read_group`                                         |
-| `align_reads`        | `reads`                         | `aligner` (bwa-mem3), `fasta`, `fai`, `cram_format`, `align_qc`, `riker`, `qualimap`                                                                                                                                        | `id`, `library`, `pl`, `platform_unit`, `read_group` |
-| `ingest_bam_or_cram` | `bam_cram`                      | `fasta`, `fai`, `cram_format`, `align_qc`, `riker`, `qualimap`                                                                                                                                                              | `id`, `library`, `pl`, `platform_unit`, `read_group` |
-| `merge`              | `alignments`                    | `level` (library), `fasta`, `fai`, `cram_format`, `align_qc`, `riker`, `qualimap`                                                                                                                                           | `id`, `pl`, `single_end`, `library` (library level)  |
-| `mark_duplicates`    | `alignments`                    | `duplicate_marker` (samtools), `remove_duplicates`, `optical_distance` (100), `fasta`, `fai`, `cram_format`, `align_qc`, `riker`, `qualimap`                                                                                | `id`, `library`, `pl`                                |
-| `call_variants`      | `alignments`, `sample_metadata` | `variant_caller` (bcftools_multisample), `chunk_size`, `min_length` (1000), `callset_prefix` (all_samples), `group_samples`, `save_mpileup`, `bcftools_mpileup_extra`, `bcftools_call_extra`, `fasta`, `fai`, `dict` (GATK) | `id`, `pl`                                           |
-| `variant_qc`         | `variant_calls`                 | `fasta`                                                                                                                                                                                                                     |                                                      |
-| `multiqc`            | `multiqc_files`                 | `multiqc_config`, `multiqc_logo`, `multiqc_title`, `multiqc_methods_description`, `workflow_summary`                                                                                                                        |                                                      |
+A step is a stage when it can run on an input of its own, a CSV or a records channel. A step that only serves other steps is a shared subworkflow (`utils_reference`, `utils_stage_help`). Quality checks follow the same rule: `read_qc`, `alignment_qc` and `variant_qc` are stages. The alignment stages include `alignment_qc` under their own alias with their `level` (`input`, `readgroup`, `library`, `markdup` or `sample`), and `call_variants` includes `variant_qc` under its own alias. `variant_qc` takes an optional `level` that prefixes its output files, so that calls from different stages do not collide. `call_variants` leaves it unset, which keeps the file names of `dev`.
+
+| Stage                | Data param                      | Other params (defaults)                                                                                                                                                                                                                   | Required `meta` keys                                                                      |
+| -------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `read_qc`            | `reads`                         |                                                                                                                                                                                                                                           | `read_group`                                                                              |
+| `trim_reads`         | `reads`                         | `adapter_fasta`, `save_trimmed_fail` (false), `save_merged` (false)                                                                                                                                                                       | `read_group`                                                                              |
+| `align_reads`        | `reads`                         | `aligner` (bwa-mem3), `fasta`, `fai`, `cram_format`, `align_qc`, `riker`, `qualimap`                                                                                                                                                      | `id`, `library`, `pl`, `platform_unit`, `read_group`                                      |
+| `ingest_bam_or_cram` | `bam_cram`                      | `fasta`, `fai`, `cram_format`, `align_qc`, `riker`, `qualimap`                                                                                                                                                                            | `id`, `library`, `pl`, `platform_unit`, `read_group`                                      |
+| `merge`              | `alignments`                    | `level` (library), `fasta`, `fai`, `cram_format`, `align_qc`, `riker`, `qualimap`                                                                                                                                                         | `id`, `pl`, `single_end`, `library` (library level)                                       |
+| `mark_duplicates`    | `alignments`                    | `duplicate_marker` (samtools), `remove_duplicates`, `optical_distance` (100), `fasta`, `fai`, `cram_format`, `align_qc`, `riker`, `qualimap`                                                                                              | `id`, `library`, `pl`                                                                     |
+| `call_variants`      | `alignments`, `sample_metadata` | `variant_caller` (bcftools_multisample), `chunk_size`, `min_length` (1000), `callset_prefix` (all_samples), `group_samples`, `save_mpileup`, `bcftools_mpileup_extra`, `bcftools_call_extra`, `fasta`, `fai`, `dict` (GATK), `variant_qc` | `id`, `pl`                                                                                |
+| `variant_qc`         | `variant_calls`                 | `fasta`, `level`                                                                                                                                                                                                                          |                                                                                           |
+| `alignment_qc`       | `alignments`                    | `level` (required), `fasta`, `fai`, `riker` (true), `qualimap` (false)                                                                                                                                                                    | `id`, `pl`, `single_end`; `read_group` (input, readgroup) or `library` (library, markdup) |
+| `multiqc`            | `multiqc_files`                 | `multiqc_config`, `multiqc_logo`, `multiqc_title`, `multiqc_methods_description`, `workflow_summary`                                                                                                                                      |                                                                                           |
 
 ### Running a stage on its own
 
 Each stage takes the flat `samplesheet.csv` with `--samplesheet`, so a stage can be run with the same file as BioVAT. `samplesheet` is a `Channel` of a named record type, which Nextflow loads from the CSV (the type has to be named and its files `Path` fields, otherwise the paths stay strings and the process fails with "Not a valid path value"). Empty cells are `null`, and the stage keeps the rows that apply to it and builds `meta` with `sampleToRow()`, the same function BioVAT uses.
 
-| Stage                                       | `--samplesheet` CSV columns                                                                           | Rows used           |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------- |
-| `read_qc`, `trim_reads`, `align_reads`      | the BioVAT samplesheet (`sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end`) | rows with `fastq_1` |
-| `ingest_bam_or_cram`                        | the BioVAT samplesheet                                                                                | rows with `bam`     |
-| `merge`, `mark_duplicates`, `call_variants` | `sample,library_id,platform,single_end,alignment,index`                                               | all rows            |
-| `variant_qc`                                | `id,vcf,index`                                                                                        | all rows            |
+| Stage                                                       | `--samplesheet` CSV columns                                                                           | Rows used           |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------- |
+| `read_qc`, `trim_reads`, `align_reads`                      | the BioVAT samplesheet (`sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end`) | rows with `fastq_1` |
+| `ingest_bam_or_cram`                                        | the BioVAT samplesheet                                                                                | rows with `bam`     |
+| `merge`, `mark_duplicates`, `call_variants`, `alignment_qc` | `sample,library_id,platform,single_end,alignment,index`                                               | all rows            |
+| `variant_qc`                                                | `id,vcf,index`                                                                                        | all rows            |
 
 `--sample_metadata` for `call_variants` is a CSV with the columns `sample,population`. The nested route (`--reads`, `--bam_cram`, `--alignments`, `--variant_calls`, a YAML or JSON file with `meta`) is kept for calling pipelines; give either `--samplesheet` or that param, not both:
 
@@ -289,10 +288,10 @@ A stage's own `nextflow.config` includes `conf/stage.config` (container profiles
 | `--enable_raw_read_qc`     | `read_qc`                                      |
 | `--enable_trim`            | `trim_reads`                                   |
 | `--enable_align`           | `align_reads`                                  |
-| `--enable_align_qc`        | alignment QC inside the alignment stages       |
+| `--enable_align_qc`        | `alignment_qc`, inside the alignment stages    |
 | `--enable_mark_duplicates` | `merge` to library level and `mark_duplicates` |
 | `--enable_variant_calling` | `merge` to sample level and `call_variants`    |
-| `--enable_variant_qc`      | `variant_qc`, on the calls of `call_variants`  |
+| `--enable_variant_qc`      | `variant_qc`, inside `call_variants`           |
 
 `ingest_bam_or_cram` always runs, on the BAM/CRAM rows of the samplesheet. MultiQC always runs.
 
@@ -398,6 +397,7 @@ nf-core modules do not have typed records upstream, so the converted modules are
 Outputs are the same as before for the test profile. The differences are:
 
 - **fastp `discard_trimmed_pass`.** The old code was `discard_trimmed_pass ?: "--out1 ..."`, which passed `true` to fastp when the option was set. It now adds `--out1` only when passing reads are kept.
+- **Alignment QC** is the `alignment_qc` stage. `align_reads`, `ingest_bam_or_cram`, `merge` and `mark_duplicates` include it under their own alias with their level, so each stage still runs QC when it runs on its own, and the QC processes keep the stage prefix (`MERGE_TO_LIBRARY:ALIGNMENT_QC:RIKER_MULTI`).
 - **Stub runs.** `samtools sormadup` now creates the `.csi`/`.crai` index in stub mode. Before, the stub run silently dropped these alignments in a `join` and skipped the QC after mark duplicates and the merge to sample level. Stub runs now execute more tasks.
 - **Required indexes.** An alignment without an index now fails the process with "input cannot be null" instead of being dropped by `join`.
 - **`samtools sort` and `samtools merge`** take their BAM lists as `List<Path>`. A single file has to be wrapped as `[ file ]`.
@@ -439,7 +439,7 @@ Outputs are the same as before for the test profile. The differences are:
 
 **A stage.**
 
-1. Create `pipelines/<stage>/main.nf` with `nextflow.enable.types = true`, a named record type and a nullable `Channel` param for the data, Boolean and String params with defaults for the options, `help` and `help_full`, an entry `workflow` with `STAGE_HELP`, the missing-param check, `main:` and `publish:`, and an `output` block.
+1. Create `pipelines/<stage>/main.nf` with `nextflow.enable.types = true`, a named record type and a nullable `Channel` param for the data, Boolean and String params with defaults for the options, `help` and `help_full`, an entry `workflow` with `STAGE_HELP`, `checkStageInput`, `main:` and `publish:`, and an `output` block.
 2. Add `nextflow.config` (include `conf/stage.config`), a hand-written `nextflow_schema.json`, and `tests/main.nf.test` with a stub test.
 3. Pass tool arguments and prefixes to the processes in record fields.
 4. Add the include and the call to `main.nf`, behind a gate. Give a second call of the same stage its own alias.

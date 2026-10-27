@@ -78,6 +78,12 @@
                     "default": 1000,
                     "description": "Minimum contig/scaffold length (bp) to be kept for variant calling. Set to 0 to keep all regions.",
                     "fa_icon": "fas fa-ruler"
+                },
+                "variant_qc": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run quality checks (bcftools stats and vcftools) on the joint callset.",
+                    "fa_icon": "fas fa-check"
                 }
             }
         },

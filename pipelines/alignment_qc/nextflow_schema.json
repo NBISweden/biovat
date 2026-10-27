@@ -1,0 +1,100 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/NBISweden/biovat/main/pipelines/alignment_qc/nextflow_schema.json",
+    "title": "BioVAT alignment_qc pipeline parameters",
+    "description": "Quality checks of alignments with samtools flagstat, Riker and Qualimap",
+    "type": "object",
+    "$defs": {
+        "input_options": {
+            "title": "Input options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data.",
+            "properties": {
+                "samplesheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "Alignments samplesheet (CSV) with the columns sample, library_id, platform, single_end, alignment and index. library_id is needed at the library and markdup levels and can be empty otherwise.",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "level": {
+                    "type": "string",
+                    "enum": ["input", "readgroup", "library", "markdup", "sample"],
+                    "description": "Level of the samplesheet rows. It is the prefix of the output files. Required with --samplesheet.",
+                    "fa_icon": "fas fa-layer-group"
+                },
+                "alignments": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per alignment. Fields: meta (a map with id, pl, single_end and, depending on the level, read_group or library), alignment (BAM/CRAM file), index (its index) and level. Use either --samplesheet or --alignments.",
+                    "fa_icon": "fas fa-file"
+                }
+            }
+        },
+        "reference_options": {
+            "title": "Reference options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Reference genome files.",
+            "properties": {
+                "fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Reference fasta file. Needed by Riker and to decode CRAM.",
+                    "fa_icon": "fas fa-file"
+                },
+                "fai": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Fai index of the reference fasta. Used by Riker. Created from --fasta when it is needed and not given.",
+                    "fa_icon": "fas fa-file"
+                }
+            }
+        },
+        "alignment_qc_options": {
+            "title": "Alignment QC options",
+            "type": "object",
+            "fa_icon": "fas fa-chart-bar",
+            "description": "Tools to run on the alignments. samtools flagstat always runs.",
+            "properties": {
+                "riker": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run Riker. Requires --fasta.",
+                    "fa_icon": "fas fa-check"
+                },
+                "qualimap": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run Qualimap.",
+                    "fa_icon": "fas fa-check"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "properties": {
+                "help": {
+                    "type": ["boolean", "string"],
+                    "description": "Display the help message.",
+                    "fa_icon": "fas fa-question-circle"
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full help message.",
+                    "fa_icon": "fas fa-question-circle"
+                }
+            }
+        }
+    },
+    "allOf": [
+        { "$ref": "#/$defs/input_options" },
+        { "$ref": "#/$defs/reference_options" },
+        { "$ref": "#/$defs/alignment_qc_options" },
+        { "$ref": "#/$defs/generic_options" }
+    ]
+}

@@ -28,6 +28,11 @@
                     "format": "file-path",
                     "description": "Reference fasta, used by bcftools stats.",
                     "fa_icon": "fas fa-file"
+                },
+                "level": {
+                    "type": "string",
+                    "description": "Prefix of the output file names, to tell apart variant calls from different stages. No prefix by default.",
+                    "fa_icon": "fas fa-layer-group"
                 }
             }
         },

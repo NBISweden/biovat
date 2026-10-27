@@ -4,10 +4,11 @@ nextflow.enable.types = true
 // Merge pipeline: merges alignments to library level or to sample level
 //
 
-include { SAMTOOLS_MERGE } from '../../modules/nf-core/samtools/merge/main'
-include { ALIGNMENT_QC   } from '../../subworkflows/local/alignment_qc/main'
-include { REFERENCE_VALUE } from '../../subworkflows/local/utils_reference/main'
-include { STAGE_HELP     } from '../../subworkflows/local/utils_stage_help/main'
+include { SAMTOOLS_MERGE           } from '../../modules/nf-core/samtools/merge/main'
+include { workflow as ALIGNMENT_QC } from '../alignment_qc'
+include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
+include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet
 record AlignmentSample {
@@ -46,12 +47,7 @@ workflow {
     if ( !(params.level in [ 'library', 'sample' ]) ) {
         error "Unknown merge level '${params.level}', expected library or sample"
     }
-    if ( params.samplesheet && params.alignments ) {
-        error "Provide either --samplesheet or --alignments, not both"
-    }
-    if ( !params.samplesheet && !params.alignments ) {
-        error "Missing required parameter --samplesheet"
-    }
+    checkStageInput(params.samplesheet, params.alignments, 'alignments')
     alignments = channel.empty()
     if ( params.samplesheet ) {
         alignments = params.samplesheet.map { s ->
@@ -124,7 +120,21 @@ workflow {
     qc_qualimap      = channel.empty()
     qc_multiqc_files = channel.empty()
     if ( params.align_qc ) {
-        alignment_qc = ALIGNMENT_QC(merged_alignments, reference, params.riker, params.qualimap, params.level)
+        // The reference has its fai index when this stage needed it. Pass it on, so that it is not created twice
+        qc_fai = params.fai
+        if ( params.riker || params.cram_format ) {
+            qc_fai = reference.map { ref -> ref.fai } as Value<Path>
+        }
+        alignment_qc = ALIGNMENT_QC(
+            record(
+                alignments: merged_alignments,
+                level     : params.level,
+                fasta     : params.fasta,
+                fai       : qc_fai,
+                riker     : params.riker,
+                qualimap  : params.qualimap
+            )
+        )
         qc_flagstat      = alignment_qc.flagstat
         qc_riker         = alignment_qc.riker
         qc_qualimap      = alignment_qc.qualimap

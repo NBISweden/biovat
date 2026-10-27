@@ -4,15 +4,16 @@ nextflow.enable.types = true
 // Read alignment pipeline
 //
 
-include { BWAMEM3_INDEX     } from '../../modules/nf-core/bwamem3/index/main'
-include { BWAMEM3_MEM       } from '../../modules/nf-core/bwamem3/mem/main'
-include { BWA_INDEX         } from '../../modules/nf-core/bwa/index/main'
-include { PARABRICKS_FQ2BAM } from '../../modules/nf-core/parabricks/fq2bam/main'
-include { SAMTOOLS_INDEX    } from '../../modules/nf-core/samtools/index/main'
-include { ALIGNMENT_QC      } from '../../subworkflows/local/alignment_qc/main'
-include { REFERENCE_VALUE   } from '../../subworkflows/local/utils_reference/main'
-include { STAGE_HELP        } from '../../subworkflows/local/utils_stage_help/main'
-include { sampleToRow       } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { BWAMEM3_INDEX            } from '../../modules/nf-core/bwamem3/index/main'
+include { BWAMEM3_MEM              } from '../../modules/nf-core/bwamem3/mem/main'
+include { BWA_INDEX                } from '../../modules/nf-core/bwa/index/main'
+include { PARABRICKS_FQ2BAM        } from '../../modules/nf-core/parabricks/fq2bam/main'
+include { SAMTOOLS_INDEX           } from '../../modules/nf-core/samtools/index/main'
+include { workflow as ALIGNMENT_QC } from '../alignment_qc'
+include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
+include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
+include { sampleToRow              } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
 record Sample {
@@ -50,12 +51,7 @@ workflow {
 
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/align_reads --samplesheet samplesheet.csv --fasta genome.fa')
-    if ( params.samplesheet && params.reads ) {
-        error "Provide either --samplesheet or --reads, not both"
-    }
-    if ( !params.samplesheet && !params.reads ) {
-        error "Missing required parameter --samplesheet"
-    }
+    checkStageInput(params.samplesheet, params.reads, 'reads')
     reads = channel.empty()
     if ( params.samplesheet ) {
         reads = params.samplesheet
@@ -149,7 +145,21 @@ workflow {
     qc_qualimap      = channel.empty()
     qc_multiqc_files = channel.empty()
     if ( params.align_qc ) {
-        alignment_qc = ALIGNMENT_QC(alignments, reference, params.riker, params.qualimap, 'readgroup')
+        // The reference has its fai index when this stage needed it. Pass it on, so that it is not created twice
+        qc_fai = params.fai
+        if ( params.riker || params.cram_format ) {
+            qc_fai = reference.map { ref -> ref.fai } as Value<Path>
+        }
+        alignment_qc = ALIGNMENT_QC(
+            record(
+                alignments: alignments,
+                level     : 'readgroup',
+                fasta     : params.fasta,
+                fai       : qc_fai,
+                riker     : params.riker,
+                qualimap  : params.qualimap
+            )
+        )
         qc_flagstat      = alignment_qc.flagstat
         qc_riker         = alignment_qc.riker
         qc_qualimap      = alignment_qc.qualimap

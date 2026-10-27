@@ -24,6 +24,31 @@
             "nextflow": "26.10.0"
         }
     },
+    "--level prefixes the output files - stub": {
+        "content": [
+            5,
+            [
+                "bcftools_stats",
+                "bcftools_stats/joint_callset.bcftools_multisample.bcftools_stats.txt",
+                "multiqc_files",
+                "multiqc_files/joint_callset.bcftools_multisample.FILTER.summary",
+                "multiqc_files/joint_callset.bcftools_multisample.TsTv.count",
+                "multiqc_files/joint_callset.bcftools_multisample.TsTv.qual",
+                "multiqc_files/joint_callset.bcftools_multisample.bcftools_stats.txt",
+                "multiqc_files/joint_callset.bcftools_multisample.relatedness2",
+                "vcftools",
+                "vcftools/joint_callset.bcftools_multisample.FILTER.summary",
+                "vcftools/joint_callset.bcftools_multisample.TsTv.count",
+                "vcftools/joint_callset.bcftools_multisample.TsTv.qual",
+                "vcftools/joint_callset.bcftools_multisample.relatedness2"
+            ]
+        ],
+        "timestamp": "2026-10-27T13:15:43.746108",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    },
     "one callset, from a CSV samplesheet - stub": {
         "content": [
             5,

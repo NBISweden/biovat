@@ -65,6 +65,36 @@ nextflow_pipeline {
         }
     }
 
+    test("--level prefixes the output files - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/callset.vcf.gz").text = ""
+            new File("${launchDir}/callset.vcf.gz.csi").text = ""
+            new File("${launchDir}/variant_calls.yml").text = "- {meta: {id: callset.bcftools_multisample}, vcf: ${launchDir}/callset.vcf.gz, index: ${launchDir}/callset.vcf.gz.csi}\n"
+        }
+
+        when {
+            params {
+                variant_calls = "${launchDir}/variant_calls.yml"
+                fasta         = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                level         = "joint"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert workflow.trace.succeeded().size() == 5 },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
     test("--samplesheet and --variant_calls together fail") {
 
         options "-stub -output-dir ${outputDir}"

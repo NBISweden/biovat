@@ -7,9 +7,10 @@ nextflow.enable.types = true
 include { VALIDATE_READGROUP_HEADER } from '../../modules/local/validate_readgroup_header/main'
 include { SAMTOOLS_ADDREPLACERG     } from '../../modules/nf-core/samtools/addreplacerg/main'
 include { SAMTOOLS_SORT             } from '../../modules/nf-core/samtools/sort/main'
-include { ALIGNMENT_QC              } from '../../subworkflows/local/alignment_qc/main'
+include { workflow as ALIGNMENT_QC  } from '../alignment_qc'
 include { REFERENCE_VALUE           } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput           } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow               } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -47,12 +48,7 @@ workflow {
 
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/ingest_bam_or_cram --samplesheet samplesheet.csv --fasta genome.fa')
-    if ( params.samplesheet && params.bam_cram ) {
-        error "Provide either --samplesheet or --bam_cram, not both"
-    }
-    if ( !params.samplesheet && !params.bam_cram ) {
-        error "Missing required parameter --samplesheet"
-    }
+    checkStageInput(params.samplesheet, params.bam_cram, 'bam_cram')
     bam_cram = channel.empty()
     if ( params.samplesheet ) {
         bam_cram = params.samplesheet
@@ -130,7 +126,21 @@ workflow {
     qc_qualimap      = channel.empty()
     qc_multiqc_files = channel.empty()
     if ( params.align_qc ) {
-        alignment_qc     = ALIGNMENT_QC(alignments, reference, params.riker, params.qualimap, 'input')
+        // The reference has its fai index when this stage needed it. Pass it on, so that it is not created twice
+        qc_fai = params.fai
+        if ( params.riker || params.cram_format ) {
+            qc_fai = reference.map { ref -> ref.fai } as Value<Path>
+        }
+        alignment_qc = ALIGNMENT_QC(
+            record(
+                alignments: alignments,
+                level     : 'input',
+                fasta     : params.fasta,
+                fai       : qc_fai,
+                riker     : params.riker,
+                qualimap  : params.qualimap
+            )
+        )
         qc_flagstat      = alignment_qc.flagstat
         qc_riker         = alignment_qc.riker
         qc_qualimap      = alignment_qc.qualimap

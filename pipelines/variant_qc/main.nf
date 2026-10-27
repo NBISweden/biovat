@@ -11,6 +11,7 @@ include { VCFTOOLS as VCFTOOLS_TSTV_QUAL    } from '../../modules/nf-core/vcftoo
 include { VCFTOOLS as VCFTOOLS_RELATEDNESS2 } from '../../modules/nf-core/vcftools/main'
 include { REFERENCE_VALUE                   } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                        } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput                   } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the variant calls samplesheet (CSV)
 record VariantCallSample {
@@ -29,6 +30,7 @@ params {
     samplesheet  : Channel<VariantCallSample>? // variant calls to check, as a CSV with the columns id, vcf and index
     variant_calls: Channel<VariantCall>?       // alternative to the samplesheet: variant calls with their meta record, from a YAML or JSON file or a calling pipeline
     fasta        : Value<Path>?          // reference fasta, used by bcftools stats
+    level        : String?               // prefix of the output files, to tell apart calls from different stages (default: none)
     help         : Boolean = false
     help_full    : Boolean = false
 }
@@ -37,12 +39,7 @@ workflow {
 
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/variant_qc --samplesheet variant_calls.csv --fasta reference.fasta')
-    if ( params.samplesheet && params.variant_calls ) {
-        error "Provide either --samplesheet or --variant_calls, not both"
-    }
-    if ( !params.samplesheet && !params.variant_calls ) {
-        error "Missing required parameter --samplesheet"
-    }
+    checkStageInput(params.samplesheet, params.variant_calls, 'variant_calls')
     reference = REFERENCE_VALUE(params.fasta, null, false)
 
     // Variant calls: from the samplesheet, or given with their meta record
@@ -72,7 +69,7 @@ workflow {
                     exons              : null,
                     fasta              : ref.fasta,
                     bcftools_stats_args: null,
-                    output_prefix      : null
+                    output_prefix      : qcPrefix(call.meta, params.level)
                 )
             }
     )
@@ -80,16 +77,16 @@ workflow {
     // VCFTOOLS: the index is not used
     vcftools_calls = variant_calls.map { call -> record(meta: call.meta, variant_file: call.vcf) }
     vcftools_tstv_counts = VCFTOOLS_TSTV_COUNT(
-        vcftools_calls.map { call -> record(id: call.meta.id, meta: call.meta, variant_file: call.variant_file, bed: null, diff_variant_file: null, vcftools_args: '--TsTv-by-count', output_prefix: null) }
+        vcftools_calls.map { call -> vcftoolsInput(call, params.level, '--TsTv-by-count') }
     )
     vcftools_tstv_qual = VCFTOOLS_TSTV_QUAL(
-        vcftools_calls.map { call -> record(id: call.meta.id, meta: call.meta, variant_file: call.variant_file, bed: null, diff_variant_file: null, vcftools_args: '--TsTv-by-qual', output_prefix: null) }
+        vcftools_calls.map { call -> vcftoolsInput(call, params.level, '--TsTv-by-qual') }
     )
     vcftools_filter_summary = VCFTOOLS_SUMMARY(
-        vcftools_calls.map { call -> record(id: call.meta.id, meta: call.meta, variant_file: call.variant_file, bed: null, diff_variant_file: null, vcftools_args: '--FILTER-summary', output_prefix: null) }
+        vcftools_calls.map { call -> vcftoolsInput(call, params.level, '--FILTER-summary') }
     )
     vcftools_relatedness2 = VCFTOOLS_RELATEDNESS2(
-        vcftools_calls.map { call -> record(id: call.meta.id, meta: call.meta, variant_file: call.variant_file, bed: null, diff_variant_file: null, vcftools_args: '--relatedness2', output_prefix: null) }
+        vcftools_calls.map { call -> vcftoolsInput(call, params.level, '--relatedness2') }
     )
 
     publish:
@@ -113,4 +110,13 @@ output {
     vcftools_filter_summary: Channel<Record> { path 'vcftools' }
     vcftools_relatedness2  : Channel<Record> { path 'vcftools' }
     multiqc_files          : Channel<Path> { path 'multiqc_files' }
+}
+
+// Output file prefix: the callset id, behind the level when one is given
+def qcPrefix(meta: Record, level: String?) {
+    return level ? "${level}_${meta.id}" : null
+}
+
+def vcftoolsInput(call: Record, level: String?, vcftools_args: String) {
+    return record(id: call.meta.id, meta: call.meta, variant_file: call.variant_file, bed: null, diff_variant_file: null, vcftools_args: vcftools_args, output_prefix: qcPrefix(call.meta, level))
 }
