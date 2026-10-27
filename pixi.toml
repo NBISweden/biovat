@@ -77,10 +77,6 @@ description = "Run the nf-core pipeline linter"
 cmd         = "prek run --all-files --show-diff-on-failure --color=always"
 description = "Run prek on all files"
 
-[tasks.schema-build]
-cmd         = "nf-core pipelines schema build"
-description = "Build the pipeline schema"
-
 [tasks.default-nf-test]
 cmd         = "nf-test test tests/default.nf.test --profile +docker"
 description = "Run the default nf-test profile with Docker"
