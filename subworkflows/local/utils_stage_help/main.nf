@@ -43,3 +43,12 @@ def checkStageInput(samplesheet, given, given_name: String) {
         error "Missing required parameter --samplesheet"
     }
 }
+
+//
+// Stop with a message from inside an operator closure. Nextflow reports an error raised there as "Unexpected error
+// [InvocationTargetException]" and leaves the message in .nextflow.log, so the message is logged first
+//
+def stageError(message) {
+    log.error(message)
+    error message
+}

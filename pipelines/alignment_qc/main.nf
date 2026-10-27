@@ -12,6 +12,7 @@ include { QUALIMAP_BAMQC    } from '../../modules/nf-core/qualimap/bamqc/main'
 include { REFERENCE_VALUE   } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP        } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput   } from '../../subworkflows/local/utils_stage_help/main'
+include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
 record AlignmentSample {
@@ -55,7 +56,7 @@ workflow {
     if ( params.samplesheet ) {
         alignments = params.samplesheet.map { s ->
             if ( params.level in [ 'library', 'markdup' ] && s.library_id == null ) {
-                error "Level '${params.level}' needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
+                stageError "Level '${params.level}' needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }
             def meta = [ id: s.sample, library: s.library_id, pl: s.platform, single_end: s.single_end, read_group: s.alignment.baseName ]
             record(meta: record(meta), alignment: s.alignment, index: s.index)

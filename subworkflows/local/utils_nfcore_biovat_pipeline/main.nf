@@ -174,7 +174,10 @@ def versionEntryToLine(entry) {
     return tuple(process.toString().tokenize(':').last(), "  ${tool}: ${version}")
 }
 
+// Also used inside operator closures, where Nextflow reports a raised error as "Unexpected error [InvocationTargetException]"
+// and leaves the message in .nextflow.log, so the message is logged first
 def validationError(message) {
+    log.error("\033[0;91mERROR\033[0m: ${message}")
     error "\033[0;91mERROR\033[0m: ${message}"
 }
 

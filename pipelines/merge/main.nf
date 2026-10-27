@@ -9,6 +9,7 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
+include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet
 record AlignmentSample {
@@ -52,7 +53,7 @@ workflow {
     if ( params.samplesheet ) {
         alignments = params.samplesheet.map { s ->
             if ( params.level == 'library' && s.library_id == null ) {
-                error "Merging to library level needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
+                stageError "Merging to library level needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }
             def meta = [ id: s.sample, library: s.library_id, pl: s.platform, single_end: s.single_end ]
             record(meta: record(meta), alignment: s.alignment, index: s.index)

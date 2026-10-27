@@ -42,11 +42,10 @@ workflow {
     reads = channel.empty()
     if ( params.samplesheet ) {
         reads = params.samplesheet
-            .filter { sample -> sample.fastq_1 != null }
-            .map { sample ->
-                def row = sampleToRow(sample)
-                record(meta: record(row[0]), reads: row[1])
-            }
+            // Every row is checked, including the ones this stage skips
+            .map { sample -> sampleToRow(sample) }
+            .filter { row -> row[0].input_type == 'fastq' }
+            .map { row -> record(meta: record(row[0]), reads: row[1]) }
     } else {
         reads = params.reads
     }

@@ -52,11 +52,10 @@ workflow {
     bam_cram = channel.empty()
     if ( params.samplesheet ) {
         bam_cram = params.samplesheet
-            .filter { sample -> sample.bam != null }
-            .map { sample ->
-                def row = sampleToRow(sample)
-                record(meta: record(row[0]), bam_cram: row[1][0])
-            }
+            // Every row is checked, including the ones this stage skips
+            .map { sample -> sampleToRow(sample) }
+            .filter { row -> row[0].input_type == 'bam_cram' }
+            .map { row -> record(meta: record(row[0]), bam_cram: row[1][0]) }
     } else {
         bam_cram = params.bam_cram
     }

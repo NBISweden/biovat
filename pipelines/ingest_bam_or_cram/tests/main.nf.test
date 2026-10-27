@@ -76,6 +76,31 @@ nextflow_pipeline {
         }
     }
 
+    test("a samplesheet row with neither fastq nor bam fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/samplesheet.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,,,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+                riker       = false
+            }
+        }
+
+        then {
+            // The stage skips the rows of the other input type, but still checks them
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("has neither fastq_1 nor bam")
+        }
+    }
+
     test("--samplesheet and --bam_cram together fail") {
 
         options "-stub"

@@ -15,6 +15,7 @@ include { workflow as VARIANT_QC       } from '../variant_qc'
 include { REFERENCE_VALUE              } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
+include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
 record AlignmentSample {
@@ -119,7 +120,7 @@ workflow {
         population = params.sample_metadata
             .map { sample ->
                 if ( sample.population == null ) {
-                    error "--group_samples requires a population for every sample in --sample_metadata. Missing for: ${sample.sample}"
+                    stageError "--group_samples requires a population for every sample in --sample_metadata. Missing for: ${sample.sample}"
                 }
                 "${sample.sample}\t${sample.population}"
             }
