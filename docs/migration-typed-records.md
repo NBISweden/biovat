@@ -170,14 +170,32 @@ Convert a Map to a record with `record(map)`. Join two record channels on `meta`
 
 ## Stage pipelines
 
-Each directory under `pipelines/` is a pipeline with a typed `params` block, an entry `workflow` that reads `params.x`, an `output` block, its own `nextflow.config` and its own `nextflow_schema.json`. A stage can run on its own or be included.
+Each directory under `pipelines/` is a pipeline with a typed `params` block, an entry `workflow` that reads `params.x`, an `output` block, its own `nextflow.config` and its own `nextflow_schema.json`. A stage can run on its own or be included. `pipelines/read_qc/main.nf` is the smallest example:
 
 ```groovy
 nextflow.enable.types = true
 
-include { FASTQC     } from '../../modules/nf-core/fastqc/main'
-include { STAGE_HELP } from '../../subworkflows/local/utils_stage_help/main'
+//
+// Read QC pipeline
+//
+
+include { FASTQC          } from '../../modules/nf-core/fastqc/main'
+include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
+include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+
+// A row of the BioVAT samplesheet
+record Sample {
+    sample     : String
+    library_id : String
+    flowcell_id: String
+    lane       : Integer
+    platform   : String
+    fastq_1    : Path?
+    fastq_2    : Path?
+    bam        : Path?
+    single_end : Boolean?
+}
 
 record Reads {
     meta : Record     // sample information, requires read_group
@@ -186,7 +204,7 @@ record Reads {
 
 params {
     samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with a bam instead of fastq files are skipped
-    reads    : Channel<Reads>?    // alternative to the samplesheet: reads with their meta record (YAML, JSON or a calling pipeline)
+    reads      : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
     help     : Boolean = false
     help_full: Boolean = false
 }
@@ -196,16 +214,24 @@ workflow {
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/read_qc --samplesheet samplesheet.csv')
     checkStageInput(params.samplesheet, params.reads, 'reads')
-    reads = params.reads ?: params.samplesheet
-        .filter { sample -> sample.fastq_1 != null }
-        .map { sample -> def row = sampleToRow(sample); record(meta: record(row[0]), reads: row[1]) }
+    reads = channel.empty()
+    if ( params.samplesheet ) {
+        reads = params.samplesheet
+            .filter { sample -> sample.fastq_1 != null }
+            .map { sample ->
+                def row = sampleToRow(sample)
+                record(meta: record(row[0]), reads: row[1])
+            }
+    } else {
+        reads = params.reads
+    }
 
     fastqc = FASTQC(
         reads.map { r -> record(id: r.meta.id, meta: r.meta, reads: r.reads, fastqc_args: '--quiet', output_prefix: r.meta.read_group) }
     )
 
     publish:
-    fastqc        = fastqc
+    fastqc        = fastqc                                         // record(meta, html, zip)
     multiqc_files = fastqc.flatMap { out -> out.zip.toList() }
 
 }
@@ -294,6 +320,8 @@ A stage's own `nextflow.config` includes `conf/stage.config` (container profiles
 | `--enable_variant_qc`      | `variant_qc`, inside `call_variants`           |
 
 `ingest_bam_or_cram` always runs, on the BAM/CRAM rows of the samplesheet. MultiQC always runs.
+
+Long-read rows (`ONT`, `PACBIO`) are filtered out in `main.nf` before any stage, with a warning, until a long-read path exists. The stages themselves do not filter by platform: `call_variants` makes one callset per platform, named `<callset_prefix>.<platform>.<variant_caller>`.
 
 The samplesheet has two routes:
 

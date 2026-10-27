@@ -33,7 +33,7 @@ samplesheet input (`bam` column). As with PUN-Y-LO above, QNAMEs were edited (`L
 they don't collide with the sibling row they get merged with. PUN-R-ELF's row is a distinct second library
 (`PUN-R-ELF_2.bam`); PUN-R-MT's is repeat sequencing of library 1 on a second flowcell (`PUN-R-MT_1_repeat2.cram`).
 The CRAM's `@RG` ID/SM/LB/PU/PL tags were set with `samtools addreplacerg` to match what the pipeline's own
-aligner would have written for that samplesheet row (see `conf/modules.config`'s `BWAMEM3_MEM` args).
+aligner would have written for that samplesheet row (see the `bwamem3_mem_args` of `BWAMEM3_MEM` in `pipelines/align_reads/main.nf`).
 `PUN-R-ELF_2.bam` instead has its `@RG` header line and every read's `RG:Z` tag stripped
 (`samtools view -x RG` + `samtools reheader`), to test that the pipeline fills a missing read group in from
 the samplesheet. Its reads are otherwise unchanged, so the filled-in alignment matches the original.
