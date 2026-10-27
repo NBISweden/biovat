@@ -21,13 +21,13 @@
                 "level": {
                     "type": "string",
                     "enum": ["input", "readgroup", "library", "markdup", "sample"],
-                    "description": "Level of the samplesheet rows. It is the prefix of the output files. Required with --samplesheet.",
+                    "description": "Level at which the alignments were produced. It is the prefix of the output files. Required.",
                     "fa_icon": "fas fa-layer-group"
                 },
                 "alignments": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per alignment. Fields: meta (a map with id, pl, single_end and, depending on the level, read_group or library), alignment (BAM/CRAM file), index (its index) and level. Use either --samplesheet or --alignments.",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per alignment. Fields: meta (a map with id, pl, single_end and, depending on the level, read_group or library), alignment (BAM/CRAM file) and index (its index). Use either --samplesheet or --alignments.",
                     "fa_icon": "fas fa-file"
                 }
             }

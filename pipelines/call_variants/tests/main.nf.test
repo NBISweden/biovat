@@ -206,4 +206,21 @@ nextflow_pipeline {
             assert (workflow.stdout + workflow.stderr).toString().contains("--variant_caller gatk requires --dict")
         }
     }
+
+    test("--help") {
+
+        when {
+            params {
+                help = true
+                sample_metadata = null // the test profile of the repository sets a path that does not exist for a stage
+            }
+        }
+
+        then {
+            // nf-test does not capture the help message. This checks that --help is reached and exits cleanly,
+            // i.e. that the schema loads and no required parameter blocks it
+            assert workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
 }

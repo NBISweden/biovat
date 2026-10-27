@@ -136,7 +136,7 @@ Use the following naming schemes for channels to make the channel flow easier to
 
 Parameters are declared with their type and default in the `params` block of `main.nf`, or of the stage in `pipelines/<stage>/main.nf` ([see here for the ADR](https://github.com/NBISweden/biovat/issues/61)), e.g.: `aligner: String = 'bwa-mem3'`. Parameters that only the config reads stay in `nextflow.config`.
 
-They should also be documented in the `nextflow_schema.json` next to the `params` block, which `--help` and the parameter validation read. Edit it by hand and keep the type and default the same as in the block. `nf-core pipelines schema build` reads the parameters from `nextflow config`, which does not see a typed `params` block, so it would remove them from the schema. Do not run it.
+They should also be documented in the `nextflow_schema.json` next to the `params` block, which `--help` and the parameter validation read. Edit it by hand and keep the type and default the same as in the block. `nf-core pipelines schema build` reads the parameters from `nextflow config`, which does not see a typed `params` block, so it would remove them from the schema. Do not run it. `nf-test test tests/schema_params.nf.test` fails when a schema and its `params` block differ in names, types or defaults.
 
 Boolean parameters used to enable/disable stages, tools, or tool behaviours must be prefixed with `enable_`, for example, `enable_align`. The pipeline automatically groups these parameters into a map called `enable`, where each key is the parameter name with the `enable_` prefix removed. For example, the value of the parameter `enable_align` becomes accessible in scripts via `enable.align`.
 

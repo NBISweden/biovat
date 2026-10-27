@@ -417,6 +417,7 @@ Outputs are the same as before for the test profile. The differences are:
 
 - **Modules.** Every module test is converted to records. The sort and merge snapshots were made with `nft-bam@0.6.0`, because `bam()` and `cram()` fail in `nft-bam@0.7.0`. The parabricks tests need a GPU, so only its stub tests were run.
 - **Stages.** Each stage has `pipelines/<stage>/tests/main.nf.test`: a stub run from a generated YAML fixture, and a check that a missing data param fails with "Missing required parameter". Run them with `nf-test test pipelines --profile docker,arm64,test`.
+- **Schemas.** `tests/schema_params.nf.test` fails when a `params` block and its `nextflow_schema.json` differ in parameter names, types or defaults. Each stage test file also has a `--help` test. nf-test does not capture the help message, so it only checks that `--help` is reached and exits cleanly.
 - **BioVAT.** `tests/default.nf.test` runs the pipeline with the test profile against the snapshot from before the migration, and passes unchanged.
 - **Lint.** `nextflow lint -o concise -exclude .pixi -exclude .git -exclude work -exclude .nf-test .` has no errors. The `collectFile` warnings in `pipelines/multiqc` remain.
 - **Stub runs.** The published files of the test profile match the pipeline before the migration, apart from the QC outputs described above. Disabling stages with the `--enable_*` flags skips them and the rest still runs. `examples/chaining` runs.
@@ -426,7 +427,7 @@ Outputs are the same as before for the test profile. The differences are:
 - Included pipelines need Nextflow 26.10. Composition is experimental.
 - nf-schema 2.8.0 and 3.0.0 hang in `validateParameters` when a param is a channel with a value. A fix ([nextflow-io/nf-schema#230](https://github.com/nextflow-io/nf-schema/pull/230), merged 2026-10-05) is not released yet, 3.0.0 (2026-09-29) is the latest release. BioVAT therefore keeps `--input` as a validated path for the command line, and uses the `samplesheet` channel param only for callers, which set `validate_params: false`. With a fixed release, `input` and the schema check could become one typed channel param.
 - `subworkflows/local/utils_nfcore_biovat_pipeline` is not typed. It is the nf-core template code (methods description, completion summary) plus the samplesheet checks, which use mutable Groovy collections and `workflow.toMap()` that typed Nextflow does not support. Its functions receive records and plain maps at runtime.
-- The stage schemas are written by hand and can drift from the params blocks.
+- The schemas are written by hand. `nf-core pipelines schema build` does not read typed `params` blocks, so it cannot update them. `tests/schema_params.nf.test` compares the names, types and defaults of each schema with its `params` block, but not the descriptions.
 - `nf-core pipelines lint` is not run. `nextflow lint` is the check.
 - The MultiQC pipeline uses `collectFile`, which the linter discourages in typed code.
 - The published outputs are still one channel per tool, to keep the published directory layout of `dev`. Joining the outputs of a stage into one wide record per sample would be cleaner for composition, and is a follow-up.

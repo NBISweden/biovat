@@ -103,4 +103,20 @@ nextflow_pipeline {
             assert workflow.stdout.toString().contains("Missing required parameter --samplesheet") || workflow.stderr.toString().contains("Missing required parameter --samplesheet")
         }
     }
+
+    test("--help") {
+
+        when {
+            params {
+                help = true
+            }
+        }
+
+        then {
+            // nf-test does not capture the help message. This checks that --help is reached and exits cleanly,
+            // i.e. that the schema loads and no required parameter blocks it
+            assert workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
 }

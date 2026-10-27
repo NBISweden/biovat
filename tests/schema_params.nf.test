@@ -1,0 +1,243 @@
+nextflow_function {
+
+    name "Test the schemas against the params blocks"
+    script "./utils/schema_params.nf"
+    function "schemaParamsDiff"
+    tag "schema"
+
+    // BioVAT: parameters that the config reads are in the schema but not in the params block
+    test("main.nf matches nextflow_schema.json") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/main.nf"
+                input[1] = "${projectDir}/nextflow_schema.json"
+                input[2] = false
+                input[3] = [ 'samplesheet' ] // a channel param for pipelines that include BioVAT, which nf-schema cannot validate
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    // The check has to fail on a schema that differs, not pass because it found no parameters
+    test("a schema that differs from the params block is reported") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/tests/utils/fixtures/drift_main.nf.txt"
+                input[1] = "${projectDir}/tests/utils/fixtures/drift_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result.size() == 6
+            assert function.result.any { it.contains("--missing is in the params block but not in the schema") }
+            assert function.result.any { it.contains("--wrong_type is Integer") }
+            assert function.result.any { it.contains("--wrong_value defaults to a in the params block and b in the schema") }
+            assert function.result.any { it.contains("--no_default defaults to true in the params block and has no default in the schema") }
+            assert function.result.any { it.contains("--extra_value has no default in the params block and defaults to x in the schema") }
+            assert function.result.any { it.contains("--only_in_schema is in the schema but not in the params block") }
+        }
+    }
+
+    test("pipelines/align_reads matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/align_reads/main.nf"
+                input[1] = "${projectDir}/pipelines/align_reads/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/alignment_qc matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/alignment_qc/main.nf"
+                input[1] = "${projectDir}/pipelines/alignment_qc/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/call_variants matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/call_variants/main.nf"
+                input[1] = "${projectDir}/pipelines/call_variants/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/ingest_bam_or_cram matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/ingest_bam_or_cram/main.nf"
+                input[1] = "${projectDir}/pipelines/ingest_bam_or_cram/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/mark_duplicates matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/mark_duplicates/main.nf"
+                input[1] = "${projectDir}/pipelines/mark_duplicates/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/merge matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/merge/main.nf"
+                input[1] = "${projectDir}/pipelines/merge/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/multiqc matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/multiqc/main.nf"
+                input[1] = "${projectDir}/pipelines/multiqc/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/read_qc matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/read_qc/main.nf"
+                input[1] = "${projectDir}/pipelines/read_qc/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/trim_reads matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/trim_reads/main.nf"
+                input[1] = "${projectDir}/pipelines/trim_reads/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+
+    test("pipelines/variant_qc matches its schema") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/variant_qc/main.nf"
+                input[1] = "${projectDir}/pipelines/variant_qc/nextflow_schema.json"
+                input[2] = true
+                input[3] = []
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == []
+        }
+    }
+}
