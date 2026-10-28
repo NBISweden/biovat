@@ -74,26 +74,6 @@ nextflow_function {
         }
     }
 
-    test("filterSampleMetadata - leaves out the samples that are not in the run") {
-        function "filterSampleMetadata"
-
-        when {
-            function {
-                """
-                input[0] = [ [ id:'A', population:'red' ], [ id:'B', population:'yellow' ], [ id:'EXTRA', population:[] ] ]
-                input[1] = [ 'A', 'B' ].toSet()
-                """
-            }
-        }
-
-        then {
-            assertAll(
-                { assert function.success },
-                { assert function.result*.id == [ 'A', 'B' ] }
-            )
-        }
-    }
-
     test("validateSampleMetadata - skipped without --sample_metadata") {
         function "validateSampleMetadata"
 

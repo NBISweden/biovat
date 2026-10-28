@@ -225,11 +225,6 @@ def readSampleMetadata(sample_metadata) {
         : []
 }
 
-// The metadata rows of the given samples. --sample_metadata can list samples that are not in the run
-def filterSampleMetadata(metadata_rows, samples) {
-    return metadata_rows.findAll { meta -> meta.id in samples }
-}
-
 // --sample_metadata, when provided, groups samples into populations during bcftools_multisample variant calling (unused otherwise)
 // Every sample must then have a population in the metadata file. We warn if extras are found.
 def validateSampleMetadata(rows, metadata_rows, enable, options) {

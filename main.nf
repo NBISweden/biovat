@@ -21,7 +21,6 @@ include { sampleToRow                } from './subworkflows/local/utils_nfcore_b
 include { validateSamplesheetRows    } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { rikerActive                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { isLongReadPlatform         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { filterSampleMetadata       } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { logRootCause               } from './subworkflows/local/utils_stage_help/main'
 include { REFERENCE_UTILS            } from './subworkflows/local/utils_reference/main'
 include { paramsSummaryMap           } from 'plugin/nf-schema'
@@ -234,16 +233,18 @@ workflow {
     // Short read path: branch on whether preprocessing or BAM/CRAM ingestion is needed
     fastq_rows    = short_read_rows.filter { row -> row.meta.input_type == 'fastq' }
     bam_cram_rows = short_read_rows.filter { row -> row.meta.input_type == 'bam_cram' }
+    reads         = fastq_rows.map { row -> record(meta: row.meta, reads: row.files) }
 
     // The populations of the samples in the run. --sample_metadata can list samples that are not in --input, and those
     // are left out. The rows of a samplesheet channel are only known once they have all arrived
     run_sample_metadata = short_read_rows
         .map { row -> row.meta.id }
-        .unique()
         .collect()
-        .flatMap { ids -> filterSampleMetadata(sample_metadata_rows, ids.toSet()) }
-        .map { meta -> record(sample: meta.id, population: meta.population) }
-    reads         = fastq_rows.map { row -> record(meta: row.meta, reads: row.files) }
+        .flatMap { ids ->
+            sample_metadata_rows
+                .findAll { meta -> meta.id in ids.toSet() }
+                .collect { meta -> record(sample: meta.id, population: meta.population) }
+        }
 
     // Reference: the fasta and, if needed, its fai index. Stages take them as separate Value params
     fasta = null
