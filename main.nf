@@ -21,6 +21,7 @@ include { sampleToRow                } from './subworkflows/local/utils_nfcore_b
 include { validateSamplesheetRows    } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { rikerActive                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { isLongReadPlatform         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { logRootCause               } from './subworkflows/local/utils_stage_help/main'
 include { REFERENCE_UTILS            } from './subworkflows/local/utils_reference/main'
 include { paramsSummaryMap           } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc       } from './subworkflows/nf-core/utils_nfcore_pipeline'
@@ -175,28 +176,40 @@ workflow {
     // Samplesheet rows as records: record(meta, files). They come from the --input file (validated by nf-schema)
     // or from a samplesheet channel given by a calling pipeline
     sample_metadata_rows = readSampleMetadata(params.sample_metadata)
+    checks = record(
+        has_reference      : params.reference != null,
+        variant_caller     : params.variant_caller,
+        multiallelic_caller: params.enable_multiallelic_caller,
+        sample_metadata    : params.sample_metadata != null
+    )
     if ( params.input && params.samplesheet ) {
         error "Provide either --input or a samplesheet channel, not both"
     }
     if ( params.input ) {
-        rows = channel.fromList(readSamplesheet(params.input))
+        // The rows are known here, so they are checked before any stage is called. A stage that finds the same problem
+        // (a missing reference, for example) reports it with the name of its own parameter, and would do so first
+        input_rows = readSamplesheet(params.input).collect { row -> record(meta: record(row[0]), files: row[1]) }
+        validateSamplesheetRows(input_rows, sample_metadata_rows, enable, checks)
+        samplesheet = channel.fromList(input_rows)
     } else if ( params.samplesheet ) {
-        rows = params.samplesheet.map { sample -> sampleToRow(sample) }
+        // The rows of a channel are not known yet. Check them together, and release them only when the checks have passed
+        samplesheet = params.samplesheet
+            .map { sample -> sampleToRow(sample) }
+            .map { row -> record(meta: record(row[0]), files: row[1]) }
+            .toList()
+            .flatMap { list ->
+                // An error raised in a closure is reported without its message, so the message is logged first
+                try {
+                    return validateSamplesheetRows(list, sample_metadata_rows, enable, checks)
+                }
+                catch ( e: Exception ) {
+                    logRootCause(e)
+                    throw e
+                }
+            }
     } else {
         error "Missing required parameter --input"
     }
-    // Check the rows together, and release them only when the checks have passed
-    samplesheet = rows
-        .map { row -> record(meta: record(row[0]), files: row[1]) }
-        .toList()
-        .flatMap { list ->
-            validateSamplesheetRows(
-                list,
-                sample_metadata_rows,
-                enable,
-                record(has_reference: params.reference != null, variant_caller: params.variant_caller, multiallelic_caller: params.enable_multiallelic_caller, sample_metadata: params.sample_metadata != null)
-            )
-        }
 
     // Long-read rows (ONT, PACBIO) need their own preprocessing and variant callers. Until that path exists they are
     // branched off ahead of any preprocessing and excluded with a warning

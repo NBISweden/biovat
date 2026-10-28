@@ -15,6 +15,7 @@ include { paramsHelp              } from 'plugin/nf-schema'
 include { completionSummary       } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
+include { stageError               } from '../utils_stage_help/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -134,12 +135,14 @@ def readSamplesheet(input) {
 }
 
 // Convert a row of the samplesheet, loaded as a record by Nextflow, to a [ meta, files ] row
+// Runs inside operator closures, where an error is reported as "Unexpected error [InvocationTargetException]" and its
+// message is left in .nextflow.log, so stageError logs the message first
 def sampleToRow(sample) {
     if ( !sample.fastq_1 && !sample.bam ) {
-        validationError("Sample '${sample.sample}', library '${sample.library_id}' has neither fastq_1 nor bam")
+        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has neither fastq_1 nor bam")
     }
     if ( sample.fastq_1 && sample.bam ) {
-        validationError("Sample '${sample.sample}', library '${sample.library_id}' has both fastq_1 and bam")
+        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has both fastq_1 and bam")
     }
     def meta = [
         id        : sample.sample,
@@ -174,10 +177,7 @@ def versionEntryToLine(entry) {
     return tuple(process.toString().tokenize(':').last(), "  ${tool}: ${version}")
 }
 
-// Also used inside operator closures, where Nextflow reports a raised error as "Unexpected error [InvocationTargetException]"
-// and leaves the message in .nextflow.log, so the message is logged first
 def validationError(message) {
-    log.error("\033[0;91mERROR\033[0m: ${message}")
     error "\033[0;91mERROR\033[0m: ${message}"
 }
 

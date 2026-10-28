@@ -52,3 +52,12 @@ def stageError(message) {
     log.error(message)
     error message
 }
+
+//
+// Log the message of the root cause of an exception caught in an operator closure, where Nextflow wraps the error
+// in exceptions that have no message of their own
+//
+def logRootCause(e: Throwable) {
+    def cause: Throwable = org.apache.commons.lang3.exception.ExceptionUtils.getRootCause(e) ?: e
+    log.error(cause.getMessage())
+}

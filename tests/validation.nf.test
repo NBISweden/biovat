@@ -1,0 +1,73 @@
+nextflow_pipeline {
+
+    name "Test pipeline input validation"
+    script "../main.nf"
+    tag "pipeline"
+    tag "validation"
+
+    // The checks of the samplesheet and the reference run before any stage is called, so that a problem is reported
+    // with the name of the BioVAT parameter and not with the one of the stage that finds it too
+
+    test("no reference with alignment enabled - names --reference") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/bam_only.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${projectDir}/tests/data/monkeyflower/PUN-R-ELF_2.bam,false"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                outdir                 = "$outputDir"
+                input                  = "${launchDir}/bam_only.csv"
+                reference              = null // the test profile sets one
+                sample_metadata        = null
+                enable_variant_calling = false
+                enable_riker           = false
+            }
+        }
+
+        then {
+            def output = (workflow.stdout + workflow.stderr).toString()
+            assertAll(
+                { assert workflow.failed },
+                { assert output.contains("A reference FASTA file (--reference) is required for") },
+                { assert output.contains("alignment (--enable_align)") },
+                { assert !output.contains("Missing required parameter --fasta") }
+            )
+        }
+    }
+
+    test("a library with two platforms - names the sample and library") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/mixed_platforms.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
+                "PUN-R-ELF,1,SRR9309792,2,IONTORRENT,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                outdir          = "$outputDir"
+                input           = "${launchDir}/mixed_platforms.csv"
+                sample_metadata = null
+            }
+        }
+
+        then {
+            def output = (workflow.stdout + workflow.stderr).toString()
+            assertAll(
+                { assert workflow.failed },
+                { assert output.contains("Sample 'PUN-R-ELF', library '1' mixes sequencing platforms") }
+            )
+        }
+    }
+}
