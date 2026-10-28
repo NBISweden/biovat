@@ -156,5 +156,5 @@ def rikerFiles(riker: Record) {
         riker.isize_histogram, riker.isize_metrics, riker.mean_qual, riker.qual_dist, riker.rna_biotype,
         riker.rna_insert_size_histogram, riker.rna_insert_size, riker.rna_metrics, riker.wgs_coverage, riker.wgs_metrics
     ].findAll { file -> file != null }
-    return single + riker.hybcap_per_base.toList() + riker.pdf.toList()
+    return single + riker.hybcap_per_base + riker.pdf
 }
