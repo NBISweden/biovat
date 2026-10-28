@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- `BWAMEM3_INDEX` requests 4 CPUs, the `-t` of `bwa-mem3 index`, set next to its size-based memory in the module (a `label` would replace that memory). On a 122 Mb genome 4 threads take 10 s against 19 s with one
 - Removed the `schema-build` pixi task. `nf-core pipelines schema build` does not read typed `params` blocks and removes their parameters from the schema, so the schemas are edited by hand. `docs/CONTRIBUTING.md` describes where parameters are declared
 - All processes use static types and follow the module spec: one record as input, one record as output, a required `id` and an optional `meta` that the process code never reads, `ext [ ... ]` closure directives, and and software versions sent to the `versions` topic as `record(process, tool, version)`. nf-core modules are converted locally and tracked with `nf-core modules patch` (`*.diff` files next to each module)
 - Tool arguments and output prefixes are passed to processes as input record fields (`<tool>_args`, `output_prefix`) by the stage pipelines instead of `conf/modules.config`, which is removed. `ext.args`/`ext.prefix` set in user config still take precedence
