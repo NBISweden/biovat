@@ -406,7 +406,7 @@ If a pipeline-wide selector is needed, put it in its own config file and load it
 
 ## Patched nf-core modules
 
-nf-core modules do not have typed records upstream, so the converted modules are tracked with `nf-core modules patch`. Each patched module has a `<tool>-<name>.diff` file next to `main.nf` and a `patch` entry in `modules.json`. The nf-core subworkflow `utils_nextflow_pipeline` is patched in the same way: its params dump had to skip `Path` values, which Groovy's JSON generator cannot write.
+nf-core modules do not have typed records upstream, so the converted modules are tracked with `nf-core modules patch`. Each patched module has a `<tool>-<name>.diff` file next to `main.nf` and a `patch` entry in `modules.json`. The nf-core subworkflow `utils_nextflow_pipeline` is patched in the same way: its params dump writes `Path` values as strings, as Groovy's JSON generator cannot write them. Maps and lists are kept, with the paths in them as strings, and dataflow values such as a samplesheet channel are left out.
 
 - Edit `main.nf` and the tests in the module, then run `nf-core modules patch <name>`. If the diff already exists, delete the `.diff` file first.
 - `nf-core modules update <name>` applies the patch on top of the new upstream version, and reports a conflict if they overlap.

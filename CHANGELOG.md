@@ -54,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `main.nf` composes the stage pipelines directly, and can be run or included by other pipelines. `workflows/biovat.nf` is removed. The stages are still gated by the `--enable_*` flags
 - Param defaults moved from `nextflow.config` to the `params` block of `main.nf`. `nextflow.config` keeps only the params that the config reads
 - The samplesheet checks (single-end/paired-end mix, reference required) run on the collected rows in the entry workflow
-- The nf-core subworkflow `utils_nextflow_pipeline` is patched so that the params dump handles `Path` params
+- The nf-core subworkflow `utils_nextflow_pipeline` is patched so that the params dump handles `Path` params: paths are written as strings, maps and lists are kept (with their paths as strings), and dataflow values such as a samplesheet channel are left out
 - Software versions and MultiQC files are collected by the `multiqc` pipeline; the versions file is published through the `output` block instead of `collectFile(storeDir:)`
 
 ### `Fixed`
