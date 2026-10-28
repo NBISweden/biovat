@@ -119,7 +119,7 @@ workflow {
     if ( params.group_samples ) {
         population = params.sample_metadata
             .map { sample ->
-                if ( sample.population == null ) {
+                if ( !sample.population ) {
                     stageError "--group_samples requires a population for every sample in --sample_metadata. Missing for: ${sample.sample}"
                 }
                 "${sample.sample}\t${sample.population}"

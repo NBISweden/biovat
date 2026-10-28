@@ -1,6 +1,6 @@
 nextflow_pipeline {
 
-    name "Test pipeline input validation"
+    name "Test pipeline input checks"
     script "../main.nf"
     tag "pipeline"
     tag "validation"
@@ -67,6 +67,42 @@ nextflow_pipeline {
             assertAll(
                 { assert workflow.failed },
                 { assert output.contains("Sample 'PUN-R-ELF', library '1' mixes sequencing platforms") }
+            )
+        }
+    }
+
+    test("a sample in --sample_metadata that is not in --input is left out of the populations") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/samples.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
+                "PUN-R-JMC,1,SRR9309467,1,ILLUMINA,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
+            ].join("\n") + "\n"
+            new File("${launchDir}/metadata.csv").text = "sample,population\nPUN-R-ELF,red\nPUN-R-JMC,red\nEXTRA_SAMPLE,\n"
+        }
+
+        when {
+            params {
+                outdir          = "$outputDir"
+                input           = "${launchDir}/samples.csv"
+                sample_metadata = "${launchDir}/metadata.csv"
+            }
+        }
+
+        then {
+            // The population file is made by a process of the run, so it is in the work directory
+            def population_files = []
+            file(workDir).eachFileRecurse { f -> if ( f.name == "sample_population.tsv" ) { population_files << f } }
+            def populations = population_files.collect { f -> f.text }.join("\n")
+            assertAll(
+                { assert workflow.success },
+                { assert populations.contains("PUN-R-ELF\tred") },
+                { assert populations.contains("PUN-R-JMC\tred") },
+                { assert !populations.contains("EXTRA_SAMPLE") }
             )
         }
     }

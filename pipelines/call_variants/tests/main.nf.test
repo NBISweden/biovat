@@ -208,6 +208,31 @@ nextflow_pipeline {
         }
     }
 
+    test("--group_samples with a sample without a population fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/sample_metadata_blank.csv").text = "sample,population\nA,red\nB,\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = "${launchDir}/sample_metadata_blank.csv"
+                group_samples   = true
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/reference.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("requires a population for every sample in --sample_metadata. Missing for: B")
+        }
+    }
+
     test("gatk without --dict fails") {
 
         options "-stub -output-dir ${outputDir}"

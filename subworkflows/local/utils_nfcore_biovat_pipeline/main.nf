@@ -225,6 +225,11 @@ def readSampleMetadata(sample_metadata) {
         : []
 }
 
+// The metadata rows of the given samples. --sample_metadata can list samples that are not in the run
+def filterSampleMetadata(metadata_rows, samples) {
+    return metadata_rows.findAll { meta -> meta.id in samples }
+}
+
 // --sample_metadata, when provided, groups samples into populations during bcftools_multisample variant calling (unused otherwise)
 // Every sample must then have a population in the metadata file. We warn if extras are found.
 def validateSampleMetadata(rows, metadata_rows, enable, options) {
@@ -313,8 +318,8 @@ def validateReferenceRequirements(rows, has_reference, enable) {
     }
 }
 
-// Check the rows of the samplesheet (a list of records with meta and files). options has has_reference,
-// variant_caller, multiallelic_caller and sample_metadata (whether a sample metadata sheet was given)
+// Check the rows of the samplesheet (a list of records with meta and files). options is built in main.nf, and
+// contains has_reference, variant_caller, multiallelic_caller and sample_metadata (whether a sample metadata sheet was given)
 def validateSamplesheetRows(rows, metadata_rows, enable, options) {
     if ( rows.isEmpty() ) {
         validationError("The samplesheet has no rows. Provide at least one sample.")

@@ -21,6 +21,7 @@ include { sampleToRow                } from './subworkflows/local/utils_nfcore_b
 include { validateSamplesheetRows    } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { rikerActive                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { isLongReadPlatform         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { filterSampleMetadata       } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { logRootCause               } from './subworkflows/local/utils_stage_help/main'
 include { REFERENCE_UTILS            } from './subworkflows/local/utils_reference/main'
 include { paramsSummaryMap           } from 'plugin/nf-schema'
@@ -173,15 +174,18 @@ workflow {
         fai             : (enable.cram_format && merge_active) || rikerActive(enable, true) || enable.variant_calling
     )
 
-    // Samplesheet rows as records: record(meta, files). They come from the --input file (validated by nf-schema)
-    // or from a samplesheet channel given by a calling pipeline
+    // Sample population metadata, from --sample_metadata (validated by nf-schema)
     sample_metadata_rows = readSampleMetadata(params.sample_metadata)
-    checks = record(
+
+    // The parameters that the samplesheet checks depend on, passed as the 'options' input of validateSamplesheetRows
+    options = record(
         has_reference      : params.reference != null,
         variant_caller     : params.variant_caller,
         multiallelic_caller: params.enable_multiallelic_caller,
         sample_metadata    : params.sample_metadata != null
     )
+    // Samplesheet rows as records: record(meta, files). They come from the --input file (validated by nf-schema)
+    // or from a samplesheet channel given by a calling pipeline
     if ( params.input && params.samplesheet ) {
         error "Provide either --input or a samplesheet channel, not both"
     }
@@ -189,7 +193,7 @@ workflow {
         // The rows are known here, so they are checked before any stage is called. A stage that finds the same problem
         // (a missing reference, for example) reports it with the name of its own parameter, and would do so first
         input_rows = readSamplesheet(params.input).collect { row -> record(meta: record(row[0]), files: row[1]) }
-        validateSamplesheetRows(input_rows, sample_metadata_rows, enable, checks)
+        validateSamplesheetRows(input_rows, sample_metadata_rows, enable, options)
         samplesheet = channel.fromList(input_rows)
     } else if ( params.samplesheet ) {
         // The rows of a channel are not known yet. Check them together, and release them only when the checks have passed
@@ -200,7 +204,7 @@ workflow {
             .flatMap { list ->
                 // An error raised in a closure is reported without its message, so the message is logged first
                 try {
-                    return validateSamplesheetRows(list, sample_metadata_rows, enable, checks)
+                    return validateSamplesheetRows(list, sample_metadata_rows, enable, options)
                 }
                 catch ( e: Exception ) {
                     logRootCause(e)
@@ -230,6 +234,15 @@ workflow {
     // Short read path: branch on whether preprocessing or BAM/CRAM ingestion is needed
     fastq_rows    = short_read_rows.filter { row -> row.meta.input_type == 'fastq' }
     bam_cram_rows = short_read_rows.filter { row -> row.meta.input_type == 'bam_cram' }
+
+    // The populations of the samples in the run. --sample_metadata can list samples that are not in --input, and those
+    // are left out. The rows of a samplesheet channel are only known once they have all arrived
+    run_sample_metadata = short_read_rows
+        .map { row -> row.meta.id }
+        .unique()
+        .collect()
+        .flatMap { ids -> filterSampleMetadata(sample_metadata_rows, ids.toSet()) }
+        .map { meta -> record(sample: meta.id, population: meta.population) }
     reads         = fastq_rows.map { row -> record(meta: row.meta, reads: row.files) }
 
     // Reference: the fasta and, if needed, its fai index. Stages take them as separate Value params
@@ -413,7 +426,7 @@ workflow {
         call_variants = CALL_VARIANTS(
             record(
                 alignments            : alignments_to_process,
-                sample_metadata       : channel.fromList(sample_metadata_rows).map { meta -> record(sample: meta.id, population: meta.population) },
+                sample_metadata       : run_sample_metadata,
                 variant_caller        : params.variant_caller,
                 chunk_size            : params.chunk_size,
                 min_length            : params.min_length,
