@@ -16,7 +16,7 @@ channels    = ["conda-forge", "bioconda"]
 platforms   = ["linux-64", "osx-64", "osx-arm64"]
 
 [dependencies]
-nextflow    = ">=26.4.6,<27"
+nextflow    = ">=26.10.0,<27"
 nf-core     = ">=4.0.3,<5"
 nf-test     = ">=0.9.5,<0.10"
 gh          = ">=2.97.0,<3"
@@ -76,10 +76,6 @@ description = "Run the nf-core pipeline linter"
 [tasks.lint-prek]
 cmd         = "prek run --all-files --show-diff-on-failure --color=always"
 description = "Run prek on all files"
-
-[tasks.schema-build]
-cmd         = "nf-core pipelines schema build"
-description = "Build the pipeline schema"
 
 [tasks.default-nf-test]
 cmd         = "nf-test test tests/default.nf.test --profile +docker"

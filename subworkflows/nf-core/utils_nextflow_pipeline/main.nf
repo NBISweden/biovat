@@ -74,11 +74,31 @@ def dumpParametersToJSON(outdir) {
     def timestamp = new java.util.Date().format('yyyy-MM-dd_HH-mm-ss')
     def filename  = "params_${timestamp}.json"
     def temp_pf   = new File(workflow.launchDir.toString(), ".${filename}")
-    def jsonStr   = groovy.json.JsonOutput.toJson(params)
+    // Typed params can be paths (which Groovy's JSON generator cannot serialise) or dataflow values (not serialisable, left out)
+    def printable = params
+        .findAll { _k, v -> v == null || v instanceof CharSequence || v instanceof Number || v instanceof Boolean || v instanceof java.nio.file.Path || v instanceof Map || v instanceof Collection }
+        .collectEntries { k, v -> [ k, jsonValue(v) ] }
+    def jsonStr   = groovy.json.JsonOutput.toJson(printable)
     temp_pf.text  = groovy.json.JsonOutput.prettyPrint(jsonStr)
 
     nextflow.extension.FilesEx.copyTo(temp_pf.toPath(), "${outdir}/pipeline_info/params_${timestamp}.json")
     temp_pf.delete()
+}
+
+//
+// A value for the JSON dump: maps and lists are kept, and paths (and any other object) become strings
+//
+def jsonValue(value) {
+    if ( value instanceof Map ) {
+        return value.collectEntries { k, v -> [ k, jsonValue(v) ] }
+    }
+    if ( value instanceof Collection ) {
+        return value.collect { v -> jsonValue(v) }
+    }
+    if ( value == null || value instanceof CharSequence || value instanceof Number || value instanceof Boolean ) {
+        return value
+    }
+    return value.toString()
 }
 
 //

@@ -1,0 +1,21 @@
+{
+    "three files - stub": {
+        "content": [
+            1,
+            [
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml"
+            ]
+        ],
+        "timestamp": "2026-10-20T13:14:40.716642",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    }
+}

@@ -1,0 +1,12 @@
+nextflow.enable.types = true
+
+// Fixture of the schema check: every parameter of this block differs from drift_schema.json, except `same`
+
+params {
+    same        : Integer = 3
+    missing     : String?          // not in the schema
+    wrong_type  : Integer?         // a string in the schema
+    wrong_value : String = 'a'     // 'b' in the schema
+    no_default  : Boolean = true   // no default in the schema
+    extra_value : String?          // has a default in the schema
+}

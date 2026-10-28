@@ -1,0 +1,172 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/NBISweden/biovat/main/pipelines/call_variants/nextflow_schema.json",
+    "title": "BioVAT call_variants pipeline parameters",
+    "description": "Variant calling with bcftools or GATK",
+    "type": "object",
+    "$defs": {
+        "input_options": {
+            "title": "Input options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data.",
+            "properties": {
+                "samplesheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alignments to call, as a CSV with one row per alignment and the columns sample, library_id, platform, single_end, alignment and index. Each platform is called as its own callset.",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "alignments": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per alignment, with the keys meta (a map with at least id and pl), alignment (BAM or CRAM) and index.",
+                    "fa_icon": "fas fa-file"
+                },
+                "sample_metadata": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "CSV with one row per sample and the columns sample and population, as for the --sample_metadata of BioVAT. Only used with --group_samples.",
+                    "fa_icon": "fas fa-file"
+                },
+                "fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Reference fasta. Required.",
+                    "fa_icon": "fas fa-file"
+                },
+                "fai": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Index of the reference fasta (.fai). Required.",
+                    "fa_icon": "fas fa-file"
+                },
+                "dict": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Sequence dictionary of the reference fasta (.dict). Required for --variant_caller gatk.",
+                    "fa_icon": "fas fa-file"
+                }
+            }
+        },
+        "variant_calling_options": {
+            "title": "Variant calling options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Options of the variant callers.",
+            "properties": {
+                "variant_caller": {
+                    "type": "string",
+                    "default": "bcftools_multisample",
+                    "enum": ["bcftools_multisample", "gatk"],
+                    "description": "Variant caller to use.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "callset_prefix": {
+                    "type": "string",
+                    "default": "all_samples",
+                    "description": "File name prefix of the VCF with all samples. The caller is appended, e.g. all_samples.gatk.vcf.gz.",
+                    "fa_icon": "fas fa-tag"
+                },
+                "chunk_size": {
+                    "type": "integer",
+                    "description": "Chunk size (bp) for splitting the genome into chunks for parallel calling. Default is chosen dynamically.",
+                    "fa_icon": "fas fa-cut"
+                },
+                "min_length": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Minimum contig/scaffold length (bp) to be kept for variant calling. Set to 0 to keep all regions.",
+                    "fa_icon": "fas fa-ruler"
+                },
+                "variant_qc": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run quality checks (bcftools stats and vcftools) on the joint callset.",
+                    "fa_icon": "fas fa-check"
+                }
+            }
+        },
+        "bcftools_options": {
+            "title": "BCFtools multi-sample options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Options for --variant_caller bcftools_multisample.",
+            "properties": {
+                "group_samples": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Group samples into populations (bcftools call --group-samples). Needs --sample_metadata with a population for every sample.",
+                    "fa_icon": "fas fa-users"
+                },
+                "save_mpileup": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save the bcftools mpileup output.",
+                    "fa_icon": "fas fa-save"
+                },
+                "baq": {
+                    "type": "boolean",
+                    "description": "Compute base alignment quality (BAQ) in bcftools mpileup.",
+                    "fa_icon": "fas fa-check"
+                },
+                "multiallelic_caller": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use the multiallelic caller in bcftools call (--multiallelic-caller). When false, the consensus caller is used. Population grouping (--group_samples) needs the multiallelic caller.",
+                    "fa_icon": "fas fa-check"
+                },
+                "variants_only": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Output variant sites only in bcftools call (--variants-only). When false, every site, including invariant ones, is written.",
+                    "fa_icon": "fas fa-check"
+                },
+                "bcftools_mpileup_extra": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Additional arguments for bcftools mpileup.",
+                    "fa_icon": "fas fa-terminal"
+                },
+                "bcftools_call_extra": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Additional arguments for bcftools call.",
+                    "fa_icon": "fas fa-terminal"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "properties": {
+                "help": {
+                    "type": ["boolean", "string"],
+                    "description": "Display the help message.",
+                    "fa_icon": "fas fa-question-circle"
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full help message.",
+                    "fa_icon": "fas fa-question-circle"
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_options"
+        },
+        {
+            "$ref": "#/$defs/variant_calling_options"
+        },
+        {
+            "$ref": "#/$defs/bcftools_options"
+        },
+        {
+            "$ref": "#/$defs/generic_options"
+        }
+    ]
+}

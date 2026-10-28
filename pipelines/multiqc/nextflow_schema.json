@@ -1,0 +1,86 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/NBISweden/biovat/main/pipelines/multiqc/nextflow_schema.json",
+    "title": "BioVAT multiqc pipeline parameters",
+    "description": "MultiQC report and software versions",
+    "type": "object",
+    "$defs": {
+        "input_options": {
+            "title": "Input options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data.",
+            "properties": {
+                "multiqc_files": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Samplesheet (CSV, JSON or YAML) with one row per file to report on. Column: file.",
+                    "fa_icon": "fas fa-file"
+                }
+            }
+        },
+        "multiqc_options": {
+            "title": "MultiQC options",
+            "type": "object",
+            "fa_icon": "fas fa-chart-bar",
+            "description": "Options for the MultiQC report.",
+            "properties": {
+                "multiqc_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Custom config file to supply to MultiQC. [default: assets/multiqc_config.yml]",
+                    "fa_icon": "fas fa-cog"
+                },
+                "multiqc_logo": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Custom logo file to supply to MultiQC.",
+                    "fa_icon": "fas fa-image"
+                },
+                "multiqc_title": {
+                    "type": "string",
+                    "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
+                    "fa_icon": "fas fa-file-signature"
+                },
+                "multiqc_methods_description": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Custom MultiQC yaml file containing HTML including a methods description. [default: assets/biovat_methods_description.yml]",
+                    "fa_icon": "fas fa-cog"
+                },
+                "workflow_summary": {
+                    "type": "string",
+                    "default": "",
+                    "description": "MultiQC-formatted HTML summary of the parameters of the calling pipeline.",
+                    "fa_icon": "fas fa-list"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "properties": {
+                "help": {
+                    "type": ["boolean", "string"],
+                    "description": "Display the help message.",
+                    "fa_icon": "fas fa-question-circle"
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full help message.",
+                    "fa_icon": "fas fa-question-circle"
+                }
+            }
+        }
+    },
+    "allOf": [
+        { "$ref": "#/$defs/input_options" },
+        { "$ref": "#/$defs/multiqc_options" },
+        { "$ref": "#/$defs/generic_options" }
+    ]
+}

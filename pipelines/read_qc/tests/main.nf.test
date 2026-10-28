@@ -1,0 +1,146 @@
+nextflow_pipeline {
+
+    name "Test pipeline read_qc"
+    script "../main.nf"
+    tag "pipeline"
+    tag "pipelines/read_qc"
+
+    test("two read groups - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/reads.yml").text = [
+                "- meta: {id: PUN-R-ELF, library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1}",
+                "  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]",
+                "- meta: {id: PUN-R-JMC, library: '1', flowcell: SRR9309467, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-JMC.1.SRR9309467.1}",
+                "  reads: [${data}/PUN-R-JMC_1_R1.fastq.gz, ${data}/PUN-R-JMC_1_R2.fastq.gz]"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                reads = "${launchDir}/reads.yml"
+            }
+        }
+
+        then {
+            assert workflow.success
+            def published = getAllFilesFromDir(outputDir, relative: true, includeDir: false)
+            assertAll(
+                { assert snapshot(workflow.trace.succeeded().size(), published).match() }
+            )
+        }
+    }
+
+    test("BioVAT samplesheet - stub, bam rows are skipped") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/samplesheet.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
+                "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false",
+                "PUN-R-JMC,1,SRR9309467,1,ILLUMINA,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+            }
+        }
+
+        then {
+            assert workflow.success
+            def published = getAllFilesFromDir(outputDir, relative: true, includeDir: false)
+            assertAll(
+                // two fastq rows are checked, the bam row is skipped
+                { assert workflow.trace.succeeded().size() == 2 },
+                { assert snapshot(published).match() }
+            )
+        }
+    }
+
+    test("a samplesheet row with neither fastq nor bam fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/samplesheet.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,,,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+            }
+        }
+
+        then {
+            // The stage skips the rows of the other input type, but still checks them
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("has neither fastq_1 nor bam")
+        }
+    }
+
+    test("samplesheet and reads together fail") {
+
+        options "-stub"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/reads.yml").text = [
+                "- meta: {id: PUN-R-ELF, library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1}",
+                "  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]"
+            ].join("\n") + "\n"
+            new File("${launchDir}/samplesheet.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+                reads       = "${launchDir}/reads.yml"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.toString().contains("Provide either --samplesheet or --reads, not both") || workflow.stderr.toString().contains("Provide either --samplesheet or --reads, not both")
+        }
+    }
+
+    test("missing --samplesheet fails") {
+
+        options "-stub"
+
+        then {
+            assert workflow.failed
+            assert workflow.stdout.toString().contains("Missing required parameter --samplesheet") || workflow.stderr.toString().contains("Missing required parameter --samplesheet")
+        }
+    }
+
+    test("--help") {
+
+        when {
+            params {
+                help = true
+            }
+        }
+
+        then {
+            // nf-test does not capture the help message. This checks that --help is reached and exits cleanly,
+            // i.e. that the schema loads and no required parameter blocks it
+            assert workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+}

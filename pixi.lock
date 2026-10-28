@@ -23,7 +23,7 @@ environments:
     - url: https://conda.anaconda.org/bioconda/
     packages:
       linux-64:
-      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.6-h2a3209d_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.10.0-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.1.0-pyhdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-test-0.9.5-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/piper-0.15.1-pyhdfd78af_0.conda
@@ -217,7 +217,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/yacman-1.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       osx-64:
-      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.6-h2a3209d_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.10.0-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.1.0-pyhdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-test-0.9.5-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/piper-0.15.1-pyhdfd78af_0.conda
@@ -380,7 +380,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zlib-ng-2.3.3-h8bce59a_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       osx-arm64:
-      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.6-h2a3209d_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.10.0-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.1.0-pyhdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/nf-test-0.9.5-h2a3209d_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/piper-0.15.1-pyhdfd78af_0.conda
@@ -542,16 +542,19 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-hed4e4f5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
 packages:
-- conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.04.6-h2a3209d_0.conda
-  sha256: 4182f40edeebe27d01e23a9b2774cb52565079ad947bf2d8504214c5248a156b
-  md5: 30dd384c7c334c6fff49c3d3525ba554
+- conda: https://conda.anaconda.org/bioconda/noarch/nextflow-26.10.0-h2a3209d_0.conda
+  sha256: 4df243d47f3d152853dac03b0d7a74507a87ff4304606e956887bbb88de2ff7f
+  md5: 5bef1141808d8eae443a54f1526a1113
   depends:
   - coreutils
   - curl
-  - openjdk >=17,<=24
+  - openjdk >=17,<26
   license: Apache-2.0
-  size: 37863668
-  timestamp: 1783624848374
+  run_exports:
+    weak:
+    - nextflow >=26.10.0,<26.11.0a0
+  size: 42928989
+  timestamp: 1791804192960
 - conda: https://conda.anaconda.org/bioconda/noarch/nf-core-4.1.0-pyhdfd78af_0.conda
   sha256: b90513a5036ff2084d8654913cb76611f374813900df48b394bd05077b6e391b
   md5: 0bb17a17f070f2689ea0e9bbf59de9c1

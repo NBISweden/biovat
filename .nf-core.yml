@@ -3,6 +3,17 @@ repository_type: pipeline
 nf_core_version: 4.1.0
 
 lint:
+  # TEMPORARY, set for the typed-records migration (Nextflow 26.10). Revert these when nf-core updates its lint
+  # tests for typed params (parameters defined in main.nf instead of nextflow.config) and for pipelines that
+  # have no conf/modules.config (tool arguments are record fields). They are: modules_config, schema_params,
+  # the params.* entries under nextflow_config, conf/modules.config under files_exist, and tests/help.nf.test
+  # tests/schema_params.nf.test and tests/validation.nf.test under nf_test_content.
+  modules_config: false
+  schema_params: false
+  nf_test_content:
+    - tests/help.nf.test
+    - tests/schema_params.nf.test
+    - tests/validation.nf.test
   template_strings:
     # Binary alignment fixtures: mimetypes doesn't recognise .bam/.cram, so the
     # naive Jinja-placeholder scan reads them as latin1 text and can coincidentally
@@ -23,9 +34,32 @@ lint:
   nextflow_config:
     - manifest.name
     - manifest.homePage
+    # The typed params {} block in main.nf holds the parameter defaults, not nextflow.config
+    - params.input
+    - config_defaults:
+        - params.enable_raw_read_qc
+        - params.enable_trim
+        - params.enable_align
+        - params.enable_align_qc
+        - params.enable_mark_duplicates
+        - params.enable_variant_calling
+        - params.enable_variant_qc
+        - params.aligner
+        - params.enable_riker
+        - params.duplicate_marker
+        - params.optical_distance
+        - params.callset_prefix
+        - params.variant_caller
+        - params.min_length
+        - params.enable_multiallelic_caller
+        - params.enable_variants_only
+        - params.bcftools_mpileup_extra
+        - params.bcftools_call_extra
+        - params.validate_params
   multiqc_config:
     - report_comment
   files_exist:
+    - conf/modules.config
     - conf/igenomes.config
     - conf/igenomes_ignored.config
     - CODE_OF_CONDUCT.md

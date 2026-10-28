@@ -1,0 +1,58 @@
+{
+    "two read groups - stub": {
+        "content": [
+            2,
+            [
+                "fastp/PUN-R-ELF.1.SRR9309791.1.fastp.html",
+                "fastp/PUN-R-ELF.1.SRR9309791.1.fastp.json",
+                "fastp/PUN-R-ELF.1.SRR9309791.1.fastp.log",
+                "fastp/PUN-R-ELF.1.SRR9309791.1_R1.fastp.fastq.gz",
+                "fastp/PUN-R-ELF.1.SRR9309791.1_R2.fastp.fastq.gz",
+                "fastp/PUN-R-JMC.1.SRR9309467.1.fastp.html",
+                "fastp/PUN-R-JMC.1.SRR9309467.1.fastp.json",
+                "fastp/PUN-R-JMC.1.SRR9309467.1.fastp.log",
+                "fastp/PUN-R-JMC.1.SRR9309467.1_R1.fastp.fastq.gz",
+                "fastp/PUN-R-JMC.1.SRR9309467.1_R2.fastp.fastq.gz",
+                "multiqc_files/PUN-R-ELF.1.SRR9309791.1.fastp.json",
+                "multiqc_files/PUN-R-JMC.1.SRR9309467.1.fastp.json",
+                "trimmed_reads/PUN-R-ELF.1.SRR9309791.1_R1.fastp.fastq.gz",
+                "trimmed_reads/PUN-R-ELF.1.SRR9309791.1_R2.fastp.fastq.gz",
+                "trimmed_reads/PUN-R-JMC.1.SRR9309467.1_R1.fastp.fastq.gz",
+                "trimmed_reads/PUN-R-JMC.1.SRR9309467.1_R2.fastp.fastq.gz"
+            ]
+        ],
+        "timestamp": "2026-10-20T13:14:57.396475",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    },
+    "two read groups from a samplesheet - stub, the bam row is skipped": {
+        "content": [
+            2,
+            [
+                "fastp/PUN-R-ELF.1.SRR9309791.1.fastp.html",
+                "fastp/PUN-R-ELF.1.SRR9309791.1.fastp.json",
+                "fastp/PUN-R-ELF.1.SRR9309791.1.fastp.log",
+                "fastp/PUN-R-ELF.1.SRR9309791.1_R1.fastp.fastq.gz",
+                "fastp/PUN-R-ELF.1.SRR9309791.1_R2.fastp.fastq.gz",
+                "fastp/PUN-R-JMC.1.SRR9309467.1.fastp.html",
+                "fastp/PUN-R-JMC.1.SRR9309467.1.fastp.json",
+                "fastp/PUN-R-JMC.1.SRR9309467.1.fastp.log",
+                "fastp/PUN-R-JMC.1.SRR9309467.1_R1.fastp.fastq.gz",
+                "fastp/PUN-R-JMC.1.SRR9309467.1_R2.fastp.fastq.gz",
+                "multiqc_files/PUN-R-ELF.1.SRR9309791.1.fastp.json",
+                "multiqc_files/PUN-R-JMC.1.SRR9309467.1.fastp.json",
+                "trimmed_reads/PUN-R-ELF.1.SRR9309791.1_R1.fastp.fastq.gz",
+                "trimmed_reads/PUN-R-ELF.1.SRR9309791.1_R2.fastp.fastq.gz",
+                "trimmed_reads/PUN-R-JMC.1.SRR9309467.1_R1.fastp.fastq.gz",
+                "trimmed_reads/PUN-R-JMC.1.SRR9309467.1_R2.fastp.fastq.gz"
+            ]
+        ],
+        "timestamp": "2026-10-21T13:50:49.078473",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    }
+}

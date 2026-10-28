@@ -1,0 +1,946 @@
+Changes in component 'nf-core/samtools/faidx'
+'modules/nf-core/samtools/faidx/environment.yml' is unchanged
+Changes in 'samtools/faidx/meta.yml':
+--- modules/nf-core/samtools/faidx/meta.yml
++++ modules/nf-core/samtools/faidx/meta.yml
+@@ -19,7 +19,11 @@
+         - "MIT"
+       identifier: biotools:samtools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample or reference. Used as the default prefix of the output files
++    - meta:
++        optional: true
+         type: map
+         description: |
+           Groovy Map containing reference information
+@@ -39,7 +43,11 @@
+       description: use cut to get the sizes of the index (true) or not (false)
+ output:
+   fa:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -50,7 +58,11 @@
+           pattern: "*.{fa}"
+           ontologies: []
+   sizes:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -61,7 +73,11 @@
+           pattern: "*.{sizes}"
+           ontologies: []
+   fai:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -72,7 +88,11 @@
+           pattern: "*.{fai}"
+           ontologies: []
+   gzi:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+
+Changes in 'samtools/faidx/main.nf':
+--- modules/nf-core/samtools/faidx/main.nf
++++ modules/nf-core/samtools/faidx/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process SAMTOOLS_FAIDX {
+-    tag "${fasta}"
++    tag "${id}"
+     label 'process_single'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,28 +9,40 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
+         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
+ 
++    ext [
++        args: { samtools_faidx_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(fasta), path(fai)
+-    val get_sizes
++    record(
++        id: String,
++        meta: Record?,
++        fasta: Path,
++        fai: Path?,
++        get_sizes: Boolean,
++        samtools_faidx_args: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("*.{fa,fasta}"), emit: fa, optional: true
+-    tuple val(meta), path("*.sizes"), emit: sizes, optional: true
+-    tuple val(meta), path("*.fai"), emit: fai, optional: true
+-    tuple val(meta), path("*.gzi"), emit: gzi, optional: true
+-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
++    record(
++        id: id,
++        meta: meta,
++        fa: file("*.{fa,fasta}", optional: true),
++        sizes: file("*.sizes", optional: true),
++        fai: file("*.fai", optional: true),
++        gzi: file("*.gzi", optional: true)
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+     def get_sizes_command = get_sizes ? "cut -f 1,2 ${fasta}.fai > ${fasta}.sizes" : ''
+     """
+     samtools \\
+         faidx \\
+         ${fasta} \\
+-        ${args}
++        ${task.ext.args}
+ 
+     ${get_sizes_command}
+     """
+
+Changes in 'samtools/faidx/tests/main.nf.test.snap':
+--- modules/nf-core/samtools/faidx/tests/main.nf.test.snap
++++ modules/nf-core/samtools/faidx/tests/main.nf.test.snap
+@@ -1,352 +1,182 @@
+ {
+     "test_samtools_faidx_fasta - stub": {
+         "content": [
+-            {
+-                "fa": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "extract.fa:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "fai": [
+-                    
+-                ],
+-                "gzi": [
+-                    
+-                ],
+-                "sizes": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    "extract.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    null,
++                    null,
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-07-10T16:03:49.706821725",
++        "timestamp": "2026-10-19T11:20:37.303921",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            "nextflow": "26.10.0"
+         }
+     },
+     "test_samtools_faidx": {
+         "content": [
+-            {
+-                "fa": [
+-                    
+-                ],
+-                "fai": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.fai:md5,9da2a56e2853dc8c0b86a9e7229c9fe5"
+-                    ]
+-                ],
+-                "gzi": [
+-                    
+-                ],
+-                "sizes": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    null,
++                    "genome.fasta.fai:md5,9da2a56e2853dc8c0b86a9e7229c9fe5",
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T08:57:29.747964",
++        "timestamp": "2026-10-19T11:20:18.665685",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "test_samtools_faidx_get_sizes_bgzip - stub": {
+         "content": [
+-            {
+-                "fa": [
+-                    
+-                ],
+-                "fai": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.gz.fai:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "gzi": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.gz.gzi:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "sizes": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.gz.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    "genome.fasta.gz.sizes:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "genome.fasta.gz.fai:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "genome.fasta.gz.gzi:md5,d41d8cd98f00b204e9800998ecf8427e"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T08:58:10.04235",
++        "timestamp": "2026-10-19T11:21:03.703591",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "test_samtools_faidx_get_sizes": {
+         "content": [
+-            {
+-                "fa": [
+-                    
+-                ],
+-                "fai": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.fai:md5,9da2a56e2853dc8c0b86a9e7229c9fe5"
+-                    ]
+-                ],
+-                "gzi": [
+-                    
+-                ],
+-                "sizes": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.sizes:md5,a57c401f27ae5133823fb09fb21c8a3c"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    "genome.fasta.sizes:md5,a57c401f27ae5133823fb09fb21c8a3c",
++                    "genome.fasta.fai:md5,9da2a56e2853dc8c0b86a9e7229c9fe5",
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T08:57:55.552612",
++        "timestamp": "2026-10-19T11:20:47.889617",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "test_samtools_faidx_bgzip": {
+         "content": [
+-            {
+-                "fa": [
+-                    
+-                ],
+-                "fai": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.gz.fai:md5,9da2a56e2853dc8c0b86a9e7229c9fe5"
+-                    ]
+-                ],
+-                "gzi": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.gz.gzi:md5,7dea362b3fac8e00956a4952a3d4f474"
+-                    ]
+-                ],
+-                "sizes": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    null,
++                    "genome.fasta.gz.fai:md5,9da2a56e2853dc8c0b86a9e7229c9fe5",
++                    "genome.fasta.gz.gzi:md5,7dea362b3fac8e00956a4952a3d4f474"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T08:57:34.346045",
++        "timestamp": "2026-10-19T11:20:24.421261",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "test_samtools_faidx_fasta": {
+         "content": [
+-            {
+-                "fa": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "extract.fa:md5,6a0774a0ad937ba0bfd2ac7457d90f36"
+-                    ]
+-                ],
+-                "fai": [
+-                    
+-                ],
+-                "gzi": [
+-                    
+-                ],
+-                "sizes": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    "extract.fa:md5,6a0774a0ad937ba0bfd2ac7457d90f36",
++                    null,
++                    null,
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T08:57:39.136814",
++        "timestamp": "2026-10-19T11:20:30.848254",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "test_samtools_faidx_get_sizes - stub": {
+         "content": [
+-            {
+-                "fa": [
+-                    
+-                ],
+-                "fai": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.fai:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "gzi": [
+-                    
+-                ],
+-                "sizes": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.sizes:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    "genome.fasta.sizes:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "genome.fasta.fai:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T08:58:05.200994",
++        "timestamp": "2026-10-19T11:20:58.463088",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "test_samtools_faidx_fai - stub": {
+         "content": [
+-            {
+-                "fa": [
+-                    
+-                ],
+-                "fai": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.fai:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "gzi": [
+-                    
+-                ],
+-                "sizes": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    null,
++                    "genome.fasta.fai:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-07-10T16:03:54.799114575",
++        "timestamp": "2026-10-19T11:20:42.529067",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            "nextflow": "26.10.0"
+         }
+     },
+     "test_samtools_faidx_get_sizes_bgzip": {
+         "content": [
+-            {
+-                "fa": [
+-                    
+-                ],
+-                "fai": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.gz.fai:md5,9da2a56e2853dc8c0b86a9e7229c9fe5"
+-                    ]
+-                ],
+-                "gzi": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.gz.gzi:md5,7dea362b3fac8e00956a4952a3d4f474"
+-                    ]
+-                ],
+-                "sizes": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.fasta.gz.sizes:md5,a57c401f27ae5133823fb09fb21c8a3c"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_FAIDX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    "genome.fasta.gz.sizes:md5,a57c401f27ae5133823fb09fb21c8a3c",
++                    "genome.fasta.gz.fai:md5,9da2a56e2853dc8c0b86a9e7229c9fe5",
++                    "genome.fasta.gz.gzi:md5,7dea362b3fac8e00956a4952a3d4f474"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T08:58:00.460031",
++        "timestamp": "2026-10-19T11:20:53.291965",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+'modules/nf-core/samtools/faidx/tests/nextflow.config' is unchanged
+Changes in 'samtools/faidx/tests/main.nf.test':
+--- modules/nf-core/samtools/faidx/tests/main.nf.test
++++ modules/nf-core/samtools/faidx/tests/main.nf.test
+@@ -18,20 +18,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    []
+-                ]
+-                input[1] = false
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: null,
++                    get_sizes: false,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+@@ -44,20 +46,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
+-                    []
+-                ]
+-                input[1] = false
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
++                    fai: null,
++                    get_sizes: false,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+@@ -70,20 +74,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ]
+-                input[1] = false
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    get_sizes: false,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+@@ -98,20 +104,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ]
+-                input[1] = false
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    get_sizes: false,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+@@ -126,20 +134,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    []
+-                ]
+-                input[1] = false
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: null,
++                    get_sizes: false,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+@@ -152,20 +162,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    []
+-                ]
+-                input[1] = true
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: null,
++                    get_sizes: true,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+@@ -178,20 +190,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
+-                    []
+-                ]
+-                input[1] = true
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
++                    fai: null,
++                    get_sizes: true,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+@@ -206,20 +220,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    []
+-                ]
+-                input[1] = true
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: null,
++                    get_sizes: true,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+@@ -234,20 +250,22 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
+-                    []
+-                ]
+-                input[1] = true
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match()}
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.gz', checkIfExists: true),
++                    fai: null,
++                    get_sizes: true,
++                    samtools_faidx_args: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.fa, r.sizes, r.fai, r.gzi ] }).match()}
+             )
+         }
+     }
+
+************************************************************

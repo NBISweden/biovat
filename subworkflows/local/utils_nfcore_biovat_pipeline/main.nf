@@ -15,6 +15,7 @@ include { paramsHelp              } from 'plugin/nf-schema'
 include { completionSummary       } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
+include { stageError               } from '../utils_stage_help/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,17 +31,17 @@ workflow PIPELINE_INITIALISATION {
     monochrome_logs   // boolean: Do not use coloured log outputs
     nextflow_cli_args // array: List of positional nextflow CLI args
     outdir            // string: The output directory where the results will be saved
-    input             // string: Path to input samplesheet
-    sample_metadata   // string: Path to sample-level metadata sheet (optional)
     help              // boolean: Display help message and exit
     help_full         // boolean: Show the full help message
     show_hidden       // boolean: Show hidden parameters in the help message
+    enable            // record: stage/tool gating flags
 
     main:
+
     //
     // Print version and exit if required and dump pipeline parameters to JSON file
     //
-    UTILS_NEXTFLOW_PIPELINE(
+    UTILS_NEXTFLOW_PIPELINE (
         version,
         true,
         outdir,
@@ -63,10 +64,10 @@ workflow PIPELINE_INITIALISATION {
 
     command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --outdir <OUTDIR>"
 
-    UTILS_NFSCHEMA_PLUGIN(
+    UTILS_NFSCHEMA_PLUGIN (
         workflow,
         validate_params,
-        null,
+        "${moduleDir}/../../../nextflow_schema.json",
         help,
         help_full,
         show_hidden,
@@ -78,66 +79,15 @@ workflow PIPELINE_INITIALISATION {
     //
     // Check config provided to the pipeline
     //
-    UTILS_NFCORE_PIPELINE(
+    UTILS_NFCORE_PIPELINE (
         nextflow_cli_args
     )
 
-    // Validation of pipeline parameters
-    validateInputParameters()
-
-    // Parse samplesheet 1 of 2
-    // Build list of samplesheet rows (channel will be created after validation checks)
-    def samplesheet_rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
-        .collect { meta, fastq_1, fastq_2, bam ->
-            // We define read_group separately as an intuitive/readable @RG-level file prefix
-            def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
-            // GATK format @RG ID/PU written by the aligners/samtools, and expected by VALIDATE_READGROUP_HEADER
-            def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}".toString()
-            def extra = bam
-                ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
-                : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
-            [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
-        }
-
-    // Parse samplesheet 2 of 2
-    // Build sample level metadata (e.g. population) if --sample_metadata is provided, one row per sample
-    def sample_metadata_rows = sample_metadata
-        ? samplesheetToList(sample_metadata, "${projectDir}/assets/schema_sample_metadata.json").collect { row -> row[0] }
-        : []
-
-    // Validation checks
-
-    // Alignments are merged from read group to library to sample levels. A specific library must not mix platforms, and
-    // every alignment in a merge group must agree on single_end
-    validateMergeGroups(samplesheet_rows)
-
-    // Long-read rows are temporarily excluded in BIOVAT, so stage-level checks currently consider only short-read rows
-    def short_read_rows = samplesheet_rows.findAll { meta, _files -> !isLongReadPlatform(meta.pl) }
-
-    // Correctness of --sample_metadata is checked against the samplesheet rows
-    validateSampleMetadata(short_read_rows, sample_metadata_rows)
-    def samples = short_read_rows.collect { meta, _files -> meta.id }.toSet()
-
-    // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
-    validateAlignmentConsumers(short_read_rows)
-
-    // Report every reason --reference is needed (params and samplesheet rows) in one error
-    validateReferenceRequirements(short_read_rows)
-
-    // Create reference channel from input file provided through params.reference
-    reference = channel.empty()
-    if ( params.reference ) {
-        reference = channel.value(file(params.reference, checkIfExists: true))
-            .map { fasta ->
-                def meta = [ id: fasta.baseName ]
-                return [ meta, fasta ]
-            }
-    }
+    // Validation pipeline parameters
+    validateInputParameters(enable)
 
     emit:
-    samplesheet           = channel.fromList(samplesheet_rows)
-    sample_metadata_sheet = channel.fromList(sample_metadata_rows.findAll { meta -> meta.id in samples })
-    reference
+    dummy_emit = true
 }
 
 /*
@@ -177,15 +127,62 @@ workflow PIPELINE_COMPLETION {
 // Custom validation of input parameters (e.g. dependent/exclusive params)
 //
 
+// Read and validate the samplesheet with nf-schema, returning one [ meta, files ] row per read group.
+// The schema is resolved relative to this script, so the function can be used by pipelines that include it
+def readSamplesheet(input) {
+    return samplesheetToList(input, "${moduleDir}/../../../assets/schema_input.json")
+        .collect { meta, fastq_1, fastq_2, bam -> buildSampleRow(meta, fastq_1, fastq_2, bam) }
+}
+
+// Convert a row of the samplesheet, loaded as a record by Nextflow, to a [ meta, files ] row
+// Runs inside operator closures, where an error is reported as "Unexpected error [InvocationTargetException]" and its
+// message is left in .nextflow.log, so stageError logs the message first
+def sampleToRow(sample) {
+    if ( !sample.fastq_1 && !sample.bam ) {
+        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has neither fastq_1 nor bam")
+    }
+    if ( sample.fastq_1 && sample.bam ) {
+        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has both fastq_1 and bam")
+    }
+    def meta = [
+        id        : sample.sample,
+        library   : sample.library_id,
+        flowcell  : sample.flowcell_id,
+        lane      : sample.lane,
+        pl        : sample.platform,
+    ]
+    if ( sample.bam ) {
+        meta.single_end = sample.single_end
+    }
+    return buildSampleRow(meta, sample.fastq_1, sample.fastq_2, sample.bam)
+}
+
+// Add the read group information to the meta of a samplesheet row
+def buildSampleRow(meta, fastq_1, fastq_2, bam) {
+    // We define read_group separately as an intuitive/readable @RG-level file prefix
+    def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
+    // GATK format @RG ID/PU written by the aligners/samtools, and expected by VALIDATE_READGROUP_HEADER
+    def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}".toString()
+    def extra = bam
+        ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
+        : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
+    return [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
+}
+
+// Turn an entry of the versions topic into [ process name, "  tool: version" ]. The topic is shared with every process
+// of a pipeline that includes BioVAT, so both forms are accepted: record(process, tool, version), and the tuple
+// (process, tool, version) that the Nextflow docs use for typed processes
+def versionEntryToLine(entry) {
+    def (process, tool, version) = entry instanceof List ? entry : [ entry.process, entry.tool, entry.version ]
+    return tuple(process.toString().tokenize(':').last(), "  ${tool}: ${version}")
+}
+
 def validationError(message) {
     error "\033[0;91mERROR\033[0m: ${message}"
 }
 
-def validateInputParameters() {
+def validateInputParameters(enable) {
 
-    def enable = params
-        .findAll { k, _v -> k.startsWith('enable_') }
-        .collectEntries { k, v -> [(k - 'enable_'): v] }
     // If CRAM format is requested, qualimap cannot be run
     if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
         validationError("Qualimap cannot be run when CRAM output is enabled.")
@@ -200,42 +197,49 @@ def validateInputParameters() {
 //    so libraries are only compared within a platform
 def validateMergeGroups(rows) {
     rows
-        .groupBy { meta, _reads -> [ meta.id, meta.library ] }
+        .groupBy { row -> [ row.meta.id, row.meta.library ] }
         .each { key, group ->
             def (sample_id, library_id) = key
-            def platforms = group.collect { meta, _reads -> meta.pl }.unique()
+            def platforms = group.collect { row -> row.meta.pl }.unique()
             if (platforms.size() > 1) {
                 validationError("Sample '${sample_id}', library '${library_id}' mixes sequencing platforms (${platforms.join(', ')}) - all lanes of a library must share the same platform.")
             }
-            if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
+            if (group.collect { row -> row.meta.single_end }.unique().size() > 1) {
                 validationError("Sample '${sample_id}', library '${library_id}' mixes single-end and paired-end reads across lanes - all lanes of a library must share the same read layout.")
             }
         }
     rows
-        .groupBy { meta, _reads -> [ meta.id, meta.pl ] }
+        .groupBy { row -> [ row.meta.id, row.meta.pl ] }
         .each { key, group ->
             def (sample_id, platform) = key
-            if (group.collect { meta, _reads -> meta.single_end }.unique().size() > 1) {
+            if (group.collect { row -> row.meta.single_end }.unique().size() > 1) {
                 validationError("Sample '${sample_id}' mixes single-end and paired-end reads across its ${platform} libraries - all libraries of a sample sequenced on the same platform must share the same read layout.")
             }
         }
 }
 
+// Read and validate the sample metadata sheet with nf-schema, returning one meta map per sample
+def readSampleMetadata(sample_metadata) {
+    return sample_metadata
+        ? samplesheetToList(sample_metadata, "${moduleDir}/../../../assets/schema_sample_metadata.json").collect { row -> row[0] }
+        : []
+}
+
 // --sample_metadata, when provided, groups samples into populations during bcftools_multisample variant calling (unused otherwise)
 // Every sample must then have a population in the metadata file. We warn if extras are found.
-def validateSampleMetadata(rows, metadata_rows) {
-    if ( !(params.enable_variant_calling && params.sample_metadata) ) {
+def validateSampleMetadata(rows, metadata_rows, enable, options) {
+    if ( !(enable.variant_calling && options.sample_metadata) ) {
         return
     }
-    if ( params.variant_caller != 'bcftools_multisample' ) {
-        log.warn("--sample_metadata is only used by --variant_caller bcftools_multisample, so it is ignored with --variant_caller ${params.variant_caller}")
+    if ( options.variant_caller != 'bcftools_multisample' ) {
+        log.warn("--sample_metadata is only used by --variant_caller bcftools_multisample, so it is ignored with --variant_caller ${options.variant_caller}")
         return
     }
     // bcftools call only supports --group-samples with the multiallelic caller (-m)
-    if ( !params.enable_multiallelic_caller ) {
+    if ( !options.multiallelic_caller ) {
         validationError("Population grouping with '--sample_metadata' requires the multiallelic caller. Set '--enable_multiallelic_caller true' or remove '--sample_metadata'.")
     }
-    def samplesheet_samples = rows.collect { meta, _files -> meta.id }.unique()
+    def samplesheet_samples = rows.collect { row -> row.meta.id }.unique()
     def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
     def extra_samples       = metadata_supplied - samplesheet_samples
     if ( extra_samples ) {
@@ -260,11 +264,8 @@ def rikerActive(enable, has_bam_cram_rows) {
 }
 
 // Stages that consume alignments need a source of them: ALIGN_READS or BAM/CRAM input rows
-def validateAlignmentConsumers(rows) {
-    def enable            = params
-        .findAll { k, _v -> k.startsWith('enable_') }
-        .collectEntries { k, v -> [(k - 'enable_'): v] }
-    def has_bam_cram_rows = rows.any { meta, _files -> meta.input_type == 'bam_cram' }
+def validateAlignmentConsumers(rows, enable) {
+    def has_bam_cram_rows = rows.any { row -> row.meta.input_type == 'bam_cram' }
     if ( hasAlignmentSource(enable, has_bam_cram_rows) ) {
         return
     }
@@ -282,15 +283,12 @@ def isLongReadPlatform(platform) {
 }
 
 // Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
-def validateReferenceRequirements(rows) {
-    if ( params.reference ) {
+def validateReferenceRequirements(rows, has_reference, enable) {
+    if ( has_reference ) {
         return
     }
-    def enable            = params
-        .findAll { k, _v -> k.startsWith('enable_') }
-        .collectEntries { k, v -> [(k - 'enable_'): v] }
-    def bam_cram_rows     = rows.findAll { meta, _files -> meta.input_type == 'bam_cram' }
-    def cram_rows         = bam_cram_rows.findAll { _meta, files -> files[0].toString().endsWith('.cram') }
+    def bam_cram_rows     = rows.findAll { row -> row.meta.input_type == 'bam_cram' }
+    def cram_rows         = bam_cram_rows.findAll { row -> row.files[0].toString().endsWith('.cram') }
     def has_bam_cram_rows = !bam_cram_rows.isEmpty()
     def reasons           = []
     if ( enable.align ) {
@@ -301,7 +299,7 @@ def validateReferenceRequirements(rows) {
     }
     // A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
     if ( !cram_rows.isEmpty() ) {
-        def cram_samples = cram_rows.collect { meta, _files -> meta.id }.unique()
+        def cram_samples = cram_rows.collect { row -> row.meta.id }.unique()
         reasons.add("decoding CRAM input (sample(s): ${cram_samples.join(', ')})")
     }
     if ( rikerActive(enable, has_bam_cram_rows) ) {
@@ -315,6 +313,22 @@ def validateReferenceRequirements(rows) {
     }
 }
 
+// Check the rows of the samplesheet (a list of records with meta and files). options is built in main.nf, and
+// contains has_reference, variant_caller, multiallelic_caller and sample_metadata (whether a sample metadata sheet was given)
+def validateSamplesheetRows(rows, metadata_rows, enable, options) {
+    if ( rows.isEmpty() ) {
+        validationError("The samplesheet has no rows. Provide at least one sample.")
+    }
+    validateMergeGroups(rows)
+    // Long-read rows are temporarily excluded in BIOVAT, so stage-level checks currently consider only short-read rows
+    def short_read_rows = rows.findAll { row -> !isLongReadPlatform(row.meta.pl) }
+    validateSampleMetadata(short_read_rows, metadata_rows, enable, options)
+    // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
+    validateAlignmentConsumers(short_read_rows, enable)
+    // Report every reason --reference is needed (params and samplesheet rows) in one error
+    validateReferenceRequirements(short_read_rows, options.has_reference, enable)
+    return rows
+}
 
 //
 // Generate methods description for MultiQC

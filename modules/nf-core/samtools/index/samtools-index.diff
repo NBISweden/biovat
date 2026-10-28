@@ -1,0 +1,421 @@
+Changes in component 'nf-core/samtools/index'
+'modules/nf-core/samtools/index/environment.yml' is unchanged
+Changes in 'samtools/index/meta.yml':
+--- modules/nf-core/samtools/index/meta.yml
++++ modules/nf-core/samtools/index/meta.yml
+@@ -18,7 +18,11 @@
+         - "MIT"
+       identifier: biotools:samtools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample or reference. Used as the default prefix of the output files
++    - meta:
++        optional: true
+         type: map
+         description: |
+           Groovy Map containing sample information
+@@ -29,7 +33,11 @@
+         ontologies: []
+ output:
+   index:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+
+Changes in 'samtools/index/main.nf':
+--- modules/nf-core/samtools/index/main.nf
++++ modules/nf-core/samtools/index/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process SAMTOOLS_INDEX {
+-    tag "${meta.id}"
++    tag "${id}"
+     label 'process_low'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,31 +9,41 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
+         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
+ 
++    ext [
++        args: { samtools_index_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(input)
++    record(
++        id: String,
++        meta: Record?,
++        input: Path,
++        samtools_index_args: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("*.{bai,csi,crai}"), emit: index
+-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), emit: versions_samtools, topic: versions
++    record(
++        id: id,
++        meta: meta,
++        index: file("*.{bai,csi,crai}")
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+     """
+     samtools \\
+         index \\
+         -@ ${task.cpus} \\
+-        ${args} \\
++        ${task.ext.args} \\
+         ${input}
+     """
+ 
+     stub:
+-    def args = task.ext.args ?: ''
+-    def extension = file(input).getExtension() == 'cram'
++    def extension = input.getExtension() == 'cram'
+         ? "crai"
+-        : args.contains("-c") ? "csi" : "bai"
++        : task.ext.args.contains("-c") ? "csi" : "bai"
+     """
+     touch ${input}.${extension}
+     """
+
+Changes in 'samtools/index/tests/main.nf.test.snap':
+--- modules/nf-core/samtools/index/tests/main.nf.test.snap
++++ modules/nf-core/samtools/index/tests/main.nf.test.snap
+@@ -9,21 +9,12 @@
+                     },
+                     "test.paired_end.sorted.bam.csi:md5,d41d8cd98f00b204e9800998ecf8427e"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_INDEX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T09:00:39.171613",
++        "timestamp": "2026-10-19T11:16:48.971283",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "crai - stub": {
+@@ -36,21 +27,12 @@
+                     },
+                     "test.paired_end.recalibrated.sorted.cram.crai:md5,d41d8cd98f00b204e9800998ecf8427e"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_INDEX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T09:00:32.838795",
++        "timestamp": "2026-10-19T11:16:43.037059",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "bai - stub": {
+@@ -63,40 +45,22 @@
+                     },
+                     "test.paired_end.sorted.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_INDEX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T09:00:25.255379",
++        "timestamp": "2026-10-21T09:38:52.797938",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "csi": {
+         "content": [
+-            "test.paired_end.sorted.bam.csi",
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_INDEX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            "test.paired_end.sorted.bam.csi"
+         ],
+-        "timestamp": "2026-03-19T09:00:18.414839",
++        "timestamp": "2026-10-19T11:16:31.847534",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "crai": {
+@@ -109,21 +73,12 @@
+                     },
+                     "test.paired_end.recalibrated.sorted.cram.crai:md5,14bc3bd5c89cacc8f4541f9062429029"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_INDEX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T09:00:13.571297",
++        "timestamp": "2026-10-19T11:16:26.351039",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "bai": {
+@@ -136,21 +91,12 @@
+                     },
+                     "test.paired_end.sorted.bam.bai:md5,704c10dd1326482448ca3073fdebc2f4"
+                 ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_INDEX",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-19T09:00:06.767362",
++        "timestamp": "2026-10-21T09:38:35.123489",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+'modules/nf-core/samtools/index/tests/csi.nextflow.config' is unchanged
+Changes in 'samtools/index/tests/main.nf.test':
+--- modules/nf-core/samtools/index/tests/main.nf.test
++++ modules/nf-core/samtools/index/tests/main.nf.test
+@@ -12,10 +12,12 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+-                ])
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    samtools_index_args: null
++                ))
+                 """
+             }
+         }
+@@ -24,8 +26,7 @@
+             assert process.success
+             assertAll(
+                 { assert snapshot(
+-                    process.out.index,
+-                    process.out.findAll { key, val -> key.startsWith('versions') }
++                    process.out[0].collect { r -> [ r.meta, r.index ] }
+                 ).match() }
+             )
+         }
+@@ -35,10 +36,12 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.recalibrated.sorted.cram', checkIfExists: true)
+-                ])
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    input: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.recalibrated.sorted.cram', checkIfExists: true),
++                    samtools_index_args: null
++                ))
+                 """
+             }
+         }
+@@ -47,8 +50,7 @@
+             assert process.success
+             assertAll(
+                 { assert snapshot(
+-                    process.out.index,
+-                    process.out.findAll { key, val -> key.startsWith('versions') }
++                    process.out[0].collect { r -> [ r.meta, r.index ] }
+                 ).match() }
+             )
+         }
+@@ -60,10 +62,12 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+-                ])
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    samtools_index_args: null
++                ))
+                 """
+             }
+         }
+@@ -72,8 +76,7 @@
+             assert process.success
+             assertAll(
+                 { assert snapshot(
+-                    file(process.out.index[0][1]).name,
+-                    process.out.findAll { key, val -> key.startsWith('versions') }
++                    file(process.out[0][0].index).name
+                 ).match() }
+             )
+         }
+@@ -86,10 +89,12 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+-                ])
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    samtools_index_args: null
++                ))
+                 """
+             }
+         }
+@@ -98,8 +103,7 @@
+             assert process.success
+             assertAll(
+                 { assert snapshot(
+-                    process.out.index,
+-                    process.out.findAll { key, val -> key.startsWith('versions') }
++                    process.out[0].collect { r -> [ r.meta, r.index ] }
+                 ).match() }
+             )
+         }
+@@ -112,10 +116,12 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.recalibrated.sorted.cram', checkIfExists: true)
+-                ])
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    input: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.recalibrated.sorted.cram', checkIfExists: true),
++                    samtools_index_args: null
++                ))
+                 """
+             }
+         }
+@@ -124,8 +130,7 @@
+             assert process.success
+             assertAll(
+                 { assert snapshot(
+-                    process.out.index,
+-                    process.out.findAll { key, val -> key.startsWith('versions') }
++                    process.out[0].collect { r -> [ r.meta, r.index ] }
+                 ).match() }
+             )
+         }
+@@ -140,10 +145,12 @@
+         when {
+             process {
+                 """
+-                input[0] = channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+-                ])
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    samtools_index_args: null
++                ))
+                 """
+             }
+         }
+@@ -152,8 +159,7 @@
+             assert process.success
+             assertAll(
+                 { assert snapshot(
+-                    process.out.index,
+-                    process.out.findAll { key, val -> key.startsWith('versions') }
++                    process.out[0].collect { r -> [ r.meta, r.index ] }
+                 ).match() }
+             )
+         }
+
+************************************************************

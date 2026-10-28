@@ -1,0 +1,169 @@
+nextflow_pipeline {
+
+    name "Test pipeline mark_duplicates"
+    script "../main.nf"
+    tag "pipelines"
+    tag "pipelines/mark_duplicates"
+
+    test("samtools - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            // Stub mode does not read the files, so empty files are enough
+            def rows = []
+            ["A_1", "B_1"].each { name ->
+                new File("${launchDir}/${name}.bam").text = ""
+                new File("${launchDir}/${name}.bam.csi").text = ""
+                def (sample, library) = name.tokenize('_')
+                rows << "- {meta: {id: ${sample}, library: '${library}', pl: ILLUMINA, single_end: false}, alignment: ${launchDir}/${name}.bam, index: ${launchDir}/${name}.bam.csi}"
+            }
+            new File("${launchDir}/alignments.yml").text = rows.join("\n") + "\n"
+        }
+
+        when {
+            params {
+                alignments       = "${launchDir}/alignments.yml"
+                duplicate_marker = "samtools"
+                fasta            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    test("picard - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            // Stub mode does not read the files, so empty files are enough
+            def rows = []
+            ["A_1", "B_1"].each { name ->
+                new File("${launchDir}/${name}.bam").text = ""
+                new File("${launchDir}/${name}.bam.csi").text = ""
+                def (sample, library) = name.tokenize('_')
+                rows << "- {meta: {id: ${sample}, library: '${library}', pl: ILLUMINA, single_end: false}, alignment: ${launchDir}/${name}.bam, index: ${launchDir}/${name}.bam.csi}"
+            }
+            new File("${launchDir}/alignments.yml").text = rows.join("\n") + "\n"
+        }
+
+        when {
+            params {
+                alignments       = "${launchDir}/alignments.yml"
+                duplicate_marker = "picard"
+                fasta            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    test("from a CSV samplesheet - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            // Stub mode does not read the files, so empty files are enough
+            def rows = [ "sample,library_id,platform,single_end,alignment,index" ]
+            ["A_1_rg1", "A_1_rg2", "B_1_rg1"].each { name ->
+                new File("${launchDir}/${name}.bam").text = ""
+                new File("${launchDir}/${name}.bam.csi").text = ""
+                def (sample, library, _rg) = name.tokenize('_')
+                rows << "${sample},${library},ILLUMINA,false,${launchDir}/${name}.bam,${launchDir}/${name}.bam.csi"
+            }
+            new File("${launchDir}/alignments.csv").text = rows.join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/alignments.csv"
+                duplicate_marker = "samtools"
+                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    test("--samplesheet and --alignments together fail") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/a.bam").text = ""
+            new File("${launchDir}/a.bam.csi").text = ""
+            new File("${launchDir}/alignments.csv").text = "sample,library_id,platform,single_end,alignment,index\nA,1,ILLUMINA,false,${launchDir}/a.bam,${launchDir}/a.bam.csi\n"
+            new File("${launchDir}/alignments.yml").text = "- {meta: {id: A, library: '1', pl: ILLUMINA, single_end: false}, alignment: ${launchDir}/a.bam, index: ${launchDir}/a.bam.csi}\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/alignments.csv"
+                alignments  = "${launchDir}/alignments.yml"
+                duplicate_marker = "samtools"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Provide either --samplesheet or --alignments, not both")
+        }
+    }
+
+    test("missing --alignments fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        when {
+            params {
+                duplicate_marker = "samtools"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Missing required parameter --samplesheet")
+        }
+    }
+
+    test("--help") {
+
+        when {
+            params {
+                help = true
+            }
+        }
+
+        then {
+            // nf-test does not capture the help message. This checks that --help is reached and exits cleanly,
+            // i.e. that the schema loads and no required parameter blocks it
+            assert workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+}
