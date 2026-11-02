@@ -2,7 +2,7 @@ nextflow_pipeline {
 
     name "Test pipeline align_reads"
     script "../main.nf"
-    tag "pipeline"
+    tag "pipelines"
     tag "pipelines/align_reads"
 
     test("stub, from a YAML samplesheet") {

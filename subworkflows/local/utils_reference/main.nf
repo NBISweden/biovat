@@ -2,7 +2,6 @@ nextflow.enable.types = true
 
 include { SAMTOOLS_FAIDX                 } from '../../../modules/nf-core/samtools/faidx/main'
 include { GATK4_CREATESEQUENCEDICTIONARY } from '../../../modules/nf-core/gatk4/createsequencedictionary/main'
-include { stageError                     } from '../utils_stage_help/main'
 
 workflow REFERENCE_UTILS {
 
@@ -81,16 +80,34 @@ workflow REFERENCE_VALUE {
 }
 
 // GATK writes a .tbi for every .vcf.gz it creates, and tbi can't index positions past 2^29 bp, so fail fast on longer contigs.
-// Runs inside an operator closure, so the message is logged with stageError
+// Runs inside an operator closure, so the message is logged before the error
 def checkGatkContigLengths(fai: Path) {
     def too_long = fai.readLines()
         .collect { line -> line.tokenize('\t') }
         .findAll { fields -> fields[1].toLong() > 2**29 }
     if ( too_long ) {
-        stageError(
-            "--variant_caller gatk does not support indexing contigs longer than 2^29 bp (536,870,912): " +
+        def message = "--variant_caller gatk does not support indexing contigs longer than 2^29 bp (536,870,912): " +
             "${too_long.collect { fields -> "${fields[0]} (${fields[1]} bp)" }.join(', ')}. " +
             "Please use a different variant caller or split the reference into smaller contigs on runs of N."
-        )
+        log.error(message)
+        error(message)
+    }
+}
+
+// GATK finds the fai and the dictionary of a reference by name, next to the fasta: <fasta>.fai and <fasta without extension>.dict.
+// The stages are given the three files as separate params, so check that their names agree. Runs inside an operator closure
+def checkGatkReferenceNames(fasta: Path, fai: Path, dict: Path) {
+    def fasta_name = fasta.name
+    def expected_fai = "${fasta_name}.fai"
+    def expected_dict = "${fasta_name.replaceFirst(/\.(fasta|fa|fna)$/, '')}.dict"
+    if ( fai.name != expected_fai ) {
+        def message = "\033[0;91mERROR\033[0m: GATK looks for the fai next to the fasta, as '${expected_fai}', but --fai is named '${fai.name}'. Rename the fai to '${expected_fai}'"
+        log.error(message)
+        error(message)
+    }
+    if ( dict.name != expected_dict ) {
+        def message = "\033[0;91mERROR\033[0m: GATK looks for the sequence dictionary next to the fasta, as '${expected_dict}', but --dict is named '${dict.name}'. Rename the dictionary to '${expected_dict}'"
+        log.error(message)
+        error(message)
     }
 }

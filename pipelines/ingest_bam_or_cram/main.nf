@@ -12,6 +12,8 @@ include { REFERENCE_VALUE           } from '../../subworkflows/local/utils_refer
 include { STAGE_HELP                } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput           } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
+include { checkReferenceForInput     } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSingleEnd              } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow               } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -59,10 +61,20 @@ workflow {
             .filter { row -> row[0].input_type == 'bam_cram' }
             .map { row -> record(meta: record(row[0]), bam_cram: row[1][0]) }
     } else {
-        bam_cram = params.bam_cram
+        bam_cram = params.bam_cram.map { r ->
+            checkSingleEnd(r.meta)
+            r
+        }
     }
 
-    reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
+    // The reference is needed for a CRAM and for the tools that use it. A sheet of FASTQ rows has no BAM/CRAM here, so
+    // it is checked per input, and a run without inputs needs no reference
+    needs_reference = (params.align_qc && params.riker) || params.cram_format
+    bam_cram = bam_cram.map { r ->
+        checkReferenceForInput(r.bam_cram, params.fasta != null, needs_reference)
+        r
+    }
+    reference = REFERENCE_VALUE(params.fasta, params.fai, needs_reference && params.fasta != null)
 
     // Reject a BAM/CRAM with several @RG lines, or one whose @RG tags are missing or disagree with its samplesheet row
     validated = VALIDATE_READGROUP_HEADER(

@@ -146,6 +146,12 @@ def sampleToRow(sample) {
     if ( sample.fastq_1 && sample.bam ) {
         stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has both fastq_1 and bam")
     }
+    if ( sample.fastq_1 && sample.single_end != null ) {
+        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has fastq_1 and a single_end value. single_end is for BAM/CRAM rows only, the layout of FASTQ rows follows from fastq_2")
+    }
+    if ( sample.bam && sample.single_end == null ) {
+        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has a BAM/CRAM but no single_end (true or false)")
+    }
     def meta = [
         id        : sample.sample,
         library   : sample.library_id,
@@ -315,12 +321,44 @@ def validateReferenceRequirements(rows, has_reference, enable) {
     }
 }
 
+// Stop before any stage is set up when the enabled stages need a reference and none is given, whatever the rows are:
+// alignment and variant calling always need it. A stage would otherwise report the missing --fasta first on the
+// samplesheet channel route, where the rows are checked later, with the name of a parameter BioVAT does not have
+def validateReferenceGates(enable, has_reference) {
+    if ( has_reference ) {
+        return
+    }
+    def reasons = []
+    if ( enable.align ) {
+        reasons.add("alignment (--enable_align)")
+    }
+    if ( enable.variant_calling ) {
+        reasons.add("variant calling (--enable_variant_calling)")
+    }
+    if ( !reasons.isEmpty() ) {
+        validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")
+    }
+}
+
+// Every read group is one row: the same sample, library, flowcell and lane twice is the same reads twice
+def validateUniqueReadGroups(rows) {
+    def repeated = rows
+        .groupBy { row -> row.meta.read_group }
+        .findAll { _read_group, group -> group.size() > 1 }
+        .collect { read_group, _group -> read_group }
+    if ( !repeated.isEmpty() ) {
+        validationError("Each row of the samplesheet must have a unique combination of sample, library_id, flowcell_id and lane. Repeated: ${repeated.join(', ')}")
+    }
+}
+
 // Check the rows of the samplesheet (a list of records with meta and files). options is built in main.nf, and
 // contains has_reference, variant_caller, multiallelic_caller and sample_metadata (whether a sample metadata sheet was given)
 def validateSamplesheetRows(rows, metadata_rows, enable, options) {
     if ( rows.isEmpty() ) {
         validationError("The samplesheet has no rows. Provide at least one sample.")
     }
+    // The schema checks these on the --input route. The checks of the platform, the names and the single_end of a BAM/CRAM row are made per row, in sampleToRow
+    validateUniqueReadGroups(rows)
     validateMergeGroups(rows)
     // Long-read rows are temporarily excluded in BIOVAT, so stage-level checks currently consider only short-read rows
     def short_read_rows = rows.findAll { row -> !isLongReadPlatform(row.meta.pl) }

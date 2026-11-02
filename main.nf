@@ -19,6 +19,7 @@ include { readSamplesheet            } from './subworkflows/local/utils_nfcore_b
 include { readSampleMetadata         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { sampleToRow                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { validateSamplesheetRows    } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { validateReferenceGates     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { rikerActive                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { isLongReadPlatform         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
 include { logRootCause               } from './subworkflows/local/utils_stage_help/main'
@@ -160,7 +161,6 @@ workflow {
     // are triggered when a downstream consumer needs alignments merged to respective levels
     merge_to_library = enable.mark_duplicates
     merge_to_sample  = enable.variant_calling
-    merge_active     = merge_to_library || merge_to_sample
     // .fai is used for certain CRAM processes, and unconditionally by riker and variant calling. The samplesheet rows aren't
     // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
     requires = record(
@@ -170,8 +170,10 @@ workflow {
         group_samples   : enable.variant_calling && params.variant_caller == 'bcftools_multisample' && params.sample_metadata != null,
         // GATK tools need a sequence dictionary alongside the reference fasta
         dict            : enable.variant_calling && params.variant_caller == 'gatk',
-        fai             : (enable.cram_format && merge_active) || rikerActive(enable, true) || enable.variant_calling
+        fai             : enable.cram_format || rikerActive(enable, true) || enable.variant_calling
     )
+
+    validateReferenceGates(enable, params.reference != null)
 
     // Sample population metadata, from --sample_metadata (validated by nf-schema)
     sample_metadata_rows = readSampleMetadata(params.sample_metadata)

@@ -90,3 +90,43 @@ def checkQualimapCram(cram_format, align_qc, qualimap) {
         error "Qualimap cannot be run when CRAM output is enabled."
     }
 }
+
+//
+// Stop when two rows of a stage input are the same item: key returns what identifies a row (for example the sample,
+// library and platform), and the message says what to do about it. Returns the rows when none repeats
+//
+def checkNoRepeats(rows, key, message) {
+    def repeated = rows
+        .groupBy { row -> key.call(row) }
+        .findAll { _key, group -> group.size() > 1 }
+        .collect { repeated_key, _group -> repeated_key.join(' / ') }
+    if ( !repeated.isEmpty() ) {
+        stageError("\033[0;91mERROR\033[0m: ${message} Repeated: ${repeated.join(', ')}")
+    }
+    return rows
+}
+
+//
+// A tool that needs to know if the reads are single-end or paired-end gets a null when the meta has no single_end.
+// Stop with a message that names the field and the sample
+//
+def checkSingleEnd(meta) {
+    if ( meta.single_end == null ) {
+        stageError("\033[0;91mERROR\033[0m: The meta of sample '${meta.id}' has no single_end (true or false). It is needed to tell single-end from paired-end data")
+    }
+}
+
+//
+// A CRAM can only be decoded with the reference it was made with. other_need is whether a tool of the stage needs the
+// reference anyway. Both are checked for the input, so a stage given no CRAM and no such tool can run without --fasta
+//
+def checkReferenceForInput(alignment, fasta_given, other_need) {
+    if ( !fasta_given ) {
+        if ( "${alignment}".endsWith('.cram') ) {
+            stageError("\033[0;91mERROR\033[0m: The CRAM '${alignment}' needs a reference fasta (--fasta) to be read")
+        }
+        if ( other_need ) {
+            stageError("\033[0;91mERROR\033[0m: A reference fasta (--fasta) is required by the enabled tools, for example Riker and CRAM output")
+        }
+    }
+}

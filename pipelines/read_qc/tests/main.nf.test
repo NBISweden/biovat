@@ -2,7 +2,7 @@ nextflow_pipeline {
 
     name "Test pipeline read_qc"
     script "../main.nf"
-    tag "pipeline"
+    tag "pipelines"
     tag "pipelines/read_qc"
 
     test("two read groups - stub") {
