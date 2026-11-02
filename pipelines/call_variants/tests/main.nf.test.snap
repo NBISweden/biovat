@@ -25,10 +25,10 @@
                 "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2",
                 "multiqc_files/genome_chunking_mqc.tsv",
                 "variant_calls",
-                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz.csi",
-                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz.csi",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz.csi",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.vcf.gz.csi",
                 "vcftools",
                 "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.FILTER.summary",
                 "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.count",
@@ -40,7 +40,7 @@
                 "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-27T15:09:23.244312",
+        "timestamp": "2026-10-30T10:30:53.429345334",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"
@@ -69,10 +69,10 @@
                 "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.relatedness2",
                 "multiqc_files/genome_chunking_mqc.tsv",
                 "variant_calls",
-                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz.tbi",
-                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz.tbi",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.vcf.gz.tbi",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.vcf.gz.tbi",
                 "vcftools",
                 "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.FILTER.summary",
                 "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.TsTv.count",
@@ -84,10 +84,10 @@
                 "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-27T16:14:12.25407266",
+        "timestamp": "2026-10-30T10:31:35.099347477",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.10.4"
+            "nextflow": "26.10.0"
         }
     },
     "bcftools_multisample - stub": {
@@ -116,10 +116,10 @@
                 "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2",
                 "multiqc_files/genome_chunking_mqc.tsv",
                 "variant_calls",
-                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz.csi",
-                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz.csi",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz.csi",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.vcf.gz.csi",
                 "vcftools",
                 "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.FILTER.summary",
                 "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.count",
@@ -131,7 +131,7 @@
                 "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-27T15:09:03.372029",
+        "timestamp": "2026-10-30T10:30:00.205666627",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"
@@ -163,10 +163,10 @@
                 "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2",
                 "multiqc_files/genome_chunking_mqc.tsv",
                 "variant_calls",
-                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.vcf.gz.csi",
-                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz",
-                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.vcf.gz.csi",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz.csi",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.vcf.gz",
+                "variant_calls/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.vcf.gz.csi",
                 "vcftools",
                 "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.FILTER.summary",
                 "vcftools/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.count",
@@ -178,7 +178,7 @@
                 "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-27T15:09:13.309959",
+        "timestamp": "2026-10-30T10:30:25.581601884",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"

@@ -145,6 +145,160 @@ nextflow_pipeline {
         }
     }
 
+    // The tests below run the callers on the monkeyflower test data. The reference is split into two chunks of the
+    // default size, unless a test sets chunk_size
+    def realAlignments = { launchDir, projectDir, platforms ->
+        def cram = "${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram"
+        new File("${launchDir}/alignments.yml").text = platforms.collect { platform ->
+            "- {meta: {id: PUN-R-MT, pl: ${platform}}, alignment: ${cram}, index: ${cram}.crai}"
+        }.join("\n") + "\n"
+    }
+
+    // Without --sample_metadata no population file is built, so bcftools call runs without --group-samples
+    test("bcftools_multisample - no population grouping") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir, [ 'ILLUMINA' ])
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_qc      = false
+                callset_prefix  = 'test_dataset'
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            def vcf = path("${outputDir}/variant_calls/test_dataset.ILLUMINA.bcftools_multisample.vcf.gz")
+            assertAll(
+                { assert workflow.success },
+                // The test reference yields two chunks, so BCFTOOLS_CONCAT must join them
+                { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_MPILEUP_MULTISAMPLE') } == 2 },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_CONCAT') } },
+                { assert file("${outputDir}/variant_calls/test_dataset.ILLUMINA.bcftools_multisample.vcf.gz.csi").exists() },
+                { assert vcf.vcf.sampleCount == 1 },
+                { assert vcf.vcf.variantCount > 0 }
+            )
+        }
+    }
+
+    // HaplotypeCaller -> GenomicsDBImport -> GenotypeGVCFs per chunk, then BCFTOOLS_CONCAT joins the chunks
+    test("gatk - multiple chunks") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir, [ 'ILLUMINA' ])
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = 'gatk'
+                variant_qc      = false
+                callset_prefix  = 'test_dataset'
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+                dict            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.dict"
+            }
+        }
+
+        then {
+            def vcf = path("${outputDir}/variant_calls/test_dataset.ILLUMINA.gatk.vcf.gz")
+            assertAll(
+                { assert workflow.success },
+                // The test reference yields two chunks: one task per chunk at each GATK step, then one concat
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_HAPLOTYPECALLER') } == 2 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOMICSDBIMPORT') } == 2 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } == 2 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_CONCAT') } == 1 },
+                { assert file("${outputDir}/variant_calls/test_dataset.ILLUMINA.gatk.vcf.gz.csi").exists() },
+                { assert vcf.vcf.sampleCount == 1 },
+                { assert vcf.vcf.variantCount > 0 }
+            )
+        }
+    }
+
+    // Each platform is its own callset: a sample on two platforms is called once per platform, never pooled
+    test("gatk - one callset per platform") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir, [ 'ILLUMINA', 'IONTORRENT' ])
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = 'gatk'
+                variant_qc      = false
+                callset_prefix  = 'test_dataset'
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+                dict            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.dict"
+            }
+        }
+
+        then {
+            def vcfs = [ 'ILLUMINA', 'IONTORRENT' ].collect { platform -> path("${outputDir}/variant_calls/test_dataset.${platform}.gatk.vcf.gz") }
+            assertAll(
+                { assert workflow.success },
+                // Two chunks x two platforms at each GATK step, then one concat per platform
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_HAPLOTYPECALLER') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOMICSDBIMPORT') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_CONCAT') } == 2 },
+                { assert vcfs.every { vcf -> vcf.vcf.sampleCount == 1 } },
+                { assert vcfs.every { vcf -> vcf.vcf.variantCount > 0 } }
+            )
+        }
+    }
+
+    // A chunk size above the reference length gives one chunk, so its GenotypeGVCFs output (with .tbi) is published as is
+    test("gatk - single chunk skips concatenation") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir, [ 'ILLUMINA' ])
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = 'gatk'
+                variant_qc      = false
+                chunk_size      = 200000
+                callset_prefix  = 'test_dataset'
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+                dict            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.dict"
+            }
+        }
+
+        then {
+            def vcf = path("${outputDir}/variant_calls/test_dataset.ILLUMINA.gatk.vcf.gz")
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } == 1 },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_CONCAT') } },
+                { assert file("${outputDir}/variant_calls/test_dataset.ILLUMINA.gatk.vcf.gz.tbi").exists() },
+                { assert vcf.vcf.sampleCount == 1 },
+                { assert vcf.vcf.variantCount > 0 }
+            )
+        }
+    }
+
     test("--samplesheet and --alignments together fail") {
 
         options "-stub -output-dir ${outputDir}"
@@ -254,6 +408,80 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert (workflow.stdout + workflow.stderr).toString().contains("--variant_caller gatk requires --dict")
+        }
+    }
+
+    test("a samplesheet row with an unsupported platform fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/bad_platform.csv").text = "sample,library_id,platform,single_end,alignment,index\nA,1,SOLID,false,${launchDir}/A.bam,${launchDir}/A.bam.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/bad_platform.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/reference.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Sequencing platform 'SOLID' must be one of")
+        }
+    }
+
+    test("a samplesheet row with a full stop in the sample name fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/bad_name.csv").text = "sample,library_id,platform,single_end,alignment,index\nA.1,1,ILLUMINA,false,${launchDir}/A.bam,${launchDir}/A.bam.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/bad_name.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/reference.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Sample name 'A.1' cannot contain spaces or full stops")
+        }
+    }
+
+    test("gatk with a contig past 2^29 bp fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/long.fasta.fai").text = "contig1\t600000000\t10\t60\t61\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                variant_caller  = "gatk"
+                dict            = "${launchDir}/reference.dict"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/long.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("does not support indexing contigs longer than 2^29 bp")
         }
     }
 

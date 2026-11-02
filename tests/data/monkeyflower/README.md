@@ -42,3 +42,7 @@ Files follow the naming convention `<sample>_<library_id>_R1/R2.fastq.gz`. Where
 row (repeat sequencing on a different flowcell/lane, e.g. PUN-Y-LO library 2 and PUN-R-MT library 1), a
 `repeat1`/`repeat2` tag is inserted before the read suffix: `<sample>_<library_id>_repeatN_R1/R2.fastq.gz`.
 BAM/CRAM fixtures drop the `_R1`/`_R2` suffix.
+
+The `.fai`, `.dict` and `.crai` files are the samtools indexes and the sequence dictionary of the reference and of `PUN-R-MT_1_repeat2.cram`.
+The `call_variants` tests, which start from alignments, read them directly.
+The dictionary has no `UR` field, so it does not depend on where the reference is stored.
