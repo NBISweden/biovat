@@ -42,7 +42,7 @@ process SPLITGENOME {
     def chunk_size_cmd = chunk_size ? "--chunk_size ${chunk_size}" : ""
     def min_length_cmd = min_length ? "--min_length ${min_length}" : ""
     """
-    ./split_genome_chunks.py \\
+    python3 split_genome_chunks.py \\
         --input ${fai} \\
         ${chunk_size_cmd} \\
         ${min_length_cmd} \\

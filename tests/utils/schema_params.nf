@@ -87,7 +87,7 @@ def paramsBlock(text) {
 def schemaProperties(text) {
     def schema = new groovy.json.JsonSlurper().parseText(text)
     def result = [:]
-    schema.get('$defs', [:]).each { group, definition ->
+    schema.get('$defs', [:]).each { _group, definition ->
         definition.get('properties', [:]).each { name, prop ->
             result[name] = prop
         }
