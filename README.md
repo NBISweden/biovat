@@ -19,6 +19,9 @@
 ## Usage
 
 > [!NOTE]
+> [!NOTE]
+> BioVAT requires Nextflow 26.10.0 or later. It uses typed records and pipeline composition, which earlier versions do not have.
+
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.
 
 First, prepare a samplesheet with your input data that looks as follows:

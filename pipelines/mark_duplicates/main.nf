@@ -11,6 +11,8 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
+include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet
@@ -50,9 +52,11 @@ workflow {
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/mark_duplicates --samplesheet alignments.csv --fasta reference.fasta')
     checkStageInput(params.samplesheet, params.alignments, 'alignments')
+    checkQualimapCram(params.cram_format, params.align_qc, params.qualimap)
     alignments = channel.empty()
     if ( params.samplesheet ) {
         alignments = params.samplesheet.map { s ->
+            checkSampleFields(s.sample, s.library_id, null, s.platform)
             if ( s.library_id == null ) {
                 stageError "Marking duplicates needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }

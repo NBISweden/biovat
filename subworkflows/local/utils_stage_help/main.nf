@@ -61,3 +61,32 @@ def logRootCause(e: Throwable) {
     def cause: Throwable = org.apache.commons.lang3.exception.ExceptionUtils.getRootCause(e) ?: e
     log.error(cause.getMessage())
 }
+
+//
+// Check the sample, library and flowcell names and the platform of a samplesheet row, as assets/schema_input.json does
+// for --input. The CSV of a stage or the channel of a pipeline is only checked for types by Nextflow, so a name with a
+// space or a full stop, or a platform that is not supported, would otherwise get through. A null name is skipped
+//
+def checkSampleFields(sample, library_id, flowcell_id, platform) {
+    checkName('Sample name', sample)
+    checkName('Sequencing library ID', library_id)
+    checkName('Flowcell ID', flowcell_id)
+    if ( platform != null && !(platform in [ 'ILLUMINA', 'IONTORRENT', 'ONT', 'PACBIO' ]) ) {
+        stageError("\033[0;91mERROR\033[0m: Sequencing platform '${platform}' must be one of the SAM specification @RG:PL values (in uppercase): ILLUMINA, IONTORRENT, ONT, PACBIO. To request support of another platform, please log a GitHub issue")
+    }
+}
+
+def checkName(label, value) {
+    if ( value != null && !("${value}" ==~ /^[^\s.]+$/) ) {
+        stageError("\033[0;91mERROR\033[0m: ${label} '${value}' cannot contain spaces or full stops")
+    }
+}
+
+//
+// Qualimap cannot read CRAM output, so the two cannot be enabled together
+//
+def checkQualimapCram(cram_format, align_qc, qualimap) {
+    if ( cram_format && align_qc && qualimap ) {
+        error "Qualimap cannot be run when CRAM output is enabled."
+    }
+}

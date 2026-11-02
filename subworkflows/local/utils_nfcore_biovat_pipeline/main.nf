@@ -16,6 +16,7 @@ include { completionSummary       } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
 include { stageError               } from '../utils_stage_help/main'
+include { checkSampleFields        } from '../utils_stage_help/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -138,6 +139,7 @@ def readSamplesheet(input) {
 // Runs inside operator closures, where an error is reported as "Unexpected error [InvocationTargetException]" and its
 // message is left in .nextflow.log, so stageError logs the message first
 def sampleToRow(sample) {
+    checkSampleFields(sample.sample, sample.library_id, sample.flowcell_id, sample.platform)
     if ( !sample.fastq_1 && !sample.bam ) {
         stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has neither fastq_1 nor bam")
     }

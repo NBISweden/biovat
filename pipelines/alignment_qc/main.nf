@@ -12,6 +12,7 @@ include { QUALIMAP_BAMQC    } from '../../modules/nf-core/qualimap/bamqc/main'
 include { REFERENCE_VALUE   } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP        } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput   } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
@@ -55,6 +56,7 @@ workflow {
     alignments = channel.empty()
     if ( params.samplesheet ) {
         alignments = params.samplesheet.map { s ->
+            checkSampleFields(s.sample, s.library_id, null, s.platform)
             if ( params.level in [ 'library', 'markdup' ] && s.library_id == null ) {
                 stageError "Level '${params.level}' needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }

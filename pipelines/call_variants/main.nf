@@ -13,8 +13,10 @@ include { GATK4_GENOMICSDBIMPORT       } from '../../modules/nf-core/gatk4/genom
 include { GATK4_GENOTYPEGVCFS          } from '../../modules/nf-core/gatk4/genotypegvcfs/main'
 include { workflow as VARIANT_QC       } from '../variant_qc'
 include { REFERENCE_VALUE              } from '../../subworkflows/local/utils_reference/main'
+include { checkGatkContigLengths       } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
@@ -82,11 +84,19 @@ workflow {
         error "Population grouping with --group_samples requires the multiallelic caller. Set --multiallelic_caller true or remove --group_samples"
     }
     reference = REFERENCE_VALUE(params.fasta, params.fai, true)
+    if ( params.variant_caller == 'gatk' ) {
+        // Checked in the channel itself, so that nothing using the fai starts before the check passes
+        reference = reference.map { r ->
+            checkGatkContigLengths(r.fai)
+            r
+        }
+    }
 
     // Alignments: from the samplesheet, or given with their meta record
     samplesheet_alignments = channel.empty()
     if ( params.samplesheet ) {
         samplesheet_alignments = params.samplesheet.map { s ->
+            checkSampleFields(s.sample, s.library_id, null, s.platform)
             record(
                 meta     : record(id: s.sample, pl: s.platform),
                 alignment: s.alignment,
@@ -283,24 +293,26 @@ workflow {
 
     // TODO: add parabricks haplotype caller and genotype gvcfs
 
-    // Concatenate the genome chunks of each group using BCFTOOLS_CONCAT
+    // Concatenate the genome chunks of each group using BCFTOOLS_CONCAT.
+    // groupKey with the chunk count releases a callset as soon as its last chunk arrives
     vcf_groups = chunk_calls
         .map { call ->
             // tag the joint VCF (and the variant QC named after it) with the caller, e.g. <callset_prefix>.<platform>.gatk
-            tuple(record(id: "${call.meta.group_id}.${params.variant_caller}", samples: call.meta.samples), call)
+            tuple(groupKey("${call.meta.group_id}.${params.variant_caller}", call.meta.n_chunks), call)
         }
         .groupBy()
-        .map { group, calls ->
+        .map { _group, calls ->
             // sort files by chunk id (e.g. "chunk_00002") to preserve genomic order
             def sorted = calls.toSorted { a, b -> a.chunk <=> b.chunk }
-            record(meta: group, vcfs: sorted.collect { c -> c.vcf }.toList())
+            def id = "${sorted[0].meta.group_id}.${params.variant_caller}"
+            record(id: id, meta: record(id: id, samples: sorted[0].meta.samples), vcfs: sorted.collect { c -> c.vcf }.toList())
         }
     // The index files are only staged next to the VCFs, so they are grouped on their own to get a bag
     chunk_indexes = chunk_calls
-        .map { call -> tuple(record(id: "${call.meta.group_id}.${params.variant_caller}", samples: call.meta.samples), call.index) }
+        .map { call -> tuple(groupKey("${call.meta.group_id}.${params.variant_caller}", call.meta.n_chunks), call.index) }
         .groupBy()
-        .map { group, indexes -> record(meta: group, tbi: indexes) }
-    chunk_groups = vcf_groups.join(chunk_indexes, by: 'meta')
+        .map { group, indexes -> record(id: "${group}", tbi: indexes) }
+    chunk_groups = vcf_groups.join(chunk_indexes, by: 'id')
     // A single chunk skips concatenation. It is renamed to the group meta id when published
     to_concat = chunk_groups.filter { group -> group.vcfs.size() > 1 }
     skipped   = chunk_groups
@@ -360,7 +372,13 @@ workflow {
 
 output {
     genome_chunks          : Value<Record> { path 'genome_chunk_bed_files' }
-    variant_calls          : Channel<Record> { path 'variant_calls' }
+    variant_calls          : Channel<Record> {
+        path { call ->
+            // Named from the group meta, as a single-chunk call skips BCFTOOLS_CONCAT and keeps its chunk file name
+            call.vcf   >> "variant_calls/${call.meta.id}.vcf.gz"
+            call.index >> "variant_calls/${call.meta.id}.vcf.gz.${call.index.extension}"
+        }
+    }
     mpileup                : Channel<Record> { path 'mpileup' }
     bcftools_stats         : Channel<Record> { path 'bcftools_stats' }
     vcftools_tstv_counts   : Channel<Record> { path 'vcftools' }

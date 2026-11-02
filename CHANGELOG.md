@@ -37,7 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/migration-typed-records.md`: migration guide for the typed records and pipeline composition change
 - `readSamplesheet()` function for reading the samplesheet outside of `PIPELINE_INITIALISATION`
 - GATK4 joint variant calling (`--variant_caller gatk`), following the GATK germline short variant Best Practices: per-sample `HaplotypeCaller` in GVCF mode, then `GenomicsDBImport` and `GenotypeGVCFs`, each run per genome chunk. The reference sequence dictionary is created by `REFERENCE_UTILS` when needed. Output is not yet filtered
-- Genome chunk concatenation is shared by all variant callers, and the joint VCF and its variant QC outputs are named after the caller (`<callset_prefix>.<variant_caller>.vcf.gz`)
+- `alignment_qc` is a stage pipeline with a required `--level` param. `align_reads`, `ingest_bam_or_cram`, `merge` and `mark_duplicates` include it under their own alias, so their QC outputs and the MultiQC files are kept
+- Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every samplesheet row of the stages and of the `samplesheet` channel, as the schema does for `--input`
+- Standalone `call_variants` checks the GATK contig lengths of `--fai`, and the stages that write CRAM reject `--qualimap`, as `main.nf` does
+- `-profile gpu` is known to the stage pipelines and to `examples/chaining`; the container engine options of the profile stay with the institutional profile
+- `examples/chaining` sets `process.shell` (with `pipefail`) and the container environment variables
+- Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
+- Genome chunk concatenation is shared by all variant callers, and the joint VCF and its variant QC outputs are named after the platform and the caller (see the next entry)
 - Long-read samplesheet rows (`ONT`, `PACBIO`) are branched off at the start of the workflow, ahead of any preprocessing, and excluded with a warning until a long-read path exists. Certain short-read platforms continue through preprocessing and variant calling (previously only `ILLUMINA` alignments were variant called), each platform is variant called as its own callset, so the joint VCF is now named `<callset_prefix>.<platform>.<variant_caller>.vcf.gz` and a sample sequenced on several platforms appears in each platform's VCF
 - Bcftools mpileup output: change from the pattern used by nf-core. Instead of bgzipping compressed output, output uncompressed, then recompress with bcftools. This leads to equivalent compression on the test files, plus it's directly readable by bcftools (previously it had to be unzipped and piped into bcftools)
 
@@ -45,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `BWAMEM3_INDEX` requests 4 CPUs, the `-t` of `bwa-mem3 index`, set next to its size-based memory in the module (a `label` would replace that memory). On a 122 Mb genome 4 threads take 10 s against 19 s with one
 - Removed the `schema-build` pixi task. `nf-core pipelines schema build` does not read typed `params` blocks and removes their parameters from the schema, so the schemas are edited by hand. `docs/CONTRIBUTING.md` describes where parameters are declared
-- All processes use static types and follow the module spec: one record as input, one record as output, a required `id` and an optional `meta` that the process code never reads, `ext [ ... ]` closure directives, and and software versions sent to the `versions` topic as `record(process, tool, version)`. nf-core modules are converted locally and tracked with `nf-core modules patch` (`*.diff` files next to each module)
+- All processes use static types and follow the module spec: one record as input, one record as output, a required `id` and an optional `meta` that the process code never reads, `ext [ ... ]` closure directives, and software versions sent to the `versions` topic as `record(process, tool, version)`. nf-core modules are converted locally and tracked with `nf-core modules patch` (`*.diff` files next to each module)
 - Tool arguments and output prefixes are passed to processes as input record fields (`<tool>_args`, `output_prefix`) by the stage pipelines instead of `conf/modules.config`, which is removed. `ext.args`/`ext.prefix` set in user config still take precedence
 - Removed the `when:` section from converted modules. `ext.when` no longer has an effect: the calling workflow decides, with the stage gates or an `if` around the call. `process.when` in a user config still works for excluding samples
 - The variant calling subworkflows are the stage pipelines `call_variants` and `variant_qc`, and the new modules (`splitgenome`, `bcftools/*`, `vcftools`, `gatk4/*`) use records. `bin/split_genome_chunks.py` moved into the `splitgenome` module (`modules/local/splitgenome/bin`) and is staged into the task with `stage:`
@@ -53,18 +59,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `versions` topic consumer accepts records and tuples. Process names carry the stage as a prefix, so fully-qualified selectors need updating
 - `main.nf` composes the stage pipelines directly, and can be run or included by other pipelines. `workflows/biovat.nf` is removed. The stages are still gated by the `--enable_*` flags
 - Param defaults moved from `nextflow.config` to the `params` block of `main.nf`. `nextflow.config` keeps only the params that the config reads
-- The samplesheet checks (single-end/paired-end mix, reference required) run on the collected rows in the entry workflow
+- The samplesheet checks (single-end/paired-end mix, reference required) run on the rows of `--input` before any task starts. Rows of the `samplesheet` channel and of a stage's CSV are checked one by one as they arrive
 - The nf-core subworkflow `utils_nextflow_pipeline` is patched so that the params dump handles `Path` params: paths are written as strings, maps and lists are kept (with their paths as strings), and dataflow values such as a samplesheet channel are left out
 - Software versions and MultiQC files are collected by the `multiqc` pipeline; the versions file is published through the `output` block instead of `collectFile(storeDir:)`
 
 ### `Fixed`
 
+- Concatenation of the genome chunks of a callset starts when its last chunk is done, as on `dev`, instead of when all chunks of all callsets are done (`groupKey` with the chunk count)
+- The standalone `call_variants` publishes a single-chunk callset as `<callset_prefix>.<platform>.<variant_caller>.vcf.gz`, not under its chunk name
 - Samplesheet schema enforces platform & (temporarily) fastq2
 - nf-test CI failures: missing pipeline snapshot, relative test-data paths not resolving under nf-test, and test-profile memory limit exceeding GitHub Actions runner capacity (#37)
 - Regenerated stale container/conda-lock configs and synced `linting.yml` with the nf-core template (#37)
 - Prettier formatting drift; excluded `pixi.lock` from prettier since its format is owned by pixi (#37)
 - Sample/library_id/flowcell/lane uniqueness is now enforced via nf-schema's `uniqueEntries` keyword instead of custom dedup code (#43)
-- Experimental: switches to typed params
 
 ### `Dependencies`
 

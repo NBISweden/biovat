@@ -6,6 +6,10 @@
 
 <!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
 
+## Requirements
+
+BioVAT requires Nextflow 26.10.0 or later. The stage pipelines in `pipelines/` and `main.nf` use typed records and pipeline composition, which earlier versions do not support.
+
 ## Samplesheet input
 
 You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Add it to the parameter file to specify its location (an [example parameter file](../assets/nf-params.yml) has been provided with the pipeline) or use this parameter.

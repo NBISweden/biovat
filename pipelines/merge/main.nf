@@ -9,6 +9,8 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
+include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet
@@ -49,9 +51,11 @@ workflow {
         error "Unknown merge level '${params.level}', expected library or sample"
     }
     checkStageInput(params.samplesheet, params.alignments, 'alignments')
+    checkQualimapCram(params.cram_format, params.align_qc, params.qualimap)
     alignments = channel.empty()
     if ( params.samplesheet ) {
         alignments = params.samplesheet.map { s ->
+            checkSampleFields(s.sample, s.library_id, null, s.platform)
             if ( params.level == 'library' && s.library_id == null ) {
                 stageError "Merging to library level needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }

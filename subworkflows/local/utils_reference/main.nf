@@ -2,6 +2,7 @@ nextflow.enable.types = true
 
 include { SAMTOOLS_FAIDX                 } from '../../../modules/nf-core/samtools/faidx/main'
 include { GATK4_CREATESEQUENCEDICTIONARY } from '../../../modules/nf-core/gatk4/createsequencedictionary/main'
+include { stageError                     } from '../utils_stage_help/main'
 
 workflow REFERENCE_UTILS {
 
@@ -79,13 +80,14 @@ workflow REFERENCE_VALUE {
     reference: Value<Record> = reference // record(meta, fasta, fai)
 }
 
-// GATK writes a .tbi for every .vcf.gz it creates, and tbi can't index positions past 2^29 bp, so fail fast on longer contigs
+// GATK writes a .tbi for every .vcf.gz it creates, and tbi can't index positions past 2^29 bp, so fail fast on longer contigs.
+// Runs inside an operator closure, so the message is logged with stageError
 def checkGatkContigLengths(fai: Path) {
     def too_long = fai.readLines()
         .collect { line -> line.tokenize('\t') }
         .findAll { fields -> fields[1].toLong() > 2**29 }
     if ( too_long ) {
-        error(
+        stageError(
             "--variant_caller gatk does not support indexing contigs longer than 2^29 bp (536,870,912): " +
             "${too_long.collect { fields -> "${fields[0]} (${fields[1]} bp)" }.join(', ')}. " +
             "Please use a different variant caller or split the reference into smaller contigs on runs of N."
