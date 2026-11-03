@@ -487,6 +487,54 @@ nextflow_pipeline {
         }
     }
 
+    test("a samplesheet row with an unsupported platform fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/bad_platform.csv").text = "sample,library_id,platform,single_end,alignment,index\nA,1,SOLID,false,${launchDir}/A.bam,${launchDir}/A.bam.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/bad_platform.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Sequencing platform 'SOLID' must be one of")
+        }
+    }
+
+    test("a samplesheet row with a full stop in the sample name fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/bad_name.csv").text = "sample,library_id,platform,single_end,alignment,index\nA.1,1,ILLUMINA,false,${launchDir}/A.bam,${launchDir}/A.bam.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/bad_name.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Sample name 'A.1' cannot contain spaces or full stops")
+        }
+    }
+
     test("--help") {
 
         when {
