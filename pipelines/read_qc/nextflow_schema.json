@@ -1,0 +1,48 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/NBISweden/biovat/main/pipelines/read_qc/nextflow_schema.json",
+    "title": "BioVAT read_qc pipeline parameters",
+    "description": "Raw read quality checks with FastQC",
+    "type": "object",
+    "$defs": {
+        "input_options": {
+            "title": "Input options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data.",
+            "properties": {
+                "samplesheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "BioVAT samplesheet (CSV) with one row per read group. Columns: sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, bam, single_end. Rows with a bam instead of fastq files are skipped.",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "reads": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Alternative to the samplesheet: a YAML or JSON file with one entry per read group, with a meta map (id, read_group) and reads (a list of fastq files), or the reads from a calling pipeline.",
+                    "fa_icon": "fas fa-file"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "properties": {
+                "help": {
+                    "type": ["boolean", "string"],
+                    "description": "Display the help message.",
+                    "fa_icon": "fas fa-question-circle"
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full help message.",
+                    "fa_icon": "fas fa-question-circle"
+                }
+            }
+        }
+    },
+    "allOf": [{ "$ref": "#/$defs/input_options" }, { "$ref": "#/$defs/generic_options" }]
+}

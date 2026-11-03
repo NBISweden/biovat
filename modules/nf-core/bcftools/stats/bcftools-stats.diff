@@ -1,0 +1,536 @@
+Changes in component 'nf-core/bcftools/stats'
+'modules/nf-core/bcftools/stats/environment.yml' is unchanged
+Changes in 'bcftools/stats/meta.yml':
+--- modules/nf-core/bcftools/stats/meta.yml
++++ modules/nf-core/bcftools/stats/meta.yml
+@@ -16,11 +16,14 @@
+         - "MIT"
+       identifier: biotools:bcftools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample, used for the default output prefix
++    - meta:
+         type: map
+         description: |
+-          Groovy Map containing sample information
+-          e.g. [ id:'test', single_end:false ]
++          Optional Groovy Map with sample metadata, passed through to the output.
++          It is not used by the module itself.
+     - vcf:
+         type: file
+         description: VCF input file
+@@ -87,11 +90,14 @@
+         ontologies: []
+ output:
+   stats:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
+           type: map
+           description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*stats.txt":
+           type: file
+           description: Text output file containing stats
+
+Changes in 'bcftools/stats/main.nf':
+--- modules/nf-core/bcftools/stats/main.nf
++++ modules/nf-core/bcftools/stats/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process BCFTOOLS_STATS {
+-    tag "${meta.id}"
++    tag "${id}"
+     label 'process_single'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,24 +9,37 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/0b/0b4d52ca9a56d07be3f78a12af654e5116f5112908dba277e6796fd9dfb83fe5/data'
+         : 'community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a'}"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { bcftools_stats_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(vcf), path(tbi)
+-    tuple val(meta2), path(regions)
+-    tuple val(meta3), path(targets)
+-    tuple val(meta4), path(samples)
+-    tuple val(meta5), path(exons)
+-    tuple val(meta6), path(fasta)
++    record(
++        id: String,
++        meta: Record?,
++        vcf: Path,
++        tbi: Path?,
++        regions: Path?,
++        targets: Path?,
++        samples: Path?,
++        exons: Path?,
++        fasta: Path?,
++        bcftools_stats_args: String?,
++        output_prefix: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("*stats.txt"), emit: stats
+-    tuple val("${task.process}"), val('bcftools'), eval("bcftools --version | sed '1!d; s/^.*bcftools //'"), topic: versions, emit: versions_bcftools
++    record(
++        id: id,
++        meta: meta,
++        stats: file("*stats.txt")
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'bcftools', version: eval("bcftools --version | sed '1!d; s/^.*bcftools //'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+     def regions_file = regions ? "--regions-file ${regions}" : ""
+     def targets_file = targets ? "--targets-file ${targets}" : ""
+     def samples_file = samples ? "--samples-file ${samples}" : ""
+@@ -32,19 +47,17 @@
+     def exons_file = exons ? "--exons ${exons}" : ""
+     """
+     bcftools stats \\
+-        ${args} \\
++        ${task.ext.args} \\
+         ${regions_file} \\
+         ${targets_file} \\
+         ${samples_file} \\
+         ${reference_fasta} \\
+         ${exons_file} \\
+-        ${vcf} > ${prefix}.bcftools_stats.txt
++        ${vcf} > ${task.ext.prefix}.bcftools_stats.txt
+     """
+ 
+     stub:
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+-
+     """
+-    touch ${prefix}.bcftools_stats.txt
++    touch ${task.ext.prefix}.bcftools_stats.txt
+     """
+ }
+
+Changes in 'bcftools/stats/tests/main.nf.test.snap':
+--- modules/nf-core/bcftools/stats/tests/main.nf.test.snap
++++ modules/nf-core/bcftools/stats/tests/main.nf.test.snap
+@@ -33,24 +33,6 @@
+             "nextflow": "25.10.2"
+         }
+     },
+-    "versions": {
+-        "content": [
+-            {
+-                "versions_bcftools": [
+-                    [
+-                        "BCFTOOLS_STATS",
+-                        "bcftools",
+-                        "1.23.1"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-03-20T18:21:53.228681614",
+-        "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.2"
+-        }
+-    },
+     "sarscov2 - vcf_gz - targets": {
+         "content": [
+             [
+@@ -68,117 +50,22 @@
+             "nextflow": "25.10.2"
+         }
+     },
+-    "regions_versions": {
+-        "content": [
+-            {
+-                "versions_bcftools": [
+-                    [
+-                        "BCFTOOLS_STATS",
+-                        "bcftools",
+-                        "1.23.1"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-03-20T18:22:01.713819348",
+-        "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.2"
+-        }
+-    },
+-    "targets_versions": {
+-        "content": [
+-            {
+-                "versions_bcftools": [
+-                    [
+-                        "BCFTOOLS_STATS",
+-                        "bcftools",
+-                        "1.23.1"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-03-20T18:22:10.32795863",
+-        "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.2"
+-        }
+-    },
+     "sarscov2 - vcf_gz - stub": {
+         "content": [
+-            {
+-                "0": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bcftools_stats.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "1": [
+-                    [
+-                        "BCFTOOLS_STATS",
+-                        "bcftools",
+-                        "1.23.1"
+-                    ]
+-                ],
+-                "stats": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bcftools_stats.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_bcftools": [
+-                    [
+-                        "BCFTOOLS_STATS",
+-                        "bcftools",
+-                        "1.23.1"
+-                    ]
++            [
++                [
++                    "test",
++                    {
++                        "id": "test"
++                    },
++                    "test.bcftools_stats.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-03-20T18:22:36.639614055",
++        "timestamp": "2026-10-21T09:37:03.40799",
+         "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.2"
+-        }
+-    },
+-    "exon_versions": {
+-        "content": [
+-            {
+-                "versions_bcftools": [
+-                    [
+-                        "BCFTOOLS_STATS",
+-                        "bcftools",
+-                        "1.23.1"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-03-20T18:22:18.899161374",
+-        "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.2"
+-        }
+-    },
+-    "ref_versions": {
+-        "content": [
+-            {
+-                "versions_bcftools": [
+-                    [
+-                        "BCFTOOLS_STATS",
+-                        "bcftools",
+-                        "1.23.1"
+-                    ]
+-                ]
+-            }
+-        ],
+-        "timestamp": "2026-03-20T18:22:27.810279032",
+-        "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.2"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - vcf_gz": {
+
+Changes in 'bcftools/stats/tests/main.nf.test':
+--- modules/nf-core/bcftools/stats/tests/main.nf.test
++++ modules/nf-core/bcftools/stats/tests/main.nf.test
+@@ -14,14 +14,19 @@
+         when {
+             process {
+                 """
+-                input[0] = [ [ id:'test' ], // meta map
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
+-                            []]
+-                input[1] = [ [], [] ]
+-                input[2] = [ [], [] ]
+-                input[3] = [ [], [] ]
+-                input[4] = [ [], [] ]
+-                input[5] = [ [], [] ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    vcf: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    tbi: null,
++                    regions: null,
++                    targets: null,
++                    samples: null,
++                    exons: null,
++                    fasta: null,
++                    bcftools_stats_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -29,26 +34,30 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match("versions") },
+-                { assert snapshot(file(process.out.stats.get(0).get(1)).readLines()[0..5]).match() },
++                { assert snapshot(file(process.out[0][0].stats).readLines()[0..5]).match() }
+             )
+         }
+     }
++
+ 
+     test("sarscov2 - vcf_gz - regions") {
+ 
+         when {
+             process {
+                 """
+-                input[0] = [ [ id:'regions_test' ], // meta map
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz.tbi', checkIfExists: true)]
+-                input[1] = [ [id:'regions_test'],
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test3.vcf.gz', checkIfExists: true) ]
+-                input[2] = [ [], [] ]
+-                input[3] = [ [], [] ]
+-                input[4] = [ [], [] ]
+-                input[5] = [ [], [] ]
++                input[0] = channel.of(record(
++                    id: 'regions_test',
++                    meta: [ id:'regions_test' ],
++                    vcf: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    tbi: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz.tbi', checkIfExists: true),
++                    regions: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test3.vcf.gz', checkIfExists: true),
++                    targets: null,
++                    samples: null,
++                    exons: null,
++                    fasta: null,
++                    bcftools_stats_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -56,27 +65,30 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match("regions_versions") },
+-                { assert snapshot(file(process.out.stats.get(0).get(1)).readLines()[0..5]).match() },
++                { assert snapshot(file(process.out[0][0].stats).readLines()[0..5]).match() }
+             )
+         }
+     }
++
+ 
+     test("sarscov2 - vcf_gz - targets") {
+ 
+         when {
+             process {
+                 """
+-                input[0] = [ [ id:'targets_test' ], // meta map
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
+-                            [] ]
+-                input[1] = [ [], [] ]
+-                input[2] = [ [id:'targets_test'],
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test2.targets.tsv.gz', checkIfExists: true)
+-                            ]
+-                input[3] = [ [], [] ]
+-                input[4] = [ [], [] ]
+-                input[5] = [ [], [] ]
++                input[0] = channel.of(record(
++                    id: 'targets_test',
++                    meta: [ id:'targets_test' ],
++                    vcf: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    tbi: null,
++                    regions: null,
++                    targets: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test2.targets.tsv.gz', checkIfExists: true),
++                    samples: null,
++                    exons: null,
++                    fasta: null,
++                    bcftools_stats_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -84,26 +96,30 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match("targets_versions") },
+-                { assert snapshot(file(process.out.stats.get(0).get(1)).readLines()[0..5]).match() },
++                { assert snapshot(file(process.out[0][0].stats).readLines()[0..5]).match() }
+             )
+         }
+     }
++
+ 
+     test("sarscov2 - vcf_gz - exons") {
+ 
+         when {
+             process {
+                 """
+-                input[0] = [ [ id:'exon_test' ], // meta map
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
+-                            [] ]
+-                input[1] = [ [], [] ]
+-                input[2] = [ [], [] ]
+-                input[3] = [ [], [] ]
+-                input[4] = [ [id: "exon_test"],
+-                            file(params.modules_testdata_base_path + 'delete_me/bcftools/stats/exons.tsv.gz', checkIfExists: true) ]
+-                input[5] = [ [], [] ]
++                input[0] = channel.of(record(
++                    id: 'exon_test',
++                    meta: [ id:'exon_test' ],
++                    vcf: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    tbi: null,
++                    regions: null,
++                    targets: null,
++                    samples: null,
++                    exons: file(params.modules_testdata_base_path + 'delete_me/bcftools/stats/exons.tsv.gz', checkIfExists: true),
++                    fasta: null,
++                    bcftools_stats_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -111,27 +127,30 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match("exon_versions") },
+-                { assert snapshot(file(process.out.stats.get(0).get(1)).readLines()[0..5]).match() },
++                { assert snapshot(file(process.out[0][0].stats).readLines()[0..5]).match() }
+             )
+         }
+     }
++
+ 
+     test("sarscov2 - vcf_gz - reference") {
+ 
+         when {
+             process {
+                 """
+-                input[0] = [ [ id:'ref_test' ], // meta map
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
+-                            [] ]
+-                input[1] = [ [], [] ]
+-                input[2] = [ [], [] ]
+-                input[3] = [ [], [] ]
+-                input[4] = [ [], [] ]
+-                input[5] = [ [id: 'ref_test'],
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+-                            ]
++                input[0] = channel.of(record(
++                    id: 'ref_test',
++                    meta: [ id:'ref_test' ],
++                    vcf: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    tbi: null,
++                    regions: null,
++                    targets: null,
++                    samples: null,
++                    exons: null,
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    bcftools_stats_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -139,8 +158,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(process.out.findAll { key, val -> key.startsWith("versions") }).match("ref_versions") },
+-                { assert snapshot(file(process.out.stats.get(0).get(1)).readLines()[0..5]).match() },
++                { assert snapshot(file(process.out[0][0].stats).readLines()[0..5]).match() }
+             )
+         }
+     }
+@@ -153,14 +171,19 @@
+         when {
+             process {
+                 """
+-                input[0] = [ [ id:'test' ], // meta map
+-                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
+-                            []]
+-                input[1] = [ [], [] ]
+-                input[2] = [ [], [] ]
+-                input[3] = [ [], [] ]
+-                input[4] = [ [], [] ]
+-                input[5] = [ [], [] ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    vcf: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    tbi: null,
++                    regions: null,
++                    targets: null,
++                    samples: null,
++                    exons: null,
++                    fasta: null,
++                    bcftools_stats_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -168,7 +191,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(process.out).match() }
++                { assert snapshot(process.out[0].collect { r -> [ r.id, r.meta, r.stats ] }).match() }
+             )
+         }
+     }
+
+************************************************************

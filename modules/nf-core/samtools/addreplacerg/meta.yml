@@ -16,7 +16,11 @@ tools:
       licence: ["MIT"]
       identifier: biotools:samtools
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample or reference. Used as the default prefix of the output files
+    - meta:
+        optional: true
         type: map
         description: |
           Groovy Map containing sample information
@@ -58,7 +62,11 @@ input:
         ontologies: []
 output:
   bam:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -69,7 +77,11 @@ output:
           pattern: "${prefix}.bam"
           ontologies: []
   cram:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -80,7 +92,11 @@ output:
           pattern: "${prefix}.cram"
           ontologies: []
   sam:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -91,7 +107,11 @@ output:
           pattern: "${prefix}.sam"
           ontologies: []
   index:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information

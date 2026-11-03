@@ -21,7 +21,11 @@ tools:
         - "MIT"
       identifier: biotools:samtools
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample or reference. Used as the default prefix of the output files
+    - meta:
+        optional: true
         type: map
         description: |
           Groovy Map containing sample information
@@ -38,7 +42,11 @@ input:
         ontologies: []
 output:
   flagstat:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information

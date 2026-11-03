@@ -1,0 +1,261 @@
+Changes in component 'nf-core/gatk4/createsequencedictionary'
+'modules/nf-core/gatk4/createsequencedictionary/environment.yml' is unchanged
+Changes in 'gatk4/createsequencedictionary/meta.yml':
+--- modules/nf-core/gatk4/createsequencedictionary/meta.yml
++++ modules/nf-core/gatk4/createsequencedictionary/meta.yml
+@@ -17,7 +17,11 @@
+       licence: ["Apache-2.0"]
+       identifier: ""
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Sample identifier, used for the task tag and as the default output prefix
++    - meta:
++        optional: true
+         type: map
+         description: |
+           Groovy Map containing reference information
+@@ -29,7 +33,11 @@
+         ontologies: []
+ output:
+   dict:
+-    - - meta:
++    - - id:
++          type: string
++          description: Sample identifier from the input record
++      - meta:
++          optional: true
+           type: file
+           description: gatk dictionary file
+           pattern: "*.{dict}"
+
+Changes in 'gatk4/createsequencedictionary/main.nf':
+--- modules/nf-core/gatk4/createsequencedictionary/main.nf
++++ modules/nf-core/gatk4/createsequencedictionary/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process GATK4_CREATESEQUENCEDICTIONARY {
+-    tag "${fasta}"
++    tag "${id}"
+     label 'process_single'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,25 +9,35 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ce/ce8f4142326abbb74e28b97633a200b09439c54480803343b1cf13dc19e51ae5/data'
+         : 'community.wave.seqera.io/library/gatk4-lite:4.7.0.0--79918b8b2632f4b1'}"
+ 
++    ext [
++        args: { gatk4_createsequencedictionary_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(fasta)
++    record(
++        id: String,
++        meta: Record?,
++        fasta: Path,
++        gatk4_createsequencedictionary_args: String?
++    )
+ 
+     output:
+-    tuple val(meta), path('*.dict'), emit: dict
+-    tuple val("${task.process}"), val('gatk4'), eval("gatk --version | sed -n '/GATK.*v/s/.*v//p'"), topic: versions, emit: versions_gatk4
++    record(
++        id: id,
++        meta: meta,
++        dict: file('*.dict')
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'gatk4', version: eval("gatk --version | sed -n '/GATK.*v/s/.*v//p'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+-
+     def avail_mem = 6144
+     if (!task.memory) {
+         log.info('[GATK CreateSequenceDictionary] Available memory not known - defaulting to 6GB. Specify process memory requirements to change this.')
+     }
+     else {
+-        avail_mem = (task.memory.mega * 0.8).intValue()
++        avail_mem = (task.memory.toMega() * 0.8).intValue()
+     }
+     """
+     gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+@@ -33,7 +45,7 @@
+         --REFERENCE ${fasta} \\
+         --URI ${fasta} \\
+         --TMP_DIR . \\
+-        ${args}
++        ${task.ext.args}
+     """
+ 
+     stub:
+
+Changes in 'gatk4/createsequencedictionary/tests/main.nf.test.snap':
+--- modules/nf-core/gatk4/createsequencedictionary/tests/main.nf.test.snap
++++ modules/nf-core/gatk4/createsequencedictionary/tests/main.nf.test.snap
+@@ -1,84 +1,38 @@
+ {
+     "sarscov2 - fasta - stub": {
+         "content": [
+-            {
+-                "0": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.dict:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "1": [
+-                    [
+-                        "GATK4_CREATESEQUENCEDICTIONARY",
+-                        "gatk4",
+-                        "4.7.0.0"
+-                    ]
+-                ],
+-                "dict": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.dict:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_gatk4": [
+-                    [
+-                        "GATK4_CREATESEQUENCEDICTIONARY",
+-                        "gatk4",
+-                        "4.7.0.0"
+-                    ]
++            [
++                [
++                    "test",
++                    {
++                        "id": "test"
++                    },
++                    "genome.dict:md5,d41d8cd98f00b204e9800998ecf8427e"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-08-18T11:13:52.96517",
++        "timestamp": "2026-10-21T09:38:02.048479",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - fasta": {
+         "content": [
+-            {
+-                "0": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.dict:md5,7362679f176e0f52add03c08f457f646"
+-                    ]
+-                ],
+-                "1": [
+-                    [
+-                        "GATK4_CREATESEQUENCEDICTIONARY",
+-                        "gatk4",
+-                        "4.7.0.0"
+-                    ]
+-                ],
+-                "dict": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "genome.dict:md5,7362679f176e0f52add03c08f457f646"
+-                    ]
+-                ],
+-                "versions_gatk4": [
+-                    [
+-                        "GATK4_CREATESEQUENCEDICTIONARY",
+-                        "gatk4",
+-                        "4.7.0.0"
+-                    ]
++            [
++                [
++                    "test",
++                    {
++                        "id": "test"
++                    },
++                    "genome.dict:md5,7362679f176e0f52add03c08f457f646"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-08-18T11:13:45.249901",
++        "timestamp": "2026-10-21T09:37:51.961598",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+Changes in 'gatk4/createsequencedictionary/tests/main.nf.test':
+--- modules/nf-core/gatk4/createsequencedictionary/tests/main.nf.test
++++ modules/nf-core/gatk4/createsequencedictionary/tests/main.nf.test
+@@ -14,9 +14,12 @@
+         when {
+             process {
+                 """
+-                input[0] = [ [ id:'test' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    gatk4_createsequencedictionary_args: null
++                ))
+                 """
+             }
+         }
+@@ -24,7 +27,7 @@
+         then {
+             assert process.success
+             assertAll(
+-                { assert snapshot(process.out).match() }
++                { assert snapshot(process.out[0].collect { r -> [ r.id, r.meta, r.dict ] }).match() }
+             )
+         }
+     }
+@@ -36,9 +39,12 @@
+         when {
+             process {
+                 """
+-                input[0] = [ [ id:'test' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    gatk4_createsequencedictionary_args: null
++                ))
+                 """
+             }
+         }
+@@ -46,7 +52,7 @@
+         then {
+             assert process.success
+             assertAll(
+-                { assert snapshot(process.out).match() }
++                { assert snapshot(process.out[0].collect { r -> [ r.id, r.meta, r.dict ] }).match() }
+             )
+         }
+     }
+
+************************************************************

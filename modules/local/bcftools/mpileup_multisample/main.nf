@@ -1,6 +1,8 @@
 // Local module: joint multi-sample calling variant of nf-core/bcftools/mpileup
+nextflow.enable.types = true
+
 process BCFTOOLS_MPILEUP_MULTISAMPLE {
-    tag "${meta.id}"
+    tag "${id}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -8,28 +10,44 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/0b/0b4d52ca9a56d07be3f78a12af654e5116f5112908dba277e6796fd9dfb83fe5/data'
         : 'community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a'}"
 
+    ext [
+        prefix: { output_prefix ?: "${id}" },
+        args: { bcftools_mpileup_args ?: '' },
+        args2: { bcftools_call_args ?: '' }
+    ]
+
     input:
-    tuple val(meta), path(bams), path(indexes), path(intervals)
-    tuple val(meta2), path(fasta), path(fai)
-    val save_mpileup
-    val group_samples
-    path population_file
+    record(
+        id: String,
+        meta: Record?,
+        bams: List<Path>,
+        indexes: List<Path>,
+        intervals: Path,
+        fasta: Path,
+        fai: Path?,
+        save_mpileup: Boolean,
+        group_samples: Boolean,
+        population_file: Path?,
+        bcftools_mpileup_args: String?,
+        bcftools_call_args: String?,
+        output_prefix: String?
+    )
 
     output:
-    tuple val(meta), path("*.vcf.gz"), emit: vcf
-    tuple val(meta), path("*.csi"), emit: index, optional: true
-    tuple val(meta), path("*.mpileup.bcf"), emit: mpileup, optional: true
-    tuple val("${task.process}"), val('bcftools'), eval("bcftools --version | sed '1!d; s/^.*bcftools //'"), topic: versions, emit: versions_bcftools
+    record(
+        id: id,
+        meta: meta,
+        vcf: file("*.vcf.gz"),
+        index: file("*.csi", optional: true),
+        mpileup: file("*.mpileup.bcf", optional: true)
+    )
 
-    when:
-    task.ext.when == null || task.ext.when
+    topic:
+    record(process: "${task.process}", tool: 'bcftools', version: eval("bcftools --version | sed '1!d; s/^.*bcftools //'")) >> 'versions'
 
     script:
-    def args                   = task.ext.args ?: ''
-    def args2                  = task.ext.args2 ?: ''
-    def prefix                 = task.ext.prefix ?: "${meta.id}"
-    def mpileup                = save_mpileup ? "| tee ${prefix}.mpileup.u.bcf" : ""
-    def compress_mpileup       = save_mpileup ? "bcftools view --output-type b --output ${prefix}.mpileup.bcf ${prefix}.mpileup.u.bcf && rm ${prefix}.mpileup.u.bcf" : ""
+    def mpileup                = save_mpileup ? "| tee ${task.ext.prefix}.mpileup.u.bcf" : ""
+    def compress_mpileup       = save_mpileup ? "bcftools view --output-type b --output ${task.ext.prefix}.mpileup.bcf ${task.ext.prefix}.mpileup.u.bcf && rm ${task.ext.prefix}.mpileup.u.bcf" : ""
     def group_samples_cmd      = group_samples ? "--group-samples ${population_file}" : ""
     """
     # Note: AD tag is a bcftools default, but we add it explicitly as a guard against future version changes
@@ -38,26 +56,25 @@ process BCFTOOLS_MPILEUP_MULTISAMPLE {
         --fasta-ref ${fasta} \\
         --output-type u \\
         --annotate FORMAT/DP,FORMAT/AD \\
-        ${args} \\
-        ${bams} \\
+        ${task.ext.args} \\
+        ${bams.join(' ')} \\
         -R ${intervals} \\
         ${mpileup} \\
         | bcftools call \\
         --output-type z \\
-        ${args2} \\
+        ${task.ext.args2} \\
         ${group_samples_cmd} \\
-        --output ${prefix}.vcf.gz
+        --output ${task.ext.prefix}.vcf.gz
 
     ${compress_mpileup}
 
-    bcftools index --csi -f ${prefix}.vcf.gz
+    bcftools index --csi -f ${task.ext.prefix}.vcf.gz
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    echo "" | gzip > ${prefix}.vcf.gz
-    touch ${prefix}.vcf.gz.csi
-    echo "" | gzip > ${prefix}.mpileup.bcf
+    echo "" | gzip > ${task.ext.prefix}.vcf.gz
+    touch ${task.ext.prefix}.vcf.gz.csi
+    echo "" | gzip > ${task.ext.prefix}.mpileup.bcf
     """
 }
