@@ -9,6 +9,7 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
 include { checkReferenceForInput     } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { attachSingleEnd             } from '../../subworkflows/local/utils_stage_help/main'
@@ -58,6 +59,7 @@ workflow {
     alignments = channel.empty()
     if ( params.samplesheet ) {
         alignments = params.samplesheet.map { s ->
+            checkSampleFields(s.sample, s.library_id, null, s.platform)
             if ( params.level == 'library' && s.library_id == null ) {
                 stageError "Merging to library level needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }
