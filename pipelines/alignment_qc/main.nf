@@ -12,6 +12,7 @@ include { QUALIMAP_BAMQC    } from '../../modules/nf-core/qualimap/bamqc/main'
 include { REFERENCE_VALUE   } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP        } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput   } from '../../subworkflows/local/utils_stage_help/main'
+include { checkReferenceForInput      } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
@@ -52,7 +53,6 @@ workflow {
     if ( !(params.level in [ 'input', 'readgroup', 'library', 'markdup', 'sample' ]) ) {
         error "--level is required, one of input, readgroup, library, markdup, sample"
     }
-    reference = REFERENCE_VALUE(params.fasta, params.fai, params.riker)
 
     alignments = channel.empty()
     if ( params.samplesheet ) {
@@ -65,6 +65,13 @@ workflow {
     } else {
         alignments = params.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
     }
+    // Riker and CRAM input need the reference. It is checked for each alignment, so a stage that gets none
+    // (for example ingest_bam_or_cram with a sheet of FASTQ rows) needs no reference
+    alignments = alignments.map { aln ->
+        checkReferenceForInput(aln.alignment, params.fasta != null, params.riker)
+        aln
+    }
+    reference = REFERENCE_VALUE(params.fasta, params.fai, params.riker && params.fasta != null)
 
     // Tag each alignment with a level-scoped prefix so each output file is named by its level and read group/library/sample
     qc_input = alignments
