@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every samplesheet row of the stages and of the `samplesheet` channel, as the schema does for `--input`
 - The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--reference` is reported with BioVAT's own message before any stage is set up
 - Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
+- Tests that run the tools and read their command: the optical distance (samtools and picard) and the CRAM switch reach the tools. A stub run does not run the command
 - `examples/chaining` sets `process.shell` (with `pipefail`) and the container environment variables, as the config of BioVAT does
 - `-profile gpu` is known to the stage pipelines and to `examples/chaining`. The container engine options of the profile stay with the institutional profile
 - `call_variants` rejects an empty `--sample_metadata` with `--group_samples`. bcftools was given `--group-samples null`
