@@ -138,6 +138,13 @@ workflow {
     population = channel.value(record(file: null))
     if ( params.group_samples ) {
         population = params.sample_metadata
+            .toList()
+            .flatMap { samples ->
+                if ( samples.isEmpty() ) {
+                    stageError "--group_samples requires --sample_metadata to list the samples. It has no rows"
+                }
+                return samples
+            }
             .map { sample ->
                 if ( !sample.population ) {
                     stageError "--group_samples requires a population for every sample in --sample_metadata. Missing for: ${sample.sample}"

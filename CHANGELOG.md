@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every samplesheet row of the stages and of the `samplesheet` channel, as the schema does for `--input`
 - The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--reference` is reported with BioVAT's own message before any stage is set up
 - Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
+- `call_variants` rejects an empty `--sample_metadata` with `--group_samples`. bcftools was given `--group-samples null`
 - `call_variants` rejects `--group_samples` with `--variant_caller gatk`, which would ignore it
 - The standalone `call_variants` checks the GATK contig lengths of `--fai`, as `main.nf` does. GATK crashes on a contig past 2^29 bp
 - `call_variants` rejects repeated rows of a sample and platform. GATK fails on a duplicate sample, and bcftools read one file twice and the other never
