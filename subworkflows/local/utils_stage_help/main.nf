@@ -88,3 +88,12 @@ def checkName(label, value) {
         inputError("${label} '${value}' cannot contain spaces or full stops")
     }
 }
+
+//
+// Qualimap cannot read CRAM output, so the two cannot be enabled together
+//
+def checkQualimapCram(cram_format, align_qc, qualimap) {
+    if ( cram_format && align_qc && qualimap ) {
+        error "Qualimap cannot be run when CRAM output is enabled."
+    }
+}
