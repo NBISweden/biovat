@@ -13,6 +13,7 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSingleEnd              } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow              } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
@@ -62,7 +63,10 @@ workflow {
             .filter { row -> row[0].input_type == 'fastq' }
             .map { row -> record(meta: record(row[0]), reads: row[1]) }
     } else {
-        reads = params.reads
+        reads = params.reads.map { r ->
+            checkSingleEnd(r.meta)
+            r
+        }
     }
     if ( !params.fasta ) {
         error "Missing required parameter --fasta"
