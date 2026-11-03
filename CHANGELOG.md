@@ -38,12 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `readSamplesheet()` function for reading the samplesheet outside of `PIPELINE_INITIALISATION`
 - GATK4 joint variant calling (`--variant_caller gatk`), following the GATK germline short variant Best Practices: per-sample `HaplotypeCaller` in GVCF mode, then `GenomicsDBImport` and `GenotypeGVCFs`, each run per genome chunk. The reference sequence dictionary is created by `REFERENCE_UTILS` when needed. Output is not yet filtered
 - `alignment_qc` is a stage pipeline with a required `--level` param. `align_reads`, `ingest_bam_or_cram`, `merge` and `mark_duplicates` include it under their own alias, so their QC outputs and the MultiQC files are kept
-- Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every samplesheet row of the stages and of the `samplesheet` channel, as the schema does for `--input`
-- Standalone `call_variants` checks the GATK contig lengths of `--fai`, and the stages that write CRAM reject `--qualimap`, as `main.nf` does
-- Stage pipelines stop with a message for input that BioVAT never sends them: repeated rows of a library (`mark_duplicates`) or of a sample and platform (`call_variants`), a `--fai` or `--dict` that is not named after the `--fasta` (GATK finds them by name), an empty `--sample_metadata` or the gatk caller with `--group_samples`, a CRAM without `--fasta`, and a missing `single_end` in `trim_reads`, `align_reads` and `ingest_bam_or_cram`
+- Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every row of the `samplesheet` channel, as the schema does for `--input`
 - The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--reference` is reported with BioVAT's own message before any stage is set up
-- `-profile gpu` is known to the stage pipelines and to `examples/chaining`; the container engine options of the profile stay with the institutional profile
-- `examples/chaining` sets `process.shell` (with `pipefail`) and the container environment variables
 - Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
 - Genome chunk concatenation is shared by all variant callers, and the joint VCF and its variant QC outputs are named after the platform and the caller (see the next entry)
 - Long-read samplesheet rows (`ONT`, `PACBIO`) are branched off at the start of the workflow, ahead of any preprocessing, and excluded with a warning until a long-read path exists. Certain short-read platforms continue through preprocessing and variant calling (previously only `ILLUMINA` alignments were variant called), each platform is variant called as its own callset, so the joint VCF is now named `<callset_prefix>.<platform>.<variant_caller>.vcf.gz` and a sample sequenced on several platforms appears in each platform's VCF
@@ -67,7 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
-- `merge` passes `--fasta` to `samtools merge` whenever it is given, so CRAM inputs can be merged to BAM. `ingest_bam_or_cram` needs `--fasta` only for a CRAM row or for the tools that use it
 - `SPLITGENOME` runs its script with `python3`, so it does not depend on the file mode surviving the copy into the task
 - `requires.fai` counts CRAM output whenever it is on, so the fai is made once and not by each stage
 - `nf-test.config` triggers on `modules/local/*/bin/*`, and the stage tests share the tag `pipelines`

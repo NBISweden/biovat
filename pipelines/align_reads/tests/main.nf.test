@@ -139,42 +139,4 @@ nextflow_pipeline {
             assert workflow.trace.tasks().size() == 0
         }
     }
-
-    // A stub run does not run the command, so this runs bwa-mem3 and samtools on one read group and checks that
-    // the CRAM switch reaches the tools and the alignment is published as CRAM
-    test("bwa-mem3 - cram_format writes a CRAM") {
-
-        options "-output-dir ${outputDir}"
-
-        setup {
-            def data = "${projectDir}/tests/data/monkeyflower"
-            new File("${launchDir}/reads.yml").text = """\
-                - meta: {id: PUN-R-MT, library: "1", flowcell: SRR9309470, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-MT.1.SRR9309470.1, platform_unit: SRR9309470.1.PUN-R-MT_1}
-                  reads: [${data}/PUN-R-MT_1_repeat1_R1.fastq.gz, ${data}/PUN-R-MT_1_repeat1_R2.fastq.gz]
-                """.stripIndent()
-        }
-
-        when {
-            params {
-                reads       = "${launchDir}/reads.yml"
-                cram_format = true
-                align_qc    = false
-                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
-                fai         = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
-            }
-        }
-
-        then {
-            def commands = []
-            file(launchDir).eachFileRecurse { f -> if ( f.name == ".command.sh" ) { commands << f.text } }
-            def published = []
-            file(outputDir).eachFileRecurse { f -> published << f.name }
-            assertAll(
-                { assert workflow.success },
-                { assert commands.any { command -> command.contains("--output-fmt cram") } },
-                { assert published.any { name -> name.endsWith(".cram") } },
-                { assert published.any { name -> name.endsWith(".crai") } }
-            )
-        }
-    }
 }

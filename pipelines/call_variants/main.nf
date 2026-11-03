@@ -13,12 +13,8 @@ include { GATK4_GENOMICSDBIMPORT       } from '../../modules/nf-core/gatk4/genom
 include { GATK4_GENOTYPEGVCFS          } from '../../modules/nf-core/gatk4/genotypegvcfs/main'
 include { workflow as VARIANT_QC       } from '../variant_qc'
 include { REFERENCE_VALUE              } from '../../subworkflows/local/utils_reference/main'
-include { checkGatkContigLengths       } from '../../subworkflows/local/utils_reference/main'
-include { checkGatkReferenceNames      } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
-include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
-include { checkNoRepeats             } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
@@ -82,27 +78,15 @@ workflow {
     if ( params.group_samples && !params.sample_metadata ) {
         error "--group_samples requires --sample_metadata"
     }
-    if ( params.group_samples && params.variant_caller != 'bcftools_multisample' ) {
-        error "--group_samples is only used by --variant_caller bcftools_multisample"
-    }
     if ( params.group_samples && !params.multiallelic_caller ) {
         error "Population grouping with --group_samples requires the multiallelic caller. Set --multiallelic_caller true or remove --group_samples"
     }
     reference = REFERENCE_VALUE(params.fasta, params.fai, true)
-    if ( params.variant_caller == 'gatk' ) {
-        // Checked in the channel itself, so that nothing using the fai starts before the check passes
-        reference = reference.combine(params.dict).map { r, dict ->
-            checkGatkContigLengths(r.fai)
-            checkGatkReferenceNames(r.fasta, r.fai, dict)
-            r
-        }
-    }
 
     // Alignments: from the samplesheet, or given with their meta record
     samplesheet_alignments = channel.empty()
     if ( params.samplesheet ) {
         samplesheet_alignments = params.samplesheet.map { s ->
-            checkSampleFields(s.sample, s.library_id, null, s.platform)
             record(
                 meta     : record(id: s.sample, pl: s.platform),
                 alignment: s.alignment,
@@ -114,11 +98,7 @@ workflow {
     if ( params.alignments ) {
         given_alignments = params.alignments.map { a -> record(meta: record(id: a.meta.id, pl: a.meta.pl), alignment: a.alignment, index: a.index) }
     }
-    // A sample is one alignment per platform. Several alignments of a sample have the same name and read group,
-    // which GATK rejects and bcftools reads as one file
-    alignments = samplesheet_alignments.mix(given_alignments).toList().flatMap { rows ->
-        checkNoRepeats(rows, { row -> [ row.meta.id, row.meta.pl ] }, "Variant calling needs one alignment per sample and platform. Merge the alignments of a sample first (the merge stage).")
-    }
+    alignments = samplesheet_alignments.mix(given_alignments)
 
     // Split the reference genome into chunks (BED intervals) for parallelization
     splitgenome = SPLITGENOME(
@@ -138,13 +118,6 @@ workflow {
     population = channel.value(record(file: null))
     if ( params.group_samples ) {
         population = params.sample_metadata
-            .toList()
-            .flatMap { samples ->
-                if ( samples.isEmpty() ) {
-                    stageError "--group_samples requires --sample_metadata to list the samples. It has no rows"
-                }
-                return samples
-            }
             .map { sample ->
                 if ( !sample.population ) {
                     stageError "--group_samples requires a population for every sample in --sample_metadata. Missing for: ${sample.sample}"
@@ -408,7 +381,7 @@ output {
 // Warn when the contigs left out by min_length cover more than 5% of the reference
 def warnExcludedRegions(summary: Path, min_length: Integer) {
     def rows = summary.readLines().findAll { line -> line && !line.startsWith('#') }.collect { line -> line.tokenize('\t') }.toList()
-    if ( rows.size() == 2 && rows[0].toList().containsAll([ 'Excluded %', 'Regions excluded', 'Bp excluded' ]) ) {
+    if ( rows.size() == 2 ) {
         def headers = rows[0].toList()
         def values  = rows[1].toList()
         def excluded_percent = values[headers.indexOf('Excluded %')]

@@ -9,9 +9,6 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
-include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
-include { checkReferenceForInput     } from '../../subworkflows/local/utils_stage_help/main'
-include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet
@@ -52,11 +49,9 @@ workflow {
         error "Unknown merge level '${params.level}', expected library or sample"
     }
     checkStageInput(params.samplesheet, params.alignments, 'alignments')
-    checkQualimapCram(params.cram_format, params.align_qc, params.qualimap)
     alignments = channel.empty()
     if ( params.samplesheet ) {
         alignments = params.samplesheet.map { s ->
-            checkSampleFields(s.sample, s.library_id, null, s.platform)
             if ( params.level == 'library' && s.library_id == null ) {
                 stageError "Merging to library level needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }
@@ -65,10 +60,6 @@ workflow {
         }
     } else {
         alignments = params.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
-    }
-    alignments = alignments.map { aln ->
-        checkReferenceForInput(aln.alignment, params.fasta != null, false)
-        aln
     }
     reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
 
@@ -107,9 +98,9 @@ workflow {
                     meta               : group_meta,
                     input_files        : alns.collect { aln -> aln.alignment }.toList(),
                     index_files        : alns.collect { aln -> aln.index }.toList(),
-                    // The reference is needed to read CRAM input and to write CRAM output
-                    fasta              : ref.fasta,
-                    fai                : ref.fai,
+                    // The reference is only needed for CRAM output
+                    fasta              : params.cram_format ? ref.fasta : null,
+                    fai                : params.cram_format ? ref.fai : null,
                     gzi                : null,
                     index_format       : params.cram_format ? 'crai' : 'csi',
                     samtools_merge_args: null,

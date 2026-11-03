@@ -108,30 +108,6 @@ nextflow_pipeline {
         }
     }
 
-    test("reads without single_end in the meta fail") {
-
-        options "-stub -output-dir ${outputDir}"
-
-        setup {
-            def data = "${projectDir}/tests/data/monkeyflower"
-            new File("${launchDir}/reads.yml").text = """\
-                - meta: {id: PUN-R-ELF, library: "1", flowcell: SRR9309791, lane: 1, pl: ILLUMINA, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}
-                  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]
-                """.stripIndent()
-        }
-
-        when {
-            params {
-                reads = "${launchDir}/reads.yml"
-            }
-        }
-
-        then {
-            assert workflow.failed
-            assert (workflow.stdout + workflow.stderr).toString().contains("has no single_end")
-        }
-    }
-
     test("--help") {
 
         when {

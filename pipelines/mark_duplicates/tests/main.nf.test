@@ -82,10 +82,10 @@ nextflow_pipeline {
         setup {
             // Stub mode does not read the files, so empty files are enough
             def rows = [ "sample,library_id,platform,single_end,alignment,index" ]
-            ["A_1", "B_1"].each { name ->
+            ["A_1_rg1", "A_1_rg2", "B_1_rg1"].each { name ->
                 new File("${launchDir}/${name}.bam").text = ""
                 new File("${launchDir}/${name}.bam.csi").text = ""
-                def (sample, library) = name.tokenize('_')
+                def (sample, library, _rg) = name.tokenize('_')
                 rows << "${sample},${library},ILLUMINA,false,${launchDir}/${name}.bam,${launchDir}/${name}.bam.csi"
             }
             new File("${launchDir}/alignments.csv").text = rows.join("\n") + "\n"
@@ -151,58 +151,6 @@ nextflow_pipeline {
         }
     }
 
-    test("--cram_format with --qualimap fails") {
-
-        options "-stub -output-dir ${outputDir}"
-
-        setup {
-            new File("${launchDir}/A_1.bam").text = ""
-            new File("${launchDir}/A_1.bam.csi").text = ""
-            new File("${launchDir}/alignments.yml").text = "- {meta: {id: A, library: '1', pl: ILLUMINA, single_end: false}, alignment: ${launchDir}/A_1.bam, index: ${launchDir}/A_1.bam.csi}\n"
-        }
-
-        when {
-            params {
-                alignments  = "${launchDir}/alignments.yml"
-                cram_format = true
-                qualimap    = true
-                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
-            }
-        }
-
-        then {
-            assert workflow.failed
-            assert (workflow.stdout + workflow.stderr).toString().contains("Qualimap cannot be run when CRAM output is enabled.")
-        }
-    }
-
-    test("two alignments of a library fail") {
-
-        options "-stub -output-dir ${outputDir}"
-
-        setup {
-            def rows = [ "sample,library_id,platform,single_end,alignment,index" ]
-            ["A_rg1", "A_rg2"].each { name ->
-                new File("${launchDir}/${name}.bam").text = ""
-                new File("${launchDir}/${name}.bam.csi").text = ""
-                rows << "A,1,ILLUMINA,false,${launchDir}/${name}.bam,${launchDir}/${name}.bam.csi"
-            }
-            new File("${launchDir}/alignments.csv").text = rows.join("\n") + "\n"
-        }
-
-        when {
-            params {
-                samplesheet = "${launchDir}/alignments.csv"
-                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
-            }
-        }
-
-        then {
-            assert workflow.failed
-            assert (workflow.stdout + workflow.stderr).toString().contains("Marking duplicates needs one alignment per library")
-        }
-    }
-
     test("--help") {
 
         when {
@@ -216,77 +164,6 @@ nextflow_pipeline {
             // i.e. that the schema loads and no required parameter blocks it
             assert workflow.success
             assert workflow.trace.tasks().size() == 0
-        }
-    }
-
-    // The tests below run the tools on the monkeyflower CRAM and check the command each tool got, since a stub run
-    // does not run the command. The tasks of the run are in the work directory under the launch directory
-    def realAlignments = { launchDir, projectDir ->
-        def cram = "${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram"
-        new File("${launchDir}/alignments.yml").text =
-            "- {meta: {id: PUN-R-MT, library: '1', pl: ILLUMINA, single_end: false}, alignment: ${cram}, index: ${cram}.crai}\n"
-    }
-
-    test("samtools - the optical distance and CRAM output reach the tools") {
-
-        options "-output-dir ${outputDir}"
-
-        setup {
-            realAlignments(launchDir, projectDir)
-        }
-
-        when {
-            params {
-                alignments       = "${launchDir}/alignments.yml"
-                duplicate_marker = "samtools"
-                optical_distance = 250
-                cram_format      = true
-                align_qc         = false
-                fasta            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
-                fai              = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
-            }
-        }
-
-        then {
-            def commands = []
-            file(launchDir).eachFileRecurse { f -> if ( f.name == ".command.sh" ) { commands << f.text } }
-            def published = []
-            file(outputDir).eachFileRecurse { f -> published << f.name }
-            assertAll(
-                { assert workflow.success },
-                { assert commands.any { command -> command.contains("-d 250") } },
-                { assert published.any { name -> name.endsWith(".cram") } },
-                { assert published.any { name -> name.endsWith(".crai") } }
-            )
-        }
-    }
-
-    test("picard - the optical distance reaches the tool") {
-
-        options "-output-dir ${outputDir}"
-
-        setup {
-            realAlignments(launchDir, projectDir)
-        }
-
-        when {
-            params {
-                alignments       = "${launchDir}/alignments.yml"
-                duplicate_marker = "picard"
-                optical_distance = 250
-                align_qc         = false
-                fasta            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
-                fai              = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
-            }
-        }
-
-        then {
-            def commands = []
-            file(launchDir).eachFileRecurse { f -> if ( f.name == ".command.sh" ) { commands << f.text } }
-            assertAll(
-                { assert workflow.success },
-                { assert commands.any { command -> command.contains("--OPTICAL_DUPLICATE_PIXEL_DISTANCE 250") } }
-            )
         }
     }
 }

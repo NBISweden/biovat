@@ -11,9 +11,6 @@ include { workflow as ALIGNMENT_QC  } from '../alignment_qc'
 include { REFERENCE_VALUE           } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput           } from '../../subworkflows/local/utils_stage_help/main'
-include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
-include { checkReferenceForInput     } from '../../subworkflows/local/utils_stage_help/main'
-include { checkSingleEnd              } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow               } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -52,7 +49,6 @@ workflow {
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/ingest_bam_or_cram --samplesheet samplesheet.csv --fasta genome.fa')
     checkStageInput(params.samplesheet, params.bam_cram, 'bam_cram')
-    checkQualimapCram(params.cram_format, params.align_qc, params.qualimap)
     bam_cram = channel.empty()
     if ( params.samplesheet ) {
         bam_cram = params.samplesheet
@@ -61,20 +57,10 @@ workflow {
             .filter { row -> row[0].input_type == 'bam_cram' }
             .map { row -> record(meta: record(row[0]), bam_cram: row[1][0]) }
     } else {
-        bam_cram = params.bam_cram.map { r ->
-            checkSingleEnd(r.meta)
-            r
-        }
+        bam_cram = params.bam_cram
     }
 
-    // The reference is needed for a CRAM and for the tools that use it. A sheet of FASTQ rows has no BAM/CRAM here, so
-    // it is checked per input, and a run without inputs needs no reference
-    needs_reference = (params.align_qc && params.riker) || params.cram_format
-    bam_cram = bam_cram.map { r ->
-        checkReferenceForInput(r.bam_cram, params.fasta != null, needs_reference)
-        r
-    }
-    reference = REFERENCE_VALUE(params.fasta, params.fai, needs_reference && params.fasta != null)
+    reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
 
     // Reject a BAM/CRAM with several @RG lines, or one whose @RG tags are missing or disagree with its samplesheet row
     validated = VALIDATE_READGROUP_HEADER(
