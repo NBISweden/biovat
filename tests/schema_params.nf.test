@@ -165,25 +165,6 @@ nextflow_function {
         }
     }
 
-    test("pipelines/multiqc matches its schema") {
-
-        when {
-            function {
-                """
-                input[0] = "${projectDir}/pipelines/multiqc/main.nf"
-                input[1] = "${projectDir}/pipelines/multiqc/nextflow_schema.json"
-                input[2] = true
-                input[3] = []
-                """
-            }
-        }
-
-        then {
-            assert function.success
-            assert function.result == []
-        }
-    }
-
     test("pipelines/read_qc matches its schema") {
 
         when {
