@@ -7,6 +7,7 @@ nextflow.enable.types = true
 include { FASTP           } from '../../modules/nf-core/fastp/main'
 include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSingleEnd              } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -50,7 +51,10 @@ workflow {
             .filter { row -> row[0].input_type == 'fastq' }
             .map { row -> record(meta: record(row[0]), reads: row[1]) }
     } else {
-        reads = params.reads
+        reads = params.reads.map { r ->
+            checkSingleEnd(r.meta)
+            r
+        }
     }
 
     // Run fastp for read trimming

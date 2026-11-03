@@ -112,3 +112,13 @@ def checkNoRepeats(rows, key, message) {
     }
     return rows
 }
+
+//
+// A tool that needs to know if the reads are single-end or paired-end gets a null when the meta has no single_end.
+// Stop with a message that names the field and the sample
+//
+def checkSingleEnd(meta) {
+    if ( meta.single_end == null ) {
+        inputError("The meta of sample '${meta.id}' has no single_end (true or false). It is needed to tell single-end from paired-end data")
+    }
+}
