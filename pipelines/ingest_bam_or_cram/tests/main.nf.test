@@ -163,6 +163,48 @@ nextflow_pipeline {
         }
     }
 
+    test("a CRAM row without --fasta fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end\nPUN-R-MT,1,SRR9309471,2,ILLUMINA,,,${data}/PUN-R-MT_1_repeat2.cram,false\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+                riker       = false
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("needs a reference fasta (--fasta) to be read")
+        }
+    }
+
+    test("a samplesheet of FASTQ rows runs without --fasta") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end\nPUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/samplesheet.csv"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+
     test("--help") {
 
         when {

@@ -9,6 +9,7 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
+include { checkReferenceForInput     } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
@@ -63,6 +64,10 @@ workflow {
     } else {
         alignments = params.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
     }
+    alignments = alignments.map { aln ->
+        checkReferenceForInput(aln.alignment, params.fasta != null, false)
+        aln
+    }
     reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
 
     // Group on the requested level (dropping flowcell, lane, read group, platform unit and input type),
@@ -100,9 +105,9 @@ workflow {
                     meta               : group_meta,
                     input_files        : alns.collect { aln -> aln.alignment }.toList(),
                     index_files        : alns.collect { aln -> aln.index }.toList(),
-                    // The reference is only needed for CRAM output
-                    fasta              : params.cram_format ? ref.fasta : null,
-                    fai                : params.cram_format ? ref.fai : null,
+                    // The reference is needed to read CRAM input and to write CRAM output
+                    fasta              : ref.fasta,
+                    fai                : ref.fai,
                     gzi                : null,
                     index_format       : params.cram_format ? 'crai' : 'csi',
                     samtools_merge_args: null,
