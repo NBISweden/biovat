@@ -408,7 +408,7 @@ output {
 // Warn when the contigs left out by min_length cover more than 5% of the reference
 def warnExcludedRegions(summary: Path, min_length: Integer) {
     def rows = summary.readLines().findAll { line -> line && !line.startsWith('#') }.collect { line -> line.tokenize('\t') }.toList()
-    if ( rows.size() == 2 ) {
+    if ( rows.size() == 2 && rows[0].toList().containsAll([ 'Excluded %', 'Regions excluded', 'Bp excluded' ]) ) {
         def headers = rows[0].toList()
         def values  = rows[1].toList()
         def excluded_percent = values[headers.indexOf('Excluded %')]
