@@ -13,6 +13,7 @@ include { GATK4_GENOMICSDBIMPORT       } from '../../modules/nf-core/gatk4/genom
 include { GATK4_GENOTYPEGVCFS          } from '../../modules/nf-core/gatk4/genotypegvcfs/main'
 include { workflow as VARIANT_QC       } from '../variant_qc'
 include { REFERENCE_VALUE              } from '../../subworkflows/local/utils_reference/main'
+include { checkGatkContigLengths       } from '../../subworkflows/local/utils_reference/main'
 include { checkGatkReferenceNames      } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
@@ -89,6 +90,7 @@ workflow {
     if ( params.variant_caller == 'gatk' ) {
         // Checked in the channel itself, so that nothing using the fai starts before the check passes
         reference = reference.combine(params.dict).map { r, dict ->
+            checkGatkContigLengths(r.fai)
             checkGatkReferenceNames(r.fasta, r.fai, dict)
             r
         }

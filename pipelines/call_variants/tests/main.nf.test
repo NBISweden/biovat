@@ -535,6 +535,33 @@ nextflow_pipeline {
         }
     }
 
+    test("gatk with a contig past 2^29 bp fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/long").mkdirs()
+            new File("${launchDir}/long/M_aurantiacus_v1_splitline_ordered.fasta.fai").text = "contig1\t600000000\t10\t60\t61\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                variant_caller  = "gatk"
+                dict            = "${launchDir}/M_aurantiacus_v1_splitline_ordered.dict"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/long/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("does not support indexing contigs longer than 2^29 bp")
+        }
+    }
+
     test("--help") {
 
         when {
