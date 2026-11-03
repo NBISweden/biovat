@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `readSamplesheet()` function for reading the samplesheet outside of `PIPELINE_INITIALISATION`
 - GATK4 joint variant calling (`--variant_caller gatk`), following the GATK germline short variant Best Practices: per-sample `HaplotypeCaller` in GVCF mode, then `GenomicsDBImport` and `GenotypeGVCFs`, each run per genome chunk. The reference sequence dictionary is created by `REFERENCE_UTILS` when needed. Output is not yet filtered
 - `alignment_qc` is a stage pipeline with a required `--level` param. `align_reads`, `ingest_bam_or_cram`, `merge` and `mark_duplicates` include it under their own alias, so their QC outputs and the MultiQC files are kept
-- Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every row of the `samplesheet` channel, as the schema does for `--input`
+- Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every samplesheet row of the stages and of the `samplesheet` channel, as the schema does for `--input`
 - The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--reference` is reported with BioVAT's own message before any stage is set up
 - Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
 - `call_variants` rejects repeated rows of a sample and platform. GATK fails on a duplicate sample, and bcftools read one file twice and the other never

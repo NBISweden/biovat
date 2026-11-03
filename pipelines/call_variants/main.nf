@@ -16,6 +16,7 @@ include { REFERENCE_VALUE              } from '../../subworkflows/local/utils_re
 include { checkGatkReferenceNames      } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
 include { checkNoRepeats             } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
@@ -96,6 +97,7 @@ workflow {
     samplesheet_alignments = channel.empty()
     if ( params.samplesheet ) {
         samplesheet_alignments = params.samplesheet.map { s ->
+            checkSampleFields(s.sample, s.library_id, null, s.platform)
             record(
                 meta     : record(id: s.sample, pl: s.platform),
                 alignment: s.alignment,
