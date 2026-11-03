@@ -97,3 +97,18 @@ def checkQualimapCram(cram_format, align_qc, qualimap) {
         error "Qualimap cannot be run when CRAM output is enabled."
     }
 }
+
+//
+// Stop when two rows of a stage input are the same item: key returns what identifies a row (for example the sample,
+// library and platform), and the message says what to do about it. Returns the rows when none repeats
+//
+def checkNoRepeats(rows, key, message) {
+    def repeated = rows
+        .groupBy { row -> key.call(row) }
+        .findAll { _key, group -> group.size() > 1 }
+        .collect { repeated_key, _group -> repeated_key.join(' / ') }
+    if ( !repeated.isEmpty() ) {
+        inputError("${message} Repeated: ${repeated.join(', ')}")
+    }
+    return rows
+}
