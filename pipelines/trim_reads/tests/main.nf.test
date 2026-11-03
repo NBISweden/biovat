@@ -13,8 +13,10 @@ nextflow_pipeline {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/reads.yml").text = [
                 "- meta: {id: PUN-R-ELF, library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1}",
+                "  single_end: false",
                 "  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]",
                 "- meta: {id: PUN-R-JMC, library: '1', flowcell: SRR9309467, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-JMC.1.SRR9309467.1}",
+                "  single_end: false",
                 "  reads: [${data}/PUN-R-JMC_1_R1.fastq.gz, ${data}/PUN-R-JMC_1_R2.fastq.gz]"
             ].join("\n") + "\n"
         }
@@ -91,6 +93,7 @@ nextflow_pipeline {
             ].join("\n") + "\n"
             new File("${launchDir}/reads.yml").text = [
                 "- meta: {id: PUN-R-ELF, library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}",
+                "  single_end: false",
                 "  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]"
             ].join("\n") + "\n"
         }
@@ -108,7 +111,7 @@ nextflow_pipeline {
         }
     }
 
-    test("reads without single_end in the meta fail") {
+    test("reads without single_end are rejected when they are loaded") {
 
         options "-stub -output-dir ${outputDir}"
 
@@ -128,7 +131,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
-            assert (workflow.stdout + workflow.stderr).toString().contains("has no single_end")
+            assert (workflow.stdout + workflow.stderr).toString().contains("is missing field 'single_end' required by record type 'Reads'")
         }
     }
 
