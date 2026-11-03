@@ -124,3 +124,18 @@ def attachSingleEnd(outputs, inputs) {
         .join(inputs.map { i -> record(key: record(id: i.id, meta: i.meta), single_end: i.single_end) }, by: 'key')
         .map { j -> record(out: j.out, single_end: j.single_end) }
 }
+
+//
+// A CRAM can only be decoded with the reference it was made with. other_need is whether a tool of the stage needs the
+// reference anyway. Both are checked for the input, so a stage given no CRAM and no such tool can run without --fasta
+//
+def checkReferenceForInput(alignment, fasta_given, other_need) {
+    if ( !fasta_given ) {
+        if ( "${alignment}".endsWith('.cram') ) {
+            inputError("The CRAM '${alignment}' needs a reference fasta (--fasta) to be read")
+        }
+        if ( other_need ) {
+            inputError("A reference fasta (--fasta) is required by the enabled tools, for example Riker and CRAM output")
+        }
+    }
+}

@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--reference` is reported with BioVAT's own message before any stage is set up
 - Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
 - `id` is a field of the records of every stage (`Reads`, `BamCram`, `Alignment` and `VariantCall`), and `single_end` of the records of the stages that need it (`Reads`, `BamCram` and `Alignment` of the read and alignment stages), not a silent requirement on `meta`, as the nf-core guidelines for records ask. A YAML or JSON record without one is rejected when it is loaded, with a message that names the field and the record type. The stage adds them to `meta`, and the records that a stage emits carry them, so they can go straight into the next stage
+- `ingest_bam_or_cram`, `merge` and `alignment_qc` stop with a message when a CRAM is given without `--fasta`. `ingest_bam_or_cram` and `alignment_qc` need no reference for a run with no BAM/CRAM input, such as a sheet of FASTQ rows
 - `mark_duplicates` rejects repeated rows of a library. A library is one alignment and the samplesheet has no read group columns, so a repeat overwrote the output of the other row, and picard paired a BAM with the index of another
 - The stages that write CRAM (`align_reads`, `ingest_bam_or_cram`, `merge` and `mark_duplicates`) reject `--qualimap` with `--cram_format`, as `main.nf` does. Qualimap cannot read a CRAM
 - Genome chunk concatenation is shared by all variant callers, and the joint VCF and its variant QC outputs are named after the platform and the caller (see the next entry)
@@ -67,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - `SPLITGENOME` runs its script with `python3`, so it does not depend on the file mode surviving the copy into the task
+- `merge` passes `--fasta` to `samtools merge` whenever it is given, so CRAM inputs can be merged to BAM
 - `requires.fai` counts CRAM output whenever it is on, so the fai is made once and not by each stage
 - `nf-test.config` triggers on `modules/local/*/bin/*`, and the stage tests share the tag `pipelines`
 - Concatenation of the genome chunks of a callset starts when its last chunk is done, as on `dev`, instead of when all chunks of all callsets are done (`groupKey` with the chunk count)
