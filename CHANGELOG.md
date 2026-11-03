@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every row of the `samplesheet` channel, as the schema does for `--input`
 - The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--reference` is reported with BioVAT's own message before any stage is set up
 - Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
+- `call_variants` with `--variant_caller gatk` checks that `--fai` and `--dict` are named after `--fasta`. GATK finds them by name next to the fasta and otherwise fails in every HaplotypeCaller task
 - `ingest_bam_or_cram`, `merge` and `alignment_qc` stop with a message when a CRAM is given without `--fasta`. `ingest_bam_or_cram` and `alignment_qc` need no reference for a run with no BAM/CRAM input, such as a sheet of FASTQ rows
 - `trim_reads`, `align_reads` and `ingest_bam_or_cram` stop with a message that names `single_end` when the meta of a read group has none. The tools take a required value
 - `mark_duplicates` rejects repeated rows of a library. A library is one alignment and the samplesheet has no read group columns, so a repeat overwrote the output of the other row, and picard paired a BAM with the index of another

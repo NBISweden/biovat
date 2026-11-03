@@ -13,6 +13,7 @@ include { GATK4_GENOMICSDBIMPORT       } from '../../modules/nf-core/gatk4/genom
 include { GATK4_GENOTYPEGVCFS          } from '../../modules/nf-core/gatk4/genotypegvcfs/main'
 include { workflow as VARIANT_QC       } from '../variant_qc'
 include { REFERENCE_VALUE              } from '../../subworkflows/local/utils_reference/main'
+include { checkGatkReferenceNames      } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
@@ -82,6 +83,13 @@ workflow {
         error "Population grouping with --group_samples requires the multiallelic caller. Set --multiallelic_caller true or remove --group_samples"
     }
     reference = REFERENCE_VALUE(params.fasta, params.fai, true)
+    if ( params.variant_caller == 'gatk' ) {
+        // Checked in the channel itself, so that nothing using the fai starts before the check passes
+        reference = reference.combine(params.dict).map { r, dict ->
+            checkGatkReferenceNames(r.fasta, r.fai, dict)
+            r
+        }
+    }
 
     // Alignments: from the samplesheet, or given with their meta record
     samplesheet_alignments = channel.empty()
