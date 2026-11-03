@@ -25,9 +25,10 @@ record AlignmentSample {
 }
 
 record Alignment {
-    meta     : Record // sample information, requires id, pl, single_end, and read_group (input and readgroup levels) or library (library and markdup levels)
-    alignment: Path   // BAM or CRAM file
-    index    : Path   // index of the BAM or CRAM file
+    meta      : Record  // sample information, requires id, pl and read_group (input and readgroup levels) or library (library and markdup levels)
+    alignment : Path    // BAM or CRAM file
+    index     : Path    // index of the BAM or CRAM file
+    single_end: Boolean // whether the reads are single-end
 }
 
 params {
@@ -59,10 +60,10 @@ workflow {
                 stageError "Level '${params.level}' needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }
             def meta = [ id: s.sample, library: s.library_id, pl: s.platform, single_end: s.single_end, read_group: s.alignment.baseName ]
-            record(meta: record(meta), alignment: s.alignment, index: s.index)
+            record(meta: record(meta), alignment: s.alignment, index: s.index, single_end: s.single_end)
         }
     } else {
-        alignments = params.alignments
+        alignments = params.alignments.map { a -> record(meta: a.meta + record(single_end: a.single_end), alignment: a.alignment, index: a.index, single_end: a.single_end) }
     }
 
     // Tag each alignment with a level-scoped prefix so each output file is named by its level and read group/library/sample
@@ -75,7 +76,7 @@ workflow {
                 : params.level == 'sample'
                     ? "${aln.meta.id}_${aln.meta.pl}"
                     : "${aln.meta.id}_${aln.meta.library}_${aln.meta.pl}" // else 'library' or 'markdup'
-            record(meta: aln.meta, alignment: aln.alignment, index: aln.index, qc_prefix: "${params.level}_${prefix}")
+            record(meta: aln.meta, alignment: aln.alignment, index: aln.index, single_end: aln.single_end, qc_prefix: "${params.level}_${prefix}")
         }
 
     // SAMTOOLS_FLAGSTAT
@@ -121,7 +122,7 @@ workflow {
                 record(
                     id                  : qc.meta.id,
                     meta                : qc.meta,
-                    single_end          : qc.meta.single_end,
+                    single_end          : qc.single_end,
                     bam                 : qc.alignment,
                     gff                 : null, // TODO: Potentially support optional input (gff file)
                     qualimap_bamqc_args : null,

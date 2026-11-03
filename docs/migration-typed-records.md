@@ -273,17 +273,12 @@ Each stage takes the flat `samplesheet.csv` with `--samplesheet`, so a stage can
 ```yaml
 # reads.yml
 - meta:
-    {
-      id: PUN-R-ELF,
-      library: "1",
-      flowcell: SRR9309791,
-      lane: 1,
-      pl: ILLUMINA,
-      single_end: false,
-      read_group: PUN-R-ELF.1.SRR9309791.1,
-    }
+    { id: PUN-R-ELF, library: "1", flowcell: SRR9309791, lane: 1, pl: ILLUMINA, read_group: PUN-R-ELF.1.SRR9309791.1 }
+  single_end: false
   reads: [/data/PUN-R-ELF_1_R1.fastq.gz, /data/PUN-R-ELF_1_R2.fastq.gz]
 ```
+
+`single_end` is a field of the record, next to `meta`, for the records that need it (`Reads`, `BamCram` and `Alignment`). A record without it is rejected when it is loaded. The stage adds it to `meta`, and the alignments that a stage emits carry it, so a calling pipeline can pass them to the next stage.
 
 ```bash
 nextflow run pipelines/read_qc --samplesheet samplesheet.csv -profile docker -output-dir results   # from the repository root

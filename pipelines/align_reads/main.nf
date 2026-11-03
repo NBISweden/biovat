@@ -13,7 +13,6 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
-include { checkSingleEnd              } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow              } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
@@ -31,8 +30,9 @@ record Sample {
 }
 
 record Reads {
-    meta : Record     // sample information, requires id, library, pl, platform_unit and read_group
-    reads: List<Path> // fastq files, in order
+    meta      : Record     // sample information, requires id, library, pl, platform_unit and read_group
+    reads     : List<Path> // fastq files, in order
+    single_end: Boolean    // whether the reads are single-end
 }
 
 params {
@@ -61,12 +61,9 @@ workflow {
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
             .filter { row -> row[0].input_type == 'fastq' }
-            .map { row -> record(meta: record(row[0]), reads: row[1]) }
+            .map { row -> record(meta: record(row[0]), reads: row[1], single_end: row[0].single_end) }
     } else {
-        reads = params.reads.map { r ->
-            checkSingleEnd(r.meta)
-            r
-        }
+        reads = params.reads.map { r -> record(meta: r.meta + record(single_end: r.single_end), reads: r.reads, single_end: r.single_end) }
     }
     if ( !params.fasta ) {
         error "Missing required parameter --fasta"
@@ -99,7 +96,7 @@ workflow {
                     )
                 }
         )
-        alignments = mem.map { out -> record(meta: out.meta, alignment: out.aligned, index: out.index) }
+        alignments = mem.map { out -> record(meta: out.meta, alignment: out.aligned, index: out.index, single_end: out.meta.single_end) }
     } else if ( params.aligner == 'parabricks' ) {
         // Parabricks requires BWA v0.7.x indexes
         index = BWA_INDEX(
@@ -113,7 +110,7 @@ workflow {
                     record(
                         id                    : r.meta.id,
                         meta                  : r.meta,
-                        single_end            : r.meta.single_end,
+                        single_end            : r.single_end,
                         reads                 : r.reads,
                         fasta                 : ref.fasta,
                         index                 : idx.index,
@@ -138,7 +135,7 @@ workflow {
             fq2bam.map { out -> record(id: out.id, meta: out.meta, input: out.bam ?: out.cram, samtools_index_args: '--csi') }
         )
         alignments = fq2bam
-            .map { out -> record(meta: out.meta, alignment: out.bam ?: out.cram) }
+            .map { out -> record(meta: out.meta, alignment: out.bam ?: out.cram, single_end: out.meta.single_end) }
             .join(indexed.map { out -> record(meta: out.meta, index: out.index) }, by: 'meta')
     } else {
         error "Unknown aligner '${params.aligner}', expected bwa-mem3 or parabricks"

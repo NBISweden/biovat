@@ -236,7 +236,7 @@ workflow {
     // Short read path: branch on whether preprocessing or BAM/CRAM ingestion is needed
     fastq_rows    = short_read_rows.filter { row -> row.meta.input_type == 'fastq' }
     bam_cram_rows = short_read_rows.filter { row -> row.meta.input_type == 'bam_cram' }
-    reads         = fastq_rows.map { row -> record(meta: row.meta, reads: row.files) }
+    reads         = fastq_rows.map { row -> record(meta: row.meta, reads: row.files, single_end: row.meta.single_end) }
 
     // The populations of the samples in the run. --sample_metadata can list samples that are not in --input, and those
     // are left out. The rows of a samplesheet channel are only known once they have all arrived
@@ -286,7 +286,7 @@ workflow {
             )
         )
         trim_reads    = trim.fastp
-        reads         = trim.trimmed_reads.map { r -> record(meta: r.meta, reads: r.reads) }
+        reads         = trim.trimmed_reads.map { r -> record(meta: r.meta, reads: r.reads, single_end: r.single_end) }
         multiqc_files = multiqc_files.mix(trim.multiqc_files)
     }
 
@@ -319,7 +319,7 @@ workflow {
     // We assume they are aligned, but enforce sorting/indexing to ensure compatibility
     ingest = INGEST_BAM_OR_CRAM(
         record(
-            bam_cram   : bam_cram_rows.map { row -> record(meta: row.meta, bam_cram: row.files[0]) },
+            bam_cram   : bam_cram_rows.map { row -> record(meta: row.meta, bam_cram: row.files[0], single_end: row.meta.single_end) },
             fasta      : fasta,
             fai        : fai,
             // validateReferenceRequirements has already required --reference for the rows that need it, so without
@@ -333,7 +333,7 @@ workflow {
     multiqc_files         = multiqc_files.mix(ingest.multiqc_files)
     alignments_to_process = read_group_alignments
         .mix(ingest.alignments)
-        .map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
+        .map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
 
     // Merge lane alignments to library level
     library_alignments = channel.empty()
@@ -353,7 +353,7 @@ workflow {
                 qualimap   : enable.qualimap
             )
         )
-        alignments_to_process = merge_library.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
+        alignments_to_process = merge_library.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
         library_alignments    = merge_library.merged
         library_flagstat      = merge_library.flagstat
         library_riker         = merge_library.riker
@@ -382,7 +382,7 @@ workflow {
                 qualimap         : enable.qualimap
             )
         )
-        alignments_to_process      = markdup.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
+        alignments_to_process      = markdup.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
         mark_duplicates_alignments = markdup.alignments
         mark_duplicates_metrics    = markdup.metrics
         mark_duplicates_flagstat   = markdup.flagstat
@@ -409,7 +409,7 @@ workflow {
                 qualimap   : enable.qualimap
             )
         )
-        alignments_to_process = merge_sample.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
+        alignments_to_process = merge_sample.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
         sample_alignments     = merge_sample.merged
         sample_flagstat   = merge_sample.flagstat
         sample_riker      = merge_sample.riker

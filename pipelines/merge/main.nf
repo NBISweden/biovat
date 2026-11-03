@@ -23,9 +23,10 @@ record AlignmentSample {
 }
 
 record Alignment {
-    meta     : Record // sample information, requires id, pl and single_end (and library to merge at library level)
-    alignment: Path   // BAM or CRAM file
-    index    : Path   // index of the BAM or CRAM file
+    meta      : Record  // sample information, requires id and pl (and library to merge at library level)
+    alignment : Path    // BAM or CRAM file
+    index     : Path    // index of the BAM or CRAM file
+    single_end: Boolean // whether the reads are single-end
 }
 
 params {
@@ -58,10 +59,10 @@ workflow {
                 stageError "Merging to library level needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }
             def meta = [ id: s.sample, library: s.library_id, pl: s.platform, single_end: s.single_end ]
-            record(meta: record(meta), alignment: s.alignment, index: s.index)
+            record(meta: record(meta), alignment: s.alignment, index: s.index, single_end: s.single_end)
         }
     } else {
-        alignments = params.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
+        alignments = params.alignments.map { a -> record(meta: a.meta + record(single_end: a.single_end), alignment: a.alignment, index: a.index, single_end: a.single_end) }
     }
     reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
 
@@ -74,7 +75,7 @@ workflow {
                 id        : aln.meta.id,
                 library   : params.level == 'sample' ? null : aln.meta.library,
                 pl        : aln.meta.pl,
-                single_end: aln.meta.single_end
+                single_end: aln.single_end
             )
             tuple(group_meta, aln)
         }
@@ -88,7 +89,7 @@ workflow {
     to_merge = grouped.filter { _group_meta, alns -> alns.size() > 1 }
     skipped  = grouped
         .filter { _group_meta, alns -> alns.size() == 1 }
-        .map { group_meta, alns -> record(meta: group_meta, alignment: alns[0].alignment, index: alns[0].index) }
+        .map { group_meta, alns -> record(meta: group_meta, alignment: alns[0].alignment, index: alns[0].index, single_end: group_meta.single_end) }
 
     // Merge alignments
     merged = SAMTOOLS_MERGE(
@@ -114,7 +115,7 @@ workflow {
     )
 
     // Merged alignments with their indexes, for alignment QC and publishing.
-    merged_alignments = merged.map { out -> record(meta: out.meta, alignment: out.cram ?: out.bam, index: out.index) }
+    merged_alignments = merged.map { out -> record(meta: out.meta, alignment: out.cram ?: out.bam, index: out.index, single_end: out.meta.single_end) }
 
     // MERGE:ALIGNMENT_QC — only for alignments that were actually merged; a skipped singleton is
     // byte-identical to the pre-merge alignment already QC'd upstream

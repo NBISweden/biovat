@@ -11,7 +11,6 @@ include { workflow as ALIGNMENT_QC  } from '../alignment_qc'
 include { REFERENCE_VALUE           } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput           } from '../../subworkflows/local/utils_stage_help/main'
-include { checkSingleEnd              } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow               } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
@@ -29,8 +28,9 @@ record Sample {
 }
 
 record BamCram {
-    meta    : Record // sample information, requires id, library, pl, platform_unit and read_group
-    bam_cram: Path   // aligned BAM or CRAM file
+    meta      : Record  // sample information, requires id, library, pl, platform_unit and read_group
+    bam_cram  : Path    // aligned BAM or CRAM file
+    single_end: Boolean // whether the reads are single-end
 }
 
 params {
@@ -58,12 +58,9 @@ workflow {
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
             .filter { row -> row[0].input_type == 'bam_cram' }
-            .map { row -> record(meta: record(row[0]), bam_cram: row[1][0]) }
+            .map { row -> record(meta: record(row[0]), bam_cram: row[1][0], single_end: row[0].single_end) }
     } else {
-        bam_cram = params.bam_cram.map { r ->
-            checkSingleEnd(r.meta)
-            r
-        }
+        bam_cram = params.bam_cram.map { r -> record(meta: r.meta + record(single_end: r.single_end), bam_cram: r.bam_cram, single_end: r.single_end) }
     }
 
     reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
@@ -123,7 +120,7 @@ workflow {
                 )
             }
     )
-    alignments = sorted.map { out -> record(meta: out.meta, alignment: out.bam ?: out.cram, index: out.index) }
+    alignments = sorted.map { out -> record(meta: out.meta, alignment: out.bam ?: out.cram, index: out.index, single_end: out.meta.single_end) }
 
     // INGEST_BAM_OR_CRAM:ALIGNMENT_QC
     qc_flagstat      = channel.empty()
