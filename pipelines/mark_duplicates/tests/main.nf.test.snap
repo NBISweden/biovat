@@ -235,7 +235,7 @@
     },
     "from a CSV samplesheet - stub": {
         "content": [
-            10,
+            7,
             [
                 "alignments",
                 "alignments/A_1_ILLUMINA_markdup.bam",
@@ -344,7 +344,7 @@
                 "riker/markdup_B_1_ILLUMINA.wgs-metrics.txt"
             ]
         ],
-        "timestamp": "2026-10-21T13:52:29.360233",
+        "timestamp": "2026-11-02T20:19:30.377890873",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"

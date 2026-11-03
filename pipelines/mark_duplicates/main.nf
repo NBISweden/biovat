@@ -11,6 +11,7 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
+include { checkNoRepeats             } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
@@ -63,6 +64,10 @@ workflow {
         }
     } else {
         alignments = params.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
+    }
+    // Duplicates are marked per library, so a library is one alignment. The samplesheet has no read group columns
+    alignments = alignments.toList().flatMap { rows ->
+        checkNoRepeats(rows, { row -> [ row.meta.id, row.meta.library, row.meta.pl ] }, "Marking duplicates needs one alignment per library. Merge the alignments of a library first (the merge stage).")
     }
     reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
 
