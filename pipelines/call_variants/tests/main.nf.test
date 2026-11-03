@@ -437,6 +437,32 @@ nextflow_pipeline {
         }
     }
 
+    test("two alignments of a sample on one platform fail") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/A2.bam").text = ""
+            new File("${launchDir}/A2.bam.csi").text = ""
+            new File("${launchDir}/repeat.csv").text = "sample,library_id,platform,single_end,alignment,index\nA,1,ILLUMINA,false,${launchDir}/A.bam,${launchDir}/A.bam.csi\nA,2,ILLUMINA,false,${launchDir}/A2.bam,${launchDir}/A2.bam.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/repeat.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Variant calling needs one alignment per sample and platform")
+        }
+    }
+
     test("--help") {
 
         when {

@@ -16,6 +16,7 @@ include { REFERENCE_VALUE              } from '../../subworkflows/local/utils_re
 include { checkGatkReferenceNames      } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
+include { checkNoRepeats             } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
@@ -106,7 +107,11 @@ workflow {
     if ( params.alignments ) {
         given_alignments = params.alignments.map { a -> record(meta: record(id: a.meta.id, pl: a.meta.pl), alignment: a.alignment, index: a.index) }
     }
-    alignments = samplesheet_alignments.mix(given_alignments)
+    // A sample is one alignment per platform. Several alignments of a sample have the same name and read group,
+    // which GATK rejects and bcftools reads as one file
+    alignments = samplesheet_alignments.mix(given_alignments).toList().flatMap { rows ->
+        checkNoRepeats(rows, { row -> [ row.meta.id, row.meta.pl ] }, "Variant calling needs one alignment per sample and platform. Merge the alignments of a sample first (the merge stage).")
+    }
 
     // Split the reference genome into chunks (BED intervals) for parallelization
     splitgenome = SPLITGENOME(
