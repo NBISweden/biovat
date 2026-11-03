@@ -538,6 +538,32 @@ nextflow_pipeline {
         }
     }
 
+    test("--group_samples with gatk fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = "${launchDir}/sample_metadata.csv"
+                group_samples   = true
+                variant_caller  = "gatk"
+                dict            = "${launchDir}/M_aurantiacus_v1_splitline_ordered.dict"
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("--group_samples is only used by --variant_caller bcftools_multisample")
+        }
+    }
+
     test("--help") {
 
         when {

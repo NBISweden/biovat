@@ -82,6 +82,9 @@ workflow {
     if ( params.group_samples && !params.sample_metadata ) {
         error "--group_samples requires --sample_metadata"
     }
+    if ( params.group_samples && params.variant_caller != 'bcftools_multisample' ) {
+        error "--group_samples is only used by --variant_caller bcftools_multisample"
+    }
     if ( params.group_samples && !params.multiallelic_caller ) {
         error "Population grouping with --group_samples requires the multiallelic caller. Set --multiallelic_caller true or remove --group_samples"
     }
