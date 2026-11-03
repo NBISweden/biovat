@@ -54,6 +54,13 @@ def stageError(message) {
 }
 
 //
+// stageError with the red ERROR prefix of the messages about the input
+//
+def inputError(message) {
+    stageError("\033[0;91mERROR\033[0m: ${message}")
+}
+
+//
 // Log the message of the root cause of an exception caught in an operator closure, where Nextflow wraps the error
 // in exceptions that have no message of their own
 //
@@ -72,13 +79,13 @@ def checkSampleFields(sample, library_id, flowcell_id, platform) {
     checkName('Sequencing library ID', library_id)
     checkName('Flowcell ID', flowcell_id)
     if ( platform != null && !(platform in [ 'ILLUMINA', 'IONTORRENT', 'ONT', 'PACBIO' ]) ) {
-        stageError("\033[0;91mERROR\033[0m: Sequencing platform '${platform}' must be one of the SAM specification @RG:PL values (in uppercase): ILLUMINA, IONTORRENT, ONT, PACBIO. To request support of another platform, please log a GitHub issue")
+        inputError("Sequencing platform '${platform}' must be one of the SAM specification @RG:PL values (in uppercase): ILLUMINA, IONTORRENT, ONT, PACBIO. To request support of another platform, please log a GitHub issue")
     }
 }
 
 def checkName(label, value) {
     if ( value != null && !("${value}" ==~ /^[^\s.]+$/) ) {
-        stageError("\033[0;91mERROR\033[0m: ${label} '${value}' cannot contain spaces or full stops")
+        inputError("${label} '${value}' cannot contain spaces or full stops")
     }
 }
 
@@ -101,7 +108,7 @@ def checkNoRepeats(rows, key, message) {
         .findAll { _key, group -> group.size() > 1 }
         .collect { repeated_key, _group -> repeated_key.join(' / ') }
     if ( !repeated.isEmpty() ) {
-        stageError("\033[0;91mERROR\033[0m: ${message} Repeated: ${repeated.join(', ')}")
+        inputError("${message} Repeated: ${repeated.join(', ')}")
     }
     return rows
 }
@@ -112,7 +119,7 @@ def checkNoRepeats(rows, key, message) {
 //
 def checkSingleEnd(meta) {
     if ( meta.single_end == null ) {
-        stageError("\033[0;91mERROR\033[0m: The meta of sample '${meta.id}' has no single_end (true or false). It is needed to tell single-end from paired-end data")
+        inputError("The meta of sample '${meta.id}' has no single_end (true or false). It is needed to tell single-end from paired-end data")
     }
 }
 
@@ -123,10 +130,10 @@ def checkSingleEnd(meta) {
 def checkReferenceForInput(alignment, fasta_given, other_need) {
     if ( !fasta_given ) {
         if ( "${alignment}".endsWith('.cram') ) {
-            stageError("\033[0;91mERROR\033[0m: The CRAM '${alignment}' needs a reference fasta (--fasta) to be read")
+            inputError("The CRAM '${alignment}' needs a reference fasta (--fasta) to be read")
         }
         if ( other_need ) {
-            stageError("\033[0;91mERROR\033[0m: A reference fasta (--fasta) is required by the enabled tools, for example Riker and CRAM output")
+            inputError("A reference fasta (--fasta) is required by the enabled tools, for example Riker and CRAM output")
         }
     }
 }

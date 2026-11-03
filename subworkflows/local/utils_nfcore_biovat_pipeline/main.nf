@@ -17,6 +17,7 @@ include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
 include { stageError               } from '../utils_stage_help/main'
 include { checkSampleFields        } from '../utils_stage_help/main'
+include { inputError               } from '../utils_stage_help/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,16 +142,16 @@ def readSamplesheet(input) {
 def sampleToRow(sample) {
     checkSampleFields(sample.sample, sample.library_id, sample.flowcell_id, sample.platform)
     if ( !sample.fastq_1 && !sample.bam ) {
-        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has neither fastq_1 nor bam")
+        inputError("Sample '${sample.sample}', library '${sample.library_id}' has neither fastq_1 nor bam")
     }
     if ( sample.fastq_1 && sample.bam ) {
-        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has both fastq_1 and bam")
+        inputError("Sample '${sample.sample}', library '${sample.library_id}' has both fastq_1 and bam")
     }
     if ( sample.fastq_1 && sample.single_end != null ) {
-        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has fastq_1 and a single_end value. single_end is for BAM/CRAM rows only, the layout of FASTQ rows follows from fastq_2")
+        inputError("Sample '${sample.sample}', library '${sample.library_id}' has fastq_1 and a single_end value. single_end is for BAM/CRAM rows only, the layout of FASTQ rows follows from fastq_2")
     }
     if ( sample.bam && sample.single_end == null ) {
-        stageError("\033[0;91mERROR\033[0m: Sample '${sample.sample}', library '${sample.library_id}' has a BAM/CRAM but no single_end (true or false)")
+        inputError("Sample '${sample.sample}', library '${sample.library_id}' has a BAM/CRAM but no single_end (true or false)")
     }
     def meta = [
         id        : sample.sample,

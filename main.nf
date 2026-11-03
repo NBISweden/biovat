@@ -173,8 +173,6 @@ workflow {
         fai             : enable.cram_format || rikerActive(enable, true) || enable.variant_calling
     )
 
-    validateReferenceGates(enable, params.reference != null)
-
     // Sample population metadata, from --sample_metadata (validated by nf-schema)
     sample_metadata_rows = readSampleMetadata(params.sample_metadata)
 
@@ -197,6 +195,9 @@ workflow {
         validateSamplesheetRows(input_rows, sample_metadata_rows, enable, options)
         samplesheet = channel.fromList(input_rows)
     } else if ( params.samplesheet ) {
+        // The rows of a channel are checked late, after the stages are set up, and a stage would report the missing
+        // reference first with the name of its own parameter. Whatever the rows are, these stages need it
+        validateReferenceGates(enable, params.reference != null)
         // The rows of a channel are not known yet. Check them together, and release them only when the checks have passed
         samplesheet = params.samplesheet
             .map { sample -> sampleToRow(sample) }
