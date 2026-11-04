@@ -13,7 +13,7 @@ nextflow_process {
                 """
                 input[0] = channel.of(record(
                     id: 'monkeyflower',
-                    meta: [ id:'monkeyflower' ],
+                    meta: null,
                     fasta: file("${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta", checkIfExists: true),
                     fai: null,
                     get_sizes: false,
@@ -29,7 +29,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 1000, splitgenome_args: null) } // 1000 is the pipeline default for min_length
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 1000, splitgenome_args: null) } // 1000 is the pipeline default for min_length
                 """
             }
         }
@@ -57,7 +57,7 @@ nextflow_process {
             process {
                 """
                 // longest contig is LG4_2 (51180 bp)
-                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: 1000, min_length: 500, splitgenome_args: null) }
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.id, meta: r.meta, fai: r.fai, chunk_size: 1000, min_length: 500, splitgenome_args: null) }
                 """
             }
         }
@@ -84,7 +84,7 @@ nextflow_process {
                 // 200 x 1000 bp scaffolds: longest (1000) is below total / 50 (4000), so the default is 4000
                 def fai = file("\${workDir}/fragmented.fasta.fai")
                 fai.text = (1..200).collect { i -> "scaffold_\${i}\\t1000\\t0\\t60\\t61\\n" }.join()
-                input[0] = channel.of(record(id: 'fragmented', meta: [ id:'fragmented' ], fai: fai, chunk_size: null, min_length: 0, splitgenome_args: null))
+                input[0] = channel.of(record(id: 'fragmented', meta: null, fai: fai, chunk_size: null, min_length: 0, splitgenome_args: null))
                 """
             }
         }
@@ -108,7 +108,7 @@ nextflow_process {
             process {
                 """
                 // keep all contigs: 100000 bp total, so total / 50 (2000) is below the longest (51180)
-                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 500, splitgenome_args: null) }
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 500, splitgenome_args: null) }
                 """
             }
         }
@@ -131,7 +131,7 @@ nextflow_process {
             process {
                 """
                 // total is 100000 bp
-                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: 200000, min_length: 500, splitgenome_args: null) }
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.id, meta: r.meta, fai: r.fai, chunk_size: 200000, min_length: 500, splitgenome_args: null) }
                 """
             }
         }
@@ -154,7 +154,7 @@ nextflow_process {
             process {
                 """
                 // longest contig is LG4_2 (51180 bp)
-                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 60000, splitgenome_args: null) }
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 60000, splitgenome_args: null) }
                 """
             }
         }

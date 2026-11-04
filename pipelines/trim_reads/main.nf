@@ -7,6 +7,8 @@ nextflow.enable.types = true
 include { FASTP           } from '../../modules/nf-core/fastp/main'
 include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
+include { readGroupMeta             } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { attachSingleEnd            } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -23,7 +25,8 @@ record Sample {
 }
 
 record Reads {
-    meta      : Record     // sample information, requires read_group
+    id        : String     // sample name
+    meta      : Record     // read group information, requires read_group
     reads     : List<Path> // fastq files, in order
     single_end: Boolean    // whether the reads are single-end
 }
@@ -49,16 +52,16 @@ workflow {
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
             .filter { row -> row[0].input_type == 'fastq' }
-            .map { row -> record(meta: record(row[0]), reads: row[1], single_end: row[0].single_end) }
+            .map { row -> record(id: row[0].id, meta: readGroupMeta(row[0]), reads: row[1], single_end: row[0].single_end) }
     } else {
-        reads = params.reads.map { r -> record(meta: r.meta + record(single_end: r.single_end), reads: r.reads, single_end: r.single_end) }
+        reads = params.reads
     }
 
     // Run fastp for read trimming
     fastp = FASTP(
         reads.map { r ->
             record(
-                id                  : r.meta.id,
+                id                  : r.id,
                 meta                : r.meta,
                 single_end          : r.single_end,
                 reads               : r.reads,
@@ -74,7 +77,8 @@ workflow {
 
     publish:
     fastp         = fastp                                                                                                     // record(meta, reads, json, html, log, reads_fail, reads_merged)
-    trimmed_reads = fastp.map { out -> record(meta: out.meta, reads: out.reads.toList().toSorted { a, b -> a.name <=> b.name }, single_end: out.meta.single_end) } // record(meta, reads)
+    trimmed_reads = attachSingleEnd(fastp, reads)
+        .map { j -> record(id: j.out.id, meta: j.out.meta, reads: j.out.reads.toList().toSorted { a, b -> a.name <=> b.name }, single_end: j.single_end) } // record(id, meta, reads, single_end)
     multiqc_files = fastp.map { out -> out.json }
 
 }

@@ -12,7 +12,7 @@ nextflow_pipeline {
         [ [ 'A', 'ILLUMINA' ], [ 'B', 'ILLUMINA' ], [ 'C', 'IONTORRENT' ] ].each { sample, platform ->
             new File("${launchDir}/${sample}.bam").text = ""
             new File("${launchDir}/${sample}.bam.csi").text = ""
-            rows << "- {meta: {id: ${sample}, pl: ${platform}}, alignment: ${launchDir}/${sample}.bam, index: ${launchDir}/${sample}.bam.csi}"
+            rows << "- {meta: {pl: ${platform}}, id: ${sample}, alignment: ${launchDir}/${sample}.bam, index: ${launchDir}/${sample}.bam.csi}"
         }
         new File("${launchDir}/alignments.yml").text = rows.join("\n") + "\n"
         // The same alignments as a samplesheet, with the columns of the BioVAT samplesheet where they apply
@@ -150,7 +150,7 @@ nextflow_pipeline {
     def realAlignments = { launchDir, projectDir, platforms ->
         def cram = "${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram"
         new File("${launchDir}/alignments.yml").text = platforms.collect { platform ->
-            "- {meta: {id: PUN-R-MT, pl: ${platform}}, alignment: ${cram}, index: ${cram}.crai}"
+            "- {meta: {pl: ${platform}}, id: PUN-R-MT, alignment: ${cram}, index: ${cram}.crai}"
         }.join("\n") + "\n"
     }
 
@@ -408,6 +408,30 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert (workflow.stdout + workflow.stderr).toString().contains("--variant_caller gatk requires --dict")
+        }
+    }
+
+    test("an alignment without id is rejected when it is loaded") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/no_id.yml").text = "- {meta: {pl: ILLUMINA}, alignment: ${launchDir}/A.bam, index: ${launchDir}/A.bam.csi}\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/no_id.yml"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/reference.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("is missing field 'id' required by record type 'Alignment'")
         }
     }
 

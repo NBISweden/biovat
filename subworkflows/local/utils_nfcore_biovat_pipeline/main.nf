@@ -166,6 +166,11 @@ def sampleToRow(sample) {
     return buildSampleRow(meta, sample.fastq_1, sample.fastq_2, sample.bam)
 }
 
+// The meta of a stage record holds the read group information. The id and single_end are fields of the record
+def readGroupMeta(meta) {
+    return record(library: meta.library, flowcell: meta.flowcell, lane: meta.lane, pl: meta.pl, read_group: meta.read_group, platform_unit: meta.platform_unit)
+}
+
 // Add the read group information to the meta of a samplesheet row
 def buildSampleRow(meta, fastq_1, fastq_2, bam) {
     // We define read_group separately as an intuitive/readable @RG-level file prefix

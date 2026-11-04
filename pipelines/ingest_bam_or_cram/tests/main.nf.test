@@ -12,10 +12,12 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/bam_cram.yml").text = """\
-                - meta: {id: PUN-R-ELF, library: "2", flowcell: SRR9309891, lane: 3, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.2.SRR9309891.3, platform_unit: SRR9309891.3.PUN-R-ELF_2}
+                - meta: {library: "2", flowcell: SRR9309891, lane: 3, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.2.SRR9309891.3, platform_unit: SRR9309891.3.PUN-R-ELF_2}
+                  id: PUN-R-ELF
                   single_end: false
                   bam_cram: ${data}/PUN-R-ELF_2.bam
-                - meta: {id: PUN-R-MT, library: "1", flowcell: SRR9309471, lane: 2, pl: ILLUMINA, single_end: false, read_group: PUN-R-MT.1.SRR9309471.2, platform_unit: SRR9309471.2.PUN-R-MT_1}
+                - meta: {library: "1", flowcell: SRR9309471, lane: 2, pl: ILLUMINA, single_end: false, read_group: PUN-R-MT.1.SRR9309471.2, platform_unit: SRR9309471.2.PUN-R-MT_1}
+                  id: PUN-R-MT
                   single_end: false
                   bam_cram: ${data}/PUN-R-MT_1_repeat2.cram
                 """.stripIndent()
@@ -110,7 +112,7 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end\nPUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false\n"
-            new File("${launchDir}/bam_cram.yml").text = "- {meta: {id: PUN-R-ELF, library: '2', flowcell: SRR9309891, lane: 3, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.2.SRR9309891.3, platform_unit: SRR9309891.3.PUN-R-ELF_2}, single_end: false, bam_cram: ${data}/PUN-R-ELF_2.bam}\n"
+            new File("${launchDir}/bam_cram.yml").text = "- {meta: {library: '2', flowcell: SRR9309891, lane: 3, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.2.SRR9309891.3, platform_unit: SRR9309891.3.PUN-R-ELF_2}, id: PUN-R-ELF, single_end: false, bam_cram: ${data}/PUN-R-ELF_2.bam}\n"
         }
 
         when {
