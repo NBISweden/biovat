@@ -7,8 +7,8 @@ nextflow.enable.types = true
 include { FASTP           } from '../../modules/nf-core/fastp/main'
 include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
-include { readGroupMeta             } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { attachSingleEnd            } from '../../subworkflows/local/utils_stage_help/main'
+include { readGroupMeta   } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { attachSingleEnd } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
