@@ -7,6 +7,7 @@ nextflow.enable.types = true
 include { FASTQC          } from '../../modules/nf-core/fastqc/main'
 include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
+include { readGroupMeta            } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -23,7 +24,8 @@ record Sample {
 }
 
 record Reads {
-    meta : Record     // sample information, requires read_group
+    id   : String     // sample name
+    meta : Record     // read group information, requires read_group
     reads: List<Path> // fastq files, in order
 }
 
@@ -45,13 +47,13 @@ workflow {
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
             .filter { row -> row[0].input_type == 'fastq' }
-            .map { row -> record(meta: record(row[0]), reads: row[1]) }
+            .map { row -> record(id: row[0].id, meta: readGroupMeta(row[0]), reads: row[1]) }
     } else {
         reads = params.reads
     }
 
     fastqc = FASTQC(
-        reads.map { r -> record(id: r.meta.id, meta: r.meta, reads: r.reads, fastqc_args: '--quiet', output_prefix: r.meta.read_group) }
+        reads.map { r -> record(id: r.id, meta: r.meta, reads: r.reads, fastqc_args: '--quiet', output_prefix: r.meta.read_group) }
     )
 
     publish:

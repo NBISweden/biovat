@@ -12,6 +12,8 @@ include { REFERENCE_VALUE           } from '../../subworkflows/local/utils_refer
 include { STAGE_HELP                } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput           } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
+include { readGroupMeta               } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { attachSingleEnd            } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow               } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -28,7 +30,8 @@ record Sample {
 }
 
 record BamCram {
-    meta      : Record  // sample information, requires id, library, pl, platform_unit and read_group
+    id        : String  // sample name
+    meta      : Record  // read group information, requires library, pl, platform_unit and read_group
     bam_cram  : Path    // aligned BAM or CRAM file
     single_end: Boolean // whether the reads are single-end
 }
@@ -58,9 +61,9 @@ workflow {
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
             .filter { row -> row[0].input_type == 'bam_cram' }
-            .map { row -> record(meta: record(row[0]), bam_cram: row[1][0], single_end: row[0].single_end) }
+            .map { row -> record(id: row[0].id, meta: readGroupMeta(row[0]), bam_cram: row[1][0], single_end: row[0].single_end) }
     } else {
-        bam_cram = params.bam_cram.map { r -> record(meta: r.meta + record(single_end: r.single_end), bam_cram: r.bam_cram, single_end: r.single_end) }
+        bam_cram = params.bam_cram
     }
 
     reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
@@ -68,7 +71,7 @@ workflow {
     // Reject a BAM/CRAM with several @RG lines, or one whose @RG tags are missing or disagree with its samplesheet row
     validated = VALIDATE_READGROUP_HEADER(
         bam_cram.map { r ->
-            record(id: r.meta.id, meta: r.meta, library: "${r.meta.library}", platform: r.meta.pl, platform_unit: r.meta.platform_unit, bam_cram: r.bam_cram)
+            record(id: r.id, meta: r.meta, library: "${r.meta.library}", platform: r.meta.pl, platform_unit: r.meta.platform_unit, bam_cram: r.bam_cram)
         }
     )
 
@@ -79,7 +82,7 @@ workflow {
         missing_rg
             .combine(reference)
             .map { v, ref ->
-                log.warn "No @RG header line in '${v.bam_cram.name}' (sample '${v.meta.id}', library '${v.meta.library}'): adding one from the samplesheet and tagging the reads"
+                log.warn "No @RG header line in '${v.bam_cram.name}' (sample '${v.id}', library '${v.meta.library}'): adding one from the samplesheet and tagging the reads"
                 record(
                     id                        : v.id,
                     meta                      : v.meta,
@@ -93,7 +96,7 @@ workflow {
                     samtools_addreplacerg_args: [
                         "-m overwrite_all",
                         "--output-fmt bam",
-                        "-r '@RG\\tID:${v.meta.platform_unit}\\tSM:${v.meta.id}\\tLB:${v.meta.library}\\tPU:${v.meta.platform_unit}\\tPL:${v.meta.pl}'"
+                        "-r '@RG\\tID:${v.meta.platform_unit}\\tSM:${v.id}\\tLB:${v.meta.library}\\tPU:${v.meta.platform_unit}\\tPL:${v.meta.pl}'"
                     ].join(" "),
                     output_prefix             : "${v.meta.read_group}_rg"
                 )
@@ -102,14 +105,14 @@ workflow {
 
     // Ensure compatible sort order, index, and convert CRAM to BAM/BAM to CRAM if required
     to_sort = present_rg
-        .map { v -> record(meta: v.meta, alignment: v.bam_cram) }
-        .mix(addreplacerg.map { out -> record(meta: out.meta, alignment: out.bam) })
+        .map { v -> record(id: v.id, meta: v.meta, alignment: v.bam_cram) }
+        .mix(addreplacerg.map { out -> record(id: out.id, meta: out.meta, alignment: out.bam) })
     sorted = SAMTOOLS_SORT(
         to_sort
             .combine(reference)
             .map { a, ref ->
                 record(
-                    id                : a.meta.id,
+                    id                : a.id,
                     meta              : a.meta,
                     bam               : [ a.alignment ],
                     fasta             : ref.fasta,
@@ -120,7 +123,8 @@ workflow {
                 )
             }
     )
-    alignments = sorted.map { out -> record(meta: out.meta, alignment: out.bam ?: out.cram, index: out.index, single_end: out.meta.single_end) }
+    alignments = attachSingleEnd(sorted, bam_cram)
+        .map { j -> record(id: j.out.id, meta: j.out.meta, alignment: j.out.bam ?: j.out.cram, index: j.out.index, single_end: j.single_end) }
 
     // INGEST_BAM_OR_CRAM:ALIGNMENT_QC
     qc_flagstat      = channel.empty()
