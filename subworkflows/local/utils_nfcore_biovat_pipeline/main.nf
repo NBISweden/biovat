@@ -15,10 +15,10 @@ include { paramsHelp              } from 'plugin/nf-schema'
 include { completionSummary       } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
-include { stageError               } from '../utils_stage_help/main'
-include { checkSampleFields        } from '../utils_stage_help/main'
-include { checkMergeLayouts        } from '../utils_stage_help/main'
-include { inputError               } from '../utils_stage_help/main'
+include { stageError              } from '../utils_stage_help/main'
+include { checkSampleFields       } from '../utils_stage_help/main'
+include { checkMergeLayouts       } from '../utils_stage_help/main'
+include { inputError              } from '../utils_stage_help/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -93,9 +93,9 @@ nextflow_pipeline {
 
         when {
             params {
-                samplesheet = "${launchDir}/alignments.csv"
+                samplesheet      = "${launchDir}/alignments.csv"
                 duplicate_marker = "samtools"
-                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fasta            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
             }
         }
 
@@ -123,8 +123,8 @@ nextflow_pipeline {
 
         when {
             params {
-                samplesheet = "${launchDir}/alignments.csv"
-                alignments  = "${launchDir}/alignments.yml"
+                samplesheet      = "${launchDir}/alignments.csv"
+                alignments       = "${launchDir}/alignments.yml"
                 duplicate_marker = "samtools"
             }
         }
