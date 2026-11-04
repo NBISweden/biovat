@@ -7,7 +7,7 @@ nextflow.enable.types = true
 include { FASTQC          } from '../../modules/nf-core/fastqc/main'
 include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
-include { readGroupMeta            } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { readGroupMeta   } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -32,8 +32,8 @@ record Reads {
 params {
     samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with a bam instead of fastq files are skipped
     reads      : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
-    help     : Boolean = false
-    help_full: Boolean = false
+    help       : Boolean = false
+    help_full  : Boolean = false
 }
 
 workflow {
