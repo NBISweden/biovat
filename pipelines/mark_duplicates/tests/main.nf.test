@@ -218,4 +218,75 @@ nextflow_pipeline {
             assert workflow.trace.tasks().size() == 0
         }
     }
+
+    // The tests below run the tools on the monkeyflower CRAM and check the command each tool got, since a stub run
+    // does not run the command. The tasks of the run are in the work directory under the launch directory
+    def realAlignments = { launchDir, projectDir ->
+        def cram = "${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram"
+        new File("${launchDir}/alignments.yml").text =
+            "- {meta: {library: '1', pl: ILLUMINA, single_end: false}, id: PUN-R-MT, single_end: false, alignment: ${cram}, index: ${cram}.crai}\n"
+    }
+
+    test("samtools - the optical distance and CRAM output reach the tools") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir)
+        }
+
+        when {
+            params {
+                alignments       = "${launchDir}/alignments.yml"
+                duplicate_marker = "samtools"
+                optical_distance = 250
+                cram_format      = true
+                align_qc         = false
+                fasta            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai              = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            def commands = []
+            file(launchDir).eachFileRecurse { f -> if ( f.name == ".command.sh" ) { commands << f.text } }
+            def published = []
+            file(outputDir).eachFileRecurse { f -> published << f.name }
+            assertAll(
+                { assert workflow.success },
+                { assert commands.any { command -> command.contains("-d 250") } },
+                { assert published.any { name -> name.endsWith(".cram") } },
+                { assert published.any { name -> name.endsWith(".crai") } }
+            )
+        }
+    }
+
+    test("picard - the optical distance reaches the tool") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir)
+        }
+
+        when {
+            params {
+                alignments       = "${launchDir}/alignments.yml"
+                duplicate_marker = "picard"
+                optical_distance = 250
+                align_qc         = false
+                fasta            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai              = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            def commands = []
+            file(launchDir).eachFileRecurse { f -> if ( f.name == ".command.sh" ) { commands << f.text } }
+            assertAll(
+                { assert workflow.success },
+                { assert commands.any { command -> command.contains("--OPTICAL_DUPLICATE_PIXEL_DISTANCE 250") } }
+            )
+        }
+    }
 }
