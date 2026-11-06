@@ -21,7 +21,8 @@ record VariantCallSample {
 }
 
 record VariantCall {
-    meta : Record // callset information, requires id
+    id   : String // name of the callset
+    meta : Record // callset information
     vcf  : Path   // VCF file
     index: Path   // index of the VCF file
 }
@@ -45,11 +46,11 @@ workflow {
     // Variant calls: from the samplesheet, or given with their meta record
     samplesheet_calls = channel.empty()
     if ( params.samplesheet ) {
-        samplesheet_calls = params.samplesheet.map { s -> record(meta: record(id: s.id), vcf: s.vcf, index: s.index) }
+        samplesheet_calls = params.samplesheet.map { s -> record(id: s.id, meta: record(callset: s.id) as Record, vcf: s.vcf, index: s.index) }
     }
     given_calls = channel.empty()
     if ( params.variant_calls ) {
-        given_calls = params.variant_calls.map { c -> record(meta: record(id: c.meta.id), vcf: c.vcf, index: c.index) }
+        given_calls = params.variant_calls.map { c -> record(id: c.id, meta: c.meta, vcf: c.vcf, index: c.index) }
     }
     variant_calls = samplesheet_calls.mix(given_calls)
 
@@ -59,7 +60,7 @@ workflow {
             .combine(reference)
             .map { call, ref ->
                 record(
-                    id                 : call.meta.id,
+                    id                 : call.id,
                     meta               : call.meta,
                     vcf                : call.vcf,
                     tbi                : call.index,
@@ -69,13 +70,13 @@ workflow {
                     exons              : null,
                     fasta              : ref.fasta,
                     bcftools_stats_args: null,
-                    output_prefix      : qcPrefix(call.meta, params.level)
+                    output_prefix      : qcPrefix(call.id, params.level)
                 )
             }
     )
 
     // VCFTOOLS: the index is not used
-    vcftools_calls = variant_calls.map { call -> record(meta: call.meta, variant_file: call.vcf) }
+    vcftools_calls = variant_calls.map { call -> record(id: call.id, meta: call.meta, variant_file: call.vcf) }
     vcftools_tstv_counts = VCFTOOLS_TSTV_COUNT(
         vcftools_calls.map { call -> vcftoolsInput(call, params.level, '--TsTv-by-count') }
     )
@@ -113,10 +114,10 @@ output {
 }
 
 // Output file prefix: the callset id, behind the level when one is given
-def qcPrefix(meta: Record, level: String?) {
-    return level ? "${level}_${meta.id}" : null
+def qcPrefix(id: String, level: String?) {
+    return level ? "${level}_${id}" : null
 }
 
 def vcftoolsInput(call: Record, level: String?, vcftools_args: String) {
-    return record(id: call.meta.id, meta: call.meta, variant_file: call.variant_file, bed: null, diff_variant_file: null, vcftools_args: vcftools_args, output_prefix: qcPrefix(call.meta, level))
+    return record(id: call.id, meta: call.meta, variant_file: call.variant_file, bed: null, diff_variant_file: null, vcftools_args: vcftools_args, output_prefix: qcPrefix(call.id, level))
 }

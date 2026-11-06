@@ -227,7 +227,7 @@ workflow {
     }
 
     fastqc = FASTQC(
-        reads.map { r -> record(id: r.meta.id, meta: r.meta, reads: r.reads, fastqc_args: '--quiet', output_prefix: r.meta.read_group) }
+        reads.map { r -> record(id: r.id, meta: r.meta, reads: r.reads, fastqc_args: '--quiet', output_prefix: r.meta.read_group) }
     )
 
     publish:
@@ -272,18 +272,13 @@ Each stage takes the flat `samplesheet.csv` with `--samplesheet`, so a stage can
 
 ```yaml
 # reads.yml
-- meta:
-    {
-      id: PUN-R-ELF,
-      library: "1",
-      flowcell: SRR9309791,
-      lane: 1,
-      pl: ILLUMINA,
-      single_end: false,
-      read_group: PUN-R-ELF.1.SRR9309791.1,
-    }
+- meta: { library: "1", flowcell: SRR9309791, lane: 1, pl: ILLUMINA, read_group: PUN-R-ELF.1.SRR9309791.1 }
+  id: PUN-R-ELF
+  single_end: false
   reads: [/data/PUN-R-ELF_1_R1.fastq.gz, /data/PUN-R-ELF_1_R2.fastq.gz]
 ```
+
+`id` and `single_end` are fields of the record, next to `meta`, for the records that need them (`id` for `Reads`, `BamCram`, `Alignment` and `VariantCall`, `single_end` for the read and alignment stages), as the nf-core guidelines for records ask. A record without one is rejected when it is loaded. The stage adds both to `meta`, and the alignments that a stage emits carry them, so a calling pipeline can pass them to the next stage.
 
 ```bash
 nextflow run pipelines/read_qc --samplesheet samplesheet.csv -profile docker -output-dir results   # from the repository root
@@ -356,7 +351,7 @@ workflow {
         )
     )
     flagstat = SAMTOOLS_FLAGSTAT(
-        biovat.outputs_alignments.map { aln -> record(meta: aln.meta, bam: aln.alignment, bai: aln.index, output_prefix: "downstream_${aln.meta.id}") }
+        biovat.outputs_alignments.map { aln -> record(id: aln.id, meta: aln.meta, bam: aln.alignment, bai: aln.index, output_prefix: "downstream_${aln.id}") }
     )
     ...
 }

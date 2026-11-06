@@ -14,7 +14,7 @@ nextflow_process {
                 input[0] = channel.of(record(
                     // Matches PUN-R-MT_1_repeat2.cram's own @RG ID/SM/LB/PU/PL (its PL:illumina is lowercase, so this also covers case-insensitive PL)
                     id: 'PUN-R-MT',
-                    meta: [ id:'PUN-R-MT', library:'1', flowcell:'SRR9309471', lane:2, pl:'ILLUMINA', platform_unit:'SRR9309471.2.PUN-R-MT_1' ],
+                    meta: [ library:'1', flowcell:'SRR9309471', lane:2, pl:'ILLUMINA', platform_unit:'SRR9309471.2.PUN-R-MT_1' ],
                     library: '1',
                     platform: 'ILLUMINA',
                     platform_unit: 'SRR9309471.2.PUN-R-MT_1',
@@ -40,7 +40,7 @@ nextflow_process {
                 """
                 input[0] = channel.of(record(
                     id: 'FAKE',
-                    meta: [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    meta: [ library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
                     library: '9',
                     platform: 'ILLUMINA',
                     platform_unit: 'FC1.4.FAKE_9',
@@ -66,7 +66,7 @@ nextflow_process {
                 """
                 input[0] = channel.of(record(
                     id: 'FAKE',
-                    meta: [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    meta: [ library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
                     library: '9',
                     platform: 'ILLUMINA',
                     platform_unit: 'FC1.4.FAKE_9',
@@ -92,7 +92,7 @@ nextflow_process {
                 """
                 input[0] = channel.of(record(
                     id: 'FAKE',
-                    meta: [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    meta: [ library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
                     library: '9',
                     platform: 'ILLUMINA',
                     platform_unit: 'FC1.4.FAKE_9',
@@ -118,7 +118,7 @@ nextflow_process {
                 """
                 input[0] = channel.of(record(
                     id: 'FAKE',
-                    meta: [ id:'FAKE', library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
+                    meta: [ library:'9', flowcell:'FC1', lane:4, pl:'ILLUMINA', platform_unit:'FC1.4.FAKE_9' ],
                     library: '9',
                     platform: 'ILLUMINA',
                     platform_unit: 'FC1.4.FAKE_9',

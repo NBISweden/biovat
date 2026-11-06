@@ -112,3 +112,15 @@ def checkNoRepeats(rows, key, message) {
     }
     return rows
 }
+
+//
+// Processes return the id and the meta of their input, but not single_end. Put it back from the input record that
+// the output belongs to: the two are matched on the id and the meta. Each element of the result is
+// record(out, single_end), with out the output of the process
+//
+def attachSingleEnd(outputs, inputs) {
+    return outputs
+        .map { o -> record(key: record(id: o.id, meta: o.meta), out: o) }
+        .join(inputs.map { i -> record(key: record(id: i.id, meta: i.meta), single_end: i.single_end) }, by: 'key')
+        .map { j -> record(out: j.out, single_end: j.single_end) }
+}

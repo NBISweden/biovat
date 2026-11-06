@@ -12,9 +12,13 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/reads.yml").text = """\
-                - meta: {id: PUN-R-ELF, library: "1", flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}
+                - meta: {library: "1", flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}
+                  id: PUN-R-ELF
+                  single_end: false
                   reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]
-                - meta: {id: PUN-R-JMC, library: "1", flowcell: SRR9309467, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-JMC.1.SRR9309467.1, platform_unit: SRR9309467.1.PUN-R-JMC_1}
+                - meta: {library: "1", flowcell: SRR9309467, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-JMC.1.SRR9309467.1, platform_unit: SRR9309467.1.PUN-R-JMC_1}
+                  id: PUN-R-JMC
+                  single_end: false
                   reads: [${data}/PUN-R-JMC_1_R1.fastq.gz, ${data}/PUN-R-JMC_1_R2.fastq.gz]
                 """.stripIndent()
         }
@@ -89,7 +93,9 @@ nextflow_pipeline {
                 "PUN-R-JMC,1,SRR9309467,1,ILLUMINA,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
             ].join("\n") + "\n"
             new File("${launchDir}/reads.yml").text = [
-                "- meta: {id: PUN-R-ELF, library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}",
+                "- meta: {library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}",
+                "  id: PUN-R-ELF",
+                "  single_end: false",
                 "  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]"
             ].join("\n") + "\n"
         }
