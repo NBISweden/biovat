@@ -6,15 +6,15 @@ nextflow.enable.types = true
 // include this pipeline under their own alias, with their level
 //
 
-include { SAMTOOLS_FLAGSTAT } from '../../modules/nf-core/samtools/flagstat/main'
-include { RIKER_MULTI       } from '../../modules/nf-core/riker/multi/main'
-include { QUALIMAP_BAMQC    } from '../../modules/nf-core/qualimap/bamqc/main'
-include { REFERENCE_VALUE   } from '../../subworkflows/local/utils_reference/main'
-include { STAGE_HELP        } from '../../subworkflows/local/utils_stage_help/main'
-include { checkStageInput   } from '../../subworkflows/local/utils_stage_help/main'
-include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
-include { checkReferenceForInput      } from '../../subworkflows/local/utils_stage_help/main'
-include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
+include { SAMTOOLS_FLAGSTAT      } from '../../modules/nf-core/samtools/flagstat/main'
+include { RIKER_MULTI            } from '../../modules/nf-core/riker/multi/main'
+include { QUALIMAP_BAMQC         } from '../../modules/nf-core/qualimap/bamqc/main'
+include { REFERENCE_VALUE        } from '../../subworkflows/local/utils_reference/main'
+include { STAGE_HELP             } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput        } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields      } from '../../subworkflows/local/utils_stage_help/main'
+include { checkReferenceForInput } from '../../subworkflows/local/utils_stage_help/main'
+include { stageError             } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
 record AlignmentSample {

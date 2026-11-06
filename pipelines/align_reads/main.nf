@@ -13,9 +13,9 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
-include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
-include { readGroupMeta                } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
-include { attachSingleEnd             } from '../../subworkflows/local/utils_stage_help/main'
+include { checkQualimapCram        } from '../../subworkflows/local/utils_stage_help/main'
+include { readGroupMeta            } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { attachSingleEnd          } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow              } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -40,16 +40,16 @@ record Reads {
 
 params {
     samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with a bam instead of fastq files are skipped
-    reads     : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
-    aligner   : String = 'bwa-mem3' // alignment tool: bwa-mem3 or parabricks
-    fasta     : Value<Path>?    // reference fasta
-    fai       : Value<Path>?    // fai index of the reference fasta, needed by Riker
+    reads      : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
+    aligner    : String = 'bwa-mem3' // alignment tool: bwa-mem3 or parabricks
+    fasta      : Value<Path>?    // reference fasta
+    fai        : Value<Path>?    // fai index of the reference fasta, needed by Riker
     cram_format: Boolean = false // write CRAM instead of BAM
-    align_qc  : Boolean = true  // run quality checks on the alignments
-    riker     : Boolean = true  // run Riker during alignment QC
-    qualimap  : Boolean = false // run Qualimap during alignment QC
-    help      : Boolean = false
-    help_full : Boolean = false
+    align_qc   : Boolean = true  // run quality checks on the alignments
+    riker      : Boolean = true  // run Riker during alignment QC
+    qualimap   : Boolean = false // run Qualimap during alignment QC
+    help       : Boolean = false
+    help_full  : Boolean = false
 }
 
 workflow {
