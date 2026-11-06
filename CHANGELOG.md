@@ -73,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The samplesheet checks (single-end/paired-end mix, reference required) run on the rows of `--input` before any task starts. Rows of the `samplesheet` channel and of a stage's CSV are checked one by one as they arrive
 - The nf-core subworkflow `utils_nextflow_pipeline` is patched so that the params dump handles `Path` params: paths are written as strings, maps and lists are kept (with their paths as strings), and dataflow values such as a samplesheet channel are left out
 - Software versions and MultiQC files are collected by the `multiqc` pipeline; the versions file is published through the `output` block instead of `collectFile(storeDir:)`
+- The stage pipelines and `examples/chaining` no longer set `manifest.contributors`. Nothing in Nextflow or the nf-core tools reads it from them, and a placeholder collective is not a person. The root `nextflow.config` lists the contributors
 
 ### `Fixed`
 
