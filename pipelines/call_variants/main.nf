@@ -58,10 +58,10 @@ params {
     variants_only         : Boolean = true          // bcftools call --variants-only, else write every site (bcftools_multisample only)
     bcftools_mpileup_extra: String = ''             // additional arguments for bcftools mpileup
     bcftools_call_extra   : String = ''             // additional arguments for bcftools call
-    variant_qc            : Boolean = true          // run quality checks on the joint callset
     fasta                 : Value<Path>?            // reference fasta, required
     fai                   : Value<Path>?            // fai index of the reference fasta, required
     dict                  : Value<Path>?            // sequence dictionary of the reference fasta, required for gatk
+    variant_qc            : Boolean = true          // run quality checks on the joint callset
     help                  : Boolean = false
     help_full             : Boolean = false
 }
