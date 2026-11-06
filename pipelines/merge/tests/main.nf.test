@@ -151,6 +151,30 @@ nextflow_pipeline {
         }
     }
 
+    test("a CRAM without --fasta fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/A.cram").text = ""
+            new File("${launchDir}/A.cram.crai").text = ""
+            new File("${launchDir}/alignments.yml").text = "- {meta: {library: '1', pl: ILLUMINA, single_end: false}, id: A, single_end: false, alignment: ${launchDir}/A.cram, index: ${launchDir}/A.cram.crai}\n"
+        }
+
+        when {
+            params {
+                alignments = "${launchDir}/alignments.yml"
+                level      = "library"
+                align_qc   = false
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("needs a reference fasta (--fasta) to be read")
+        }
+    }
+
     test("--help") {
 
         when {
