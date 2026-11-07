@@ -11,11 +11,11 @@ include { workflow as ALIGNMENT_QC } from '../alignment_qc'
 include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
-include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
-include { checkNoRepeats             } from '../../subworkflows/local/utils_stage_help/main'
-include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
-include { attachSingleEnd             } from '../../subworkflows/local/utils_stage_help/main'
-include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields        } from '../../subworkflows/local/utils_stage_help/main'
+include { checkNoRepeats           } from '../../subworkflows/local/utils_stage_help/main'
+include { checkQualimapCram        } from '../../subworkflows/local/utils_stage_help/main'
+include { attachSingleEnd          } from '../../subworkflows/local/utils_stage_help/main'
+include { stageError               } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet
 record AlignmentSample {
@@ -36,19 +36,19 @@ record Alignment {
 }
 
 params {
-    samplesheet     : Channel<AlignmentSample>? // alignments samplesheet (CSV with the columns sample, library_id, platform, single_end, alignment, index)
-    alignments      : Channel<Alignment>? // alternative to the samplesheet: library alignments with their meta record, from a YAML or JSON file or a calling pipeline
-    duplicate_marker: String = 'samtools' // duplicate marking tool to use ('picard'/'samtools')
+    samplesheet      : Channel<AlignmentSample>? // alignments samplesheet (CSV with the columns sample, library_id, platform, single_end, alignment, index)
+    alignments       : Channel<Alignment>? // alternative to the samplesheet: library alignments with their meta record, from a YAML or JSON file or a calling pipeline
+    duplicate_marker : String = 'samtools' // duplicate marking tool to use ('picard'/'samtools')
     remove_duplicates: Boolean = false    // remove alignments identified as duplicates (else mark them)
-    optical_distance: Integer = 100       // maximum pixel distance for optical duplicates
-    fasta           : Value<Path>?        // reference fasta
-    fai             : Value<Path>?        // fai index of the reference fasta, needed for CRAM output and Riker
-    cram_format     : Boolean = false     // write CRAM instead of BAM
-    align_qc        : Boolean = true      // run alignment QC on the deduplicated alignments
-    riker           : Boolean = true      // run Riker in the alignment QC
-    qualimap        : Boolean = false     // run Qualimap in the alignment QC
-    help            : Boolean = false
-    help_full       : Boolean = false
+    optical_distance : Integer = 100       // maximum pixel distance for optical duplicates
+    fasta            : Value<Path>?        // reference fasta
+    fai              : Value<Path>?        // fai index of the reference fasta, needed for CRAM output and Riker
+    cram_format      : Boolean = false     // write CRAM instead of BAM
+    align_qc         : Boolean = true      // run alignment QC on the deduplicated alignments
+    riker            : Boolean = true      // run Riker in the alignment QC
+    qualimap         : Boolean = false     // run Qualimap in the alignment QC
+    help             : Boolean = false
+    help_full        : Boolean = false
 }
 
 workflow {

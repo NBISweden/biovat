@@ -91,12 +91,12 @@ workflow {
     )
 
     publish:
-    bcftools_stats        = bcftools_stats.map { out -> record(meta: out.meta, stats: out.stats) }
-    vcftools_tstv_counts  = vcftools_tstv_counts.map { out -> record(meta: out.meta, tstv_count: out.tstv_count) }
-    vcftools_tstv_qual    = vcftools_tstv_qual.map { out -> record(meta: out.meta, tstv_qual: out.tstv_qual) }
+    bcftools_stats          = bcftools_stats.map { out -> record(meta: out.meta, stats: out.stats) }
+    vcftools_tstv_counts    = vcftools_tstv_counts.map { out -> record(meta: out.meta, tstv_count: out.tstv_count) }
+    vcftools_tstv_qual      = vcftools_tstv_qual.map { out -> record(meta: out.meta, tstv_qual: out.tstv_qual) }
     vcftools_filter_summary = vcftools_filter_summary.map { out -> record(meta: out.meta, filter_summary: out.filter_summary) }
-    vcftools_relatedness2 = vcftools_relatedness2.map { out -> record(meta: out.meta, relatedness2: out.relatedness2) }
-    multiqc_files         = bcftools_stats.map { out -> out.stats }
+    vcftools_relatedness2   = vcftools_relatedness2.map { out -> record(meta: out.meta, relatedness2: out.relatedness2) }
+    multiqc_files           = bcftools_stats.map { out -> out.stats }
         .mix(vcftools_tstv_counts.map { out -> out.tstv_count })
         .mix(vcftools_tstv_qual.map { out -> out.tstv_qual })
         .mix(vcftools_filter_summary.map { out -> out.filter_summary })

@@ -617,7 +617,7 @@ nextflow_pipeline {
 
         when {
             params {
-                help = true
+                help            = true
                 sample_metadata = null // the test profile of the repository sets a path that does not exist for a stage
             }
         }

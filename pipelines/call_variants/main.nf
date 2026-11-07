@@ -17,9 +17,9 @@ include { checkGatkContigLengths       } from '../../subworkflows/local/utils_re
 include { checkGatkReferenceNames      } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput              } from '../../subworkflows/local/utils_stage_help/main'
-include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
-include { checkNoRepeats             } from '../../subworkflows/local/utils_stage_help/main'
-include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
+include { checkSampleFields            } from '../../subworkflows/local/utils_stage_help/main'
+include { checkNoRepeats               } from '../../subworkflows/local/utils_stage_help/main'
+include { stageError                   } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet (CSV)
 record AlignmentSample {
