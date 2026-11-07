@@ -11,12 +11,14 @@ nextflow_process {
             script "../../../nf-core/samtools/faidx/main.nf"
             process {
                 """
-                input[0] = channel.of([
-                    [ id:'monkeyflower' ],
-                    file("${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta", checkIfExists: true),
-                    []
-                ])
-                input[1] = false
+                input[0] = channel.of(record(
+                    id: 'monkeyflower',
+                    meta: [ id:'monkeyflower' ],
+                    fasta: file("${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta", checkIfExists: true),
+                    fai: null,
+                    get_sizes: false,
+                    samtools_faidx_args: null
+                ))
                 """
             }
         }
@@ -27,21 +29,18 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = SAMTOOLS_FAIDX.out.fai
-                input[1] = ''
-                input[2] = params.min_length // pipeline default (1000), so this tracks any change to it
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 1000, splitgenome_args: null) } // 1000 is the pipeline default for min_length
                 """
             }
         }
 
         then {
-            def contigs = process.out.chunks[0][1]
-                .with { it instanceof List ? it : [it] }
+            def contigs = process.out[0][0].chunks.sort()
                 .collectMany { bed -> path(bed).readLines() }
                 .collect { line -> line.tokenize('\t')[0] }
-            def stderr = path(process.out.chunks[0][1][0]).getParent().resolve('.command.err').text
-            def excluded = path(process.out.excluded[0][1]).readLines()
-            def summary = path(process.out.summary[0][1]).readLines().findAll { line -> !line.startsWith('#') }
+            def stderr = path(process.out[0][0].chunks.sort()[0]).getParent().resolve('.command.err').text
+            def excluded = path(process.out[0][0].excluded).readLines()
+            def summary = path(process.out[0][0].summary).readLines().findAll { line -> !line.startsWith('#') }
             assertAll(
                 { assert process.success },
                 { assert contigs == ['LG4_1', 'LG4_2'] },
@@ -57,15 +56,14 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = SAMTOOLS_FAIDX.out.fai
-                input[1] = 1000 // longest contig is LG4_2 (51180 bp)
-                input[2] = 500
+                // longest contig is LG4_2 (51180 bp)
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: 1000, min_length: 500, splitgenome_args: null) }
                 """
             }
         }
 
         then {
-            def beds = process.out.chunks[0][1]
+            def beds = process.out[0][0].chunks.sort()
             def chunks = beds.collect { bed -> path(bed).readLines().collect { line -> line.tokenize('\t')[0] } }
             // chunk BEDs are written to the task work dir, alongside the script's stderr
             def stderr = path(beds[0]).getParent().resolve('.command.err').text
@@ -86,16 +84,14 @@ nextflow_process {
                 // 200 x 1000 bp scaffolds: longest (1000) is below total / 50 (4000), so the default is 4000
                 def fai = file("\${workDir}/fragmented.fasta.fai")
                 fai.text = (1..200).collect { i -> "scaffold_\${i}\\t1000\\t0\\t60\\t61\\n" }.join()
-                input[0] = channel.of([ [ id:'fragmented' ], fai ])
-                input[1] = ''
-                input[2] = 0
+                input[0] = channel.of(record(id: 'fragmented', meta: [ id:'fragmented' ], fai: fai, chunk_size: null, min_length: 0, splitgenome_args: null))
                 """
             }
         }
 
         then {
-            def beds = process.out.chunks[0][1]
-            def summary = path(process.out.summary[0][1]).readLines().findAll { line -> !line.startsWith('#') }
+            def beds = process.out[0][0].chunks.sort()
+            def summary = path(process.out[0][0].summary).readLines().findAll { line -> !line.startsWith('#') }
             assertAll(
                 { assert process.success },
                 // Chunk size, Chunks
@@ -111,21 +107,20 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = SAMTOOLS_FAIDX.out.fai
-                input[1] = ''
-                input[2] = 500 // keep all contigs: 100000 bp total, so total / 50 (2000) is below the longest (51180)
+                // keep all contigs: 100000 bp total, so total / 50 (2000) is below the longest (51180)
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 500, splitgenome_args: null) }
                 """
             }
         }
 
         then {
-            def chunks = process.out.chunks[0][1].collect { bed -> path(bed).readLines().collect { line -> line.tokenize('\t')[0] } }
-            def summary = path(process.out.summary[0][1]).readLines().findAll { line -> !line.startsWith('#') }
+            def chunks = process.out[0][0].chunks.sort().collect { bed -> path(bed).readLines().collect { line -> line.tokenize('\t')[0] } }
+            def summary = path(process.out[0][0].summary).readLines().findAll { line -> !line.startsWith('#') }
             assertAll(
                 { assert process.success },
                 { assert summary[1].tokenize('\t')[6..7] == ['51180', '3'] },
                 { assert chunks == [['LG4_1'], ['LG4_2'], ['LG4_3']] },
-                { assert path(process.out.excluded[0][1]).readLines() == ['chrom\tlength'] }
+                { assert path(process.out[0][0].excluded).readLines() == ['chrom\tlength'] }
             )
         }
     }
@@ -135,17 +130,15 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = SAMTOOLS_FAIDX.out.fai
-                input[1] = 200000 // total is 100000 bp
-                input[2] = 500
+                // total is 100000 bp
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: 200000, min_length: 500, splitgenome_args: null) }
                 """
             }
         }
 
         then {
-            // A single output file is emitted as a path, not a list
-            def beds = process.out.chunks[0][1].with { it instanceof List ? it : [it] }
-            def summary = path(process.out.summary[0][1]).readLines().findAll { line -> !line.startsWith('#') }
+            def beds = process.out[0][0].chunks.sort()
+            def summary = path(process.out[0][0].summary).readLines().findAll { line -> !line.startsWith('#') }
             assertAll(
                 { assert process.success },
                 { assert summary[1].tokenize('\t')[6..7] == ['200000', '1'] },
@@ -160,9 +153,8 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = SAMTOOLS_FAIDX.out.fai
-                input[1] = ''
-                input[2] = 60000 // longest contig is LG4_2 (51180 bp)
+                // longest contig is LG4_2 (51180 bp)
+                input[0] = SAMTOOLS_FAIDX.out.map { r -> record(id: r.meta.id, meta: r.meta, fai: r.fai, chunk_size: null, min_length: 60000, splitgenome_args: null) }
                 """
             }
         }
@@ -171,7 +163,7 @@ nextflow_process {
             assertAll(
                 { assert process.failed },
                 // Fail for the right reason: everything filtered out, not e.g. a container error
-                { assert process.stdout.any { line -> line.contains('all chromosomes were filtered out by --min_length=60000') } }
+                { assert (process.stdout + process.stderr).any { line -> line.contains('all chromosomes were filtered out by --min_length=60000') } }
             )
         }
     }

@@ -1,0 +1,614 @@
+Changes in component 'nf-core/bwamem3/mem'
+'modules/nf-core/bwamem3/mem/environment.yml' is unchanged
+Changes in 'bwamem3/mem/meta.yml':
+--- modules/nf-core/bwamem3/mem/meta.yml
++++ modules/nf-core/bwamem3/mem/meta.yml
+@@ -26,10 +26,13 @@
+       licence: ["MIT"]
+       identifier: "biotools:samtools"
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample or reference, used to name the outputs
++    - meta:
+         type: map
+         description: |
+-          Groovy Map containing sample information
++          Optional groovy Map containing sample information
+           e.g. [ id:'test', single_end:false ]
+     - reads:
+         type: file
+@@ -67,10 +70,13 @@
+       description: use samtools sort (true) or samtools view (false)
+ output:
+   aligned:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference, used to name the outputs
++      - meta:
+           type: map
+           description: |
+-            Groovy Map containing sample information
++            Optional groovy Map containing sample information
+             e.g. [ id:'test', single_end:false ]
+       - "*.{sam,bam,cram}":
+           type: file
+@@ -81,10 +87,13 @@
+             - edam: "http://edamontology.org/format_2572"
+             - edam: "http://edamontology.org/format_3462"
+   index:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference, used to name the outputs
++      - meta:
+           type: map
+           description: |
+-            Groovy Map containing sample information
++            Optional groovy Map containing sample information
+             e.g. [ id:'test', single_end:false ]
+       - "*.{bai,csi,crai}":
+           type: file
+
+Changes in 'bwamem3/mem/main.nf':
+--- modules/nf-core/bwamem3/mem/main.nf
++++ modules/nf-core/bwamem3/mem/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process BWAMEM3_MEM {
+-    tag "${meta.id}"
++    tag "${id}"
+     label 'process_high'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,30 +9,43 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/86/86147f304683f83e8c20d9cf8aebae945f7751402d84553efd735a4f5edfd9e6/data'
+         : 'community.wave.seqera.io/library/bwa-mem3_findutils_htslib_samtools:06f7d72b721717bd'}"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { bwamem3_mem_args ?: '' },
++        args2: { samtools_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(reads)
+-    tuple val(meta2), path(index)
+-    tuple val(meta3), path(fasta)
+-    val sort_bam
++    record(
++        id: String,
++        meta: Record?,
++        reads: List<Path>,
++        index: Path,
++        fasta: Path?,
++        sort_bam: Boolean,
++        bwamem3_mem_args: String?,
++        samtools_args: String?, // samtools sort (sort_bam) or samtools view arguments
++        output_prefix: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("*.{sam,bam,cram}"), emit: aligned
+-    tuple val(meta), path("*.{bai,csi,crai}"), emit: index, optional: true
+-    tuple val("${task.process}"), val('bwamem3'), eval("bwa-mem3 version | sed -nE '1 s/^([0-9]+(\\.[0-9]+)+).*/\\1/p'"), emit: versions_bwamem3, topic: versions
+-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), emit: versions_samtools, topic: versions
++    record(
++        id: id,
++        meta: meta,
++        aligned: file("*.{sam,bam,cram}"),
++        index: file("*.{bai,csi,crai}", optional: true)
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'bwamem3', version: eval("bwa-mem3 version | sed -nE '1 s/^([0-9]+(\\.[0-9]+)+).*/\\1/p'")) >> 'versions'
++    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+-    def args2 = task.ext.args2 ?: ''
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+     def samtools_command = sort_bam ? 'sort' : 'view'
+ 
+-    def extension_pattern = /(--output-fmt|-O)+\s+(\S+)/
+-    def extension_matcher = (args2 =~ extension_pattern)
+-    def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"
++    def args2_tokens = task.ext.args2.tokenize()
++    def format_index = args2_tokens.indexOf('--output-fmt') >= 0 ? args2_tokens.indexOf('--output-fmt') : args2_tokens.indexOf('-O')
++    def extension = format_index >= 0 && format_index + 1 < args2_tokens.size() ? args2_tokens[format_index + 1].toLowerCase() : "bam"
+     def reference = fasta && extension == "cram" ? "--reference ${fasta}" : ""
+     if (!fasta && extension == "cram") {
+         error("Fasta reference is required for CRAM output")
+@@ -40,32 +55,30 @@
+ 
+     bwa-mem3 \\
+         mem \\
+-        ${args} \\
++        ${task.ext.args} \\
+         -t ${task.cpus} \\
+         \$INDEX \\
+-        ${reads} \\
+-        | samtools ${samtools_command} ${args2} -@ ${task.cpus} ${reference} -o ${prefix}.${extension} -
++        ${reads.join(' ')} \\
++        | samtools ${samtools_command} ${task.ext.args2} -@ ${task.cpus} ${reference} -o ${task.ext.prefix}.${extension} -
+     """
+ 
+     stub:
+-    def args2 = task.ext.args2 ?: ''
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+-    def extension_pattern = /(--output-fmt|-O)+\s+(\S+)/
+-    def extension_matcher = (args2 =~ extension_pattern)
+-    def extension = extension_matcher.getCount() > 0 ? extension_matcher[0][2].toLowerCase() : "bam"
++    def args2_tokens = task.ext.args2.tokenize()
++    def format_index = args2_tokens.indexOf('--output-fmt') >= 0 ? args2_tokens.indexOf('--output-fmt') : args2_tokens.indexOf('-O')
++    def extension = format_index >= 0 && format_index + 1 < args2_tokens.size() ? args2_tokens[format_index + 1].toLowerCase() : "bam"
+     if (!fasta && extension == "cram") {
+         error("Fasta reference is required for CRAM output")
+     }
+ 
+     def create_index = ""
+     if (extension == "cram") {
+-        create_index = "touch ${prefix}.crai"
++        create_index = "touch ${task.ext.prefix}.crai"
+     }
+     else if (extension == "bam") {
+-        create_index = "touch ${prefix}.csi"
++        create_index = "touch ${task.ext.prefix}.csi"
+     }
+     """
+-    touch ${prefix}.${extension}
++    touch ${task.ext.prefix}.${extension}
+     ${create_index}
+     """
+ }
+
+Changes in 'bwamem3/mem/tests/main.nf.test.snap':
+--- modules/nf-core/bwamem3/mem/tests/main.nf.test.snap
++++ modules/nf-core/bwamem3/mem/tests/main.nf.test.snap
+@@ -2,152 +2,60 @@
+     "sarscov2 - [fastq1, fastq2], index, fasta, false": {
+         "content": [
+             "ea4e0adcd721314a753aca7493f52cd7",
+-            "57aeef88ed701a8ebc8e2f0a381b2a6",
+-            {
+-                "versions_bwamem3": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "bwamem3",
+-                        "0.8.0"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            "57aeef88ed701a8ebc8e2f0a381b2a6"
+         ],
+-        "timestamp": "2026-08-04T09:46:26.620433",
++        "timestamp": "2026-10-19T16:14:01.984018",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.3"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - [fastq1, fastq2], index, fasta, true - stub": {
+         "content": [
+             {
+-                "aligned": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "index": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        "test.csi:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_bwamem3": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "bwamem3",
+-                        "0.8.0"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++                "id": "test",
++                "single_end": false
++            },
++            "test.bam",
++            "test.csi"
+         ],
+-        "timestamp": "2026-08-04T09:47:02.75764",
++        "timestamp": "2026-10-19T16:14:12.652677",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.3"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - [fastq1, fastq2], index, fasta, true": {
+         "content": [
+             "a069617624c8f96b83456545ddd8faad",
+-            "af8628d9df18b2d3d4f6fd47ef2bb872",
+-            {
+-                "versions_bwamem3": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "bwamem3",
+-                        "0.8.0"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            "af8628d9df18b2d3d4f6fd47ef2bb872"
+         ],
+-        "timestamp": "2026-08-04T09:46:44.956786",
++        "timestamp": "2026-10-19T16:14:07.429459",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.3"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - fastq, index, fasta, false": {
+         "content": [
+             "c7df0403c5a8e672987468a6ce92ba56",
+-            "798439cbd7fd81cbcc5078022dc5479d",
+-            {
+-                "versions_bwamem3": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "bwamem3",
+-                        "0.8.0"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            "798439cbd7fd81cbcc5078022dc5479d"
+         ],
+-        "timestamp": "2026-08-04T09:45:49.560236",
++        "timestamp": "2026-10-19T16:13:51.011229",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.3"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - fastq, index, fasta, true": {
+         "content": [
+             "a88d3740be073b6b248afe4b59274f07",
+-            "94fcf617f5b994584c4e8d4044e16b4f",
+-            {
+-                "versions_bwamem3": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "bwamem3",
+-                        "0.8.0"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "BWAMEM3_MEM",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            "94fcf617f5b994584c4e8d4044e16b4f"
+         ],
+-        "timestamp": "2026-08-04T09:46:08.525663",
++        "timestamp": "2026-10-19T16:13:56.443879",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.3"
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+Changes in 'bwamem3/mem/tests/main.nf.test':
+--- modules/nf-core/bwamem3/mem/tests/main.nf.test
++++ modules/nf-core/bwamem3/mem/tests/main.nf.test
+@@ -15,10 +15,13 @@
+             script "../../index/main.nf"
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [:], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+-                ])
++                input[0] = Channel.of(record(
++                    id: 'test',
++                    meta: [:],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    bwamem3_index_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -29,24 +32,29 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:true ], // meta map
+-                    [file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)]
+-                ])
+-                input[1] = BWAMEM3_INDEX.out.index
+-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
+-                input[3] = false
+-                """
+-            }
+-        }
+-
+-        then {
+-            assertAll(
+-                { assert process.success },
+-                { assert snapshot(
+-                    bam(process.out.aligned[0][1]).getHeaderMD5(),
+-                    bam(process.out.aligned[0][1]).getReadsMD5(),
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                input[0] = BWAMEM3_INDEX.out.map { idx ->
++                    record(
++                        id: 'test',
++                        meta: [ id:'test', single_end:true ],
++                        reads: [file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)],
++                        index: idx.index,
++                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                        sort_bam: false,
++                        bwamem3_mem_args: null,
++                        samtools_args: null,
++                        output_prefix: null
++                    )
++                }
++                """
++            }
++        }
++
++        then {
++            assertAll(
++                { assert process.success },
++                { assert snapshot(
++                    bam(process.out[0][0].aligned).getHeaderMD5(),
++                    bam(process.out[0][0].aligned).getReadsMD5()
+                 ).match() }
+             )
+         }
+@@ -57,24 +65,29 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:true ], // meta map
+-                    [file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)]
+-                ])
+-                input[1] = BWAMEM3_INDEX.out.index
+-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
+-                input[3] = true
+-                """
+-            }
+-        }
+-
+-        then {
+-            assertAll(
+-                { assert process.success },
+-                { assert snapshot(
+-                    bam(process.out.aligned[0][1]).getHeaderMD5(),
+-                    bam(process.out.aligned[0][1]).getReadsMD5(),
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                input[0] = BWAMEM3_INDEX.out.map { idx ->
++                    record(
++                        id: 'test',
++                        meta: [ id:'test', single_end:true ],
++                        reads: [file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)],
++                        index: idx.index,
++                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                        sort_bam: true,
++                        bwamem3_mem_args: null,
++                        samtools_args: null,
++                        output_prefix: null
++                    )
++                }
++                """
++            }
++        }
++
++        then {
++            assertAll(
++                { assert process.success },
++                { assert snapshot(
++                    bam(process.out[0][0].aligned).getHeaderMD5(),
++                    bam(process.out[0][0].aligned).getReadsMD5()
+                 ).match() }
+             )
+         }
+@@ -85,27 +98,32 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    [
++                input[0] = BWAMEM3_INDEX.out.map { idx ->
++                    record(
++                        id: 'test',
++                        meta: [ id:'test', single_end:false ],
++                        reads: [
+                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
+-                    ]
+-                ])
+-                input[1] = BWAMEM3_INDEX.out.index
+-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
+-                input[3] = false
+-                """
+-            }
+-        }
+-
+-        then {
+-            assertAll(
+-                { assert process.success },
+-                { assert snapshot(
+-                    bam(process.out.aligned[0][1]).getHeaderMD5(),
+-                    bam(process.out.aligned[0][1]).getReadsMD5(),
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                    ],
++                        index: idx.index,
++                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                        sort_bam: false,
++                        bwamem3_mem_args: null,
++                        samtools_args: null,
++                        output_prefix: null
++                    )
++                }
++                """
++            }
++        }
++
++        then {
++            assertAll(
++                { assert process.success },
++                { assert snapshot(
++                    bam(process.out[0][0].aligned).getHeaderMD5(),
++                    bam(process.out[0][0].aligned).getReadsMD5()
+                 ).match() }
+             )
+         }
+@@ -116,27 +134,32 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    [
++                input[0] = BWAMEM3_INDEX.out.map { idx ->
++                    record(
++                        id: 'test',
++                        meta: [ id:'test', single_end:false ],
++                        reads: [
+                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
+-                    ]
+-                ])
+-                input[1] = BWAMEM3_INDEX.out.index
+-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
+-                input[3] = true
+-                """
+-            }
+-        }
+-
+-        then {
+-            assertAll(
+-                { assert process.success },
+-                { assert snapshot(
+-                    bam(process.out.aligned[0][1]).getHeaderMD5(),
+-                    bam(process.out.aligned[0][1]).getReadsMD5(),
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                    ],
++                        index: idx.index,
++                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                        sort_bam: true,
++                        bwamem3_mem_args: null,
++                        samtools_args: null,
++                        output_prefix: null
++                    )
++                }
++                """
++            }
++        }
++
++        then {
++            assertAll(
++                { assert process.success },
++                { assert snapshot(
++                    bam(process.out[0][0].aligned).getHeaderMD5(),
++                    bam(process.out[0][0].aligned).getReadsMD5()
+                 ).match() }
+             )
+         }
+@@ -149,24 +172,30 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    [
++                input[0] = BWAMEM3_INDEX.out.map { idx ->
++                    record(
++                        id: 'test',
++                        meta: [ id:'test', single_end:false ],
++                        reads: [
+                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
+-                    ]
+-                ])
+-                input[1] = BWAMEM3_INDEX.out.index
+-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
+-                input[3] = true
+-                """
+-            }
+-        }
+-
+-        then {
+-            assertAll(
+-                { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                    ],
++                        index: idx.index,
++                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                        sort_bam: true,
++                        bwamem3_mem_args: null,
++                        samtools_args: null,
++                        output_prefix: null
++                    )
++                }
++                """
++            }
++        }
++
++        then {
++            assertAll(
++                { assert process.success },
++                { assert snapshot(process.out[0][0].meta, file(process.out[0][0].aligned.toString()).name, process.out[0][0].index ? file(process.out[0][0].index.toString()).name : null).match() }
+             )
+         }
+     }
+
+************************************************************

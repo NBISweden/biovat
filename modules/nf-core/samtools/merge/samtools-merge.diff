@@ -1,0 +1,987 @@
+Changes in component 'nf-core/samtools/merge'
+'modules/nf-core/samtools/merge/environment.yml' is unchanged
+Changes in 'samtools/merge/meta.yml':
+--- modules/nf-core/samtools/merge/meta.yml
++++ modules/nf-core/samtools/merge/meta.yml
+@@ -17,7 +17,11 @@
+       licence: ["MIT"]
+       identifier: biotools:samtools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample or reference. Used as the default prefix of the output files
++    - meta:
++        optional: true
+         type: map
+         description: |
+           Groovy Map containing sample information
+@@ -59,7 +63,11 @@
+       pattern: "bai|csi|crai"
+ output:
+   bam:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -70,7 +78,11 @@
+           pattern: "*.{bam}"
+           ontologies: []
+   cram:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -81,7 +93,11 @@
+           pattern: "*.{cram}"
+           ontologies: []
+   index:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+
+Changes in 'samtools/merge/main.nf':
+--- modules/nf-core/samtools/merge/main.nf
++++ modules/nf-core/samtools/merge/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process SAMTOOLS_MERGE {
+-    tag "${meta.id}"
++    tag "${id}"
+     label 'process_low'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,36 +9,54 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
+         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { samtools_merge_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(input_files, stageAs: "?/*"), path(index_files, stageAs: "?/*")
+-    tuple val(meta2), path(fasta), path(fai), path(gzi)
+-    val index_format
++    record(
++        id: String,
++        meta: Record?,
++        input_files: List<Path>,
++        index_files: List<Path>,
++        fasta: Path?,
++        fai: Path?,
++        gzi: Path?,
++        index_format: String?,
++        samtools_merge_args: String?,
++        output_prefix: String?
++    )
++
++    stage:
++    stageAs input_files, "?/*"
++    stageAs index_files, "?/*"
+ 
+     output:
+-    tuple val(meta), path("${prefix}.bam"), optional: true, emit: bam
+-    tuple val(meta), path("${prefix}.cram"), optional: true, emit: cram
+-    tuple val(meta), path("${prefix}.${file_type}.{bai,crai,csi}"), optional: true, emit: index
+-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
++    record(
++        id: id,
++        meta: meta,
++        bam: file("${task.ext.prefix}.bam", optional: true),
++        cram: file("${task.ext.prefix}.cram", optional: true),
++        index: file("${task.ext.prefix}.*.{bai,crai,csi}", optional: true)
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+-    prefix = task.ext.prefix ?: "${meta.id}"
+-    file_type = input_files instanceof List ? input_files[0].getExtension() : input_files.getExtension()
++    def file_type = input_files[0].getExtension()
+     def reference = fasta ? "--reference ${fasta}" : ""
+     //setting default values
+     def write_index = ""
+-    def output_file = "${prefix}.${file_type}"
+-
++    def output_file = "${task.ext.prefix}.${file_type}"
+     // Update if index is requested
+     if (index_format != '' && index_format) {
+-        if (!index_format.matches('bai|csi|crai')) {
++        if (!(index_format ==~ /bai|csi|crai/)) {
+             error("Index format not one of bai, csi, crai.")
+         }
+         write_index = "--write-index"
+-        output_file = "${prefix}.${file_type}##idx##${prefix}.${file_type}.${index_format}"
++        output_file = "${task.ext.prefix}.${file_type}##idx##${task.ext.prefix}.${file_type}.${index_format}"
+     }
+     """
+     # Note: --threads value represents *additional* CPUs to allocate (total CPUs = 1 + --threads).
+@@ -44,26 +64,22 @@
+         merge \\
+         --threads ${task.cpus - 1} \\
+         ${write_index} \\
+-        ${args} \\
++        ${task.ext.args} \\
+         ${reference} \\
+         ${output_file} \\
+-        ${input_files}
++        ${input_files.join(' ')}
+     """
+ 
+     stub:
+-    prefix = task.ext.prefix ?: "${meta.id}"
+-    file_type = input_files instanceof List ? input_files[0].getExtension() : input_files.getExtension()
+-
++    def file_type = input_files[0].getExtension()
+     if (index_format) {
+-        if (!index_format.matches('bai|csi|crai')) {
++        if (!(index_format ==~ /bai|csi|crai/)) {
+             error("Index format not one of bai, csi, crai.")
+         }
+     }
+-
+-    def index = index_format ? "touch ${prefix}.${file_type}.${index_format}" : ""
+-
++    def index = index_format ? "touch ${task.ext.prefix}.${file_type}.${index_format}" : ""
+     """
+-    touch ${prefix}.${file_type}
++    touch ${task.ext.prefix}.${file_type}
+     ${index}
+     """
+ }
+
+Changes in 'samtools/merge/tests/main.nf.test.snap':
+--- modules/nf-core/samtools/merge/tests/main.nf.test.snap
++++ modules/nf-core/samtools/merge/tests/main.nf.test.snap
+@@ -1,305 +1,170 @@
+ {
+     "crams_fastq_with_index": {
+         "content": [
+-            {
+-                "bam": [
+-                    
+-                ],
+-                "cram": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.cram:md5Reads,c4525b95f05075208347295e6a1fb232"
+-                    ]
+-                ],
+-                "index": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.cram.crai"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    "test.cram:md5Reads,c4525b95f05075208347295e6a1fb232",
++                    "test.cram.crai"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-09T11:10:07.534461198",
++        "timestamp": "2026-10-19T11:38:27.250909",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "bams_no_index - stub": {
+         "content": [
+-            {
+-                "bam": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    "test.bam",
++                    null,
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-03T09:11:29.482421751",
++        "timestamp": "2026-10-19T11:19:51.568389",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "crams_fastq": {
+         "content": [
+-            {
+-                "bam": [
+-                    
+-                ],
+-                "cram": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.cram:md5Reads,c4525b95f05075208347295e6a1fb232"
+-                    ]
+-                ],
+-                "index": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    "test.cram:md5Reads,c4525b95f05075208347295e6a1fb232",
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-09T11:09:57.706286788",
++        "timestamp": "2026-10-19T11:38:18.210052",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "bams - stub": {
+         "content": [
+-            {
+-                "bam": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    "test.bam",
++                    null,
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-03T09:11:14.363250467",
++        "timestamp": "2026-10-19T11:19:39.229579",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "bams_with_index": {
+         "content": [
+-            {
+-                "bam": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam:md5Reads,47c9f174d8c8afc1a13c75ee4b5e5d43"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam.bai"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    "test.bam:md5Reads,47c9f174d8c8afc1a13c75ee4b5e5d43",
++                    "test.bam.bai"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-09T11:09:46.435827871",
++        "timestamp": "2026-10-19T11:38:09.878526",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "bams_with_index - stub": {
+         "content": [
+-            {
+-                "bam": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    "test.bam",
++                    null,
++                    "test.bam.bai"
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-03T09:11:21.996350217",
++        "timestamp": "2026-10-19T11:19:45.110199",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "bams": {
+         "content": [
+-            {
+-                "bam": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam:md5Reads,47c9f174d8c8afc1a13c75ee4b5e5d43"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    "test.bam:md5Reads,47c9f174d8c8afc1a13c75ee4b5e5d43",
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-09T11:09:37.632940185",
++        "timestamp": "2026-10-19T11:38:00.614486",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "crams_fastq_gz": {
+         "content": [
+-            {
+-                "bam": [
+-                    
+-                ],
+-                "cram": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.cram"
+-                    ]
+-                ],
+-                "index": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    null,
++                    "test.cram",
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-09T11:10:18.14175564",
++        "timestamp": "2026-10-19T11:19:27.28546",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "bam": {
+         "content": [
+-            {
+-                "bam": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam:md5Reads,8da8fc1099a955e3ceb198665350e766"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_MERGE",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++            [
++                [
++                    {
++                        "id": "test"
++                    },
++                    "test.bam:md5Reads,8da8fc1099a955e3ceb198665350e766",
++                    null
+                 ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-09-09T11:10:26.057564606",
++        "timestamp": "2026-10-19T11:38:41.528697",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+'modules/nf-core/samtools/merge/tests/nextflow.config' is unchanged
+Changes in 'samtools/merge/tests/main.nf.test':
+--- modules/nf-core/samtools/merge/tests/main.nf.test
++++ modules/nf-core/samtools/merge/tests/main.nf.test
+@@ -18,23 +18,28 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test'],
+-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
+-                    []
+-                ]
+-                input[1] = [[],[],[],[]]
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out, readsMD5Keys: ['bam', 'cram'], unstableKeys: ['index'])).match() }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test'],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
++                    index_files: [],
++                    fasta: null,
++                    fai: null,
++                    gzi: null,
++                    index_format: '',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name + ':md5Reads,' + bam(r.bam).getReadsMD5() : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -47,23 +52,28 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test'],
+-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
+-                    []
+-                ]
+-                input[1] = [[],[],[],[]]
+-                input[2] = 'bai'
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out, readsMD5Keys: ['bam', 'cram'], unstableKeys: ['index'])).match() }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test'],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
++                    index_files: [],
++                    fasta: null,
++                    fai: null,
++                    gzi: null,
++                    index_format: 'bai',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name + ':md5Reads,' + bam(r.bam).getReadsMD5() : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -76,20 +86,20 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
+                     file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram', checkIfExists: true) ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram.crai', checkIfExists: true) ]
+-                ]
+-                input[1] = [
+-                    [ id:'genome' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+-                    []
+-                ]
+-                input[2] = ''
++                    index_files: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram.crai', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    gzi: null,
++                    index_format: '',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -98,7 +108,7 @@
+             def fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/genome/genome.fasta'
+             assert process.success
+             assertAll(
+-                { assert snapshot(sanitizeOutput(process.out, readsMD5Keys: ['bam', 'cram'], referenceFasta: fasta, unstableKeys: ['index'])).match() }
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name + ':md5Reads,' + bam(r.bam).getReadsMD5() : null, r.cram ? file(r.cram).name + ':md5Reads,' + cram(r.cram, fasta).getReadsMD5() : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -111,20 +121,20 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
+                     file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram', checkIfExists: true) ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram.crai', checkIfExists: true) ]
+-                ]
+-                input[1] = [
+-                    [ id:'genome' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+-                    []
+-                ]
+-                input[2] = 'crai'
++                    index_files: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram.crai', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    gzi: null,
++                    index_format: 'crai',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -133,7 +143,7 @@
+             def fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/genome/genome.fasta'
+             assert process.success
+             assertAll(
+-                { assert snapshot(sanitizeOutput(process.out, readsMD5Keys: ['bam', 'cram'], referenceFasta: fasta, unstableKeys: ['index'])).match() }
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name + ':md5Reads,' + bam(r.bam).getReadsMD5() : null, r.cram ? file(r.cram).name + ':md5Reads,' + cram(r.cram, fasta).getReadsMD5() : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -146,20 +156,20 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
+                     file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram', checkIfExists: true) ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram.crai', checkIfExists: true) ]
+-                ]
+-                input[1] = [
+-                    [ id:'genome' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.gz', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.gz.fai', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.gz.gzi', checkIfExists: true)
+-                ]
+-                input[2] = ''
++                    index_files: [ file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test2.paired_end.sorted.cram.crai', checkIfExists: true) ],
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.gz', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.gz.fai', checkIfExists: true),
++                    gzi: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.gz.gzi', checkIfExists: true),
++                    index_format: '',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -168,7 +178,7 @@
+             assert process.success
+             assertAll(
+                 // nft-bam doesn't like the fasta.gz
+-                { assert snapshot(sanitizeOutput(process.out, unstableKeys: ['cram', 'index'])).match() }
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -181,21 +191,26 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true) ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam.bai', checkIfExists: true) ]
+-                ]
+-                input[1] = [[],[],[],[]]
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out, readsMD5Keys: ['bam', 'cram'], unstableKeys: ['index'])).match() }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true) ],
++                    index_files: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam.bai', checkIfExists: true) ],
++                    fasta: null,
++                    fai: null,
++                    gzi: null,
++                    index_format: '',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name + ':md5Reads,' + bam(r.bam).getReadsMD5() : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -210,23 +225,28 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
+-                    []
+-                ]
+-                input[1] = [[],[],[],[]]
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
++                    index_files: [],
++                    fasta: null,
++                    fai: null,
++                    gzi: null,
++                    index_format: '',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -241,23 +261,28 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
+-                    []
+-                ]
+-                input[1] = [[],[],[],[]]
+-                input[2] = 'bai'
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
++                    index_files: [],
++                    fasta: null,
++                    fai: null,
++                    gzi: null,
++                    index_format: 'bai',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+@@ -272,23 +297,28 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test'],
+-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
+-                    []
+-                ]
+-                input[1] = [[],[],[],[]]
+-                input[2] = ''
+-                """
+-            }
+-        }
+-
+-        then {
+-            assert process.success
+-            assertAll(
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test'],
++                    input_files: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.methylated.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.single_end.sorted.bam', checkIfExists: true) ],
++                    index_files: [],
++                    fasta: null,
++                    fai: null,
++                    gzi: null,
++                    index_format: '',
++                    samtools_merge_args: null,
++                    output_prefix: null
++                ))
++                """
++            }
++        }
++
++        then {
++            assert process.success
++            assertAll(
++                { assert snapshot(process.out[0].collect { r -> [ r.meta, r.bam ? file(r.bam).name : null, r.cram ? file(r.cram).name : null, r.index ? file(r.index).name : null ] }).match() }
+             )
+         }
+     }
+
+************************************************************

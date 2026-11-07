@@ -1,0 +1,510 @@
+Changes in component 'nf-core/samtools/addreplacerg'
+'modules/nf-core/samtools/addreplacerg/environment.yml' is unchanged
+Changes in 'samtools/addreplacerg/meta.yml':
+--- modules/nf-core/samtools/addreplacerg/meta.yml
++++ modules/nf-core/samtools/addreplacerg/meta.yml
+@@ -16,7 +16,11 @@
+       licence: ["MIT"]
+       identifier: biotools:samtools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample or reference. Used as the default prefix of the output files
++    - meta:
++        optional: true
+         type: map
+         description: |
+           Groovy Map containing sample information
+@@ -58,7 +62,11 @@
+         ontologies: []
+ output:
+   bam:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -69,7 +77,11 @@
+           pattern: "${prefix}.bam"
+           ontologies: []
+   cram:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -80,7 +92,11 @@
+           pattern: "${prefix}.cram"
+           ontologies: []
+   sam:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -91,7 +107,11 @@
+           pattern: "${prefix}.sam"
+           ontologies: []
+   index:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+
+Changes in 'samtools/addreplacerg/main.nf':
+--- modules/nf-core/samtools/addreplacerg/main.nf
++++ modules/nf-core/samtools/addreplacerg/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process SAMTOOLS_ADDREPLACERG {
+-    tag "${meta.id}"
++    tag "${id}"
+     label 'process_low'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,33 +9,49 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
+         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { samtools_addreplacerg_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(input), path(index), val(read_group)
+-    tuple val(meta2), path(fasta), path(fai), path(gzi)
++    record(
++        id: String,
++        meta: Record?,
++        input: Path,
++        index: Path?,
++        read_group: String?,
++        fasta: Path?,
++        fai: Path?,
++        gzi: Path?,
++        samtools_addreplacerg_args: String?,
++        output_prefix: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("${prefix}.bam"), emit: bam, optional: true
+-    tuple val(meta), path("${prefix}.cram"), emit: cram, optional: true
+-    tuple val(meta), path("${prefix}.sam"), emit: sam, optional: true
+-    tuple val(meta), path("${prefix}.${file_type}.{crai,csi,bai}"), emit: index, optional: true
+-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
++    record(
++        id: id,
++        meta: meta,
++        bam: file("${task.ext.prefix}.bam", optional: true),
++        cram: file("${task.ext.prefix}.cram", optional: true),
++        sam: file("${task.ext.prefix}.sam", optional: true),
++        index: file("${task.ext.prefix}.{bam,cram,sam}.{crai,csi,bai}", optional: true)
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+     def reference = fasta ? "--reference ${fasta}" : ''
+     def read_group_arg = read_group ? "-r ${read_group}" : ''
+-    file_type = args =~ /--output-fmt\s+sam|-O\s+sam/
++    def file_type = task.ext.args =~ /--output-fmt\s+sam|-O\s+sam/
+         ? "sam"
+-        : args =~ /--output-fmt\s+bam|-O\s+bam/
++        : task.ext.args =~ /--output-fmt\s+bam|-O\s+bam/
+             ? "bam"
+-            : args =~ /--output-fmt\s+cram|-O\s+cram/
++            : task.ext.args =~ /--output-fmt\s+cram|-O\s+cram/
+                 ? "cram"
+                 : input.getExtension()
+-    prefix = task.ext.prefix ?: "${meta.id}"
+-    if ("${input}" == "${prefix}.${file_type}") {
++    if ("${input}" == "${task.ext.prefix}.${file_type}") {
+         error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
+     }
+     """
+@@ -41,21 +59,19 @@
+     samtools \\
+         addreplacerg \\
+         --threads ${task.cpus - 1} \\
+-        ${args} \\
++        ${task.ext.args} \\
+         ${read_group_arg} \\
+         ${reference} \\
+-        -o ${prefix}.${file_type} \\
++        -o ${task.ext.prefix}.${file_type} \\
+         ${input}
+     """
+ 
+     stub:
+-    file_type = input.getExtension()
+-    prefix = task.ext.prefix ?: "${meta.id}"
+-    if ("${input}" == "${prefix}.${file_type}") {
++    def file_type = input.getExtension()
++    if ("${input}" == "${task.ext.prefix}.${file_type}") {
+         error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
+     }
+-
+     """
+-    touch ${prefix}.${file_type}
++    touch ${task.ext.prefix}.${file_type}
+     """
+ }
+
+Changes in 'samtools/addreplacerg/tests/main.nf.test.snap':
+--- modules/nf-core/samtools/addreplacerg/tests/main.nf.test.snap
++++ modules/nf-core/samtools/addreplacerg/tests/main.nf.test.snap
+@@ -2,111 +2,58 @@
+     "sarscov2 - bam - stub": {
+         "content": [
+             {
+-                "bam": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "bam": "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "cram": null,
++                        "id": "test",
++                        "index": null,
++                        "meta": {
+                             "id": "test"
+                         },
+-                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    
+-                ],
+-                "sam": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_ADDREPLACERG",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++                        "sam": null
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-07-10T15:47:55.607754847",
++        "timestamp": "2026-10-21T09:38:17.995138",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            "nextflow": "26.10.0"
+         }
+     },
+     "homo-sapiens - cram - output bam": {
+         "content": [
+             {
+-                "bam": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "bam": "test.bam:md5,62b17148e4d01ed5e6037944410f55cf",
++                        "cram": null,
++                        "id": "test",
++                        "index": "test.bam.csi:md5,8b681445a826210081c8446f705031e7",
++                        "meta": {
+                             "id": "test"
+                         },
+-                        "test.bam:md5,62b17148e4d01ed5e6037944410f55cf"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bam.csi:md5,8b681445a826210081c8446f705031e7"
+-                    ]
+-                ],
+-                "sam": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_ADDREPLACERG",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++                        "sam": null
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-07-10T15:47:51.337152318",
++        "timestamp": "2026-10-21T09:38:12.5687",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            "nextflow": "26.10.0"
+         }
+     },
+     "homo-sapiens - cram": {
+         "content": [
+-            {
+-                "bam": [
+-                    
+-                ],
+-                "cram": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.cram"
+-                    ]
+-                ],
+-                "index": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.cram.crai"
+-                    ]
+-                ],
+-                "sam": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_ADDREPLACERG",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            },
++            [
++                {
++                    "id": "test"
++                },
++                "test.cram",
++                "test.cram.crai"
++            ],
+             [
+                 [
+                     "@HD\tVN:1.6\tSO:coordinate",
+@@ -118,45 +65,33 @@
+                 ]
+             ]
+         ],
+-        "timestamp": "2026-07-09T22:03:13.90612",
++        "timestamp": "2026-10-21T09:38:06.828653",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - bam": {
+         "content": [
+             {
+-                "bam": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "bam": "test.bam:md5,3971cd96ae6ae8e011cdff3dd1c5b9b5",
++                        "cram": null,
++                        "id": "test",
++                        "index": null,
++                        "meta": {
+                             "id": "test"
+                         },
+-                        "test.bam:md5,3971cd96ae6ae8e011cdff3dd1c5b9b5"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "index": [
+-                    
+-                ],
+-                "sam": [
+-                    
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_ADDREPLACERG",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++                        "sam": null
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-07-10T15:47:41.720356463",
++        "timestamp": "2026-10-21T09:38:01.165936",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+'modules/nf-core/samtools/addreplacerg/tests/nextflow.config' is unchanged
+Changes in 'samtools/addreplacerg/tests/main.nf.test':
+--- modules/nf-core/samtools/addreplacerg/tests/main.nf.test
++++ modules/nf-core/samtools/addreplacerg/tests/main.nf.test
+@@ -21,13 +21,18 @@
+ 
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
+-                    [],
+-                    "\'@RG\\\\tID:1\\\\tLB:lib1\\\\tPL:ILLUMINA\\\\tSM:test\\\\tPU:barcode1\\\\tDS:replaced_read_group_test\'"
+-                ]
+-                input[1] = [[],[],[],[]]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
++                    index: null,
++                    read_group: "\'@RG\\\\tID:1\\\\tLB:lib1\\\\tPL:ILLUMINA\\\\tSM:test\\\\tPU:barcode1\\\\tDS:replaced_read_group_test\'",
++                    fasta: null,
++                    fai: null,
++                    gzi: null,
++                    samtools_addreplacerg_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -52,18 +57,18 @@
+ 
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
+-                    "\'@RG\\\\tID:1\\\\tPU:1\\\\tSM:testN\\\\tLB:testN\\\\tPL:illumina\\\\tDS:replaced_read_group_test\'"
+-                ]
+-                input[1] = [
+-                    [ id:'genome' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+-                    []
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
++                    index: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
++                    read_group: "\'@RG\\\\tID:1\\\\tPU:1\\\\tSM:testN\\\\tLB:testN\\\\tPL:illumina\\\\tDS:replaced_read_group_test\'",
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    gzi: null,
++                    samtools_addreplacerg_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -72,8 +77,8 @@
+             assert process.success
+             assertAll(
+                 { assert snapshot(
+-                    sanitizeOutput(process.out, unstableKeys: ["index","cram"]),
+-                    process.out.cram.collect{ meta, cram -> bam(cram).getHeader().collect{ l -> l.replaceAll(/\tUR:[^\t\n]+/, '') } },
++                    [ process.out[0][0].meta, file(process.out[0][0].cram).name, file(process.out[0][0].index).name ],
++                    [ process.out[0][0] ].collect{ out -> bam(out.cram).getHeader().collect{ l -> l.replaceAll(/\tUR:[^\t\n]+/, '') } },
+                 ).match() }
+             )
+         }
+@@ -91,18 +96,18 @@
+ 
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
+-                    "\'@RG\\\\tID:1\\\\tPU:1\\\\tSM:testN\\\\tLB:testN\\\\tPL:illumina\\\\tDS:replaced_read_group_test\'"
+-                ]
+-                input[1] = [
+-                    [ id:'genome' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+-                    []
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
++                    index: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
++                    read_group: "\'@RG\\\\tID:1\\\\tPU:1\\\\tSM:testN\\\\tLB:testN\\\\tPL:illumina\\\\tDS:replaced_read_group_test\'",
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    gzi: null,
++                    samtools_addreplacerg_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -123,13 +128,18 @@
+         when {
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test'],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
+-                    [],
+-                    "\'@RG\\\\tID:1\\\\tLB:lib1\\\\tPL:ILLUMINA\\\\tSM:test\\\\tPU:barcode1\\\\tDS:replaced_read_group_test\'"
+-                ]
+-                input[1] = [[],[],[],[]]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
++                    index: null,
++                    read_group: "\'@RG\\\\tID:1\\\\tLB:lib1\\\\tPL:ILLUMINA\\\\tSM:test\\\\tPU:barcode1\\\\tDS:replaced_read_group_test\'",
++                    fasta: null,
++                    fai: null,
++                    gzi: null,
++                    samtools_addreplacerg_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+
+************************************************************
