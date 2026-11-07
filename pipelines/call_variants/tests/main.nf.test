@@ -1,0 +1,632 @@
+nextflow_pipeline {
+
+    name "Test pipeline call_variants"
+    script "../main.nf"
+    tag "pipelines"
+    tag "pipelines/call_variants"
+
+    // Stub mode does not read the files, so empty files are enough. Each platform is its own callset: the
+    // IONTORRENT alignment is called apart from the ILLUMINA ones
+    def setupFiles = { launchDir ->
+        def rows = []
+        [ [ 'A', 'ILLUMINA' ], [ 'B', 'ILLUMINA' ], [ 'C', 'IONTORRENT' ] ].each { sample, platform ->
+            new File("${launchDir}/${sample}.bam").text = ""
+            new File("${launchDir}/${sample}.bam.csi").text = ""
+            rows << "- {meta: {pl: ${platform}}, id: ${sample}, alignment: ${launchDir}/${sample}.bam, index: ${launchDir}/${sample}.bam.csi}"
+        }
+        new File("${launchDir}/alignments.yml").text = rows.join("\n") + "\n"
+        // The same alignments as a samplesheet, with the columns of the BioVAT samplesheet where they apply
+        def csv = [ 'sample,library_id,platform,single_end,alignment,index' ]
+        [ [ 'A', 'ILLUMINA' ], [ 'B', 'ILLUMINA' ], [ 'C', 'IONTORRENT' ] ].each { sample, platform ->
+            csv << "${sample},1,${platform},false,${launchDir}/${sample}.bam,${launchDir}/${sample}.bam.csi"
+        }
+        new File("${launchDir}/alignments.csv").text = csv.join("\n") + "\n"
+        new File("${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai").text = "contig1\t100000\t10\t60\t61\n"
+        new File("${launchDir}/M_aurantiacus_v1_splitline_ordered.dict").text = ""
+        new File("${launchDir}/sample_metadata.csv").text = "sample,population\nA,red\nB,yellow\n"
+    }
+
+    test("bcftools_multisample - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null // the test profile of the repository sets a path that does not exist for a stage
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    test("bcftools_multisample, from a CSV samplesheet - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/alignments.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_MPILEUP_MULTISAMPLE') } },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    test("bcftools_multisample, population grouping - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = "${launchDir}/sample_metadata.csv"
+                group_samples   = true
+                save_mpileup    = true
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_MPILEUP_MULTISAMPLE') } },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    test("gatk - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = "gatk"
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+                dict            = "${launchDir}/M_aurantiacus_v1_splitline_ordered.dict"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assertAll(
+                { assert workflow.trace.tasks().any { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } },
+                { assert snapshot(
+                    workflow.trace.succeeded().size(),
+                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
+                ).match() }
+            )
+        }
+    }
+
+    // The tests below run the callers on the monkeyflower test data. The reference is split into two chunks of the
+    // default size, unless a test sets chunk_size
+    def realAlignments = { launchDir, projectDir, platforms ->
+        def cram = "${projectDir}/tests/data/monkeyflower/PUN-R-MT_1_repeat2.cram"
+        new File("${launchDir}/alignments.yml").text = platforms.collect { platform ->
+            "- {meta: {pl: ${platform}}, id: PUN-R-MT, alignment: ${cram}, index: ${cram}.crai}"
+        }.join("\n") + "\n"
+    }
+
+    // Without --sample_metadata no population file is built, so bcftools call runs without --group-samples
+    test("bcftools_multisample - no population grouping") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir, [ 'ILLUMINA' ])
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_qc      = false
+                callset_prefix  = 'test_dataset'
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            def vcf = path("${outputDir}/variant_calls/test_dataset.ILLUMINA.bcftools_multisample.vcf.gz")
+            assertAll(
+                { assert workflow.success },
+                // The test reference yields two chunks, so BCFTOOLS_CONCAT must join them
+                { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_MPILEUP_MULTISAMPLE') } == 2 },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_CONCAT') } },
+                { assert file("${outputDir}/variant_calls/test_dataset.ILLUMINA.bcftools_multisample.vcf.gz.csi").exists() },
+                { assert vcf.vcf.sampleCount == 1 },
+                { assert vcf.vcf.variantCount > 0 }
+            )
+        }
+    }
+
+    // HaplotypeCaller -> GenomicsDBImport -> GenotypeGVCFs per chunk, then BCFTOOLS_CONCAT joins the chunks
+    test("gatk - multiple chunks") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir, [ 'ILLUMINA' ])
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = 'gatk'
+                variant_qc      = false
+                callset_prefix  = 'test_dataset'
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+                dict            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.dict"
+            }
+        }
+
+        then {
+            def vcf = path("${outputDir}/variant_calls/test_dataset.ILLUMINA.gatk.vcf.gz")
+            assertAll(
+                { assert workflow.success },
+                // The test reference yields two chunks: one task per chunk at each GATK step, then one concat
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_HAPLOTYPECALLER') } == 2 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOMICSDBIMPORT') } == 2 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } == 2 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_CONCAT') } == 1 },
+                { assert file("${outputDir}/variant_calls/test_dataset.ILLUMINA.gatk.vcf.gz.csi").exists() },
+                { assert vcf.vcf.sampleCount == 1 },
+                { assert vcf.vcf.variantCount > 0 }
+            )
+        }
+    }
+
+    // Each platform is its own callset: a sample on two platforms is called once per platform, never pooled
+    test("gatk - one callset per platform") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir, [ 'ILLUMINA', 'IONTORRENT' ])
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = 'gatk'
+                variant_qc      = false
+                callset_prefix  = 'test_dataset'
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+                dict            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.dict"
+            }
+        }
+
+        then {
+            def vcfs = [ 'ILLUMINA', 'IONTORRENT' ].collect { platform -> path("${outputDir}/variant_calls/test_dataset.${platform}.gatk.vcf.gz") }
+            assertAll(
+                { assert workflow.success },
+                // Two chunks x two platforms at each GATK step, then one concat per platform
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_HAPLOTYPECALLER') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOMICSDBIMPORT') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } == 4 },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('BCFTOOLS_CONCAT') } == 2 },
+                { assert vcfs.every { vcf -> vcf.vcf.sampleCount == 1 } },
+                { assert vcfs.every { vcf -> vcf.vcf.variantCount > 0 } }
+            )
+        }
+    }
+
+    // A chunk size above the reference length gives one chunk, so its GenotypeGVCFs output (with .tbi) is published as is
+    test("gatk - single chunk skips concatenation") {
+
+        options "-output-dir ${outputDir}"
+
+        setup {
+            realAlignments(launchDir, projectDir, [ 'ILLUMINA' ])
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = 'gatk'
+                variant_qc      = false
+                chunk_size      = 200000
+                callset_prefix  = 'test_dataset'
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+                dict            = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.dict"
+            }
+        }
+
+        then {
+            def vcf = path("${outputDir}/variant_calls/test_dataset.ILLUMINA.gatk.vcf.gz")
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().count { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } == 1 },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('BCFTOOLS_CONCAT') } },
+                { assert file("${outputDir}/variant_calls/test_dataset.ILLUMINA.gatk.vcf.gz.tbi").exists() },
+                { assert vcf.vcf.sampleCount == 1 },
+                { assert vcf.vcf.variantCount > 0 }
+            )
+        }
+    }
+
+    test("--samplesheet and --alignments together fail") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/alignments.csv"
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Provide either --samplesheet or --alignments, not both")
+        }
+    }
+
+    test("missing --samplesheet fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        when {
+            params {
+                sample_metadata = null
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Missing required parameter --samplesheet")
+        }
+    }
+
+    test("--group_samples without the multiallelic caller fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments          = "${launchDir}/alignments.yml"
+                sample_metadata     = "${launchDir}/sample_metadata.csv"
+                group_samples       = true
+                multiallelic_caller = false
+                fasta               = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai                 = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("requires the multiallelic caller")
+        }
+    }
+
+    test("--group_samples with a sample without a population fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/sample_metadata_blank.csv").text = "sample,population\nA,red\nB,\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = "${launchDir}/sample_metadata_blank.csv"
+                group_samples   = true
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("requires a population for every sample in --sample_metadata. Missing for: B")
+        }
+    }
+
+    test("gatk without --dict fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = "gatk"
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("--variant_caller gatk requires --dict")
+        }
+    }
+
+    test("an alignment without id is rejected when it is loaded") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/no_id.yml").text = "- {meta: {pl: ILLUMINA}, alignment: ${launchDir}/A.bam, index: ${launchDir}/A.bam.csi}\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/no_id.yml"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("is missing field 'id' required by record type 'Alignment'")
+        }
+    }
+
+    test("gatk with a fai that is not named after the fasta fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/other.fasta.fai").text = "contig1\t100000\t10\t60\t61\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = null
+                variant_caller  = "gatk"
+                dict            = "${launchDir}/M_aurantiacus_v1_splitline_ordered.dict"
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/other.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("GATK looks for the fai next to the fasta, as 'M_aurantiacus_v1_splitline_ordered.fasta.fai'")
+        }
+    }
+
+    test("two alignments of a sample on one platform fail") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/A2.bam").text = ""
+            new File("${launchDir}/A2.bam.csi").text = ""
+            new File("${launchDir}/repeat.csv").text = "sample,library_id,platform,single_end,alignment,index\nA,1,ILLUMINA,false,${launchDir}/A.bam,${launchDir}/A.bam.csi\nA,2,ILLUMINA,false,${launchDir}/A2.bam,${launchDir}/A2.bam.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/repeat.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Variant calling needs one alignment per sample and platform")
+        }
+    }
+
+    test("a samplesheet row with an unsupported platform fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/bad_platform.csv").text = "sample,library_id,platform,single_end,alignment,index\nA,1,SOLID,false,${launchDir}/A.bam,${launchDir}/A.bam.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/bad_platform.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Sequencing platform 'SOLID' must be one of")
+        }
+    }
+
+    test("a samplesheet row with a full stop in the sample name fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/bad_name.csv").text = "sample,library_id,platform,single_end,alignment,index\nA.1,1,ILLUMINA,false,${launchDir}/A.bam,${launchDir}/A.bam.csi\n"
+        }
+
+        when {
+            params {
+                samplesheet     = "${launchDir}/bad_name.csv"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Sample name 'A.1' cannot contain spaces or full stops")
+        }
+    }
+
+    test("gatk with a contig past 2^29 bp fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/long").mkdirs()
+            new File("${launchDir}/long/M_aurantiacus_v1_splitline_ordered.fasta.fai").text = "contig1\t600000000\t10\t60\t61\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                variant_caller  = "gatk"
+                dict            = "${launchDir}/M_aurantiacus_v1_splitline_ordered.dict"
+                sample_metadata = null
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/long/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("does not support indexing contigs longer than 2^29 bp")
+        }
+    }
+
+    test("--group_samples with gatk fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = "${launchDir}/sample_metadata.csv"
+                group_samples   = true
+                variant_caller  = "gatk"
+                dict            = "${launchDir}/M_aurantiacus_v1_splitline_ordered.dict"
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("--group_samples is only used by --variant_caller bcftools_multisample")
+        }
+    }
+
+    test("--group_samples with an empty --sample_metadata fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+            new File("${launchDir}/empty_metadata.csv").text = "sample,population\n"
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = "${launchDir}/empty_metadata.csv"
+                group_samples   = true
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("requires --sample_metadata to list the samples")
+        }
+    }
+
+    test("--help") {
+
+        when {
+            params {
+                help            = true
+                sample_metadata = null // the test profile of the repository sets a path that does not exist for a stage
+            }
+        }
+
+        then {
+            // nf-test does not capture the help message. This checks that --help is reached and exits cleanly,
+            // i.e. that the schema loads and no required parameter blocks it
+            assert workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+}

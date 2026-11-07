@@ -1,0 +1,19 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Fixture",
+    "type": "object",
+    "$defs": {
+        "options": {
+            "title": "Options",
+            "type": "object",
+            "properties": {
+                "same": { "type": "integer", "default": 3 },
+                "wrong_type": { "type": "string" },
+                "wrong_value": { "type": "string", "default": "b" },
+                "no_default": { "type": "boolean" },
+                "extra_value": { "type": "string", "default": "x" },
+                "only_in_schema": { "type": "string" }
+            }
+        }
+    }
+}

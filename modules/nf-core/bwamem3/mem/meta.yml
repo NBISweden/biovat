@@ -26,10 +26,13 @@ tools:
       licence: ["MIT"]
       identifier: "biotools:samtools"
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample or reference, used to name the outputs
+    - meta:
         type: map
         description: |
-          Groovy Map containing sample information
+          Optional groovy Map containing sample information
           e.g. [ id:'test', single_end:false ]
     - reads:
         type: file
@@ -67,10 +70,13 @@ input:
       description: use samtools sort (true) or samtools view (false)
 output:
   aligned:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference, used to name the outputs
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
+            Optional groovy Map containing sample information
             e.g. [ id:'test', single_end:false ]
       - "*.{sam,bam,cram}":
           type: file
@@ -81,10 +87,13 @@ output:
             - edam: "http://edamontology.org/format_2572"
             - edam: "http://edamontology.org/format_3462"
   index:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference, used to name the outputs
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
+            Optional groovy Map containing sample information
             e.g. [ id:'test', single_end:false ]
       - "*.{bai,csi,crai}":
           type: file

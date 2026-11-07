@@ -29,21 +29,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional sample-level metadata sheet (`--sample_metadata`, one row per sample) kept separate from the samplesheet; currently holds `population`. When provided with variant calling enabled, samples are grouped into populations in `bcftools call` (`--group-samples`), replacing a dedicated `--enable_group_samples` flag
 - BAM/CRAM samplesheet input (`bam` column): each file's `@RG` header is validated against its samplesheet row; files with no `@RG` line get one built from the samplesheet (`samtools addreplacerg`), and files with several `@RG` lines or missing/mismatched tags are rejected (`PL` is matched case-insensitively, per the SAM spec)
 - Samplesheet `platform` restricted to the uppercase SAM spec `@RG PL` values (e.g. `ILLUMINA`). EDIT: currently limited to a subset of these, either short read technologies that can go through the standard preprocessing, or long reads that pass schema validation (but are filtered out until that path is supported)
+- Each analysis stage is now a pipeline under `pipelines/` (`read_qc`, `trim_reads`, `align_reads`, `alignment_qc`, `ingest_bam_or_cram`, `merge`, `mark_duplicates`) with its own typed `params` block, `output` block, `nextflow.config`, `nextflow_schema.json` (for `--help`) and nf-test. Each stage can run on its own with a samplesheet file (CSV, JSON or YAML) as input, and be composed with other pipelines (pipeline composition, Nextflow 26.10)
+- Every stage pipeline accepts `--samplesheet` with a flat CSV (the BioVAT samplesheet for the read and BAM/CRAM stages; `sample,library_id,platform,single_end,alignment,index` for merge, mark_duplicates and call_variants; `id,vcf,index` for variant_qc; the same columns as merge plus `--level` for alignment_qc). The nested YAML/JSON params are kept for calling pipelines. `--sample_metadata` columns are now `sample,population`
+- `samplesheet` channel param for pipelines that include BioVAT, as an alternative to `--input`
+
+- `examples/chaining`: includes BioVAT (`main.nf`) and passes its alignments to a downstream process
+- `docs/migration-typed-records.md`: migration guide for the typed records and pipeline composition change
+- `readSamplesheet()` function for reading the samplesheet outside of `PIPELINE_INITIALISATION`
 - GATK4 joint variant calling (`--variant_caller gatk`), following the GATK germline short variant Best Practices: per-sample `HaplotypeCaller` in GVCF mode, then `GenomicsDBImport` and `GenotypeGVCFs`, each run per genome chunk. The reference sequence dictionary is created by `REFERENCE_UTILS` when needed. Output is not yet filtered
-- Genome chunk concatenation is shared by all variant callers, and the joint VCF and its variant QC outputs are named after the caller (`<callset_prefix>.<variant_caller>.vcf.gz`)
+- `alignment_qc` is a stage pipeline with a required `--level` param. `align_reads`, `ingest_bam_or_cram`, `merge` and `mark_duplicates` include it under their own alias, so their QC outputs and the MultiQC files are kept
+- Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every samplesheet row of the stages and of the `samplesheet` channel, as the schema does for `--input`
+- The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--reference` is reported with BioVAT's own message before any stage is set up
+- Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
+- `id` is a field of the records of every stage (`Reads`, `BamCram`, `Alignment` and `VariantCall`), and `single_end` of the records of the stages that need it (`Reads`, `BamCram` and `Alignment` of the read and alignment stages), not a silent requirement on `meta`, as the nf-core guidelines for records ask. A YAML or JSON record without one is rejected when it is loaded, with a message that names the field and the record type. The stage adds them to `meta`, and the records that a stage emits carry them, so they can go straight into the next stage
+- `single_end` is a field of the records of the stages that need it (`Reads`, `BamCram` and `Alignment`), not a silent requirement on `meta`, as the nf-core guidelines for records ask. A YAML or JSON record without it is rejected when it is loaded, with a message that names the field and the record type. The stage adds it to `meta`, and the records that a stage emits carry it, so they can go straight into the next stage
+- Tests that run the tools and read their command: the optical distance (samtools and picard) and the CRAM switch reach the tools. A stub run does not run the command
+- `examples/chaining` sets `process.shell` (with `pipefail`) and the container environment variables, as the config of BioVAT does
+- `-profile gpu` is known to the stage pipelines and to `examples/chaining`. The container engine options of the profile stay with the institutional profile
+- `call_variants` rejects an empty `--sample_metadata` with `--group_samples`. bcftools was given `--group-samples null`
+- `call_variants` rejects `--group_samples` with `--variant_caller gatk`, which would ignore it
+- The standalone `call_variants` checks the GATK contig lengths of `--fai`, as `main.nf` does. GATK crashes on a contig past 2^29 bp
+- `call_variants` rejects repeated rows of a sample and platform. GATK fails on a duplicate sample, and bcftools read one file twice and the other never
+- `call_variants` with `--variant_caller gatk` checks that `--fai` and `--dict` are named after `--fasta`. GATK finds them by name next to the fasta and otherwise fails in every HaplotypeCaller task
+- `ingest_bam_or_cram`, `merge` and `alignment_qc` stop with a message when a CRAM is given without `--fasta`. `ingest_bam_or_cram` and `alignment_qc` need no reference for a run with no BAM/CRAM input, such as a sheet of FASTQ rows
+- `mark_duplicates` rejects repeated rows of a library. A library is one alignment and the samplesheet has no read group columns, so a repeat overwrote the output of the other row, and picard paired a BAM with the index of another
+- The stages that write CRAM (`align_reads`, `ingest_bam_or_cram`, `merge` and `mark_duplicates`) reject `--qualimap` with `--cram_format`, as `main.nf` does. Qualimap cannot read a CRAM
+- Genome chunk concatenation is shared by all variant callers, and the joint VCF and its variant QC outputs are named after the platform and the caller (see the next entry)
 - Long-read samplesheet rows (`ONT`, `PACBIO`) are branched off at the start of the workflow, ahead of any preprocessing, and excluded with a warning until a long-read path exists. Certain short-read platforms continue through preprocessing and variant calling (previously only `ILLUMINA` alignments were variant called), each platform is variant called as its own callset, so the joint VCF is now named `<callset_prefix>.<platform>.<variant_caller>.vcf.gz` and a sample sequenced on several platforms appears in each platform's VCF
 - Bcftools mpileup output: change from the pattern used by nf-core. Instead of bgzipping compressed output, output uncompressed, then recompress with bcftools. This leads to equivalent compression on the test files, plus it's directly readable by bcftools (previously it had to be unzipped and piped into bcftools)
 
+### `Changed`
+
+- `BWAMEM3_INDEX` requests 4 CPUs, the `-t` of `bwa-mem3 index`, set next to its size-based memory in the module (a `label` would replace that memory). On a 122 Mb genome 4 threads take 10 s against 19 s with one
+- Removed the `schema-build` pixi task. `nf-core pipelines schema build` does not read typed `params` blocks and removes their parameters from the schema, so the schemas are edited by hand. `docs/CONTRIBUTING.md` describes where parameters are declared
+- All processes use static types and follow the module spec: one record as input, one record as output, a required `id` and an optional `meta` that the process code never reads, `ext [ ... ]` closure directives, and software versions sent to the `versions` topic as `record(process, tool, version)`. nf-core modules are converted locally and tracked with `nf-core modules patch` (`*.diff` files next to each module)
+- Tool arguments and output prefixes are passed to processes as input record fields (`<tool>_args`, `output_prefix`) by the stage pipelines instead of `conf/modules.config`, which is removed. `ext.args`/`ext.prefix` set in user config still take precedence
+- Removed the `when:` section from converted modules. `ext.when` no longer has an effect: the calling workflow decides, with the stage gates or an `if` around the call. `process.when` in a user config still works for excluding samples
+- The variant calling subworkflows are the stage pipelines `call_variants` and `variant_qc`, and the new modules (`splitgenome`, `bcftools/*`, `vcftools`, `gatk4/*`) use records. `bin/split_genome_chunks.py` moved into the `splitgenome` module (`modules/local/splitgenome/bin`) and is staged into the task with `stage:`
+- `REFERENCE_VALUE` creates the fai index for a stage that needs it, and `mark_duplicates` and `merge` reject unknown option values
+- The `versions` topic consumer accepts records and tuples. Process names carry the stage as a prefix, so fully-qualified selectors need updating
+- `main.nf` composes the stage pipelines directly, and can be run or included by other pipelines. `workflows/biovat.nf` is removed. The stages are still gated by the `--enable_*` flags
+- Param defaults moved from `nextflow.config` to the `params` block of `main.nf`. `nextflow.config` keeps only the params that the config reads
+- The samplesheet checks (single-end/paired-end mix, reference required) run on the rows of `--input` before any task starts. Rows of the `samplesheet` channel and of a stage's CSV are checked one by one as they arrive
+- The nf-core subworkflow `utils_nextflow_pipeline` is patched so that the params dump handles `Path` params: paths are written as strings, maps and lists are kept (with their paths as strings), and dataflow values such as a samplesheet channel are left out
+- Software versions and MultiQC files are collected by the local workflow `MULTIQC_REPORT` (`subworkflows/local/multiqc_report`), which `main.nf` calls; MultiQC is not a stage pipeline. The versions file is published through the `output` block instead of `collectFile(storeDir:)`
+- The stage pipelines and `examples/chaining` no longer set `manifest.contributors`. Nothing in Nextflow or the nf-core tools reads it from them, and a placeholder collective is not a person. The root `nextflow.config` lists the contributors
+
 ### `Fixed`
 
+- `SPLITGENOME` runs its script with `python3`, so it does not depend on the file mode surviving the copy into the task
+- `merge` passes `--fasta` to `samtools merge` whenever it is given, so CRAM inputs can be merged to BAM
+- `requires.fai` counts CRAM output whenever it is on, so the fai is made once and not by each stage
+- `nf-test.config` triggers on `modules/local/*/bin/*`, and the stage tests share the tag `pipelines`
+- Concatenation of the genome chunks of a callset starts when its last chunk is done, as on `dev`, instead of when all chunks of all callsets are done (`groupKey` with the chunk count)
+- The standalone `call_variants` publishes a single-chunk callset as `<callset_prefix>.<platform>.<variant_caller>.vcf.gz`, not under its chunk name
 - Samplesheet schema enforces platform & (temporarily) fastq2
 - nf-test CI failures: missing pipeline snapshot, relative test-data paths not resolving under nf-test, and test-profile memory limit exceeding GitHub Actions runner capacity (#37)
 - Regenerated stale container/conda-lock configs and synced `linting.yml` with the nf-core template (#37)
 - Prettier formatting drift; excluded `pixi.lock` from prettier since its format is owned by pixi (#37)
 - Sample/library_id/flowcell/lane uniqueness is now enforced via nf-schema's `uniqueEntries` keyword instead of custom dedup code (#43)
-- Experimental: switches to typed params
 
 ### `Dependencies`
 
+- Nextflow >=26.10.0 (pipeline composition)
 - updated nf-core to 4.1.0
 - Updated the pixi lock file to v7
