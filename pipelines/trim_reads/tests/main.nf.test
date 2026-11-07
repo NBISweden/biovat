@@ -12,9 +12,13 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/reads.yml").text = [
-                "- meta: {id: PUN-R-ELF, library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1}",
+                "- meta: {library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1}",
+                "  id: PUN-R-ELF",
+                "  single_end: false",
                 "  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]",
-                "- meta: {id: PUN-R-JMC, library: '1', flowcell: SRR9309467, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-JMC.1.SRR9309467.1}",
+                "- meta: {library: '1', flowcell: SRR9309467, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-JMC.1.SRR9309467.1}",
+                "  id: PUN-R-JMC",
+                "  single_end: false",
                 "  reads: [${data}/PUN-R-JMC_1_R1.fastq.gz, ${data}/PUN-R-JMC_1_R2.fastq.gz]"
             ].join("\n") + "\n"
         }
@@ -90,7 +94,9 @@ nextflow_pipeline {
                 "PUN-R-JMC,1,SRR9309467,1,ILLUMINA,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
             ].join("\n") + "\n"
             new File("${launchDir}/reads.yml").text = [
-                "- meta: {id: PUN-R-ELF, library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}",
+                "- meta: {library: '1', flowcell: SRR9309791, lane: 1, pl: ILLUMINA, single_end: false, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}",
+                "  id: PUN-R-ELF",
+                "  single_end: false",
                 "  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]"
             ].join("\n") + "\n"
         }
@@ -105,6 +111,56 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert workflow.stdout.toString().contains("Provide either --samplesheet or --reads, not both") || workflow.stderr.toString().contains("Provide either --samplesheet or --reads, not both")
+        }
+    }
+
+    test("reads without single_end are rejected when they are loaded") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/reads.yml").text = """\
+                - meta: {library: "1", flowcell: SRR9309791, lane: 1, pl: ILLUMINA, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}
+                  id: PUN-R-ELF
+                  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]
+                """.stripIndent()
+        }
+
+        when {
+            params {
+                reads = "${launchDir}/reads.yml"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("is missing field 'single_end' required by record type 'Reads'")
+        }
+    }
+
+    test("reads without id are rejected when they are loaded") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/reads.yml").text = """\
+                - meta: {library: "1", flowcell: SRR9309791, lane: 1, pl: ILLUMINA, read_group: PUN-R-ELF.1.SRR9309791.1, platform_unit: SRR9309791.1.PUN-R-ELF_1}
+                  single_end: false
+                  reads: [${data}/PUN-R-ELF_1_R1.fastq.gz, ${data}/PUN-R-ELF_1_R2.fastq.gz]
+                """.stripIndent()
+        }
+
+        when {
+            params {
+                reads = "${launchDir}/reads.yml"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("is missing field 'id' required by record type 'Reads'")
         }
     }
 

@@ -13,6 +13,7 @@ include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
 include { checkNoRepeats             } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
+include { attachSingleEnd             } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
 
 // A row of the alignments samplesheet
@@ -26,9 +27,11 @@ record AlignmentSample {
 }
 
 record Alignment {
-    meta     : Record // sample information, requires id, library and pl
-    alignment: Path   // BAM or CRAM file
-    index    : Path   // index of the BAM or CRAM file
+    id        : String  // sample name
+    meta      : Record  // read group information, requires library and pl
+    alignment : Path    // BAM or CRAM file
+    index     : Path    // index of the BAM or CRAM file
+    single_end: Boolean // whether the reads are single-end
 }
 
 params {
@@ -59,15 +62,14 @@ workflow {
             if ( s.library_id == null ) {
                 stageError "Marking duplicates needs a library_id for every row of the samplesheet (missing for sample '${s.sample}')"
             }
-            def meta = [ id: s.sample, library: s.library_id, pl: s.platform, single_end: s.single_end ]
-            record(meta: record(meta), alignment: s.alignment, index: s.index)
+            record(id: s.sample, meta: record(library: s.library_id, pl: s.platform) as Record, alignment: s.alignment, index: s.index, single_end: s.single_end)
         }
     } else {
-        alignments = params.alignments.map { a -> record(meta: a.meta, alignment: a.alignment, index: a.index) }
+        alignments = params.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
     }
     // Duplicates are marked per library, so a library is one alignment. The samplesheet has no read group columns
     alignments = alignments.toList().flatMap { rows ->
-        checkNoRepeats(rows, { row -> [ row.meta.id, row.meta.library, row.meta.pl ] }, "Marking duplicates needs one alignment per library. Merge the alignments of a library first (the merge stage).")
+        checkNoRepeats(rows, { row -> [ row.id, row.meta.library, row.meta.pl ] }, "Marking duplicates needs one alignment per library. Merge the alignments of a library first (the merge stage).")
     }
     reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
 
@@ -79,7 +81,7 @@ workflow {
                 .combine(reference)
                 .map { aln, ref ->
                     record(
-                        id                        : aln.meta.id,
+                        id                        : aln.id,
                         meta                      : aln.meta,
                         reads                     : aln.alignment,
                         fasta                     : ref.fasta,
@@ -89,7 +91,7 @@ workflow {
                             params.remove_duplicates ? '--REMOVE_DUPLICATES true' : '--TAGGING_POLICY All',
                             "--OPTICAL_DUPLICATE_PIXEL_DISTANCE ${params.optical_distance}"
                         ].findAll { arg -> arg != '' }.join(' '),
-                        output_prefix             : "${aln.meta.id}_${aln.meta.library}_${aln.meta.pl}_markdup"
+                        output_prefix             : "${aln.id}_${aln.meta.library}_${aln.meta.pl}_markdup"
                     )
                 }
         )
@@ -97,8 +99,9 @@ workflow {
             picard.map { out -> record(id: out.id, meta: out.meta, input: out.bam ?: out.cram, samtools_index_args: '--csi') }
         )
         markdup_alignments = picard
-            .map { out -> record(meta: out.meta, alignment: out.bam ?: out.cram) }
-            .join(indexed.map { out -> record(meta: out.meta, index: out.index) }, by: 'meta')
+            .map { out -> record(key: record(id: out.id, meta: out.meta), id: out.id, meta: out.meta, alignment: out.bam ?: out.cram) }
+            .join(indexed.map { out -> record(key: record(id: out.id, meta: out.meta), index: out.index) }, by: 'key')
+            .map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index) }
         markdup_metrics    = picard.map { out -> record(meta: out.meta, metrics: out.metrics) }
     } else if ( params.duplicate_marker == 'samtools' ) {
         sormadup = SAMTOOLS_SORMADUP(
@@ -106,7 +109,7 @@ workflow {
                 .combine(reference)
                 .map { aln, ref ->
                     record(
-                        id                   : aln.meta.id,
+                        id                   : aln.id,
                         meta                 : aln.meta,
                         input                : aln.alignment,
                         fasta                : ref.fasta,
@@ -122,17 +125,21 @@ workflow {
                             "-d ${params.optical_distance}",
                             '--write-index'
                         ].findAll { arg -> arg != '' }.join(' '),
-                        output_prefix        : "${aln.meta.id}_${aln.meta.library}_${aln.meta.pl}_markdup"
+                        output_prefix        : "${aln.id}_${aln.meta.library}_${aln.meta.pl}_markdup"
                     )
                 }
         )
         markdup_alignments = sormadup.map { out ->
-            record(meta: out.meta, alignment: out.bam ?: out.cram, index: out.csi ?: out.crai)
+            record(id: out.id, meta: out.meta, alignment: out.bam ?: out.cram, index: out.csi ?: out.crai)
         }
         markdup_metrics    = sormadup.map { out -> record(meta: out.meta, metrics: out.metrics) }
     } else {
         error "Unknown duplicate marker '${params.duplicate_marker}', expected picard or samtools"
     }
+
+    // The marked alignment gets its single_end back from the alignment it came from
+    marked_alignments = attachSingleEnd(markdup_alignments, alignments)
+        .map { j -> record(id: j.out.id, meta: j.out.meta, alignment: j.out.alignment, index: j.out.index, single_end: j.single_end) }
 
     // MARK_DUPLICATES:ALIGNMENT_QC
     qc_flagstat      = channel.empty()
@@ -147,7 +154,7 @@ workflow {
         }
         alignment_qc = ALIGNMENT_QC(
             record(
-                alignments: markdup_alignments,
+                alignments: marked_alignments,
                 level     : 'markdup',
                 fasta     : params.fasta,
                 fai       : qc_fai,
@@ -162,7 +169,7 @@ workflow {
     }
 
     publish:
-    alignments    = markdup_alignments // record(meta, alignment, index)
+    alignments    = marked_alignments  // record(id, meta, alignment, index, single_end)
     metrics       = markdup_metrics    // record(meta, metrics)
     flagstat      = qc_flagstat
     riker         = qc_riker

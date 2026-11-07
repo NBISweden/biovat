@@ -11,15 +11,15 @@ workflow REFERENCE_UTILS {
     requires : Record // internal dependency relationships
 
     main:
-    ref = record(meta: record(id: reference.baseName), fasta: reference, fai: null)
+    ref = record(id: reference.baseName, fasta: reference, fai: null)
 
     if ( requires.fai ) {
         faidx = SAMTOOLS_FAIDX(
             channel.value(
-                record(id: ref.meta.id, meta: ref.meta, fasta: reference, fai: null, get_sizes: false, samtools_faidx_args: null)
+                record(id: ref.id, meta: null, fasta: reference, fai: null, get_sizes: false, samtools_faidx_args: null)
             )
         )
-        reference_and_optional_fai = faidx.map { out -> record(meta: out.meta, fasta: reference, fai: out.fai) }
+        reference_and_optional_fai = faidx.map { out -> record(id: out.id, fasta: reference, fai: out.fai) }
     } else {
         reference_and_optional_fai = channel.value(ref)
     }
@@ -27,7 +27,7 @@ workflow REFERENCE_UTILS {
     // Sequence dictionary (<basename>.dict) for GATK tools
     if ( requires.dict ) {
         gatk4_dict = GATK4_CREATESEQUENCEDICTIONARY(
-            channel.value(record(id: ref.meta.id, meta: ref.meta, fasta: reference, gatk4_createsequencedictionary_args: null))
+            channel.value(record(id: ref.id, meta: null, fasta: reference, gatk4_createsequencedictionary_args: null))
         )
         // requires.dict is set only for GATK variant calling. Checked in the channel itself, so that nothing
         // using the fai starts before the check passes
@@ -37,13 +37,13 @@ workflow REFERENCE_UTILS {
                 r
             }
             .combine(gatk4_dict)
-            .map { r, d -> record(meta: r.meta, fasta: r.fasta, fai: r.fai, dict: d.dict) }
+            .map { r, d -> record(id: r.id, fasta: r.fasta, fai: r.fai, dict: d.dict) }
     } else {
-        reference_with_dict = reference_and_optional_fai.map { r -> record(meta: r.meta, fasta: r.fasta, fai: r.fai, dict: null) }
+        reference_with_dict = reference_and_optional_fai.map { r -> record(id: r.id, fasta: r.fasta, fai: r.fai, dict: null) }
     }
 
     emit:
-    reference_and_dict: Value<Record> = reference_with_dict // record(meta, fasta, fai, dict)
+    reference_and_dict: Value<Record> = reference_with_dict // record(id, fasta, fai, dict)
 }
 
 //
@@ -64,16 +64,16 @@ workflow REFERENCE_VALUE {
     }
 
     // No reference, unless a fasta is given
-    reference = channel.value(record(meta: record(id: 'no_reference'), fasta: null, fai: null)) as Value<Record>
+    reference = channel.value(record(id: 'no_reference', fasta: null, fai: null)) as Value<Record>
     if ( fasta && fai ) {
-        reference = fasta.combine(fai).map { f, i -> record(meta: record(id: f.baseName), fasta: f, fai: i) }
+        reference = fasta.combine(fai).map { f, i -> record(id: f.baseName, fasta: f, fai: i) }
     } else if ( fasta && needs_fai ) {
         faidx = SAMTOOLS_FAIDX(
-            fasta.map { f -> record(id: f.baseName, meta: record(id: f.baseName), fasta: f, fai: null, get_sizes: false, samtools_faidx_args: null) }
+            fasta.map { f -> record(id: f.baseName, meta: null, fasta: f, fai: null, get_sizes: false, samtools_faidx_args: null) }
         )
-        reference = fasta.combine(faidx).map { f, out -> record(meta: out.meta, fasta: f, fai: out.fai) }
+        reference = fasta.combine(faidx).map { f, out -> record(id: out.id, fasta: f, fai: out.fai) }
     } else if ( fasta ) {
-        reference = fasta.map { f -> record(meta: record(id: f.baseName), fasta: f, fai: null) }
+        reference = fasta.map { f -> record(id: f.baseName, fasta: f, fai: null) }
     }
 
     emit:

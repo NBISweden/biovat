@@ -17,7 +17,7 @@ nextflow_pipeline {
                 new File("${launchDir}/${name}.bam").text = ""
                 new File("${launchDir}/${name}.bam.csi").text = ""
                 def (sample, library, _rg) = name.tokenize('_')
-                rows << "- {meta: {id: ${sample}, library: '${library}', pl: ILLUMINA, single_end: false}, alignment: ${launchDir}/${name}.bam, index: ${launchDir}/${name}.bam.csi}"
+                rows << "- {meta: {library: '${library}', pl: ILLUMINA, single_end: false}, id: ${sample}, single_end: false, alignment: ${launchDir}/${name}.bam, index: ${launchDir}/${name}.bam.csi}"
             }
             new File("${launchDir}/alignments.yml").text = rows.join("\n") + "\n"
         }
@@ -51,7 +51,7 @@ nextflow_pipeline {
                 new File("${launchDir}/${name}.bam").text = ""
                 new File("${launchDir}/${name}.bam.csi").text = ""
                 def (sample, library) = name.tokenize('_')
-                rows << "- {meta: {id: ${sample}, library: '${library}', pl: ILLUMINA, single_end: false}, alignment: ${launchDir}/${name}.bam, index: ${launchDir}/${name}.bam.csi}"
+                rows << "- {meta: {library: '${library}', pl: ILLUMINA, single_end: false}, id: ${sample}, single_end: false, alignment: ${launchDir}/${name}.bam, index: ${launchDir}/${name}.bam.csi}"
             }
             new File("${launchDir}/alignments.yml").text = rows.join("\n") + "\n"
         }
@@ -118,7 +118,7 @@ nextflow_pipeline {
             new File("${launchDir}/a.bam").text = ""
             new File("${launchDir}/a.bam.csi").text = ""
             new File("${launchDir}/alignments.csv").text = "sample,library_id,platform,single_end,alignment,index\nA,1,ILLUMINA,false,${launchDir}/a.bam,${launchDir}/a.bam.csi\n"
-            new File("${launchDir}/alignments.yml").text = "- {meta: {id: A, library: '1', pl: ILLUMINA, single_end: false}, alignment: ${launchDir}/a.bam, index: ${launchDir}/a.bam.csi}\n"
+            new File("${launchDir}/alignments.yml").text = "- {meta: {library: '1', pl: ILLUMINA, single_end: false}, id: A, single_end: false, alignment: ${launchDir}/a.bam, index: ${launchDir}/a.bam.csi}\n"
         }
 
         when {

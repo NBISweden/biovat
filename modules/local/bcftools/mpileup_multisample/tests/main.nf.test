@@ -16,7 +16,7 @@ nextflow_process {
                 bed.text = "MT192765.1\\t0\\t10000\\n"
                 input[0] = channel.of(record(
                     id: 'test',
-                    meta: [ id:'test' ],
+                    meta: null,
                     bams: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true) ],
                     indexes: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam' + '.bai', checkIfExists: true) ],
                     intervals: bed,
@@ -53,7 +53,7 @@ nextflow_process {
                 bed.text = "MT192765.1\\t0\\t10000\\n"
                 input[0] = channel.of(record(
                     id: 'test',
-                    meta: [ id:'test' ],
+                    meta: null,
                     bams: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true) ],
                     indexes: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam' + '.bai', checkIfExists: true) ],
                     intervals: bed,
@@ -91,7 +91,7 @@ nextflow_process {
                 bed.text = "MT192765.1\\t0\\t10000\\n"
                 input[0] = channel.of(record(
                     id: 'test',
-                    meta: [ id:'test' ],
+                    meta: null,
                     bams: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true) ],
                     indexes: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam' + '.bai', checkIfExists: true) ],
                     intervals: bed,
