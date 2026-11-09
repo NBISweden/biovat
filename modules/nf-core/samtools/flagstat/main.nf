@@ -26,7 +26,7 @@ process SAMTOOLS_FLAGSTAT {
     record(
         id: id,
         meta: meta,
-        flagstat: file("*.flagstat", optional: true)
+        flagstat: file("*.flagstat")
     )
 
     topic:
