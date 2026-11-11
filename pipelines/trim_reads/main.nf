@@ -78,7 +78,7 @@ workflow {
     publish:
     fastp         = fastp                                                                                                     // record(meta, reads, json, html, log, reads_fail, reads_merged)
     trimmed_reads = attachSingleEnd(fastp, reads)
-        .map { j -> record(id: j.out.id, meta: j.out.meta, reads: j.out.reads.toList().toSorted { a, b -> a.name <=> b.name }, single_end: j.single_end) } // record(id, meta, reads, single_end)
+        .map { j -> record(id: j.out.id, meta: j.out.meta, reads: j.out.reads.toSorted { a, b -> a.name <=> b.name }, single_end: j.single_end) } // record(id, meta, reads, single_end)
     multiqc_files = fastp.map { out -> out.json }
 
 }
