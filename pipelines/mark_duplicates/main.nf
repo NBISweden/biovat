@@ -92,7 +92,7 @@ workflow {
                             // Always report optical metrics, tag the BAM if retaining duplicates
                             params.remove_duplicates ? '--REMOVE_DUPLICATES true' : '--TAGGING_POLICY All',
                             "--OPTICAL_DUPLICATE_PIXEL_DISTANCE ${params.optical_distance}"
-                        ].findAll { arg -> arg != '' }.join(' '),
+                        ].join(' '),
                         output_prefix             : "${aln.id}_${aln.meta.library}_${aln.meta.pl}_markdup"
                     )
                 }
