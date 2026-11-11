@@ -378,8 +378,8 @@ workflow {
 
     publish:
     genome_chunks           = splitgenome.map { out -> record(meta: out.meta, chunks: out.chunks, excluded: out.excluded) } // record(meta, chunks, excluded)
-    variant_calls           = variant_calls                                                                                  // record(meta, vcf, index)
-    mpileup                 = mpileup                                                                                        // record(meta, mpileup)
+    variant_calls           = variant_calls                                                                                  // record(id, meta, vcf, index)
+    mpileup                 = mpileup                                                                                        // record(id, meta, vcf, index, mpileup)
     bcftools_stats          = bcftools_stats
     vcftools_tstv_counts    = vcftools_tstv_counts
     vcftools_tstv_qual      = vcftools_tstv_qual

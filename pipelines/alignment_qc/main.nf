@@ -143,7 +143,7 @@ workflow {
 
     publish:
     flagstat      = flagstat_out
-    riker         = riker_out // record(meta, <riker metric files>)
+    riker         = riker_out // record(id, meta, <riker metric files>)
     qualimap      = qualimap_out
     multiqc_files = flagstat_out
         .map { out -> out.flagstat }
