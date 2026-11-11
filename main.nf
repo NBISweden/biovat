@@ -38,19 +38,7 @@ include { workflow as MARK_DUPLICATES    } from './pipelines/mark_duplicates'
 include { workflow as MERGE_TO_SAMPLE    } from './pipelines/merge'
 include { workflow as CALL_VARIANTS      } from './pipelines/call_variants'
 include { MULTIQC_REPORT                 } from './subworkflows/local/multiqc_report/main'
-
-// A row of the samplesheet
-record Sample {
-    sample     : String
-    library_id : String
-    flowcell_id: String
-    lane       : Integer
-    platform   : String
-    fastq_1    : Path?
-    fastq_2    : Path?
-    bam        : Path?
-    single_end : Boolean?
-}
+include { Sample                          } from './types/samplesheet'
 
 // Pipeline parameters and their defaults. Parameters that only the config reads are defined in nextflow.config
 params {
