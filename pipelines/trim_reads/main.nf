@@ -10,19 +10,7 @@ include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main
 include { readGroupMeta   } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { attachSingleEnd } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
-
-// A row of the BioVAT samplesheet
-record Sample {
-    sample     : String
-    library_id : String
-    flowcell_id: String
-    lane       : Integer
-    platform   : String
-    fastq_1    : Path?
-    fastq_2    : Path?
-    bam        : Path?
-    single_end : Boolean?
-}
+include { Sample           } from '../../types/samplesheet'
 
 record Reads {
     id        : String     // sample name
