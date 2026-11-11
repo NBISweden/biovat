@@ -38,13 +38,13 @@ process FASTQC {
     record(process: "${task.process}", tool: 'fastqc', version: eval('fastqc --version | sed "/FastQC v/!d; s/.*v//"')) >> 'versions'
 
     script:
-    // Make list of old name and new name pairs to use for renaming in the bash while loop
-    def indices = 0..<reads.size()
-    def new_names = indices.collect { i ->
-        reads.size() == 1 ? "${task.ext.prefix}.${reads[i].extension}" : "${task.ext.prefix}_${i + 1}.${reads[i].extension}"
+    // Link the reads as <prefix>.<ext>, or <prefix>_1.<ext>, <prefix>_2.<ext>, ... for several reads
+    def links = reads.withIndex().collect { read, i ->
+        def number = reads.size() == 1 ? '' : "_${i + 1}"
+        record(old_name: read, new_name: "${task.ext.prefix}${number}.${read.extension}")
     }
-    def rename_to = indices.collect { i -> "${reads[i]} ${new_names.toList()[i]}" }.join(' ')
-    def renamed_files = new_names.join(' ')
+    def rename_to = links.collect { link -> "${link.old_name} ${link.new_name}" }.join(' ')
+    def renamed_files = links.collect { link -> link.new_name }.join(' ')
 
     // The total amount of allocated RAM by FastQC is equal to the number of threads defined (--threads) time the amount of RAM defined (--memory)
     // https://github.com/s-andrews/FastQC/blob/1faeea0412093224d7f6a07f777fad60a5650795/fastqc#L211-L222
