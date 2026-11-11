@@ -57,7 +57,7 @@ workflow {
     )
 
     publish:
-    fastqc        = fastqc                                         // record(meta, html, zip)
+    fastqc        = fastqc                                         // record(id, meta, html, zip)
     multiqc_files = fastqc.flatMap { out -> out.zip }
 
 }
