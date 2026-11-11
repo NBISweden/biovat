@@ -165,17 +165,15 @@ workflow {
     // 'requires' is a record of internal dependency relationships
     // MERGE_TO_LIBRARY (readgroup -> library) and MERGE_TO_SAMPLE (library -> sample, post-deduplication)
     // are triggered when a downstream consumer needs alignments merged to respective levels
-    merge_to_library = enable.mark_duplicates
-    merge_to_sample  = enable.variant_calling
-    // .fai is used for certain CRAM processes, and unconditionally by riker and variant calling. The samplesheet rows aren't
-    // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
     requires = record(
-        merge_to_library: merge_to_library,
-        merge_to_sample : merge_to_sample,
+        merge_to_library: enable.mark_duplicates,
+        merge_to_sample : enable.variant_calling,
         // Providing --sample_metadata groups samples into populations during bcftools_multisample variant calling
         group_samples   : enable.variant_calling && params.variant_caller == 'bcftools_multisample' && params.sample_metadata != null,
         // GATK tools need a sequence dictionary alongside the reference fasta
         dict            : enable.variant_calling && params.variant_caller == 'gatk',
+        // .fai is used for certain CRAM processes, and unconditionally by riker and variant calling. The samplesheet rows aren't
+        // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
         fai             : enable.cram_format || rikerActive(enable, true) || enable.variant_calling
     )
 
