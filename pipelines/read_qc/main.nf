@@ -58,7 +58,7 @@ workflow {
 
     publish:
     fastqc        = fastqc                                         // record(meta, html, zip)
-    multiqc_files = fastqc.flatMap { out -> out.zip.toList() }
+    multiqc_files = fastqc.flatMap { out -> out.zip }
 
 }
 
