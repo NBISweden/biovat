@@ -89,7 +89,7 @@ workflow {
         }
 
     // SAMTOOLS_FLAGSTAT
-    flagstat = SAMTOOLS_FLAGSTAT(
+    flagstat_out = SAMTOOLS_FLAGSTAT(
         qc_input.map { qc -> record(id: qc.id, meta: qc.meta, bam: qc.alignment, bai: qc.index, output_prefix: qc.qc_prefix) }
     )
 
@@ -142,10 +142,10 @@ workflow {
     }
 
     publish:
-    flagstat      = flagstat.map { out -> record(id: out.id, meta: out.meta, flagstat: out.flagstat) }
+    flagstat      = flagstat_out
     riker         = riker_out // record(meta, <riker metric files>)
-    qualimap      = qualimap_out.map { out -> record(id: out.id, meta: out.meta, results: out.results) }
-    multiqc_files = flagstat
+    qualimap      = qualimap_out
+    multiqc_files = flagstat_out
         .map { out -> out.flagstat }
         .mix(riker_out.flatMap { out -> rikerFiles(out) })
         .mix(qualimap_out.map { out -> out.results })
