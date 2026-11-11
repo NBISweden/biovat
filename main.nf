@@ -229,7 +229,7 @@ workflow {
             if ( skipped.size() > 0 ) {
                 log.warn(
                     "Long-read platforms are not yet supported. " +
-                    "These samplesheet read groups are excluded from the pipeline: ${skipped.toList().toSorted().join(', ')}"
+                    "These samplesheet read groups are excluded from the pipeline: ${skipped.toSorted().join(', ')}"
                 )
             }
         }
