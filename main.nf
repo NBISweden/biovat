@@ -122,6 +122,11 @@ params {
 }
 
 // Entry workflow
+// The outputs of a stage are Channel<Record>. Pick the fields of Alignment, which the next stage takes
+def toAlignments(alignments) {
+    return alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+}
+
 workflow {
 
     main:
@@ -332,9 +337,7 @@ workflow {
         )
     )
     multiqc_files         = multiqc_files.mix(ingest.multiqc_files)
-    alignments_to_process = read_group_alignments
-        .mix(ingest.alignments)
-        .map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+    alignments_to_process = toAlignments(read_group_alignments.mix(ingest.alignments))
 
     // Merge lane alignments to library level
     library_alignments = channel.empty()
@@ -354,7 +357,7 @@ workflow {
                 qualimap   : enable.qualimap
             )
         )
-        alignments_to_process = merge_library.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments_to_process = toAlignments(merge_library.alignments)
         library_alignments    = merge_library.merged
         library_flagstat      = merge_library.flagstat
         library_riker         = merge_library.riker
@@ -383,7 +386,7 @@ workflow {
                 qualimap         : enable.qualimap
             )
         )
-        alignments_to_process      = markdup.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments_to_process      = toAlignments(markdup.alignments)
         mark_duplicates_alignments = markdup.alignments
         mark_duplicates_metrics    = markdup.metrics
         mark_duplicates_flagstat   = markdup.flagstat
@@ -410,7 +413,7 @@ workflow {
                 qualimap   : enable.qualimap
             )
         )
-        alignments_to_process = merge_sample.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments_to_process = toAlignments(merge_sample.alignments)
         sample_alignments     = merge_sample.merged
         sample_flagstat       = merge_sample.flagstat
         sample_riker          = merge_sample.riker
