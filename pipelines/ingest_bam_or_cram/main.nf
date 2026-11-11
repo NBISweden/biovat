@@ -143,7 +143,7 @@ workflow {
         // The reference has its fai index when this stage needed it. Pass it on, so that it is not created twice
         qc_fai = params.fai
         if ( params.riker || params.cram_format ) {
-            qc_fai = reference.map { ref -> ref.fai } as Value<Path>
+            qc_fai = reference.map { ref -> ref.fai }
         }
         alignment_qc = ALIGNMENT_QC(
             record(
