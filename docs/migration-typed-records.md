@@ -220,7 +220,7 @@ workflow {
             .filter { sample -> sample.fastq_1 != null }
             .map { sample ->
                 def row = sampleToRow(sample)
-                record(meta: record(row[0]), reads: row[1])
+                record(meta: row.meta, reads: row.files)
             }
     } else {
         reads = params.reads
