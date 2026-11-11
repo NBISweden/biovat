@@ -14,16 +14,7 @@ include { checkReferenceForInput   } from '../../subworkflows/local/utils_stage_
 include { checkQualimapCram        } from '../../subworkflows/local/utils_stage_help/main'
 include { attachSingleEnd          } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError               } from '../../subworkflows/local/utils_stage_help/main'
-
-// A row of the alignments samplesheet
-record AlignmentSample {
-    sample    : String   // sample name
-    library_id: String?  // library, needed to merge or deduplicate at library level
-    platform  : String   // sequencing platform
-    single_end: Boolean  // whether the reads are single-end
-    alignment : Path     // BAM or CRAM file
-    index     : Path     // index of the BAM or CRAM file
-}
+include { AlignmentSample           } from '../../types/samplesheet'
 
 record Alignment {
     id        : String  // sample name
