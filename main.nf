@@ -195,7 +195,7 @@ workflow {
     if ( params.input ) {
         // The rows are known here, so they are checked before any stage is called. A stage that finds the same problem
         // (a missing reference, for example) reports it with the name of its own parameter, and would do so first
-        input_rows = readSamplesheet(params.input).collect { row -> record(meta: record(row[0]), files: row[1]) }
+        input_rows = readSamplesheet(params.input)
         validateSamplesheetRows(input_rows, sample_metadata_rows, enable, options)
         samplesheet = channel.fromList(input_rows)
     } else if ( params.samplesheet ) {
@@ -205,7 +205,6 @@ workflow {
         // The rows of a channel are not known yet. Check them together, and release them only when the checks have passed
         samplesheet = params.samplesheet
             .map { sample -> sampleToRow(sample) }
-            .map { row -> record(meta: record(row[0]), files: row[1]) }
             .toList()
             .flatMap { list ->
                 // An error raised in a closure is reported without its message, so the message is logged first

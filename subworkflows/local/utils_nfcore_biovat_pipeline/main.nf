@@ -126,14 +126,14 @@ workflow PIPELINE_COMPLETION {
 // Custom validation of input parameters (e.g. dependent/exclusive params)
 //
 
-// Read and validate the samplesheet with nf-schema, returning one [ meta, files ] row per read group.
+// Read and validate the samplesheet with nf-schema, returning one record(meta, files) row per read group.
 // The schema is resolved relative to this script, so the function can be used by pipelines that include it
 def readSamplesheet(input) {
     return samplesheetToList(input, "${moduleDir}/../../../assets/schema_input.json")
         .collect { meta, fastq_1, fastq_2, bam -> buildSampleRow(meta, fastq_1, fastq_2, bam) }
 }
 
-// Convert a row of the samplesheet, loaded as a record by Nextflow, to a [ meta, files ] row
+// Convert a row of the samplesheet, loaded as a record by Nextflow, to a record(meta, files) row
 // Runs inside operator closures, where an error is reported as "Unexpected error [InvocationTargetException]" and its
 // message is left in .nextflow.log, so stageError logs the message first
 def sampleToRow(sample) {
@@ -177,7 +177,7 @@ def buildSampleRow(meta, fastq_1, fastq_2, bam) {
     def extra = bam
         ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
         : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
-    return [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
+    return record(meta: record(meta + extra), files: bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll())
 }
 
 // Turn an entry of the versions topic into [ process name, "  tool: version" ]. The topic is shared with every process
