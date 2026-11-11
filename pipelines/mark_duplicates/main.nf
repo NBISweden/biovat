@@ -67,7 +67,7 @@ workflow {
             record(id: s.sample, meta: record(library: s.library_id, pl: s.platform) as Record, alignment: s.alignment, index: s.index, single_end: s.single_end)
         }
     } else {
-        alignments = params.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments = params.alignments
     }
     // Duplicates are marked per library, so a library is one alignment. The samplesheet has no read group columns
     alignments = alignments.toList().flatMap { rows ->
