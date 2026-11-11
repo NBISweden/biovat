@@ -46,8 +46,8 @@ workflow {
         reads = params.samplesheet
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
-            .filter { row -> row[0].input_type == 'fastq' }
-            .map { row -> record(id: row[0].id, meta: readGroupMeta(row[0]), reads: row[1]) }
+            .filter { row -> row.meta.input_type == 'fastq' }
+            .map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), reads: row.files) }
     } else {
         reads = params.reads
     }
