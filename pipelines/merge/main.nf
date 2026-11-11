@@ -67,7 +67,7 @@ workflow {
             record(id: s.sample, meta: record(library: s.library_id, pl: s.platform) as Record, alignment: s.alignment, index: s.index, single_end: s.single_end)
         }
     } else {
-        alignments = params.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments = params.alignments
     }
     // A merge group is one read layout. A library of single-end and paired-end lanes is two groups with the same id and meta
     alignments = alignments.toList().flatMap { rows ->

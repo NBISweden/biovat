@@ -50,7 +50,7 @@ workflow {
     }
     given_calls = channel.empty()
     if ( params.variant_calls ) {
-        given_calls = params.variant_calls.map { c -> record(id: c.id, meta: c.meta, vcf: c.vcf, index: c.index) }
+        given_calls = params.variant_calls
     }
     variant_calls = samplesheet_calls.mix(given_calls)
 

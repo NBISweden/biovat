@@ -65,7 +65,7 @@ workflow {
             record(id: s.sample, meta: record(library: s.library_id, pl: s.platform, read_group: s.alignment.baseName) as Record, alignment: s.alignment, index: s.index, single_end: s.single_end)
         }
     } else {
-        alignments = params.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments = params.alignments
     }
     // Riker and CRAM input need the reference. It is checked for each alignment, so a stage that gets none
     // (for example ingest_bam_or_cram with a sheet of FASTQ rows) needs no reference
