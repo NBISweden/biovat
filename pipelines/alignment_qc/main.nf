@@ -15,16 +15,7 @@ include { checkStageInput        } from '../../subworkflows/local/utils_stage_he
 include { checkSampleFields      } from '../../subworkflows/local/utils_stage_help/main'
 include { checkReferenceForInput } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError             } from '../../subworkflows/local/utils_stage_help/main'
-
-// A row of the alignments samplesheet (CSV)
-record AlignmentSample {
-    sample    : String  // sample name
-    library_id: String? // library, needed at the library and markdup levels
-    platform  : String  // sequencing platform
-    single_end: Boolean // whether the reads are single-end
-    alignment : Path    // BAM or CRAM file
-    index     : Path    // index of the BAM or CRAM file
-}
+include { AlignmentSample         } from '../../types/samplesheet'
 
 record Alignment {
     id        : String  // sample name

@@ -20,16 +20,7 @@ include { checkStageInput              } from '../../subworkflows/local/utils_st
 include { checkSampleFields            } from '../../subworkflows/local/utils_stage_help/main'
 include { checkNoRepeats               } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError                   } from '../../subworkflows/local/utils_stage_help/main'
-
-// A row of the alignments samplesheet (CSV)
-record AlignmentSample {
-    sample    : String  // sample name
-    library_id: String? // library of the alignment
-    platform  : String  // sequencing platform, samples of different platforms are called in separate callsets
-    single_end: Boolean // whether the reads are single-end
-    alignment : Path    // BAM or CRAM file
-    index     : Path    // index of the BAM or CRAM file
-}
+include { AlignmentSample               } from '../../types/samplesheet'
 
 record Alignment {
     id       : String // sample name
