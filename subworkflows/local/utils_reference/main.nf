@@ -78,7 +78,7 @@ workflow REFERENCE_VALUE {
     }
 
     emit:
-    reference: Value<Record> = reference // record(meta, fasta, fai)
+    reference: Value<Record> = reference // record(id, fasta, fai)
 }
 
 // GATK writes a .tbi for every .vcf.gz it creates, and tbi can't index positions past 2^29 bp, so fail fast on longer contigs.

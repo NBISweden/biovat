@@ -174,7 +174,7 @@ workflow {
     }
 
     publish:
-    alignments    = alignments // record(meta, alignment, index)
+    alignments    = alignments // record(id, meta, alignment, index, single_end)
     flagstat      = qc_flagstat
     riker         = qc_riker
     qualimap      = qc_qualimap
