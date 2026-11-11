@@ -169,9 +169,9 @@ workflow {
             .map { aln -> tuple(params.callset_prefix + '.' + aln.meta.pl, aln) }
             .groupBy()
             .map { group, alns ->
-                // sort by sample id so the VCF sample columns don't depend on channel arrival order
-                // a sample can have several alignments (e.g. one per library), so order those by file name as well
-                def sorted = alns.toSorted { a, b -> "${a.id}/${a.alignment.name}" <=> "${b.id}/${b.alignment.name}" }
+                // one alignment per sample and platform (checked above): sort by sample id so the VCF sample columns
+                // don't depend on channel arrival order
+                def sorted = alns.toSorted { a, b -> a.id <=> b.id }
                 record(
                     id     : group,
                     samples: sorted.collect { aln -> aln.id },
