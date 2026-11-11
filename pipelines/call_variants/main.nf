@@ -128,7 +128,7 @@ workflow {
     )
     // Carry the chunk count so that concatenation knows when all chunks are there
     bed_intervals = splitgenome.flatMap { out ->
-        def beds = out.chunks.toList()
+        def beds = out.chunks
         beds.collect { bed -> record(chunk: bed.baseName, chunk_bed: bed, n_chunks: beds.size()) }
     }
 
@@ -174,7 +174,7 @@ workflow {
                 def sorted = alns.toSorted { a, b -> "${a.id}/${a.alignment.name}" <=> "${b.id}/${b.alignment.name}" }
                 record(
                     id     : group,
-                    samples: sorted.collect { aln -> aln.id }.toList(),
+                    samples: sorted.collect { aln -> aln.id },
                     bams   : sorted.collect { aln -> aln.alignment }.toList(),
                     indexes: sorted.collect { aln -> aln.index }.toList()
                 )
@@ -247,7 +247,7 @@ workflow {
             .map { workspace, gvcfs ->
                 // sort by sample id so the workspace sample order doesn't depend on channel arrival order
                 def sorted = gvcfs.toSorted { a, b -> a.sample <=> b.sample }
-                record(id: workspace.id, callset: workspace.callset, chunk: workspace.chunk, samples: sorted.collect { g -> g.sample }.toList(), gvcfs: sorted.collect { g -> g.gvcf }.toList())
+                record(id: workspace.id, callset: workspace.callset, chunk: workspace.chunk, samples: sorted.collect { g -> g.sample }, gvcfs: sorted.collect { g -> g.gvcf }.toList())
             }
         tbis_by_workspace = haplotypecaller
             .map { out -> tuple(record(id: params.callset_prefix + '.' + out.meta.pl + '.' + out.meta.chunk), out.tbi) }
@@ -411,8 +411,8 @@ output {
 def warnExcludedRegions(summary: Path, min_length: Integer) {
     def rows = summary.readLines().findAll { line -> line && !line.startsWith('#') }.collect { line -> line.tokenize('\t') }.toList()
     if ( rows.size() == 2 ) {
-        def headers = rows[0].toList()
-        def values  = rows[1].toList()
+        def headers = rows[0]
+        def values  = rows[1]
         def excluded_percent = values[headers.indexOf('Excluded %')]
         if ( excluded_percent.toDouble() > 5 ) {
             log.warn(
