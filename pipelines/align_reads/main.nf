@@ -130,7 +130,7 @@ workflow {
                             "--gpusort",
                             "--no-markdups",
                             "--gpuwrite"
-                        ].findAll { arg -> arg != "" }.join(" "),
+                        ].join(" "),
                         output_prefix         : r.meta.read_group
                     )
                 }
