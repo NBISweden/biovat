@@ -2,13 +2,14 @@
     "homo_sapiens [bam] - stub": {
         "content": [
             {
-                "results": [
-                    [
-                        {
+                "0": [
+                    {
+                        "id": "test",
+                        "meta": {
                             "id": "test",
                             "single_end": false
                         },
-                        [
+                        "results": [
                             [
                                 "agogo.css:md5,d41d8cd98f00b204e9800998ecf8427e",
                                 "ajax-loader.gif:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -66,105 +67,25 @@
                                 "mapping_quality_histogram.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                             ]
                         ]
-                    ]
-                ],
-                "versions_qualimap": [
-                    [
-                        "QUALIMAP_BAMQC",
-                        "qualimap",
-                        "2.3"
-                    ]
+                    }
                 ]
             }
         ],
-        "timestamp": "2026-08-10T17:20:29.62252359",
+        "timestamp": "2026-10-21T09:33:33.477046",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.10.0"
         }
     },
     "homo_sapiens [bam]": {
         "content": [
-            {
-                "results": [
-                    [
-                        {
-                            "id": "test",
-                            "single_end": false
-                        },
-                        [
-                            [
-                                "agogo.css",
-                                "ajax-loader.gif",
-                                "basic.css",
-                                "bgfooter.png",
-                                "bgtop.png",
-                                "comment-bright.png",
-                                "comment-close.png",
-                                "comment.png",
-                                "doctools.js",
-                                "down-pressed.png",
-                                "down.png",
-                                "file.png",
-                                "jquery.js",
-                                "minus.png",
-                                "plus.png",
-                                "pygments.css",
-                                "qualimap_logo_small.png",
-                                "report.css",
-                                "searchtools.js",
-                                "underscore.js",
-                                "up-pressed.png",
-                                "up.png",
-                                "websupport.js"
-                            ],
-                            "genome_results.txt",
-                            [
-                                "genome_coverage_0to50_histogram.png",
-                                "genome_coverage_across_reference.png",
-                                "genome_coverage_histogram.png",
-                                "genome_coverage_quotes.png",
-                                "genome_gc_content_per_window.png",
-                                "genome_homopolymer_indels.png",
-                                "genome_insert_size_across_reference.png",
-                                "genome_insert_size_histogram.png",
-                                "genome_mapping_quality_across_reference.png",
-                                "genome_mapping_quality_histogram.png",
-                                "genome_reads_clipping_profile.png",
-                                "genome_reads_content_per_read_position.png",
-                                "genome_uniq_read_starts_histogram.png"
-                            ],
-                            "qualimapReport.html",
-                            [
-                                "coverage_across_reference.txt",
-                                "coverage_histogram.txt",
-                                "duplication_rate_histogram.txt",
-                                "genome_fraction_coverage.txt",
-                                "homopolymer_indels.txt",
-                                "insert_size_across_reference.txt",
-                                "insert_size_histogram.txt",
-                                "mapped_reads_clipping_profile.txt",
-                                "mapped_reads_gc-content_distribution.txt",
-                                "mapped_reads_nucleotide_content.txt",
-                                "mapping_quality_across_reference.txt",
-                                "mapping_quality_histogram.txt"
-                            ]
-                        ]
-                    ]
-                ],
-                "versions_qualimap": [
-                    [
-                        "QUALIMAP_BAMQC",
-                        "qualimap",
-                        "2.3"
-                    ]
-                ]
-            }
+            "qualimapReport.html",
+            "genome_results.txt:md5,45103d63ba82df2b905eb04819c32dd3"
         ],
-        "timestamp": "2026-09-14T22:58:50.481672177",
+        "timestamp": "2026-10-19T11:38:05.265389",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.3"
+            "nextflow": "26.10.0"
         }
     }
 }

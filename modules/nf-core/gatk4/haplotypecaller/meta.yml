@@ -16,7 +16,11 @@ tools:
       licence: ["Apache-2.0"]
       identifier: ""
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Sample identifier, used for the task tag and as the default output prefix
+    - meta:
+        optional: true
         type: map
         description: |
           Groovy Map containing sample information
@@ -91,7 +95,11 @@ input:
         ontologies: []
 output:
   vcf:
-    - - meta:
+    - - id:
+          type: string
+          description: Sample identifier from the input record
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -103,7 +111,11 @@ output:
           ontologies:
             - edam: http://edamontology.org/format_3989 # GZIP format
   tbi:
-    - - meta:
+    - - id:
+          type: string
+          description: Sample identifier from the input record
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -114,7 +126,11 @@ output:
           pattern: "*.vcf.gz.tbi"
           ontologies: []
   bam:
-    - - meta:
+    - - id:
+          type: string
+          description: Sample identifier from the input record
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information

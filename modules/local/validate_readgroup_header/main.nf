@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process VALIDATE_READGROUP_HEADER {
-    tag "${meta.id}"
+    tag "${id}"
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
@@ -8,14 +10,25 @@ process VALIDATE_READGROUP_HEADER {
         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
 
     input:
-    tuple val(meta), path(bam_cram)
+    record(
+        id: String,        // sample id, written to the SM tag
+        meta: Record?,
+        library: String,   // library id, written to the LB tag
+        platform: String,  // sequencing platform, written to the PL tag
+        platform_unit: String, // platform unit, written to the ID and PU tags
+        bam_cram: Path
+    )
 
     output:
-    tuple val(meta), path(bam_cram), env('rg_status'), emit: validated // rg_status: 'present' or 'missing' (no @RG line, filled downstream)
-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions
+    record(
+        id: id,
+        meta: meta,
+        bam_cram: bam_cram,
+        rg_status: env('rg_status') // 'present' or 'missing' (no @RG line, filled downstream)
+    )
 
-    when:
-    task.ext.when == null || task.ext.when
+    topic:
+    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
 
     script:
     """
@@ -34,7 +47,7 @@ process VALIDATE_READGROUP_HEADER {
         # One tag per line. PL is compared case-insensitively, so also match against an uppercased copy of it
         tr '\\t' '\\n' < rg_lines.txt | sed 1d > header_tags.txt
         grep '^PL:' header_tags.txt | tr a-z A-Z > header_pl.txt || true
-        printf '%s\\n' "ID:${meta.platform_unit}" "SM:${meta.id}" "LB:${meta.library}" "PU:${meta.platform_unit}" "PL:${meta.pl}" > expected_tags.txt
+        printf '%s\\n' "ID:${platform_unit}" "SM:${id}" "LB:${library}" "PU:${platform_unit}" "PL:${platform}" > expected_tags.txt
 
         # Expected tags with no exact match in the header: report what the header holds for that tag, or that it is absent
         grep -vxF -f header_tags.txt -f header_pl.txt expected_tags.txt | while IFS=: read -r tag _; do
@@ -47,7 +60,7 @@ process VALIDATE_READGROUP_HEADER {
 
         if [ -s problems.txt ]; then
             {
-                echo "ERROR: @RG header of '${bam_cram}' is missing tags or disagrees with the samplesheet row for sample '${meta.id}', library '${meta.library}' (expected ID/PU:${meta.platform_unit} SM:${meta.id} LB:${meta.library} PL:${meta.pl}):"
+                echo "ERROR: @RG header of '${bam_cram}' is missing tags or disagrees with the samplesheet row for sample '${id}', library '${library}' (expected ID/PU:${platform_unit} SM:${id} LB:${library} PL:${platform}):"
                 cat problems.txt
             } >&2
             exit 1

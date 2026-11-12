@@ -15,11 +15,14 @@ tools:
         - "LGPL"
       identifier: biotools:vcftools
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample, used for the default output prefix
+    - meta:
         type: map
         description: |
-          Groovy Map containing sample information
-          e.g. [ id:'test', single_end:false ]
+          Optional Groovy Map with sample metadata, passed through to the output.
+          It is not used by the module itself.
     - variant_file:
         type: file
         description: variant input file which can be vcf, vcf.gz, or bcf format.
@@ -36,77 +39,98 @@ input:
       ontologies: []
 output:
   vcf:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.vcf":
           type: file
           description: vcf file (optional)
           pattern: "*.vcf"
           ontologies: []
   bcf:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.bcf":
           type: file
           description: bcf file (optional)
           pattern: "*.bcf"
           ontologies: []
   frq:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.frq":
           type: file
           description: Allele frequency for each site (optional)
           pattern: "*.frq"
           ontologies: []
   frq_count:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.frq.count":
           type: file
           description: Allele counts for each site (optional)
           pattern: "*.frq.count"
           ontologies: []
   idepth:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.idepth":
           type: file
           description: mean depth per individual (optional)
           pattern: "*.idepth"
           ontologies: []
   ldepth:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.ldepth":
           type: file
           description: depth per site summed across individuals (optional)
           pattern: "*.ildepth"
           ontologies: []
   ldepth_mean:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.ldepth.mean":
           type: file
           description: mean depth per site calculated across individuals
@@ -114,33 +138,42 @@ output:
           pattern: "*.ldepth.mean"
           ontologies: []
   gdepth:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.gdepth":
           type: file
           description: depth for each genotype in vcf file (optional)
           pattern: "*.gdepth"
           ontologies: []
   hap_ld:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.hap.ld":
           type: file
           description: r2, D, and D’ statistics using phased haplotypes (optional)
           pattern: "*.hap.ld"
           ontologies: []
   geno_ld:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.geno.ld":
           type: file
           description: squared correlation coefficient between genotypes encoded
@@ -149,11 +182,14 @@ output:
           pattern: "*.geno.ld"
           ontologies: []
   geno_chisq:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.geno.chisq":
           type: file
           description: test for genotype independence via the chi-squared
@@ -161,11 +197,14 @@ output:
           pattern: "*.geno.chisq"
           ontologies: []
   list_hap_ld:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.list.hap.ld":
           type: file
           description: r2 statistics of the sites contained in the provided input
@@ -173,11 +212,14 @@ output:
           pattern: "*.list.hap.ld"
           ontologies: []
   list_geno_ld:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.list.geno.ld":
           type: file
           description: r2 statistics of the sites contained in the provided input
@@ -185,11 +227,14 @@ output:
           pattern: "*.list.geno.ld"
           ontologies: []
   interchrom_hap_ld:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.interchrom.hap.ld":
           type: file
           description: r2 statistics for sites (haplotypes) on different
@@ -197,11 +242,14 @@ output:
           pattern: "*.interchrom.hap.ld"
           ontologies: []
   interchrom_geno_ld:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.interchrom.geno.ld":
           type: file
           description: r2 statistics for sites (genotypes) on different
@@ -209,11 +257,14 @@ output:
           pattern: "*.interchrom.geno.ld"
           ontologies: []
   tstv:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.TsTv":
           type: file
           description: Transition / Transversion ratio in bins of size defined in
@@ -221,22 +272,28 @@ output:
           pattern: "*.TsTv"
           ontologies: []
   tstv_summary:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.TsTv.summary":
           type: file
           description: Summary of all Transitions and Transversions (optional)
           pattern: "*.TsTv.summary"
           ontologies: []
   tstv_count:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.TsTv.count":
           type: file
           description: Transition / Transversion ratio as a function of
@@ -244,11 +301,14 @@ output:
           pattern: "*.TsTv.count"
           ontologies: []
   tstv_qual:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.TsTv.qual":
           type: file
           description: Transition / Transversion ratio as a function of SNP
@@ -256,11 +316,14 @@ output:
           pattern: "*.TsTv.qual"
           ontologies: []
   filter_summary:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.FILTER.summary":
           type: file
           description: Summary of the number of SNPs and Ts/Tv ratio for each
@@ -268,22 +331,28 @@ output:
           pattern: "*.FILTER.summary"
           ontologies: []
   sites_pi:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.sites.pi":
           type: file
           description: Nucleotide divergency on a per-site basis (optional)
           pattern: "*.sites.pi"
           ontologies: []
   windowed_pi:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.windowed.pi":
           type: file
           description: Nucleotide diversity in windows, with window size
@@ -291,11 +360,14 @@ output:
           pattern: "*windowed.pi"
           ontologies: []
   weir_fst:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.weir.fst":
           type: file
           description: Fst estimate from Weir and Cockerham’s 1984 paper
@@ -303,22 +375,28 @@ output:
           pattern: "*.weir.fst"
           ontologies: []
   heterozygosity:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.het":
           type: file
           description: Heterozygosity on a per-individual basis (optional)
           pattern: "*.het"
           ontologies: []
   hwe:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.hwe":
           type: file
           description: Contains the Observed numbers of Homozygotes and
@@ -327,11 +405,14 @@ output:
           pattern: "*.hwe"
           ontologies: []
   tajima_d:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.Tajima.D":
           type: file
           description: Tajima’s D statistic in bins with size of the specified
@@ -339,11 +420,14 @@ output:
           pattern: "*.Tajima.D"
           ontologies: []
   freq_burden:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.ifreqburden":
           type: file
           description: Number of variants within each individual of a specific
@@ -351,22 +435,28 @@ output:
           pattern: "*.ifreqburden"
           ontologies: []
   lroh:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.LROH":
           type: file
           description: Long Runs of Homozygosity (optional)
           pattern: "*.LROH"
           ontologies: []
   relatedness:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.relatedness":
           type: file
           description: Relatedness statistic based on the method of Yang et al,
@@ -374,11 +464,14 @@ output:
           pattern: "*.relatedness"
           ontologies: []
   relatedness2:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.relatedness2":
           type: file
           description: Relatedness statistic based on the method of Manichaikul et
@@ -387,44 +480,56 @@ output:
           pattern: "*.relatedness2"
           ontologies: []
   lqual:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.lqual":
           type: file
           description: per-site SNP quality (optional)
           pattern: "*.lqual"
           ontologies: []
   missing_individual:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.imiss":
           type: file
           description: Missingness on a per-individual basis (optional)
           pattern: "*.imiss"
           ontologies: []
   missing_site:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.lmiss":
           type: file
           description: Missingness on a per-site basis (optional)
           pattern: "*.lmiss"
           ontologies: []
   snp_density:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.snpden":
           type: file
           description: Number and density of SNPs in bins of size defined by
@@ -432,33 +537,42 @@ output:
           pattern: "*.snpden"
           ontologies: []
   kept_sites:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.kept.sites":
           type: file
           description: All sites that have been kept after filtering (optional)
           pattern: "*.kept.sites"
           ontologies: []
   removed_sites:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.removed.sites":
           type: file
           description: All sites that have been removed after filtering (optional)
           pattern: "*.removed.sites"
           ontologies: []
   singeltons:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.singletons":
           type: file
           description: Location of singletons, and the individual they occur in
@@ -466,11 +580,14 @@ output:
           pattern: "*.singeltons"
           ontologies: []
   indel_hist:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.indel.hist":
           type: file
           description: Histogram file of the length of all indels (including SNPs)
@@ -478,33 +595,42 @@ output:
           pattern: "*.indel_hist"
           ontologies: []
   hapcount:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.hapcount":
           type: file
           description: Unique haplotypes within user specified bins (optional)
           pattern: "*.hapcount"
           ontologies: []
   mendel:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.mendel":
           type: file
           description: Mendel errors identified in trios (optional)
           pattern: "*.mendel"
           ontologies: []
   format:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.FORMAT":
           type: file
           description: Extracted information from the genotype fields in the VCF
@@ -512,11 +638,14 @@ output:
           pattern: "*.FORMAT"
           ontologies: []
   info:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.INFO":
           type: file
           description: Extracted information from the INFO field in the VCF file
@@ -524,11 +653,14 @@ output:
           pattern: "*.INFO"
           ontologies: []
   genotypes_matrix:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.012":
           type: file
           description: |
@@ -539,11 +671,14 @@ output:
           pattern: "*.012"
           ontologies: []
   genotypes_matrix_individual:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.012.indv":
           type: file
           description: Details the individuals included in the main
@@ -551,11 +686,14 @@ output:
           pattern: "*.012.indv"
           ontologies: []
   genotypes_matrix_position:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.012.pos":
           type: file
           description: Details the site locations included in the main
@@ -563,11 +701,14 @@ output:
           pattern: "*.012.pos"
           ontologies: []
   impute_hap:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.impute.hap":
           type: file
           description: Phased haplotypes in IMPUTE reference-panel format
@@ -575,121 +716,154 @@ output:
           pattern: "*.impute.hap"
           ontologies: []
   impute_hap_legend:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.impute.hap.legend":
           type: file
           description: Impute haplotype legend file (optional)
           pattern: "*.impute.hap.legend"
           ontologies: []
   impute_hap_indv:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.impute.hap.indv":
           type: file
           description: Impute haplotype individuals file (optional)
           pattern: "*.impute.hap.indv"
           ontologies: []
   ldhat_sites:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.ldhat.sites":
           type: file
           description: Output data in LDhat format, sites (optional)
           pattern: "*.ldhat.sites"
           ontologies: []
   ldhat_locs:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.ldhat.locs":
           type: file
           description: output data in LDhat format, locations (optional)
           pattern: "*.ldhat.locs"
           ontologies: []
   beagle_gl:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.BEAGLE.GL":
           type: file
           description: Genotype likelihoods for biallelic sites (optional)
           pattern: "*.BEAGLE.GL"
           ontologies: []
   beagle_pl:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.BEAGLE.PL":
           type: file
           description: Genotype likelihoods for biallelic sites (optional)
           pattern: "*.BEAGLE.PL"
           ontologies: []
   ped:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.ped":
           type: file
           description: output the genotype data in PLINK PED format (optional)
           pattern: "*.ped"
           ontologies: []
   map_:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.map":
           type: file
           description: output the genotype data in PLINK PED format (optional)
           pattern: "*.map"
           ontologies: []
   tped:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.tped":
           type: file
           description: output the genotype data in PLINK PED format (optional)
           pattern: "*.tped"
           ontologies: []
   tfam:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.tfam":
           type: file
           description: output the genotype data in PLINK PED format (optional)
           pattern: "*.tfam"
           ontologies: []
   diff_sites_in_files:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.diff.sites_in_files":
           type: file
           description: Sites that are common / unique to each file specified in
@@ -697,11 +871,14 @@ output:
           pattern: "*.diff.sites.in.files"
           ontologies: []
   diff_indv_in_files:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.diff.indv_in_files":
           type: file
           description: Individuals that are common / unique to each file specified
@@ -709,11 +886,14 @@ output:
           pattern: "*.diff.indv.in.files"
           ontologies: []
   diff_sites:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.diff.sites":
           type: file
           description: Discordance on a site by site basis, specified in optional
@@ -721,11 +901,14 @@ output:
           pattern: "*.diff.sites"
           ontologies: []
   diff_indv:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.diff.indv":
           type: file
           description: Discordance on a individual by individual basis, specified
@@ -733,11 +916,14 @@ output:
           pattern: "*.diff.indv"
           ontologies: []
   diff_discd_matrix:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.diff.discordance.matrix":
           type: file
           description: Discordance matrix between files specified in optional
@@ -745,11 +931,14 @@ output:
           pattern: "*.diff.discordance.matrix"
           ontologies: []
   diff_switch_error:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample, used for the default output prefix
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
-            e.g. [ id:'test', single_end:false ]
+            Optional Groovy Map with sample metadata, passed through to the output.
+            It is not used by the module itself.
       - "*.diff.switch":
           type: file
           description: Switch errors found between sites (optional)

@@ -1,0 +1,78 @@
+nextflow.enable.types = true
+
+//
+// Read trimming pipeline
+//
+
+include { FASTP           } from '../../modules/nf-core/fastp/main'
+include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main'
+include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
+include { readGroupMeta   } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { attachSingleEnd } from '../../subworkflows/local/utils_stage_help/main'
+include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { Sample           } from '../../types/samplesheet'
+
+record Reads {
+    id        : String     // sample name
+    meta      : Record     // read group information, requires read_group
+    reads     : List<Path> // fastq files, in order
+    single_end: Boolean    // whether the reads are single-end
+}
+
+params {
+    samplesheet      : Channel<Sample>? // BioVAT samplesheet (CSV). Rows with a bam instead of fastq files are skipped
+    reads            : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
+    adapter_fasta    : Path?           // adapter fasta file, if provided
+    save_trimmed_fail: Boolean = false // save files that failed to pass trimming thresholds
+    save_merged      : Boolean = false // save all merged reads
+    help             : Boolean = false
+    help_full        : Boolean = false
+}
+
+workflow {
+
+    main:
+    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/trim_reads --samplesheet samplesheet.csv')
+    checkStageInput(params.samplesheet, params.reads, 'reads')
+    reads = channel.empty()
+    if ( params.samplesheet ) {
+        reads = params.samplesheet
+            // Every row is checked, including the ones this stage skips
+            .map { sample -> sampleToRow(sample) }
+            .filter { row -> row.meta.input_type == 'fastq' }
+            .map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), reads: row.files, single_end: row.meta.single_end) }
+    } else {
+        reads = params.reads
+    }
+
+    // Run fastp for read trimming
+    fastp = FASTP(
+        reads.map { r ->
+            record(
+                id                  : r.id,
+                meta                : r.meta,
+                single_end          : r.single_end,
+                reads               : r.reads,
+                adapter_fasta       : params.adapter_fasta,
+                discard_trimmed_pass: false,                      // Never discard reads that pass trimming thresholds, so fastp can still be used for the report only
+                save_trimmed_fail   : params.save_trimmed_fail,   // Whether to save files that failed to pass trimming thresholds ending in *.fail.fastq.gz
+                save_merged         : params.save_merged,         // Whether to save all merged reads to a file ending in *.merged.fastq.gz
+                fastp_args          : null,
+                output_prefix       : r.meta.read_group
+            )
+        }
+    )
+
+    publish:
+    fastp         = fastp                                                                                                     // record(id, meta, reads, json, html, log, reads_fail, reads_merged)
+    trimmed_reads = attachSingleEnd(fastp, reads)
+        .map { j -> record(id: j.out.id, meta: j.out.meta, reads: j.out.reads.toSorted { a, b -> a.name <=> b.name }, single_end: j.single_end) } // record(id, meta, reads, single_end)
+    multiqc_files = fastp.map { out -> out.json }
+
+}
+
+output {
+    fastp        : Channel<Record> { path 'fastp' }
+    trimmed_reads: Channel<Record> { path 'trimmed_reads' }
+    multiqc_files: Channel<Path> { path 'multiqc_files' }
+}

@@ -19,7 +19,11 @@ tools:
         - "MIT"
       identifier: biotools:samtools
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample or reference. Used as the default prefix of the output files
+    - meta:
+        optional: true
         type: map
         description: |
           Groovy Map containing reference information
@@ -39,7 +43,11 @@ input:
       description: use cut to get the sizes of the index (true) or not (false)
 output:
   fa:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -50,7 +58,11 @@ output:
           pattern: "*.{fa}"
           ontologies: []
   sizes:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -61,7 +73,11 @@ output:
           pattern: "*.{sizes}"
           ontologies: []
   fai:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -72,7 +88,11 @@ output:
           pattern: "*.{fai}"
           ontologies: []
   gzi:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information

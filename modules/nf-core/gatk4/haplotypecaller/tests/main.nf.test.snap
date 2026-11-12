@@ -1,82 +1,62 @@
 {
     "homo_sapiens - [cram, crai] - fasta - fai - dict": {
         "content": [
-            "test_cram.vcf.gz",
-            "test_cram.vcf.gz.tbi",
-            {
-                "versions_gatk4": [
-                    [
-                        "GATK4_HAPLOTYPECALLER",
-                        "gatk4",
-                        "4.7.0.0"
-                    ]
+            [
+                [
+                    "test_cram.vcf.gz",
+                    "test_cram.vcf.gz.tbi"
                 ]
-            }
+            ]
         ],
-        "timestamp": "2026-08-18T11:24:26.815114",
+        "timestamp": "2026-10-20T14:38:00.702128",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.10.0"
         }
     },
     "homo_sapiens - [cram, crai] - fasta - fai - dict - sites - sites_tbi": {
         "content": [
-            "test_cram_sites.vcf.gz",
-            "test_cram_sites.vcf.gz.tbi",
-            {
-                "versions_gatk4": [
-                    [
-                        "GATK4_HAPLOTYPECALLER",
-                        "gatk4",
-                        "4.7.0.0"
-                    ]
+            [
+                [
+                    "test_cram_sites.vcf.gz",
+                    "test_cram_sites.vcf.gz.tbi"
                 ]
-            }
+            ]
         ],
-        "timestamp": "2026-08-18T11:24:42.757224",
+        "timestamp": "2026-10-20T14:38:20.765609",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.10.0"
         }
     },
     "homo_sapiens - [bam, bai] - fasta - fai - dict": {
         "content": [
-            "test_bam.vcf.gz",
-            "test_bam.vcf.gz.tbi",
-            {
-                "versions_gatk4": [
-                    [
-                        "GATK4_HAPLOTYPECALLER",
-                        "gatk4",
-                        "4.7.0.0"
-                    ]
+            [
+                [
+                    "test_bam.vcf.gz",
+                    "test_bam.vcf.gz.tbi"
                 ]
-            }
+            ]
         ],
-        "timestamp": "2026-08-18T11:24:11.006581",
+        "timestamp": "2026-10-20T14:37:42.492983",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.10.0"
         }
     },
     "homo_sapiens - [cram, crai, dragstr_model] - fasta - fai - dict - sites - sites_tbi": {
         "content": [
-            "test_cram_sites_dragstr.vcf.gz",
-            "test_cram_sites_dragstr.vcf.gz.tbi",
-            {
-                "versions_gatk4": [
-                    [
-                        "GATK4_HAPLOTYPECALLER",
-                        "gatk4",
-                        "4.7.0.0"
-                    ]
+            [
+                [
+                    "test_cram_sites_dragstr.vcf.gz",
+                    "test_cram_sites_dragstr.vcf.gz.tbi"
                 ]
-            }
+            ]
         ],
-        "timestamp": "2026-08-18T11:24:58.686947",
+        "timestamp": "2026-10-20T14:38:40.038169",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.6"
+            "nextflow": "26.10.0"
         }
     }
 }

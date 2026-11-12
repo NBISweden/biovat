@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process SAMTOOLS_ADDREPLACERG {
-    tag "${meta.id}"
+    tag "${id}"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
@@ -7,33 +9,49 @@ process SAMTOOLS_ADDREPLACERG {
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
 
+    ext [
+        prefix: { output_prefix ?: "${id}" },
+        args: { samtools_addreplacerg_args ?: '' }
+    ]
+
     input:
-    tuple val(meta), path(input), path(index), val(read_group)
-    tuple val(meta2), path(fasta), path(fai), path(gzi)
+    record(
+        id: String,
+        meta: Record?,
+        input: Path,
+        index: Path?,
+        read_group: String?,
+        fasta: Path?,
+        fai: Path?,
+        gzi: Path?,
+        samtools_addreplacerg_args: String?,
+        output_prefix: String?
+    )
 
     output:
-    tuple val(meta), path("${prefix}.bam"), emit: bam, optional: true
-    tuple val(meta), path("${prefix}.cram"), emit: cram, optional: true
-    tuple val(meta), path("${prefix}.sam"), emit: sam, optional: true
-    tuple val(meta), path("${prefix}.${file_type}.{crai,csi,bai}"), emit: index, optional: true
-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
+    record(
+        id: id,
+        meta: meta,
+        bam: file("${task.ext.prefix}.bam", optional: true),
+        cram: file("${task.ext.prefix}.cram", optional: true),
+        sam: file("${task.ext.prefix}.sam", optional: true),
+        index: file("${task.ext.prefix}.{bam,cram,sam}.{crai,csi,bai}", optional: true)
+    )
 
-    when:
-    task.ext.when == null || task.ext.when
+    topic:
+    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
 
     script:
-    def args = task.ext.args ?: ''
     def reference = fasta ? "--reference ${fasta}" : ''
     def read_group_arg = read_group ? "-r ${read_group}" : ''
-    file_type = args =~ /--output-fmt\s+sam|-O\s+sam/
+    def file_type = task.ext.args =~ /--output-fmt\s+sam|-O\s+sam/
         ? "sam"
-        : args =~ /--output-fmt\s+bam|-O\s+bam/
+        : task.ext.args =~ /--output-fmt\s+bam|-O\s+bam/
             ? "bam"
-            : args =~ /--output-fmt\s+cram|-O\s+cram/
+            : task.ext.args =~ /--output-fmt\s+cram|-O\s+cram/
                 ? "cram"
                 : input.getExtension()
-    prefix = task.ext.prefix ?: "${meta.id}"
-    if ("${input}" == "${prefix}.${file_type}") {
+    if ("${input}" == "${task.ext.prefix}.${file_type}") {
         error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
     }
     """
@@ -41,21 +59,19 @@ process SAMTOOLS_ADDREPLACERG {
     samtools \\
         addreplacerg \\
         --threads ${task.cpus - 1} \\
-        ${args} \\
+        ${task.ext.args} \\
         ${read_group_arg} \\
         ${reference} \\
-        -o ${prefix}.${file_type} \\
+        -o ${task.ext.prefix}.${file_type} \\
         ${input}
     """
 
     stub:
-    file_type = input.getExtension()
-    prefix = task.ext.prefix ?: "${meta.id}"
-    if ("${input}" == "${prefix}.${file_type}") {
+    def file_type = input.getExtension()
+    if ("${input}" == "${task.ext.prefix}.${file_type}") {
         error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
     }
-
     """
-    touch ${prefix}.${file_type}
+    touch ${task.ext.prefix}.${file_type}
     """
 }
