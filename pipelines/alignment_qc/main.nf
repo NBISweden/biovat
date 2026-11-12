@@ -15,16 +15,7 @@ include { checkStageInput        } from '../../subworkflows/local/utils_stage_he
 include { checkSampleFields      } from '../../subworkflows/local/utils_stage_help/main'
 include { checkReferenceForInput } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError             } from '../../subworkflows/local/utils_stage_help/main'
-
-// A row of the alignments samplesheet (CSV)
-record AlignmentSample {
-    sample    : String  // sample name
-    library_id: String? // library, needed at the library and markdup levels
-    platform  : String  // sequencing platform
-    single_end: Boolean // whether the reads are single-end
-    alignment : Path    // BAM or CRAM file
-    index     : Path    // index of the BAM or CRAM file
-}
+include { AlignmentSample         } from '../../types/samplesheet'
 
 record Alignment {
     id        : String  // sample name
@@ -65,7 +56,7 @@ workflow {
             record(id: s.sample, meta: record(library: s.library_id, pl: s.platform, read_group: s.alignment.baseName) as Record, alignment: s.alignment, index: s.index, single_end: s.single_end)
         }
     } else {
-        alignments = params.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments = params.alignments
     }
     // Riker and CRAM input need the reference. It is checked for each alignment, so a stage that gets none
     // (for example ingest_bam_or_cram with a sheet of FASTQ rows) needs no reference
@@ -89,7 +80,7 @@ workflow {
         }
 
     // SAMTOOLS_FLAGSTAT
-    flagstat = SAMTOOLS_FLAGSTAT(
+    flagstat_out = SAMTOOLS_FLAGSTAT(
         qc_input.map { qc -> record(id: qc.id, meta: qc.meta, bam: qc.alignment, bai: qc.index, output_prefix: qc.qc_prefix) }
     )
 
@@ -142,10 +133,10 @@ workflow {
     }
 
     publish:
-    flagstat      = flagstat.map { out -> record(id: out.id, meta: out.meta, flagstat: out.flagstat) }
-    riker         = riker_out // record(meta, <riker metric files>)
-    qualimap      = qualimap_out.map { out -> record(id: out.id, meta: out.meta, results: out.results) }
-    multiqc_files = flagstat
+    flagstat      = flagstat_out
+    riker         = riker_out // record(id, meta, <riker metric files>)
+    qualimap      = qualimap_out
+    multiqc_files = flagstat_out
         .map { out -> out.flagstat }
         .mix(riker_out.flatMap { out -> rikerFiles(out) })
         .mix(qualimap_out.map { out -> out.results })

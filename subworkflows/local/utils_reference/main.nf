@@ -65,7 +65,7 @@ workflow REFERENCE_VALUE {
     }
 
     // No reference, unless a fasta is given
-    reference = channel.value(record(id: 'no_reference', fasta: null, fai: null)) as Value<Record>
+    reference = channel.value(record(id: 'no_reference', fasta: null, fai: null))
     if ( fasta && fai ) {
         reference = fasta.combine(fai).map { f, i -> record(id: f.baseName, fasta: f, fai: i) }
     } else if ( fasta && needs_fai ) {
@@ -78,7 +78,7 @@ workflow REFERENCE_VALUE {
     }
 
     emit:
-    reference: Value<Record> = reference // record(meta, fasta, fai)
+    reference: Value<Record> = reference // record(id, fasta, fai)
 }
 
 // GATK writes a .tbi for every .vcf.gz it creates, and tbi can't index positions past 2^29 bp, so fail fast on longer contigs.

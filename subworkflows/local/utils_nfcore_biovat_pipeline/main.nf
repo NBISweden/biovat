@@ -9,13 +9,10 @@
 */
 
 include { UTILS_NFSCHEMA_PLUGIN   } from '../../nf-core/utils_nfschema_plugin'
-include { paramsSummaryMap        } from 'plugin/nf-schema'
 include { samplesheetToList       } from 'plugin/nf-schema'
-include { paramsHelp              } from 'plugin/nf-schema'
 include { completionSummary       } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
-include { stageError              } from '../utils_stage_help/main'
 include { checkSampleFields       } from '../utils_stage_help/main'
 include { inputError              } from '../utils_stage_help/main'
 
@@ -129,14 +126,14 @@ workflow PIPELINE_COMPLETION {
 // Custom validation of input parameters (e.g. dependent/exclusive params)
 //
 
-// Read and validate the samplesheet with nf-schema, returning one [ meta, files ] row per read group.
+// Read and validate the samplesheet with nf-schema, returning one record(meta, files) row per read group.
 // The schema is resolved relative to this script, so the function can be used by pipelines that include it
 def readSamplesheet(input) {
     return samplesheetToList(input, "${moduleDir}/../../../assets/schema_input.json")
         .collect { meta, fastq_1, fastq_2, bam -> buildSampleRow(meta, fastq_1, fastq_2, bam) }
 }
 
-// Convert a row of the samplesheet, loaded as a record by Nextflow, to a [ meta, files ] row
+// Convert a row of the samplesheet, loaded as a record by Nextflow, to a record(meta, files) row
 // Runs inside operator closures, where an error is reported as "Unexpected error [InvocationTargetException]" and its
 // message is left in .nextflow.log, so stageError logs the message first
 def sampleToRow(sample) {
@@ -180,7 +177,7 @@ def buildSampleRow(meta, fastq_1, fastq_2, bam) {
     def extra = bam
         ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
         : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
-    return [ meta + extra, bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll() ]
+    return record(meta: record(meta + extra), files: bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll())
 }
 
 // Turn an entry of the versions topic into [ process name, "  tool: version" ]. The topic is shared with every process
@@ -379,32 +376,6 @@ def validateSamplesheetRows(rows, metadata_rows, enable, options) {
 //
 // Generate methods description for MultiQC
 //
-def toolCitationText() {
-    // TODO nf-core: Optionally add in-text citation tools to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "Tool (Foo et al. 2023)" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
-    def citation_text = [
-            "Tools used in the workflow included:",
-            "FastQC (Andrews 2010),",
-            "MultiQC (Ewels et al. 2016)",
-            "."
-        ].join(' ').trim()
-
-    return citation_text
-}
-
-def toolBibliographyText() {
-    // TODO nf-core: Optionally add bibliographic entries to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "<li>Author (2023) Pub name, Journal, DOI</li>" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
-    def reference_text = [
-            "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).</li>",
-            "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
-        ].join(' ').trim()
-
-    return reference_text
-}
-
 def methodsDescriptionText(mqc_methods_yaml) {
     // Convert  to a named map so can be used as with familiar NXF ${workflow} variable syntax in the MultiQC YML file
     def meta = [:]
@@ -428,10 +399,6 @@ def methodsDescriptionText(mqc_methods_yaml) {
     // Tool references
     meta["tool_citations"] = ""
     meta["tool_bibliography"] = ""
-
-    // TODO nf-core: Only uncomment below if logic in toolCitationText/toolBibliographyText has been filled!
-    // meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
-    // meta["tool_bibliography"] = toolBibliographyText()
 
 
     def methods_text = mqc_methods_yaml.text

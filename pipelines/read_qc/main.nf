@@ -9,19 +9,7 @@ include { STAGE_HELP      } from '../../subworkflows/local/utils_stage_help/main
 include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main'
 include { readGroupMeta   } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
-
-// A row of the BioVAT samplesheet
-record Sample {
-    sample     : String
-    library_id : String
-    flowcell_id: String
-    lane       : Integer
-    platform   : String
-    fastq_1    : Path?
-    fastq_2    : Path?
-    bam        : Path?
-    single_end : Boolean?
-}
+include { Sample           } from '../../types/samplesheet'
 
 record Reads {
     id   : String     // sample name
@@ -46,8 +34,8 @@ workflow {
         reads = params.samplesheet
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
-            .filter { row -> row[0].input_type == 'fastq' }
-            .map { row -> record(id: row[0].id, meta: readGroupMeta(row[0]), reads: row[1]) }
+            .filter { row -> row.meta.input_type == 'fastq' }
+            .map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), reads: row.files) }
     } else {
         reads = params.reads
     }
@@ -57,7 +45,7 @@ workflow {
     )
 
     publish:
-    fastqc        = fastqc                                         // record(meta, html, zip)
+    fastqc        = fastqc                                         // record(id, meta, html, zip)
     multiqc_files = fastqc.flatMap { out -> out.zip }
 
 }
