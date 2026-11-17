@@ -79,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- `--help` of BioVAT and of every stage suggests `--help_full` and `--show_hidden`, the parameters that exist. It suggested `--helpFull` and `--showHidden`, which are not declared
+- The `--alignments`, `--reads` and `--bam_cram` descriptions of the stage schemas list the fields the records have: `id` and `single_end` are fields of their own, not part of `meta`. A YAML written as the old text said was rejected
+- The typical command of the BioVAT help includes `--fasta`, `assets/nf-params.yml` points to the test samplesheet so that the example runs, and `docs/output.md` lists the files of `pipeline_info/`
+- `docs/usage.md` has a section on running a stage on its own, with the parameters that differ from BioVAT
 - `SPLITGENOME` runs its script with `python3`, so it does not depend on the file mode surviving the copy into the task
 - `merge` passes `--fasta` to `samtools merge` whenever it is given, so CRAM inputs can be merged to BAM
 - `requires.fai` counts CRAM output whenever it is on, so the fai is made once and not by each stage
