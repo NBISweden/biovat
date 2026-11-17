@@ -18,7 +18,7 @@
 ## =============================================================================
 
 input: "assets/samplesheet.csv" # Path to comma-separated file containing information about the samples
-reference: "tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta" # Path to reference genome FASTA file
+fasta: "tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta" # Path to reference genome FASTA file
 # sample_metadata: "assets/sample_metadata.csv" # Path to comma-separated file with per-sample metadata (e.g. population). Providing it groups samples by population during variant calling
 outdir: "results" # The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.
 # publish_dir_mode: "copy" # How to publish results to the output directory (accepted: copy, symlink, move, rellink, link, copyNoFollow). Default: copy
