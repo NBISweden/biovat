@@ -20,7 +20,7 @@ record Reads {
 }
 
 params {
-    samplesheet      : Channel<Sample>? // BioVAT samplesheet (CSV). Rows with a bam instead of fastq files are skipped
+    samplesheet      : Channel<Sample>? // BioVAT samplesheet (CSV). Rows with an alignment instead of fastq files are skipped
     reads            : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
     adapter_fasta    : Path?           // adapter fasta file, if provided
     save_trimmed_fail: Boolean = false // save files that failed to pass trimming thresholds

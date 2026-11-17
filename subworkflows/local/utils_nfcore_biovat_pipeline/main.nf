@@ -130,7 +130,7 @@ workflow PIPELINE_COMPLETION {
 // The schema is resolved relative to this script, so the function can be used by pipelines that include it
 def readSamplesheet(input) {
     return samplesheetToList(input, "${moduleDir}/../../../assets/schema_input.json")
-        .collect { meta, fastq_1, fastq_2, bam -> buildSampleRow(meta, fastq_1, fastq_2, bam) }
+        .collect { meta, fastq_1, fastq_2, alignment, _index -> buildSampleRow(meta, fastq_1, fastq_2, alignment) }
 }
 
 // Convert a row of the samplesheet, loaded as a record by Nextflow, to a record(meta, files) row
@@ -138,16 +138,16 @@ def readSamplesheet(input) {
 // message is left in .nextflow.log, so stageError logs the message first
 def sampleToRow(sample) {
     checkSampleFields(sample.sample, sample.library_id, sample.flowcell_id, sample.platform)
-    if ( !sample.fastq_1 && !sample.bam ) {
-        inputError("Sample '${sample.sample}', library '${sample.library_id}' has neither fastq_1 nor bam")
+    if ( !sample.fastq_1 && !sample.alignment ) {
+        inputError("Sample '${sample.sample}', library '${sample.library_id}' has neither fastq_1 nor alignment")
     }
-    if ( sample.fastq_1 && sample.bam ) {
-        inputError("Sample '${sample.sample}', library '${sample.library_id}' has both fastq_1 and bam")
+    if ( sample.fastq_1 && sample.alignment ) {
+        inputError("Sample '${sample.sample}', library '${sample.library_id}' has both fastq_1 and alignment")
     }
     if ( sample.fastq_1 && sample.single_end != null ) {
         inputError("Sample '${sample.sample}', library '${sample.library_id}' has fastq_1 and a single_end value. single_end is for BAM/CRAM rows only, the layout of FASTQ rows follows from fastq_2")
     }
-    if ( sample.bam && sample.single_end == null ) {
+    if ( sample.alignment && sample.single_end == null ) {
         inputError("Sample '${sample.sample}', library '${sample.library_id}' has a BAM/CRAM but no single_end (true or false)")
     }
     def meta = [
@@ -157,10 +157,10 @@ def sampleToRow(sample) {
         lane      : sample.lane,
         pl        : sample.platform,
     ]
-    if ( sample.bam ) {
+    if ( sample.alignment ) {
         meta.single_end = sample.single_end
     }
-    return buildSampleRow(meta, sample.fastq_1, sample.fastq_2, sample.bam)
+    return buildSampleRow(meta, sample.fastq_1, sample.fastq_2, sample.alignment)
 }
 
 // The meta of a stage record holds the read group information. The id and single_end are fields of the record
@@ -169,15 +169,15 @@ def readGroupMeta(meta) {
 }
 
 // Add the read group information to the meta of a samplesheet row
-def buildSampleRow(meta, fastq_1, fastq_2, bam) {
+def buildSampleRow(meta, fastq_1, fastq_2, alignment) {
     // We define read_group separately as an intuitive/readable @RG-level file prefix
     def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
     // GATK format @RG ID/PU written by the aligners/samtools, and expected by VALIDATE_READGROUP_HEADER
     def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}".toString()
-    def extra = bam
+    def extra = alignment
         ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
         : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
-    return record(meta: record(meta + extra), files: bam ? [ bam ] : [ fastq_1, fastq_2 ].findAll())
+    return record(meta: record(meta + extra), files: alignment ? [ alignment ] : [ fastq_1, fastq_2 ].findAll())
 }
 
 // Turn an entry of the versions topic into [ process name, "  tool: version" ]. The topic is shared with every process

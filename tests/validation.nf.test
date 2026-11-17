@@ -14,7 +14,7 @@ nextflow_pipeline {
 
         setup {
             new File("${launchDir}/bam_only.csv").text = [
-                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
                 "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${projectDir}/tests/data/monkeyflower/PUN-R-ELF_2.bam,false"
             ].join("\n") + "\n"
         }
@@ -41,6 +41,31 @@ nextflow_pipeline {
         }
     }
 
+    test("an alignment row with an index column is accepted - the stage pipelines read the same columns") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/alignment_index.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,index,single_end",
+                "PUN-R-MT,1,SRR9309471,2,ILLUMINA,,,${data}/PUN-R-MT_1_repeat2.cram,${data}/PUN-R-MT_1_repeat2.cram.crai,false"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                outdir          = "$outputDir"
+                input           = "${launchDir}/alignment_index.csv"
+                sample_metadata = null
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+
     test("a library with two platforms - names the sample and library") {
 
         options "-stub -output-dir ${outputDir}"
@@ -48,7 +73,7 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/mixed_platforms.csv").text = [
-                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
                 "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
                 "PUN-R-ELF,1,SRR9309792,2,IONTORRENT,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
             ].join("\n") + "\n"
@@ -78,7 +103,7 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/samples.csv").text = [
-                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
                 "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
                 "PUN-R-JMC,1,SRR9309467,1,ILLUMINA,${data}/PUN-R-JMC_1_R1.fastq.gz,${data}/PUN-R-JMC_1_R2.fastq.gz,,"
             ].join("\n") + "\n"

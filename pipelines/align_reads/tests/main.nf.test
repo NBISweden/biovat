@@ -50,7 +50,7 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/samplesheet.csv").text = [
-                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
                 "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
                 // A row with a bam instead of fastq files is skipped
                 "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false",
@@ -86,7 +86,7 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/samplesheet.csv").text = [
-                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
                 "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
                 // A row with a bam instead of fastq files is skipped
                 "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false",
