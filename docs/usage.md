@@ -60,7 +60,7 @@ S7,1,AEG588A7,2,ILLUMINA,,,/data/AEG588A7_S7_L002.cram,false
 | `platform`    | Sequencing platform, one of the SAM specification `@RG PL` values in uppercase: `ILLUMINA`, `IONTORRENT`, `ONT`, `PACBIO`                                                        |
 | `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Mutually exclusive with `bam`                         |
 | `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads                  |
-| `bam`         | Full path to a pre-aligned `.bam` or `.cram` file, provided instead of `fastq_1`/`fastq_2`. Requires `single_end` on the same row; CRAM additionally requires `--reference`      |
+| `bam`         | Full path to a pre-aligned `.bam` or `.cram` file, provided instead of `fastq_1`/`fastq_2`. Requires `single_end` on the same row; CRAM additionally requires `--fasta`          |
 | `single_end`  | Required only when `bam` is set: `true` for single-end data, `false` for paired-end. Not required for `fastq_1`/`fastq_2` rows - it's inferred from whether `fastq_2` is present |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
@@ -97,7 +97,7 @@ nextflow main.nf --help
 
 ### Variant calling
 
-Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into one multi-sample VCF per sequencing platform, published as `07_variant_calls/<callset_prefix>.<platform>.<variant_caller>.vcf.gz` (e.g. `all_samples.ILLUMINA.gatk.vcf.gz`). Platforms are never called together: for example, a run with Illumina and IonTorrent data produces two VCFs, and a sample sequenced on both appears in each. The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--fasta`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into one multi-sample VCF per sequencing platform, published as `07_variant_calls/<callset_prefix>.<platform>.<variant_caller>.vcf.gz` (e.g. `all_samples.ILLUMINA.gatk.vcf.gz`). Platforms are never called together: for example, a run with Illumina and IonTorrent data produces two VCFs, and a sample sequenced on both appears in each. The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
 
 - `--variant_caller` selects the caller: `bcftools_multisample` (default; see [BCFtools multi-sample calling](#bcftools-multi-sample-calling)) or `gatk` (see [GATK](#gatk))
 - `--callset_prefix` (default `all_samples`) sets the file name prefix of the joint VCFs and their indexes; the platform and caller name are appended to it

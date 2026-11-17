@@ -47,7 +47,7 @@ params {
     input                      : String?              // path to the samplesheet, validated against assets/schema_input.json
     samplesheet                : Channel<Sample>?     // alternative to input for pipelines that include BioVAT
     sample_metadata            : String?              // path to the sample metadata sheet, validated against assets/schema_sample_metadata.json
-    reference                  : Path?
+    fasta                      : Path?
 
     // Workflow stage gating options
     enable_raw_read_qc         : Boolean = true
@@ -170,7 +170,7 @@ workflow {
 
     // The parameters that the samplesheet checks depend on, passed as the 'options' input of validateSamplesheetRows
     options = record(
-        has_reference      : params.reference != null,
+        has_reference      : params.fasta != null,
         variant_caller     : params.variant_caller,
         multiallelic_caller: params.enable_multiallelic_caller,
         sample_metadata    : params.sample_metadata != null
@@ -189,7 +189,7 @@ workflow {
     } else if ( params.samplesheet ) {
         // The rows of a channel are checked late, after the stages are set up, and a stage would report the missing
         // reference first with the name of its own parameter. Whatever the rows are, these stages need it
-        validateReferenceGates(enable, params.reference != null)
+        validateReferenceGates(enable, params.fasta != null)
         // The rows of a channel are not known yet. Check them together, and release them only when the checks have passed
         samplesheet = params.samplesheet
             .map { sample -> sampleToRow(sample) }
@@ -244,8 +244,8 @@ workflow {
     fasta = null
     fai   = null
     dict  = null
-    if ( params.reference ) {
-        reference = REFERENCE_UTILS(params.reference, requires)
+    if ( params.fasta ) {
+        reference = REFERENCE_UTILS(params.fasta, requires)
         fasta     = reference.map { ref -> ref.fasta }
         if ( requires.fai ) {
             fai = reference.map { ref -> ref.fai }
@@ -313,11 +313,11 @@ workflow {
             bam_cram   : bam_cram_rows.map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), bam_cram: row.files[0], single_end: row.meta.single_end) },
             fasta      : fasta,
             fai        : fai,
-            // validateReferenceRequirements has already required --reference for the rows that need it, so without
+            // validateReferenceRequirements has already required --fasta for the rows that need it, so without
             // one no BAM/CRAM row needs Riker or CRAM decoding (a run without BAM/CRAM rows must work without a reference)
-            cram_format: enable.cram_format && params.reference != null,
+            cram_format: enable.cram_format && params.fasta != null,
             align_qc   : enable.align_qc,
-            riker      : enable.riker && params.reference != null,
+            riker      : enable.riker && params.fasta != null,
             qualimap   : enable.qualimap
         )
     )

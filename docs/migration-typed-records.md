@@ -337,7 +337,7 @@ include { workflow as BIOVAT } from '../../main.nf'
 
 params {
     samples  : Channel<Sample> // BioVAT samplesheet, loaded by Nextflow as a channel of records
-    reference: Path
+    fasta    : Path
 }
 
 workflow {
@@ -345,7 +345,7 @@ workflow {
     biovat = BIOVAT(
         record(
             samplesheet    : params.samples,
-            reference      : params.reference,   // every other param has a default
+            fasta          : params.fasta,       // every other param has a default
             validate_params: false
         )
     )
