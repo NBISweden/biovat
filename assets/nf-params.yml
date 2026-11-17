@@ -17,7 +17,7 @@
 ## Input/output options
 ## =============================================================================
 
-input: "assets/samplesheet.csv" # Path to comma-separated file containing information about the samples
+input: "tests/data/monkeyflower/samplesheet.csv" # Path to comma-separated file containing information about the samples. The test data, so that the example runs as it is. Replace it with your own samplesheet (format: assets/samplesheet.csv)
 fasta: "tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta" # Path to reference genome FASTA file
 # sample_metadata: "assets/sample_metadata.csv" # Path to comma-separated file with per-sample metadata (e.g. population). Providing it groups samples by population during variant calling
 outdir: "results" # The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.

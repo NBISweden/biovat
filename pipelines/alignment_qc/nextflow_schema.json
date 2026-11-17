@@ -27,7 +27,7 @@
                 "alignments": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per alignment. Fields: meta (a map with id, pl, single_end and, depending on the level, read_group or library), alignment (BAM/CRAM file) and index (its index). Use either --samplesheet or --alignments.",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per alignment. Fields: id (sample name), single_end, meta (a map with pl and, depending on the level, read_group or library), alignment (BAM/CRAM file) and index (its index). Use either --samplesheet or --alignments.",
                     "fa_icon": "fas fa-file"
                 }
             }

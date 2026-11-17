@@ -20,7 +20,7 @@
                 "variant_calls": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per VCF, with the keys meta (a map with at least id), vcf and index.",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per VCF, with the keys id (name of the callset), meta, vcf and index.",
                     "fa_icon": "fas fa-file"
                 },
                 "fasta": {
