@@ -21,7 +21,7 @@
                 "reads": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to --samplesheet, for YAML or JSON files and for calling pipelines. One entry per read group, with meta (a map with at least read_group) and reads (a list of fastq files, in order). Give either --samplesheet or --reads.",
+                    "description": "Alternative to --samplesheet, for YAML or JSON files and for calling pipelines. One entry per read group, with id (sample name), single_end, meta (a map with at least read_group) and reads (a list of fastq files, in order). Give either --samplesheet or --reads.",
                     "fa_icon": "fas fa-file"
                 },
                 "adapter_fasta": {

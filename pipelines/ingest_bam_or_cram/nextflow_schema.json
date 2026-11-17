@@ -21,7 +21,7 @@
                 "bam_cram": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per BAM/CRAM file. Fields: meta (a map with id, library, pl, platform_unit and read_group) and bam_cram (the file). Use either --samplesheet or --bam_cram.",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per BAM/CRAM file. Fields: id (sample name), single_end, meta (a map with library, pl, platform_unit and read_group) and bam_cram (the file). Use either --samplesheet or --bam_cram.",
                     "fa_icon": "fas fa-file"
                 },
                 "fasta": {

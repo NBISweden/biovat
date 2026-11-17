@@ -20,7 +20,7 @@
                 "reads": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to the samplesheet: a YAML or JSON file with one entry per read group, with a meta map (id, read_group) and reads (a list of fastq files), or the reads from a calling pipeline.",
+                    "description": "Alternative to the samplesheet: a YAML or JSON file with one entry per read group, with id (sample name), a meta map (with read_group) and reads (a list of fastq files), or the reads from a calling pipeline.",
                     "fa_icon": "fas fa-file"
                 }
             }

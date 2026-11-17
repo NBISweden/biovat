@@ -20,7 +20,7 @@
                 "alignments": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per alignment, with the keys meta (a map with at least id and pl), alignment (BAM or CRAM) and index.",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per alignment, with the keys id (sample name), meta (a map with at least pl), alignment (BAM or CRAM) and index.",
                     "fa_icon": "fas fa-file"
                 },
                 "sample_metadata": {

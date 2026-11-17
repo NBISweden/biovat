@@ -145,6 +145,19 @@ The reference sequence dictionary (`.dict`) that GATK needs is created automatic
 
 Compared with the Best Practices, which are designed for human data, no known-variant resources are used: base quality score recalibration (BQSR) is not run and no `--dbsnp` file is given.
 
+## Running a stage on its own
+
+Every stage of BioVAT is also a pipeline in `pipelines/<stage>` that can be run alone: `read_qc`, `trim_reads`, `align_reads`, `ingest_bam_or_cram`, `alignment_qc`, `merge`, `mark_duplicates`, `call_variants` and `variant_qc`. Run `nextflow run pipelines/<stage> --help` for its parameters. A stage uses the same names as BioVAT, with these differences:
+
+- The reference is `--fasta`, as in BioVAT. `--fai` (and `--dict` for GATK) are given to `call_variants`; the other stages create the index from `--fasta` when they need it.
+- A stage switches a tool on with the bare parameter name, where BioVAT uses `enable_`: `--riker`, `--cram_format`, `--qualimap`, `--align_qc`, `--variant_qc` and so on. BioVAT's `--enable_riker` is the stage's `--riker`.
+- The output directory is Nextflow's `-output-dir`, for example `-output-dir results`. A stage has no `--outdir`.
+- `read_qc`, `trim_reads`, `align_reads` and `ingest_bam_or_cram` read the BioVAT samplesheet above. `alignment_qc`, `merge`, `mark_duplicates` and `call_variants` read a samplesheet with the columns `sample,library_id,platform,single_end,alignment,index`. A BioVAT samplesheet whose rows are all alignments (the `alignment` and `index` columns) also works for them. A row with FASTQ files cannot start an alignment stage.
+
+```bash
+nextflow run pipelines/alignment_qc -profile docker --samplesheet alignments.csv --level sample --fasta reference.fasta -output-dir results
+```
+
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
