@@ -1,4 +1,4 @@
-sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end
 PUN-R-ELF,1,SRR9309791,1,ILLUMINA,./tests/data/monkeyflower/PUN-R-ELF_1_R1.fastq.gz,./tests/data/monkeyflower/PUN-R-ELF_1_R2.fastq.gz,,
 PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,./tests/data/monkeyflower/PUN-R-ELF_2.bam,false
 PUN-R-JMC,1,SRR9309467,1,ILLUMINA,./tests/data/monkeyflower/PUN-R-JMC_1_R1.fastq.gz,./tests/data/monkeyflower/PUN-R-JMC_1_R2.fastq.gz,,
