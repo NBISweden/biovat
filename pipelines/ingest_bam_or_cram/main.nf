@@ -26,7 +26,7 @@ record BamCram {
 }
 
 params {
-    samplesheet: Channel<Sample>?  // BioVAT samplesheet (CSV). Rows with fastq files instead of a bam are skipped
+    samplesheet: Channel<Sample>?  // BioVAT samplesheet (CSV). Rows with fastq files instead of an alignment are skipped
     bam_cram   : Channel<BamCram>? // alternative to the samplesheet: BAM/CRAM files with their meta record, from a YAML or JSON file or a calling pipeline
     fasta      : Value<Path>?      // reference fasta, needed to decode CRAM
     fai        : Value<Path>?      // fai index of the reference fasta, needed by Riker

@@ -15,7 +15,7 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "BioVAT samplesheet (CSV), the same file as for the main pipeline. Columns: sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, bam, single_end. Rows with a bam instead of fastq files are skipped.",
+                    "description": "BioVAT samplesheet (CSV), the same file as for the main pipeline. Columns: sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, alignment, index (optional) and single_end. Rows with an alignment instead of fastq files are skipped.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "reads": {

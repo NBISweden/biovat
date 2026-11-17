@@ -18,7 +18,7 @@ record Reads {
 }
 
 params {
-    samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with a bam instead of fastq files are skipped
+    samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with an alignment instead of fastq files are skipped
     reads      : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
     help       : Boolean = false
     help_full  : Boolean = false

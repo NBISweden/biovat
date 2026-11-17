@@ -15,7 +15,7 @@
                     "type": "string",
                     "format": "file-path",
                     "pattern": "^\\S+\\.csv$",
-                    "description": "BioVAT samplesheet (CSV) with the columns sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, bam and single_end. Rows with a bam are used and rows with fastq files are skipped. Read group information is built from the columns.",
+                    "description": "BioVAT samplesheet (CSV) with the columns sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, alignment, index (optional) and single_end. Rows with an alignment are used and rows with fastq files are skipped. Read group information is built from the columns.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "bam_cram": {
