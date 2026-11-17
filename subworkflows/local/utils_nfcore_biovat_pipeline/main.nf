@@ -293,7 +293,7 @@ def isLongReadPlatform(platform) {
     platform in [ 'ONT', 'PACBIO' ]
 }
 
-// Collect every reason --reference is needed (from params and samplesheet rows) and report in one error
+// Collect every reason --fasta is needed (from params and samplesheet rows) and report in one error
 def validateReferenceRequirements(rows, has_reference, enable) {
     if ( has_reference ) {
         return
@@ -308,7 +308,7 @@ def validateReferenceRequirements(rows, has_reference, enable) {
     if ( enable.cram_format && hasAlignmentSource(enable, has_bam_cram_rows) ) {
         reasons.add("CRAM output (--enable_cram_format)")
     }
-    // A CRAM input row needs --reference to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
+    // A CRAM input row needs --fasta to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
     if ( !cram_rows.isEmpty() ) {
         def cram_samples = cram_rows.collect { row -> row.meta.id }.unique()
         reasons.add("decoding CRAM input (sample(s): ${cram_samples.join(', ')})")
@@ -320,7 +320,7 @@ def validateReferenceRequirements(rows, has_reference, enable) {
         reasons.add("variant calling (--enable_variant_calling)")
     }
     if ( !reasons.isEmpty() ) {
-        validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")
+        validationError("A reference FASTA file (--fasta) is required for:\n  - ${reasons.join('\n  - ')}")
     }
 }
 
@@ -339,7 +339,7 @@ def validateReferenceGates(enable, has_reference) {
         reasons.add("variant calling (--enable_variant_calling)")
     }
     if ( !reasons.isEmpty() ) {
-        validationError("A reference FASTA file (--reference) is required for:\n  - ${reasons.join('\n  - ')}")
+        validationError("A reference FASTA file (--fasta) is required for:\n  - ${reasons.join('\n  - ')}")
     }
 }
 
@@ -368,7 +368,7 @@ def validateSamplesheetRows(rows, metadata_rows, enable, options) {
     validateSampleMetadata(short_read_rows, metadata_rows, enable, options)
     // Reject alignment-consuming stages (dedup, variant calling) when nothing produces alignments
     validateAlignmentConsumers(short_read_rows, enable)
-    // Report every reason --reference is needed (params and samplesheet rows) in one error
+    // Report every reason --fasta is needed (params and samplesheet rows) in one error
     validateReferenceRequirements(short_read_rows, options.has_reference, enable)
     return rows
 }
