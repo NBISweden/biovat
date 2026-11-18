@@ -114,6 +114,32 @@ def checkNoRepeats(rows, key, message) {
 }
 
 //
+// The alignments of a merge group have one read layout. Two groups of one sample, library and platform that differ in
+// single_end have the same id and meta, so attachSingleEnd would join each merged alignment with both of them.
+// rows are maps or records with id, library, pl and single_end. library is null when merging to sample level.
+// by_library also compares the layout of the libraries of a sample, as the merge to library level groups on the library
+//
+def checkMergeLayouts(rows, by_library) {
+    if ( by_library ) {
+        rows
+            .groupBy { row -> [ row.id, row.library, row.pl ] }
+            .each { key, group ->
+                if ( group.collect { row -> row.single_end }.unique().size() > 1 ) {
+                    inputError("Sample '${key[0]}', library '${key[1]}' mixes single-end and paired-end reads across lanes - all lanes of a library must share the same read layout.")
+                }
+            }
+    }
+    rows
+        .groupBy { row -> [ row.id, row.pl ] }
+        .each { key, group ->
+            if ( group.collect { row -> row.single_end }.unique().size() > 1 ) {
+                inputError("Sample '${key[0]}' mixes single-end and paired-end reads across its ${key[1]} libraries - all libraries of a sample sequenced on the same platform must share the same read layout.")
+            }
+        }
+    return rows
+}
+
+//
 // Processes return the id and the meta of their input, but not single_end. Put it back from the input record that
 // the output belongs to: the two are matched on the id and the meta. Each element of the result is
 // record(out, single_end), with out the output of the process

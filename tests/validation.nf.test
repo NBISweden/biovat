@@ -71,6 +71,36 @@ nextflow_pipeline {
         }
     }
 
+    test("a library with single-end and paired-end lanes - names the sample and library") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/mixed_layout.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
+                "PUN-R-ELF,1,SRR9309792,2,ILLUMINA,${data}/PUN-R-JMC_1_R1.fastq.gz,,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                outdir          = "$outputDir"
+                input           = "${launchDir}/mixed_layout.csv"
+                sample_metadata = null
+            }
+        }
+
+        then {
+            def output = (workflow.stdout + workflow.stderr).toString()
+            assertAll(
+                { assert workflow.failed },
+                { assert output.contains("Sample 'PUN-R-ELF', library '1' mixes single-end and paired-end reads across lanes") }
+            )
+        }
+    }
+
     test("a sample in --sample_metadata that is not in --input is left out of the populations") {
 
         options "-stub -output-dir ${outputDir}"
