@@ -79,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
-- `--help` of BioVAT and of every stage suggests `--help_full` and `--show_hidden`, the parameters that exist. It suggested `--helpFull` and `--showHidden`, which are not declared
+- `--help` of BioVAT and of every stage prints the parameters that exist, and `--help <parameter>` describes one. `--helpFull` and `--showHidden` are the names that the nf-schema 3.0 message prints, so the renames to `--help_full` and `--show_hidden` are not needed
 - The `--alignments`, `--reads` and `--bam_cram` descriptions of the stage schemas list the fields the records have: `id` and `single_end` are fields of their own, not part of `meta`. A YAML written as the old text said was rejected
 - The typical command of the BioVAT help includes `--fasta`, `assets/nf-params.yml` points to the test samplesheet so that the example runs, and `docs/output.md` lists the files of `pipeline_info/`
 - `docs/usage.md` has a section on running a stage on its own, with the parameters that differ from BioVAT

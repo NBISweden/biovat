@@ -35,14 +35,14 @@ params {
     align_qc   : Boolean = true      // run alignment QC on the merged alignments
     riker      : Boolean = true      // run Riker in the alignment QC
     qualimap   : Boolean = false     // run Qualimap in the alignment QC
-    help       : Boolean = false
-    help_full  : Boolean = false
+    help       : String? = null
+    helpFull   : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/merge --samplesheet alignments.csv --level library --fasta reference.fasta')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/merge --samplesheet alignments.csv --level library --fasta reference.fasta')
     if ( !(params.level in [ 'library', 'sample' ]) ) {
         error "Unknown merge level '${params.level}', expected library or sample"
     }

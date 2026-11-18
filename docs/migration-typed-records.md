@@ -205,14 +205,14 @@ record Reads {
 params {
     samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with an alignment instead of fastq files are skipped
     reads      : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
-    help     : Boolean = false
-    help_full: Boolean = false
+    help       : String? = null // true, or the name of a parameter to describe
+    helpFull   : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/read_qc --samplesheet samplesheet.csv')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/read_qc --samplesheet samplesheet.csv')
     checkStageInput(params.samplesheet, params.reads, 'reads')
     reads = channel.empty()
     if ( params.samplesheet ) {
@@ -366,7 +366,7 @@ nextflow run . -profile docker,arm64,test
 What the including pipeline has to provide:
 
 - `validate_params: false`. nf-schema would otherwise validate the parameters of the calling pipeline against the BioVAT schema. BioVAT skips the validation by itself, with a warning, when a samplesheet channel is given.
-- The nf-schema plugin in its config (`plugins { id 'nf-schema@2.8.0' }`). BioVAT uses it for the parameter summary and the MultiQC summary.
+- The nf-schema plugin in its config (`plugins { id 'nf-schema@3.0.0' }`). BioVAT uses it for the parameter summary and the MultiQC summary.
 - A `manifest`. BioVAT builds the MultiQC methods description and the versions file from the manifest of the pipeline that runs it.
 - Container engine, resource limits and `outputDir`. The `nextflow.config` of an included pipeline is not loaded.
 - Process selectors with the plain process name (`'SAMTOOLS_SORT'`) still match. The full name is `ALIGN_READS:...`, with the alias of the include as the prefix, and it is only needed to give one stage different behaviour when several stages use the same module (for example `ALIGN_READS:ALIGNMENT_QC:RIKER_MULTI`).

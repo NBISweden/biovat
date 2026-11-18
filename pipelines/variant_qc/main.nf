@@ -32,14 +32,14 @@ params {
     variant_calls: Channel<VariantCall>?       // alternative to the samplesheet: variant calls with their meta record, from a YAML or JSON file or a calling pipeline
     fasta        : Value<Path>?          // reference fasta, used by bcftools stats
     level        : String?               // prefix of the output files, to tell apart calls from different stages (default: none)
-    help         : Boolean = false
-    help_full    : Boolean = false
+    help         : String? = null
+    helpFull     : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/variant_qc --samplesheet variant_calls.csv --fasta reference.fasta')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/variant_qc --samplesheet variant_calls.csv --fasta reference.fasta')
     checkStageInput(params.samplesheet, params.variant_calls, 'variant_calls')
     reference = REFERENCE_VALUE(params.fasta, null, false)
 
