@@ -38,14 +38,14 @@ params {
     align_qc         : Boolean = true      // run alignment QC on the deduplicated alignments
     riker            : Boolean = true      // run Riker in the alignment QC
     qualimap         : Boolean = false     // run Qualimap in the alignment QC
-    help             : Boolean = false
-    help_full        : Boolean = false
+    help             : String? = null
+    helpFull         : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/mark_duplicates --samplesheet alignments.csv --fasta reference.fasta')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/mark_duplicates --samplesheet alignments.csv --fasta reference.fasta')
     checkStageInput(params.samplesheet, params.alignments, 'alignments')
     checkQualimapCram(params.cram_format, params.align_qc, params.qualimap)
     alignments = channel.empty()

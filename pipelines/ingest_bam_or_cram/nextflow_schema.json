@@ -81,9 +81,9 @@
                     "description": "Display the help message.",
                     "fa_icon": "fas fa-question-circle"
                 },
-                "help_full": {
+                "helpFull": {
                     "type": "boolean",
-                    "description": "Display the full help message.",
+                    "description": "Display the full help message, with nested parameters.",
                     "fa_icon": "fas fa-question-circle"
                 }
             }

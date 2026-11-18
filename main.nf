@@ -99,9 +99,9 @@ params {
     // Boilerplate options
     outdir                     : String?
     monochrome_logs            : Boolean = false
-    help                       : Boolean = false
-    help_full                  : Boolean = false
-    show_hidden                : Boolean = false
+    help                       : String? = null
+    helpFull                   : Boolean = false
+    showHidden                 : Boolean = false
     version                    : Boolean = false
 
     // Schema validation. Set to false when including BioVAT in another pipeline
@@ -145,8 +145,8 @@ workflow {
         args,
         params.outdir,
         params.help,
-        params.help_full,
-        params.show_hidden,
+        params.helpFull,
+        params.showHidden,
         enable
     )
 
@@ -455,7 +455,7 @@ workflow {
         params.multiqc_logo,
         params.multiqc_title,
         params.multiqc_methods_description,
-        paramsSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${moduleDir}/nextflow_schema.json"))
+        paramsSummaryMultiqc(paramsSummaryMap(parameters_schema: "${moduleDir}/nextflow_schema.json"))
     )
 
     PIPELINE_COMPLETION(params.monochrome_logs)

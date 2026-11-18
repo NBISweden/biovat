@@ -157,7 +157,7 @@ nextflow_pipeline {
 
         when {
             params {
-                help = true
+                help = "true"
             }
         }
 
