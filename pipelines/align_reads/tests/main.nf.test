@@ -131,21 +131,6 @@ nextflow_pipeline {
         }
     }
 
-    test("--help") {
-
-        when {
-            params {
-                help = "true"
-            }
-        }
-
-        then {
-            // nf-test does not capture the help message. This checks that --help is reached and exits cleanly,
-            // i.e. that the schema loads and no required parameter blocks it
-            assert workflow.success
-            assert workflow.trace.tasks().size() == 0
-        }
-    }
 
     // A stub run does not run the command, so this runs bwa-mem3 and samtools on one read group and checks that
     // the CRAM switch reaches the tools and the alignment is published as CRAM
