@@ -6,12 +6,18 @@ lint:
   # TEMPORARY, set for the typed-records migration (Nextflow 26.10). Revert these when nf-core updates its lint
   # tests for typed params (parameters defined in main.nf instead of nextflow.config) and for pipelines that
   # have no conf/modules.config (tool arguments are record fields). They are: modules_config, schema_params,
-  # the params.* entries under nextflow_config, conf/modules.config under files_exist, and tests/help.nf.test
-  # tests/schema_params.nf.test and tests/validation.nf.test under nf_test_content.
+  # the params.* entries under nextflow_config, conf/modules.config under files_exist, and the tests under
+  # nf_test_content that do not snapshot the outputs of a run: they check the help, the schemas, the validation, the
+  # test profile, the root pipeline in stub mode and the chaining example (the check wants outdir and a versions.yml).
   modules_config: false
   schema_params: false
   nf_test_content:
+    - tests/chaining.nf.test
+    - tests/contract.nf.test
     - tests/help.nf.test
+    - tests/help_flags.nf.test
+    - tests/profile.nf.test
+    - tests/root_stub.nf.test
     - tests/schema_params.nf.test
     - tests/validation.nf.test
   template_strings:
