@@ -78,7 +78,7 @@ def paramsBlock(text) {
         else if ( json_type == 'integer' && raw != null ) {
             value = raw.toInteger()
         }
-        result[m.group(1)] = [ type: type, json_type: json_type, has_default: raw != null, value: value ]
+        result[m.group(1)] = [ type: type, json_type: json_type, has_default: raw != null && raw != 'null', value: value ]
     }
     return result
 }

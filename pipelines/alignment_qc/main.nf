@@ -33,14 +33,14 @@ params {
     fai        : Value<Path>?              // fai index of the reference fasta, needed by Riker and to decode CRAM
     riker      : Boolean = true            // run Riker
     qualimap   : Boolean = false           // run Qualimap
-    help       : Boolean = false
-    help_full  : Boolean = false
+    help       : String? = null
+    helpFull   : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/alignment_qc --samplesheet alignments.csv --level sample --fasta reference.fasta --fai reference.fasta.fai')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/alignment_qc --samplesheet alignments.csv --level sample --fasta reference.fasta --fai reference.fasta.fai')
     checkStageInput(params.samplesheet, params.alignments, 'alignments')
     if ( !(params.level in [ 'input', 'readgroup', 'library', 'markdup', 'sample' ]) ) {
         error "--level is required, one of input, readgroup, library, markdup, sample"

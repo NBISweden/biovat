@@ -20,14 +20,14 @@ record Reads {
 params {
     samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with an alignment instead of fastq files are skipped
     reads      : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
-    help       : Boolean = false
-    help_full  : Boolean = false
+    help       : String? = null
+    helpFull   : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/read_qc --samplesheet samplesheet.csv')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/read_qc --samplesheet samplesheet.csv')
     checkStageInput(params.samplesheet, params.reads, 'reads')
     reads = channel.empty()
     if ( params.samplesheet ) {
