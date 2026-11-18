@@ -378,7 +378,7 @@ The outputs of BioVAT are the names in the `publish:` section of `main.nf` (`out
 - **BioVAT.** `nextflow run . --help` prints the options of `nextflow_schema.json` through `PIPELINE_INITIALISATION`, as before. The `samplesheet` channel param is not in the schema, because nf-schema cannot validate it (see below).
 - **Stages.** `nextflow run pipelines/<stage> --help` prints the options of the stage's own `nextflow_schema.json`. `STAGE_HELP` passes the schema path to `paramsHelp`, prints the message and exits. The stage schemas are written by hand. Update them when the params block of a stage changes.
 - **Required params and help.** Nextflow reports a required typed param as missing before the workflow starts, so `--help` would fail on `Parameter 'reads' is required`. Data params are therefore nullable, and the workflow raises the "Missing required parameter" error itself after the help call.
-- **In an included pipeline** `help` is `false` and nothing is printed. A stage does not run the parameter summary or the validation.
+- **In an included pipeline** `help` is null and nothing is printed. A stage does not run the parameter summary or the validation.
 
 ## Configuration
 
@@ -462,7 +462,7 @@ Outputs are the same as before for the test profile. The differences are:
 
 **A stage.**
 
-1. Create `pipelines/<stage>/main.nf` with `nextflow.enable.types = true`, a named record type and a nullable `Channel` param for the data, Boolean and String params with defaults for the options, `help` and `help_full`, an entry `workflow` with `STAGE_HELP`, `checkStageInput`, `main:` and `publish:`, and an `output` block.
+1. Create `pipelines/<stage>/main.nf` with `nextflow.enable.types = true`, a named record type and a nullable `Channel` param for the data, Boolean and String params with defaults for the options, `help` (a String, `true` or a parameter name) and `helpFull`, an entry `workflow` with `STAGE_HELP`, `checkStageInput`, `main:` and `publish:`, and an `output` block.
 2. Add `nextflow.config` (include `conf/stage.config`), a hand-written `nextflow_schema.json`, and `tests/main.nf.test` with a stub test.
 3. Pass tool arguments and prefixes to the processes in record fields.
 4. Add the include and the call to `main.nf`, behind a gate. Give a second call of the same stage its own alias.

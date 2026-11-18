@@ -144,7 +144,7 @@ workflow {
         params.monochrome_logs,
         args,
         params.outdir,
-        params.help,
+        params.help == 'false' ? null : params.help,
         params.helpFull,
         params.showHidden,
         enable

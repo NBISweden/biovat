@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed`
 
+- Updated Nextflow to 26.10.6, nf-core tools to 4.2.2, nf-test to 0.9.5, nft-utils to 1.3.0 and nf-schema to 3.1.0. `--help <parameter>` describes one parameter
 - **Breaking:** the reference parameter of BioVAT is `--fasta`, as in the stage pipelines (it was `--reference`)
 - **Breaking:** the BAM/CRAM column of the samplesheet is `alignment`, as in the stage pipelines (it was `bam`). An optional `index` column is accepted and not used by BioVAT, so that a samplesheet with only alignment rows is valid for BioVAT and for the stages that start from alignments
 - `BWAMEM3_INDEX` requests 4 CPUs, the `-t` of `bwa-mem3 index`, set next to its size-based memory in the module (a `label` would replace that memory). On a 122 Mb genome 4 threads take 10 s against 19 s with one
