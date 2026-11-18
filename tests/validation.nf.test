@@ -66,6 +66,27 @@ nextflow_pipeline {
         }
     }
 
+    test("Qualimap with CRAM output fails before any stage is set up") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        when {
+            params {
+                outdir             = "$outputDir"
+                enable_cram_format = true
+                enable_qualimap    = true
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.failed },
+                { assert (workflow.stdout + workflow.stderr).toString().contains("Qualimap cannot be run when CRAM output is enabled.") },
+                { assert workflow.trace.tasks().size() == 0 }
+            )
+        }
+    }
+
     test("a library with two platforms - names the sample and library") {
 
         options "-stub -output-dir ${outputDir}"
