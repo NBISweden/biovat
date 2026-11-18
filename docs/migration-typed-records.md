@@ -366,7 +366,7 @@ nextflow run . -profile docker,arm64,test
 What the including pipeline has to provide:
 
 - `validate_params: false`. nf-schema would otherwise validate the parameters of the calling pipeline against the BioVAT schema. BioVAT skips the validation by itself, with a warning, when a samplesheet channel is given.
-- The nf-schema plugin in its config (`plugins { id 'nf-schema@3.0.0' }`). BioVAT uses it for the parameter summary and the MultiQC summary.
+- The nf-schema plugin in its config (`plugins { id 'nf-schema@3.1.0' }`). BioVAT uses it for the parameter summary and the MultiQC summary.
 - A `manifest`. BioVAT builds the MultiQC methods description and the versions file from the manifest of the pipeline that runs it.
 - Container engine, resource limits and `outputDir`. The `nextflow.config` of an included pipeline is not loaded.
 - Process selectors with the plain process name (`'SAMTOOLS_SORT'`) still match. The full name is `ALIGN_READS:...`, with the alias of the include as the prefix, and it is only needed to give one stage different behaviour when several stages use the same module (for example `ALIGN_READS:ALIGNMENT_QC:RIKER_MULTI`).
@@ -376,7 +376,7 @@ The outputs of BioVAT are the names in the `publish:` section of `main.nf` (`out
 ## Help and the parameter schemas
 
 - **BioVAT.** `nextflow run . --help` prints the options of `nextflow_schema.json` through `PIPELINE_INITIALISATION`, as before. The `samplesheet` channel param is not in the schema, because nf-schema cannot validate it (see below).
-- **Stages.** `nextflow run pipelines/<stage> --help` prints the options of the stage's own `nextflow_schema.json`. `conf/stage.config` sets `validation.parametersSchema` to it, and `STAGE_HELP` prints the message and exits. Passing the schema path as an option to `paramsHelp` has no effect in nf-schema 2.8.0. Only the configured schema is used. The stage schemas are written by hand. Update them when the params block of a stage changes.
+- **Stages.** `nextflow run pipelines/<stage> --help` prints the options of the stage's own `nextflow_schema.json`. `STAGE_HELP` passes the schema path to `paramsHelp`, prints the message and exits. The stage schemas are written by hand. Update them when the params block of a stage changes.
 - **Required params and help.** Nextflow reports a required typed param as missing before the workflow starts, so `--help` would fail on `Parameter 'reads' is required`. Data params are therefore nullable, and the workflow raises the "Missing required parameter" error itself after the help call.
 - **In an included pipeline** `help` is `false` and nothing is printed. A stage does not run the parameter summary or the validation.
 
@@ -447,7 +447,7 @@ Outputs are the same as before for the test profile. The differences are:
 ## Known limitations and follow-ups
 
 - Included pipelines need Nextflow 26.10. Composition is experimental.
-- nf-schema 2.8.0 and 3.0.0 hang in `validateParameters` when a param is a channel with a value. A fix ([nextflow-io/nf-schema#230](https://github.com/nextflow-io/nf-schema/pull/230), merged 2026-10-05) is not released yet, 3.0.0 (2026-09-29) is the latest release. BioVAT therefore keeps `--input` as a validated path for the command line, and uses the `samplesheet` channel param only for callers, which set `validate_params: false`. With a fixed release, `input` and the schema check could become one typed channel param.
+- nf-schema 2.8.0 and 3.0.0 hang in `validateParameters` when a param is a channel with a value. 3.1.0 (2026-11-18) fixes it ([nextflow-io/nf-schema#230](https://github.com/nextflow-io/nf-schema/pull/230)), which BioVAT has not tried yet. BioVAT keeps `--input` as a validated path for the command line, and uses the `samplesheet` channel param only for callers, which set `validate_params: false`. With a fixed release, `input` and the schema check could become one typed channel param.
 - `subworkflows/local/utils_nfcore_biovat_pipeline` is not typed. It is the nf-core template code (methods description, completion summary) plus the samplesheet checks, which use mutable Groovy collections and `workflow.toMap()` that typed Nextflow does not support. Its functions receive records and plain maps at runtime.
 - The schemas are written by hand. `nf-core pipelines schema build` does not read typed `params` blocks, so it cannot update them. `tests/schema_params.nf.test` compares the names, types and defaults of each schema with its `params` block, but not the descriptions.
 - `nf-core pipelines lint` is not run. `nextflow lint` is the check.
