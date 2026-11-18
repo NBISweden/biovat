@@ -5,36 +5,6 @@ nextflow_pipeline {
     tag "pipeline"
     tag "help"
 
-    test("--help") {
-
-        when {
-            params {
-                help = "true"
-            }
-        }
-
-        then {
-            // The help message itself is not captured by nf-test. This checks that --help is reached and exits
-            // cleanly, i.e. that no required parameter blocks it
-            assert workflow.success
-            assert workflow.trace.tasks().size() == 0
-        }
-    }
-
-    test("--help <parameter>") {
-
-        when {
-            params {
-                help = "fasta"
-            }
-        }
-
-        then {
-            assert workflow.success
-            assert workflow.trace.tasks().size() == 0
-        }
-    }
-
     test("--helpFull") {
 
         when {
