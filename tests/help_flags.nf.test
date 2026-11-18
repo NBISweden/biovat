@@ -1,0 +1,188 @@
+nextflow_function {
+
+    name "Test the help message"
+    script "./utils/help.nf"
+    function "helpFlagsDiff"
+    tag "help"
+
+    // The message names its flags: a renamed or removed parameter that the message still suggests fails here
+    test("BioVAT --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/main.nf"
+                input[1] = "${projectDir}/nextflow_schema.json"
+                input[2] = "fasta"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/align_reads --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/align_reads"
+                input[1] = "${projectDir}/pipelines/align_reads/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/alignment_qc --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/alignment_qc"
+                input[1] = "${projectDir}/pipelines/alignment_qc/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/call_variants --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/call_variants"
+                input[1] = "${projectDir}/pipelines/call_variants/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/ingest_bam_or_cram --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/ingest_bam_or_cram"
+                input[1] = "${projectDir}/pipelines/ingest_bam_or_cram/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/mark_duplicates --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/mark_duplicates"
+                input[1] = "${projectDir}/pipelines/mark_duplicates/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/merge --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/merge"
+                input[1] = "${projectDir}/pipelines/merge/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/read_qc --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/read_qc"
+                input[1] = "${projectDir}/pipelines/read_qc/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/trim_reads --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/trim_reads"
+                input[1] = "${projectDir}/pipelines/trim_reads/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/variant_qc --help names parameters that exist") {
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/pipelines/variant_qc"
+                input[1] = "${projectDir}/pipelines/variant_qc/nextflow_schema.json"
+                input[2] = "samplesheet"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+}

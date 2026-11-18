@@ -204,21 +204,6 @@ nextflow_pipeline {
         }
     }
 
-    test("--help") {
-
-        when {
-            params {
-                help = "true"
-            }
-        }
-
-        then {
-            // nf-test does not capture the help message. This checks that --help is reached and exits cleanly,
-            // i.e. that the schema loads and no required parameter blocks it
-            assert workflow.success
-            assert workflow.trace.tasks().size() == 0
-        }
-    }
 
     // The tests below run the tools on the monkeyflower CRAM and check the command each tool got, since a stub run
     // does not run the command. The tasks of the run are in the work directory under the launch directory
