@@ -20,4 +20,45 @@ nextflow_pipeline {
             assert workflow.trace.tasks().size() == 0
         }
     }
+
+    test("--help <parameter>") {
+
+        when {
+            params {
+                help = "fasta"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+
+    test("--helpFull") {
+
+        when {
+            params {
+                helpFull = true
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.trace.tasks().size() == 0
+        }
+    }
+
+    test("--help of a parameter that does not exist fails") {
+
+        when {
+            params {
+                help = "nonexistent"
+            }
+        }
+
+        then {
+            assert workflow.failed
+        }
+    }
 }
