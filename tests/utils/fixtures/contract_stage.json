@@ -1,0 +1,14 @@
+{
+    "$defs": {
+        "options": {
+            "properties": {
+                "caller": { "type": "string", "enum": ["a", "c"], "default": "a" },
+                "size": { "type": "integer" },
+                "flag": { "type": "boolean", "default": false },
+                "prefix": { "type": "string", "pattern": "^[a-z]+$" },
+                "alignments": { "type": "string" },
+                "orphan": { "type": "string" }
+            }
+        }
+    }
+}

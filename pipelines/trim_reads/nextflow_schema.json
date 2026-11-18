@@ -26,8 +26,6 @@
                 },
                 "adapter_fasta": {
                     "type": "string",
-                    "format": "file-path",
-                    "exists": true,
                     "description": "Path to FASTA file containing adapter sequences.",
                     "fa_icon": "fas fa-file"
                 }
