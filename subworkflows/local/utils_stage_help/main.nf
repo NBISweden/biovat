@@ -18,9 +18,11 @@ workflow STAGE_HELP {
     command          : String  // an example command of the stage
 
     main:
-    if ( help || helpFull ) {
+    // --help false is no help, as it was when help was a Boolean
+    def show_help = help != null && help != 'false'
+    if ( show_help || helpFull ) {
         def message = paramsHelp(
-            parameter        : help == null || help == 'true' ? null : help,
+            parameter        : help == null || help in ['true', 'false'] ? null : help,
             command          : command,
             fullHelp         : helpFull,
             parameters_schema: parameters_schema,
