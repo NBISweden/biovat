@@ -119,7 +119,7 @@ nextflow_pipeline {
             new File("${launchDir}/a.bam").text = ""
             new File("${launchDir}/a.bam.csi").text = ""
             new File("${launchDir}/alignments.csv").text = "sample,library_id,platform,single_end,alignment,index\nA,1,ILLUMINA,false,${launchDir}/a.bam,${launchDir}/a.bam.csi\n"
-            new File("${launchDir}/alignments.yml").text = "- {meta: {library: '1', pl: ILLUMINA, single_end: false}, id: A, single_end: false, alignment: ${launchDir}/a.bam, index: ${launchDir}/a.bam.csi}\n"
+            new File("${launchDir}/alignments.yml").text = "- {meta: {library: '1', pl: ILLUMINA}, id: A, single_end: false, alignment: ${launchDir}/a.bam, index: ${launchDir}/a.bam.csi}\n"
         }
 
         when {
@@ -159,7 +159,7 @@ nextflow_pipeline {
         setup {
             new File("${launchDir}/A_1.bam").text = ""
             new File("${launchDir}/A_1.bam.csi").text = ""
-            new File("${launchDir}/alignments.yml").text = "- {meta: {library: '1', pl: ILLUMINA, single_end: false}, id: A, single_end: false, alignment: ${launchDir}/A_1.bam, index: ${launchDir}/A_1.bam.csi}\n"
+            new File("${launchDir}/alignments.yml").text = "- {meta: {library: '1', pl: ILLUMINA}, id: A, single_end: false, alignment: ${launchDir}/A_1.bam, index: ${launchDir}/A_1.bam.csi}\n"
         }
 
         when {

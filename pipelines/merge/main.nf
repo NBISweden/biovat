@@ -13,6 +13,7 @@ include { checkSampleFields        } from '../../subworkflows/local/utils_stage_
 include { checkReferenceForInput   } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram        } from '../../subworkflows/local/utils_stage_help/main'
 include { attachSingleEnd          } from '../../subworkflows/local/utils_stage_help/main'
+include { checkMergeLayouts        } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError               } from '../../subworkflows/local/utils_stage_help/main'
 include { AlignmentSample           } from '../../types/samplesheet'
 
@@ -62,6 +63,14 @@ workflow {
     alignments = alignments.map { aln ->
         checkReferenceForInput(aln.alignment, params.fasta != null, false)
         aln
+    }
+    // A merge group is one read layout. A library of single-end and paired-end lanes is two groups with the same id and meta
+    alignments = alignments.toList().flatMap { rows ->
+        checkMergeLayouts(
+            rows.collect { aln -> [ id: aln.id, library: params.level == 'sample' ? null : aln.meta.library, pl: aln.meta.pl, single_end: aln.single_end ] },
+            params.level == 'library'
+        )
+        rows
     }
     reference = REFERENCE_VALUE(params.fasta, params.fai, (params.align_qc && params.riker) || params.cram_format)
 
