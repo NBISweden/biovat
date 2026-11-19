@@ -37,6 +37,7 @@ nextflow_pipeline {
 
         when {
             params {
+                callset_prefix  = 'Diplacus_puniceus_red_yellow' // named in the snapshots, set here so the tests do not depend on the root test profile
                 alignments      = "${launchDir}/alignments.yml"
                 sample_metadata = null // the test profile of the repository sets a path that does not exist for a stage
                 fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
@@ -65,6 +66,7 @@ nextflow_pipeline {
 
         when {
             params {
+                callset_prefix  = 'Diplacus_puniceus_red_yellow' // named in the snapshots, set here so the tests do not depend on the root test profile
                 samplesheet     = "${launchDir}/alignments.csv"
                 sample_metadata = null
                 fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
@@ -94,6 +96,7 @@ nextflow_pipeline {
 
         when {
             params {
+                callset_prefix  = 'Diplacus_puniceus_red_yellow' // named in the snapshots, set here so the tests do not depend on the root test profile
                 alignments      = "${launchDir}/alignments.yml"
                 sample_metadata = "${launchDir}/sample_metadata.csv"
                 group_samples   = true
