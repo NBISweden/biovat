@@ -11,6 +11,7 @@ include { workflow as ALIGNMENT_QC  } from '../alignment_qc'
 include { REFERENCE_VALUE           } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput           } from '../../subworkflows/local/utils_stage_help/main'
+include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow               } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -49,6 +50,7 @@ workflow {
     main:
     STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/ingest_bam_or_cram --samplesheet samplesheet.csv --fasta genome.fa')
     checkStageInput(params.samplesheet, params.bam_cram, 'bam_cram')
+    checkQualimapCram(params.cram_format, params.align_qc, params.qualimap)
     bam_cram = channel.empty()
     if ( params.samplesheet ) {
         bam_cram = params.samplesheet

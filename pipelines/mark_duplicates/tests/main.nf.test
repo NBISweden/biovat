@@ -151,6 +151,31 @@ nextflow_pipeline {
         }
     }
 
+    test("--cram_format with --qualimap fails") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/A_1.bam").text = ""
+            new File("${launchDir}/A_1.bam.csi").text = ""
+            new File("${launchDir}/alignments.yml").text = "- {meta: {id: A, library: '1', pl: ILLUMINA, single_end: false}, alignment: ${launchDir}/A_1.bam, index: ${launchDir}/A_1.bam.csi}\n"
+        }
+
+        when {
+            params {
+                alignments  = "${launchDir}/alignments.yml"
+                cram_format = true
+                qualimap    = true
+                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Qualimap cannot be run when CRAM output is enabled.")
+        }
+    }
+
     test("--help") {
 
         when {
