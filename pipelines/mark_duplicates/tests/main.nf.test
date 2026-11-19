@@ -82,10 +82,10 @@ nextflow_pipeline {
         setup {
             // Stub mode does not read the files, so empty files are enough
             def rows = [ "sample,library_id,platform,single_end,alignment,index" ]
-            ["A_1_rg1", "A_1_rg2", "B_1_rg1"].each { name ->
+            ["A_1", "B_1"].each { name ->
                 new File("${launchDir}/${name}.bam").text = ""
                 new File("${launchDir}/${name}.bam.csi").text = ""
-                def (sample, library, _rg) = name.tokenize('_')
+                def (sample, library) = name.tokenize('_')
                 rows << "${sample},${library},ILLUMINA,false,${launchDir}/${name}.bam,${launchDir}/${name}.bam.csi"
             }
             new File("${launchDir}/alignments.csv").text = rows.join("\n") + "\n"
@@ -173,6 +173,33 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert (workflow.stdout + workflow.stderr).toString().contains("Qualimap cannot be run when CRAM output is enabled.")
+        }
+    }
+
+    test("two alignments of a library fail") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            def rows = [ "sample,library_id,platform,single_end,alignment,index" ]
+            ["A_rg1", "A_rg2"].each { name ->
+                new File("${launchDir}/${name}.bam").text = ""
+                new File("${launchDir}/${name}.bam.csi").text = ""
+                rows << "A,1,ILLUMINA,false,${launchDir}/${name}.bam,${launchDir}/${name}.bam.csi"
+            }
+            new File("${launchDir}/alignments.csv").text = rows.join("\n") + "\n"
+        }
+
+        when {
+            params {
+                samplesheet = "${launchDir}/alignments.csv"
+                fasta       = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).toString().contains("Marking duplicates needs one alignment per library")
         }
     }
 
