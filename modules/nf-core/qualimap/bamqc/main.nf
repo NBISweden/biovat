@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process QUALIMAP_BAMQC {
-    tag "$meta.id"
+    tag "${id}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -7,47 +9,57 @@ process QUALIMAP_BAMQC {
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/2b/2b795495fdae4cb3319d19ed4a694302366aa574ba15a0613b85c602f0de4911/data' :
         'community.wave.seqera.io/library/qualimap:2.3--c1797c2253925b3a' }"
 
+    ext [
+        prefix: { output_prefix ?: "${id}" },
+        args: { qualimap_bamqc_args ?: '' }
+    ]
+
     input:
-    tuple val(meta), path(bam)
-    path gff
+    record(
+        id: String,
+        meta: Record?,
+        single_end: Boolean,
+        bam: Path,
+        gff: Path?,
+        qualimap_bamqc_args: String?,
+        output_prefix: String?
+    )
 
     output:
-    tuple val(meta), path("${prefix}"), emit: results
-    tuple val("${task.process}"), val('qualimap'), eval("qualimap -h | sed -n 's/^QualiMap v.//p'"), topic: versions, emit: versions_qualimap
+    record(
+        id: id,
+        meta: meta,
+        results: file(task.ext.prefix)
+    )
 
-    when:
-    task.ext.when == null || task.ext.when
+    topic:
+    record(process: "${task.process}", tool: 'qualimap', version: eval("qualimap -h | sed -n 's/^QualiMap v.//p'")) >> 'versions'
 
     script:
-    def args = task.ext.args   ?: ''
-    prefix   = task.ext.prefix ?: "${meta.id}"
-
-    def collect_pairs = meta.single_end ? '' : '--collect-overlap-pairs'
-    def memory = (task.memory.mega*0.8).intValue() + 'M'
-    def regions = gff ? "--gff ${gff}" : ''
-
+    def collect_pairs = single_end ? '' : '--collect-overlap-pairs'
+    def memory = "${(task.memory.toMega() * 0.8).intValue()}M"
+    def regions = gff ? "--gff $gff" : ''
     """
     unset DISPLAY
     mkdir -p tmp
     export _JAVA_OPTIONS=-Djava.io.tmpdir=./tmp
     qualimap \\
-        --java-mem-size=${memory} \\
+        --java-mem-size=$memory \\
         bamqc \\
-        ${args} \\
-        -bam ${bam} \\
-        ${regions} \\
-        ${collect_pairs} \\
-        -outdir ${prefix} \\
-        -nt ${task.cpus}
+        ${task.ext.args} \\
+        -bam $bam \\
+        $regions \\
+        $collect_pairs \\
+        -outdir ${task.ext.prefix} \\
+        -nt $task.cpus
     """
 
     stub:
-    prefix = task.ext.prefix ?: "${meta.id}"
     """
-    mkdir -p ${prefix}/css
-    mkdir ${prefix}/images_qualimapReport
-    mkdir ${prefix}/raw_data_qualimapReport
-    cd ${prefix}/css
+    mkdir -p ${task.ext.prefix}/css
+    mkdir ${task.ext.prefix}/images_qualimapReport
+    mkdir ${task.ext.prefix}/raw_data_qualimapReport
+    cd ${task.ext.prefix}/css
     touch agogo.css
     touch basic.css
     touch bgtop.png

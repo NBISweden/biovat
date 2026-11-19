@@ -17,7 +17,11 @@ tools:
       licence: ["Apache-2.0"]
       identifier: ""
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Sample identifier, used for the task tag and as the default output prefix
+    - meta:
+        optional: true
         type: map
         description: |
           Groovy Map containing reference information
@@ -29,7 +33,11 @@ input:
         ontologies: []
 output:
   dict:
-    - - meta:
+    - - id:
+          type: string
+          description: Sample identifier from the input record
+      - meta:
+          optional: true
           type: file
           description: gatk dictionary file
           pattern: "*.{dict}"

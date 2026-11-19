@@ -72,7 +72,11 @@ tools:
       args_id: "$args5"
       identifier: biotools:samtools
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample or reference. Used as the default prefix of the output files
+    - meta:
+        optional: true
         type: map
         description: |
           Groovy Map containing sample information
@@ -99,7 +103,11 @@ input:
         ontologies: []
 output:
   bam:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -110,7 +118,11 @@ output:
           pattern: "*.bam"
           ontologies: []
   cram:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -121,7 +133,11 @@ output:
           pattern: "*.cram"
           ontologies: []
   csi:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -132,7 +148,11 @@ output:
           pattern: "*.csi"
           ontologies: []
   crai:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information
@@ -143,7 +163,11 @@ output:
           pattern: "*.crai"
           ontologies: []
   metrics:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference. Used as the default prefix of the output files
+      - meta:
+          optional: true
           type: map
           description: |
             Groovy Map containing sample information

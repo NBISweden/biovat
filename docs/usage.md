@@ -6,6 +6,10 @@
 
 <!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
 
+## Requirements
+
+BioVAT requires Nextflow 26.10.0 or later. The stage pipelines in `pipelines/` and `main.nf` use typed records and pipeline composition, which earlier versions do not support.
+
 ## Samplesheet input
 
 You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Add it to the parameter file to specify its location (an [example parameter file](../assets/nf-params.yml) has been provided with the pipeline) or use this parameter.
@@ -23,7 +27,7 @@ A library is prepared for a single sequencing platform, so all read groups of a 
 
 Only short-read platforms are currently processed. Long-read data (`ONT`, `PACBIO`) needs its own preprocessing path (QC, trimming, alignment and variant calling, without duplicate marking), which the pipeline doesn't provide yet, so long-read rows are excluded at the start of the run with a warning. A samplesheet with only long-read rows runs to completion but produces no alignments or variant calls.
 
-Each row must provide raw reads via `fastq_1` (optionally `fastq_2`), **or** an already-aligned `BAM`/`CRAM` file via `bam`. If providing `BAM`/`CRAM`, users must also fill-out the `single_end` column (`false` for paired-end reads). When providing pre-aligned files, trimming and alignment are skipped. All read groups of a library, and all libraries of a sample, must agree on `single_end` (mixing single- and paired-end reads at the same merge level is rejected).
+Each row must provide raw reads via `fastq_1` (optionally `fastq_2`), **or** an already-aligned `BAM`/`CRAM` file via `alignment`. If providing `BAM`/`CRAM`, users must also fill-out the `single_end` column (`false` for paired-end reads). When providing pre-aligned files, trimming and alignment are skipped. All read groups of a library, and all libraries of a sample, must agree on `single_end` (mixing single- and paired-end reads at the same merge level is rejected).
 
 Each `BAM`/`CRAM` file is treated as a single read group, and its `@RG` header is checked against its samplesheet row. The pipeline expects `ID` and `PU` to be GATK format (`<flowcell_id>.<lane>.<sample>_<library_id>`), `SM` to be `sample`, `LB` to be `library_id`, and `PL` to be `platform`. `PL` is matched case-insensitively (the SAM specification asks tools to accept lowercase `PL` values); all other tags must match exactly. This is the read group the pipeline writes itself when aligning `fastq` rows. Consequently:
 
@@ -34,7 +38,7 @@ Each `BAM`/`CRAM` file is treated as a single read group, and its `@RG` header i
 A final samplesheet file consisting of paired-end data for 7 samples may look something like the one below. A single library of sample `S1` has been sequenced across three lanes. Two independent libraries of sample `S6` have been sequenced. Sample `S7` supplies a pre-aligned CRAM instead of raw reads.
 
 ```csv title="samplesheet.csv"
-sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end
 S1,1,AEG588A1,2,ILLUMINA,/data/AEG588A1_S1_L002_R1_001.fastq.gz,/data/AEG588A1_S1_L002_R2_001.fastq.gz,,
 S1,1,AEG588A1,3,ILLUMINA,/data/AEG588A1_S1_L003_R1_001.fastq.gz,/data/AEG588A1_S1_L003_R2_001.fastq.gz,,
 S1,1,AEG588A1,4,ILLUMINA,/data/AEG588A1_S1_L004_R1_001.fastq.gz,/data/AEG588A1_S1_L004_R2_001.fastq.gz,,
@@ -47,17 +51,18 @@ S6,2,AEG588A6,4,ILLUMINA,/data/AEG588A6_S6_L004_R1_001.fastq.gz,/data/AEG588A6_S
 S7,1,AEG588A7,2,ILLUMINA,,,/data/AEG588A7_S7_L002.cram,false
 ```
 
-| Column        | Description                                                                                                                                                                      |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`      | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample                                                            |
-| `library_id`  | Unique sequencing library identifier                                                                                                                                             |
-| `flowcell_id` | Unique identifier/barcode of the flowcell used for this sample library                                                                                                           |
-| `lane`        | The flow cell lane number as a positive integer                                                                                                                                  |
-| `platform`    | Sequencing platform, one of the SAM specification `@RG PL` values in uppercase: `ILLUMINA`, `IONTORRENT`, `ONT`, `PACBIO`                                                        |
-| `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Mutually exclusive with `bam`                         |
-| `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads                  |
-| `bam`         | Full path to a pre-aligned `.bam` or `.cram` file, provided instead of `fastq_1`/`fastq_2`. Requires `single_end` on the same row; CRAM additionally requires `--reference`      |
-| `single_end`  | Required only when `bam` is set: `true` for single-end data, `false` for paired-end. Not required for `fastq_1`/`fastq_2` rows - it's inferred from whether `fastq_2` is present |
+| Column        | Description                                                                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sample`      | Unique sample identifier. This entry will be identical for multiple sequencing libraries or runs from the same sample                                                                     |
+| `library_id`  | Unique sequencing library identifier                                                                                                                                                      |
+| `flowcell_id` | Unique identifier/barcode of the flowcell used for this sample library                                                                                                                    |
+| `lane`        | The flow cell lane number as a positive integer                                                                                                                                           |
+| `platform`    | Sequencing platform, one of the SAM specification `@RG PL` values in uppercase: `ILLUMINA`, `IONTORRENT`, `ONT`, `PACBIO`                                                                 |
+| `fastq_1`     | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Mutually exclusive with `alignment`                            |
+| `fastq_2`     | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". Optional - omit for single-end reads                           |
+| `alignment`   | Full path to a pre-aligned `.bam` or `.cram` file, provided instead of `fastq_1`/`fastq_2`. Requires `single_end` on the same row; CRAM additionally requires `--fasta`                   |
+| `index`       | Optional, with `alignment` only: the `.bai`, `.csi` or `.crai` index. BioVAT sorts and indexes the file again and does not use it; the stage pipelines that start from alignments read it |
+| `single_end`  | Required only when `alignment` is set: `true` for single-end data, `false` for paired-end. Not required for `fastq_1`/`fastq_2` rows - it's inferred from whether `fastq_2` is present    |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
@@ -93,7 +98,7 @@ nextflow main.nf --help
 
 ### Variant calling
 
-Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--reference`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into one multi-sample VCF per sequencing platform, published as `07_variant_calls/<callset_prefix>.<platform>.<variant_caller>.vcf.gz` (e.g. `all_samples.ILLUMINA.gatk.vcf.gz`). Platforms are never called together: for example, a run with Illumina and IonTorrent data produces two VCFs, and a sample sequenced on both appears in each. The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
+Variant calling runs when `--enable_variant_calling` is set (default `true`) and needs a `--fasta`. Alignments are first merged to one per sample and platform (see [Samplesheet input](#samplesheet-input)). Variant calling is parallelised across [genome chunks](#genome-chunking), and the per-chunk VCFs are concatenated into one multi-sample VCF per sequencing platform, published as `07_variant_calls/<callset_prefix>.<platform>.<variant_caller>.vcf.gz` (e.g. `all_samples.ILLUMINA.gatk.vcf.gz`). Platforms are never called together: for example, a run with Illumina and IonTorrent data produces two VCFs, and a sample sequenced on both appears in each. The pipeline sets the reference, the genome-chunk regions, output types and file names itself.
 
 - `--variant_caller` selects the caller: `bcftools_multisample` (default; see [BCFtools multi-sample calling](#bcftools-multi-sample-calling)) or `gatk` (see [GATK](#gatk))
 - `--callset_prefix` (default `all_samples`) sets the file name prefix of the joint VCFs and their indexes; the platform and caller name are appended to it
@@ -139,6 +144,19 @@ Follows the joint-calling workflow of the GATK [germline short variant discovery
 The reference sequence dictionary (`.dict`) that GATK needs is created automatically. The per-sample GVCFs are intermediate files and are not published.
 
 Compared with the Best Practices, which are designed for human data, no known-variant resources are used: base quality score recalibration (BQSR) is not run and no `--dbsnp` file is given.
+
+## Running a stage on its own
+
+Every stage of BioVAT is also a pipeline in `pipelines/<stage>` that can be run alone: `read_qc`, `trim_reads`, `align_reads`, `ingest_bam_or_cram`, `alignment_qc`, `merge`, `mark_duplicates`, `call_variants` and `variant_qc`. Run `nextflow run pipelines/<stage> --help` for its parameters. A stage uses the same names as BioVAT, with these differences:
+
+- The reference is `--fasta`, as in BioVAT. `--fai` (and `--dict` for GATK) are given to `call_variants`; the other stages create the index from `--fasta` when they need it.
+- A stage switches a tool on with the bare parameter name, where BioVAT uses `enable_`: `--riker`, `--cram_format`, `--qualimap`, `--align_qc`, `--variant_qc` and so on. BioVAT's `--enable_riker` is the stage's `--riker`.
+- The output directory is Nextflow's `-output-dir`, for example `-output-dir results`. A stage has no `--outdir`.
+- `read_qc`, `trim_reads`, `align_reads` and `ingest_bam_or_cram` read the BioVAT samplesheet above. `alignment_qc`, `merge`, `mark_duplicates` and `call_variants` read a samplesheet with the columns `sample,library_id,platform,single_end,alignment,index`. A BioVAT samplesheet whose rows are all alignments (the `alignment` and `index` columns) also works for them. A row with FASTQ files cannot start an alignment stage.
+
+```bash
+nextflow run pipelines/alignment_qc -profile docker --samplesheet alignments.csv --level sample --fasta reference.fasta -output-dir results
+```
 
 ## Running the pipeline
 

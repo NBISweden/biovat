@@ -21,13 +21,18 @@ nextflow_process {
 
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
-                    [],
-                    "\'@RG\\\\tID:1\\\\tLB:lib1\\\\tPL:ILLUMINA\\\\tSM:test\\\\tPU:barcode1\\\\tDS:replaced_read_group_test\'"
-                ]
-                input[1] = [[],[],[],[]]
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
+                    index: null,
+                    read_group: "\'@RG\\\\tID:1\\\\tLB:lib1\\\\tPL:ILLUMINA\\\\tSM:test\\\\tPU:barcode1\\\\tDS:replaced_read_group_test\'",
+                    fasta: null,
+                    fai: null,
+                    gzi: null,
+                    samtools_addreplacerg_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -52,18 +57,18 @@ nextflow_process {
 
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
-                    "\'@RG\\\\tID:1\\\\tPU:1\\\\tSM:testN\\\\tLB:testN\\\\tPL:illumina\\\\tDS:replaced_read_group_test\'"
-                ]
-                input[1] = [
-                    [ id:'genome' ],
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
-                    []
-                ]
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    input: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
+                    index: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
+                    read_group: "\'@RG\\\\tID:1\\\\tPU:1\\\\tSM:testN\\\\tLB:testN\\\\tPL:illumina\\\\tDS:replaced_read_group_test\'",
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    gzi: null,
+                    samtools_addreplacerg_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -72,8 +77,8 @@ nextflow_process {
             assert process.success
             assertAll(
                 { assert snapshot(
-                    sanitizeOutput(process.out, unstableKeys: ["index","cram"]),
-                    process.out.cram.collect{ meta, cram -> bam(cram).getHeader().collect{ l -> l.replaceAll(/\tUR:[^\t\n]+/, '') } },
+                    [ process.out[0][0].meta, file(process.out[0][0].cram).name, file(process.out[0][0].index).name ],
+                    [ process.out[0][0] ].collect{ out -> bam(out.cram).getHeader().collect{ l -> l.replaceAll(/\tUR:[^\t\n]+/, '') } },
                 ).match() }
             )
         }
@@ -91,18 +96,18 @@ nextflow_process {
 
             process {
                 """
-                input[0] = [
-                    [ id:'test' ],
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
-                    "\'@RG\\\\tID:1\\\\tPU:1\\\\tSM:testN\\\\tLB:testN\\\\tPL:illumina\\\\tDS:replaced_read_group_test\'"
-                ]
-                input[1] = [
-                    [ id:'genome' ],
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
-                    []
-                ]
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    input: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
+                    index: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram.crai', checkIfExists: true),
+                    read_group: "\'@RG\\\\tID:1\\\\tPU:1\\\\tSM:testN\\\\tLB:testN\\\\tPL:illumina\\\\tDS:replaced_read_group_test\'",
+                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
+                    gzi: null,
+                    samtools_addreplacerg_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -123,13 +128,18 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = [
-                    [ id:'test'],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
-                    [],
-                    "\'@RG\\\\tID:1\\\\tLB:lib1\\\\tPL:ILLUMINA\\\\tSM:test\\\\tPU:barcode1\\\\tDS:replaced_read_group_test\'"
-                ]
-                input[1] = [[],[],[],[]]
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
+                    index: null,
+                    read_group: "\'@RG\\\\tID:1\\\\tLB:lib1\\\\tPL:ILLUMINA\\\\tSM:test\\\\tPU:barcode1\\\\tDS:replaced_read_group_test\'",
+                    fasta: null,
+                    fai: null,
+                    gzi: null,
+                    samtools_addreplacerg_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }

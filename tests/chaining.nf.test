@@ -1,0 +1,34 @@
+nextflow_pipeline {
+
+    name "Test the chaining example"
+    script "../examples/chaining/main.nf"
+    tag "pipeline"
+
+    // A pipeline that includes BioVAT gives it channels, not paths, and feeds its alignments to its own processes
+    test("BioVAT included in another pipeline - stub") {
+
+        options "-stub"
+
+        setup {
+            // The paths of the sheet are relative to the example directory, where the example is run from
+            new File("${launchDir}/samples.csv").text = new File("${projectDir}/examples/chaining/samplesheet.csv").text
+                .replace('../../tests/data', "${projectDir}/tests/data")
+        }
+
+        when {
+            params {
+                samples = "${launchDir}/samples.csv"
+                fasta   = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                // BioVAT ran, and the step of the calling pipeline (not the QC inside BioVAT, which has a prefix) got its alignments
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MARK_DUPLICATES') } },
+                { assert workflow.trace.tasks().any { task -> task.name.startsWith('SAMTOOLS_FLAGSTAT') } }
+            )
+        }
+    }
+}

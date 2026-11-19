@@ -1,0 +1,12 @@
+{
+    "$defs": {
+        "options": {
+            "properties": {
+                "caller": { "type": "string", "enum": ["a", "b"], "default": "a" },
+                "size": { "type": "integer", "minimum": 1 },
+                "enable_flag": { "type": "boolean" },
+                "prefix": { "type": "string", "pattern": "^[a-z]+$" }
+            }
+        }
+    }
+}

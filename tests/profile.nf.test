@@ -1,0 +1,23 @@
+nextflow_pipeline {
+
+    name "Test the test profile"
+    script "../main.nf"
+    tag "pipeline"
+
+    // nf-test runs from a directory of its own, not from the repository root. The paths of the test samplesheet
+    // are relative to the repository, so this fails when -profile test does not give the paths of the checkout
+    test("-profile test from another directory - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+}

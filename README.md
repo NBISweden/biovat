@@ -3,7 +3,7 @@
 [![GitHub Actions CI Status](https://github.com/NBISweden/biovat/actions/workflows/nf-test.yml/badge.svg)](https://github.com/NBISweden/biovat/actions/workflows/nf-test.yml)
 [![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
 
-[![Nextflow](https://img.shields.io/badge/version-%E2%89%A526.04.0-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
+[![Nextflow](https://img.shields.io/badge/version-%E2%89%A526.10.0-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
@@ -19,6 +19,9 @@
 ## Usage
 
 > [!NOTE]
+> BioVAT requires Nextflow 26.10.0 or later. It uses typed records and pipeline composition, which earlier versions do not have.
+
+> [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.
 
 First, prepare a samplesheet with your input data that looks as follows:
@@ -26,12 +29,12 @@ First, prepare a samplesheet with your input data that looks as follows:
 `samplesheet.csv`:
 
 ```csv
-sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end
+sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end
 SAMPLE_1,1,AEG588A1,2,ILLUMINA,/path/to/AEG588A1_S1_L002_R1_001.fastq.gz,/path/to/AEG588A1_S1_L002_R2_001.fastq.gz,,
 SAMPLE_2,1,AEG588A2,2,ILLUMINA,,,/path/to/AEG588A2_S2_L002.bam,false
 ```
 
-Each row represents a set of paired-end FASTQ files generated from a specific sample library and run on a specific flowcell lane. A row can instead supply an already-aligned BAM/CRAM file via the `bam` column, in which case `single_end` must also be set; see the [usage documentation](docs/usage.md#samplesheet-input) for details.
+Each row represents a set of paired-end FASTQ files generated from a specific sample library and run on a specific flowcell lane. A row can instead supply an already-aligned BAM/CRAM file via the `alignment` column, in which case `single_end` must also be set; see the [usage documentation](docs/usage.md#samplesheet-input) for details.
 
 Per-sample information, such as population, goes in a separate samplesheet with one row per sample, passed via `--sample_metadata`. When provided with variant calling enabled and `--variant_caller bcftools_multisample`, samples are grouped into populations for variant calling; see [sample metadata](docs/usage.md#sample-metadata) and the example sheet `assets/sample_metadata.csv`.
 

@@ -1,0 +1,268 @@
+nextflow_function {
+
+    name "Test that the places that describe the same thing agree"
+    script "./utils/contract.nf"
+    tag "contract"
+
+    // A check has to fail on input that differs, not pass because it found nothing to compare
+    test("a stage schema that differs from the root schema is reported") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/tests/utils/fixtures/contract_root.json"
+                input[1] = "${projectDir}/tests/utils/fixtures/contract_stage.json"
+                input[2] = [ 'alignments' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result.size() == 3
+            assert function.result.any { it.contains("--caller: enum is [a, c] in the stage and [a, b] in the root") }
+            assert function.result.any { it.contains("--size: minimum is null in the stage and 1 in the root") }
+            assert function.result.any { it.contains("--orphan of the stage has no counterpart in the root schema") }
+        }
+    }
+
+    test("pipelines/align_reads agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/align_reads/nextflow_schema.json"
+                input[2] = [ 'reads', 'fai' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/alignment_qc agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/alignment_qc/nextflow_schema.json"
+                input[2] = [ 'level', 'alignments', 'fai' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/call_variants agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/call_variants/nextflow_schema.json"
+                input[2] = [ 'alignments', 'fai', 'dict', 'group_samples' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/ingest_bam_or_cram agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/ingest_bam_or_cram/nextflow_schema.json"
+                input[2] = [ 'bam_cram', 'fai' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/mark_duplicates agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/mark_duplicates/nextflow_schema.json"
+                input[2] = [ 'alignments', 'fai' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/merge agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/merge/nextflow_schema.json"
+                input[2] = [ 'alignments', 'level', 'fai' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/read_qc agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/read_qc/nextflow_schema.json"
+                input[2] = [ 'reads' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/trim_reads agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/trim_reads/nextflow_schema.json"
+                input[2] = [ 'reads' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("pipelines/variant_qc agrees with the root schema") {
+
+        function "rootStageDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}/nextflow_schema.json"
+                input[1] = "${projectDir}/pipelines/variant_qc/nextflow_schema.json"
+                input[2] = [ 'variant_calls', 'level' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("the pinned versions agree") {
+
+        function "pinsDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}"
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("the docs name parameters that exist") {
+
+        function "docNamesDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}"
+                // flags of the tools and of the container engines that docs/usage.md describes, and the Slurm project
+                input[1] = [ 'annotate', 'consensus', 'dbsnp', 'emit', 'gpus', 'group', 'merge', 'multiallelic', 'nv', 'ploidy', 'project', 'variants' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+
+    test("the samplesheet columns agree") {
+
+        function "samplesheetColumnsDiff"
+
+        when {
+            function {
+                """
+                input[0] = "${projectDir}"
+                // BioVAT does not use the index of a BAM/CRAM row of --input, so the Sample record has no field for it
+                input[1] = [ 'index' ]
+                """
+            }
+        }
+
+        then {
+            assert function.success
+            assert function.result == [], function.result.join("\n")
+        }
+    }
+}

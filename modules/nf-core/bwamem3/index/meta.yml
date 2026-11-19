@@ -16,10 +16,13 @@ tools:
       licence: ["MIT AND Apache-2.0"]
       identifier: ""
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample or reference, used to name the outputs
+    - meta:
         type: map
         description: |
-          Groovy Map containing sample information
+          Optional groovy Map containing sample information
           e.g. [ id:'test', single_end:false ]
     - fasta:
         type: file
@@ -29,10 +32,13 @@ input:
           - edam: "http://edamontology.org/format_1929"
 output:
   index:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference, used to name the outputs
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
+            Optional groovy Map containing sample information
             e.g. [ id:'test', single_end:false ]
       - bwamem3:
           type: directory

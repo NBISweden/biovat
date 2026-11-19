@@ -23,7 +23,7 @@
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row.",
                     "fa_icon": "fas fa-file-csv"
                 },
-                "reference": {
+                "fasta": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
@@ -362,13 +362,13 @@
                     "type": ["boolean", "string"],
                     "description": "Display the help message."
                 },
-                "help_full": {
+                "helpFull": {
                     "type": "boolean",
-                    "description": "Display the full detailed help message."
+                    "description": "Display the full help message, with nested parameters."
                 },
-                "show_hidden": {
+                "showHidden": {
                     "type": "boolean",
-                    "description": "Display hidden parameters in the help message (only works when --help or --help_full are provided)."
+                    "description": "Display hidden parameters in the help message (only works with --help or --helpFull)."
                 }
             }
         }
