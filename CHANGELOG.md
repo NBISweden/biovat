@@ -99,6 +99,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Dependencies`
 
-- Nextflow >=26.10.0 (pipeline composition)
+- Nextflow >=26.10.6 (pipeline composition; earlier 26.10 releases do not resume typed records reliably); CI tests 26.10.6
 - updated nf-core to 4.1.0
 - Updated the pixi lock file to v7
