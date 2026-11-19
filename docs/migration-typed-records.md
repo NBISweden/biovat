@@ -164,7 +164,7 @@ Notes for each module:
 | `enable` (in `main.nf`)   | `record(raw_read_qc, trim, align, align_qc, mark_duplicates, variant_calling, variant_qc, cram_format, riker, qualimap)` |
 | `requires` (in `main.nf`) | `record(merge_to_library, merge_to_sample, fai)`                                                                         |
 
-`meta` is a record. Its keys are `id`, `library`, `flowcell`, `lane`, `pl`, `single_end`, `read_group`, `platform_unit` and `input_type`. The merge stage builds a new `meta` with only `id`, `library`, `pl` and `single_end`. At sample level `library` is `null`.
+`meta` is a record. Its keys are `library`, `flowcell`, `lane`, `pl`, `read_group`, `platform_unit` and `input_type`. The merge stage builds a new `meta` with only `library` and `pl`. At sample level `library` is `null`.
 
 Convert a Map to a record with `record(map)`. Join two record channels on `meta` with `a.join(b, by: 'meta')`. Combine a channel with a value channel with `ch.combine(value)`, then take both in the closure.
 
@@ -278,7 +278,7 @@ Each stage takes the flat `samplesheet.csv` with `--samplesheet`, so a stage can
   reads: [/data/PUN-R-ELF_1_R1.fastq.gz, /data/PUN-R-ELF_1_R2.fastq.gz]
 ```
 
-`id` and `single_end` are fields of the record, next to `meta`, for the records that need them (`id` for `Reads`, `BamCram`, `Alignment` and `VariantCall`, `single_end` for the read and alignment stages), as the nf-core guidelines for records ask. A record without one is rejected when it is loaded. The stage adds both to `meta`, and the alignments that a stage emits carry them, so a calling pipeline can pass them to the next stage.
+`id` and `single_end` are fields of the record, next to `meta`, for the records that need them (`id` for `Reads`, `BamCram`, `Alignment` and `VariantCall`, `single_end` for the read and alignment stages), as the nf-core guidelines for records ask. A record without one is rejected when it is loaded. `meta` does not hold them (`readGroupMeta()` leaves them out and no stage adds them back), so `meta.id` and `meta.single_end` are `null`. The alignments that a stage emits carry them as fields, so a calling pipeline can pass them to the next stage. A user config that reads `meta.id`, such as `ext.prefix = { "${meta.id}" }` or `process.when = { meta.id != 'X' }`, does not fail: it writes `null.*` files or matches nothing.
 
 ```bash
 nextflow run pipelines/read_qc --samplesheet samplesheet.csv -profile docker -output-dir results   # from the repository root
