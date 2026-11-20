@@ -16,19 +16,7 @@ include { checkQualimapCram         } from '../../subworkflows/local/utils_stage
 include { readGroupMeta             } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { attachSingleEnd           } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow               } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
-
-// A row of the BioVAT samplesheet
-record Sample {
-    sample     : String
-    library_id : String
-    flowcell_id: String
-    lane       : Integer
-    platform   : String
-    fastq_1    : Path?
-    fastq_2    : Path?
-    bam        : Path?
-    single_end : Boolean?
-}
+include { Sample                     } from '../../types/samplesheet'
 
 record BamCram {
     id        : String  // sample name
@@ -61,8 +49,8 @@ workflow {
         bam_cram = params.samplesheet
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
-            .filter { row -> row[0].input_type == 'bam_cram' }
-            .map { row -> record(id: row[0].id, meta: readGroupMeta(row[0]), bam_cram: row[1][0], single_end: row[0].single_end) }
+            .filter { row -> row.meta.input_type == 'bam_cram' }
+            .map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), bam_cram: row.files[0], single_end: row.meta.single_end) }
     } else {
         bam_cram = params.bam_cram
     }
@@ -143,7 +131,7 @@ workflow {
         // The reference has its fai index when this stage needed it. Pass it on, so that it is not created twice
         qc_fai = params.fai
         if ( params.riker || params.cram_format ) {
-            qc_fai = reference.map { ref -> ref.fai } as Value<Path>
+            qc_fai = reference.map { ref -> ref.fai }
         }
         alignment_qc = ALIGNMENT_QC(
             record(
@@ -162,7 +150,7 @@ workflow {
     }
 
     publish:
-    alignments    = alignments // record(meta, alignment, index)
+    alignments    = alignments // record(id, meta, alignment, index, single_end)
     flagstat      = qc_flagstat
     riker         = qc_riker
     qualimap      = qc_qualimap

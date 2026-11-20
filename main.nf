@@ -38,19 +38,7 @@ include { workflow as MARK_DUPLICATES    } from './pipelines/mark_duplicates'
 include { workflow as MERGE_TO_SAMPLE    } from './pipelines/merge'
 include { workflow as CALL_VARIANTS      } from './pipelines/call_variants'
 include { MULTIQC_REPORT                 } from './subworkflows/local/multiqc_report/main'
-
-// A row of the samplesheet
-record Sample {
-    sample     : String
-    library_id : String
-    flowcell_id: String
-    lane       : Integer
-    platform   : String
-    fastq_1    : Path?
-    fastq_2    : Path?
-    bam        : Path?
-    single_end : Boolean?
-}
+include { Sample                          } from './types/samplesheet'
 
 // Pipeline parameters and their defaults. Parameters that only the config reads are defined in nextflow.config
 params {
@@ -122,6 +110,11 @@ params {
 }
 
 // Entry workflow
+// The outputs of a stage are Channel<Record>. Pick the fields of Alignment, which the next stage takes
+def toAlignments(alignments) {
+    return alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+}
+
 workflow {
 
     main:
@@ -160,17 +153,15 @@ workflow {
     // 'requires' is a record of internal dependency relationships
     // MERGE_TO_LIBRARY (readgroup -> library) and MERGE_TO_SAMPLE (library -> sample, post-deduplication)
     // are triggered when a downstream consumer needs alignments merged to respective levels
-    merge_to_library = enable.mark_duplicates
-    merge_to_sample  = enable.variant_calling
-    // .fai is used for certain CRAM processes, and unconditionally by riker and variant calling. The samplesheet rows aren't
-    // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
     requires = record(
-        merge_to_library: merge_to_library,
-        merge_to_sample : merge_to_sample,
+        merge_to_library: enable.mark_duplicates,
+        merge_to_sample : enable.variant_calling,
         // Providing --sample_metadata groups samples into populations during bcftools_multisample variant calling
         group_samples   : enable.variant_calling && params.variant_caller == 'bcftools_multisample' && params.sample_metadata != null,
         // GATK tools need a sequence dictionary alongside the reference fasta
         dict            : enable.variant_calling && params.variant_caller == 'gatk',
+        // .fai is used for certain CRAM processes, and unconditionally by riker and variant calling. The samplesheet rows aren't
+        // visible here, so assume BAM/CRAM input rows may exist (ALIGNMENT_QC runs on them during ingestion)
         fai             : enable.cram_format || rikerActive(enable, true) || enable.variant_calling
     )
 
@@ -192,7 +183,7 @@ workflow {
     if ( params.input ) {
         // The rows are known here, so they are checked before any stage is called. A stage that finds the same problem
         // (a missing reference, for example) reports it with the name of its own parameter, and would do so first
-        input_rows = readSamplesheet(params.input).collect { row -> record(meta: record(row[0]), files: row[1]) }
+        input_rows = readSamplesheet(params.input)
         validateSamplesheetRows(input_rows, sample_metadata_rows, enable, options)
         samplesheet = channel.fromList(input_rows)
     } else if ( params.samplesheet ) {
@@ -202,7 +193,6 @@ workflow {
         // The rows of a channel are not known yet. Check them together, and release them only when the checks have passed
         samplesheet = params.samplesheet
             .map { sample -> sampleToRow(sample) }
-            .map { row -> record(meta: record(row[0]), files: row[1]) }
             .toList()
             .flatMap { list ->
                 // An error raised in a closure is reported without its message, so the message is logged first
@@ -332,9 +322,7 @@ workflow {
         )
     )
     multiqc_files         = multiqc_files.mix(ingest.multiqc_files)
-    alignments_to_process = read_group_alignments
-        .mix(ingest.alignments)
-        .map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+    alignments_to_process = toAlignments(read_group_alignments.mix(ingest.alignments))
 
     // Merge lane alignments to library level
     library_alignments = channel.empty()
@@ -354,7 +342,7 @@ workflow {
                 qualimap   : enable.qualimap
             )
         )
-        alignments_to_process = merge_library.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments_to_process = toAlignments(merge_library.alignments)
         library_alignments    = merge_library.merged
         library_flagstat      = merge_library.flagstat
         library_riker         = merge_library.riker
@@ -383,7 +371,7 @@ workflow {
                 qualimap         : enable.qualimap
             )
         )
-        alignments_to_process      = markdup.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments_to_process      = toAlignments(markdup.alignments)
         mark_duplicates_alignments = markdup.alignments
         mark_duplicates_metrics    = markdup.metrics
         mark_duplicates_flagstat   = markdup.flagstat
@@ -410,7 +398,7 @@ workflow {
                 qualimap   : enable.qualimap
             )
         )
-        alignments_to_process = merge_sample.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments_to_process = toAlignments(merge_sample.alignments)
         sample_alignments     = merge_sample.merged
         sample_flagstat       = merge_sample.flagstat
         sample_riker          = merge_sample.riker

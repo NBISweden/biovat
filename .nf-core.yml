@@ -63,6 +63,7 @@ lint:
     - conf/modules.config
     - conf/igenomes.config
     - conf/igenomes_ignored.config
+    - conf/test_full.config
     - CODE_OF_CONDUCT.md
     - assets/nf-core-biovat_logo_light.png
     - docs/images/nf-core-biovat_logo_light.png

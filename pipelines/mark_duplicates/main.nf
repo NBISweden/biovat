@@ -16,16 +16,7 @@ include { checkNoRepeats           } from '../../subworkflows/local/utils_stage_
 include { checkQualimapCram        } from '../../subworkflows/local/utils_stage_help/main'
 include { attachSingleEnd          } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError               } from '../../subworkflows/local/utils_stage_help/main'
-
-// A row of the alignments samplesheet
-record AlignmentSample {
-    sample    : String   // sample name
-    library_id: String?  // library, needed to merge or deduplicate at library level
-    platform  : String   // sequencing platform
-    single_end: Boolean  // whether the reads are single-end
-    alignment : Path     // BAM or CRAM file
-    index     : Path     // index of the BAM or CRAM file
-}
+include { AlignmentSample           } from '../../types/samplesheet'
 
 record Alignment {
     id        : String  // sample name
@@ -67,7 +58,7 @@ workflow {
             record(id: s.sample, meta: record(library: s.library_id, pl: s.platform) as Record, alignment: s.alignment, index: s.index, single_end: s.single_end)
         }
     } else {
-        alignments = params.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
+        alignments = params.alignments
     }
     // Duplicates are marked per library, so a library is one alignment. The samplesheet has no read group columns
     alignments = alignments.toList().flatMap { rows ->
@@ -92,7 +83,7 @@ workflow {
                             // Always report optical metrics, tag the BAM if retaining duplicates
                             params.remove_duplicates ? '--REMOVE_DUPLICATES true' : '--TAGGING_POLICY All',
                             "--OPTICAL_DUPLICATE_PIXEL_DISTANCE ${params.optical_distance}"
-                        ].findAll { arg -> arg != '' }.join(' '),
+                        ].join(' '),
                         output_prefix             : "${aln.id}_${aln.meta.library}_${aln.meta.pl}_markdup"
                     )
                 }
@@ -152,7 +143,7 @@ workflow {
         // The reference has its fai index when this stage needed it. Pass it on, so that it is not created twice
         qc_fai = params.fai
         if ( params.riker || params.cram_format ) {
-            qc_fai = reference.map { ref -> ref.fai } as Value<Path>
+            qc_fai = reference.map { ref -> ref.fai }
         }
         alignment_qc = ALIGNMENT_QC(
             record(

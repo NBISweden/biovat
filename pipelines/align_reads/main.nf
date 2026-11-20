@@ -17,19 +17,7 @@ include { checkQualimapCram        } from '../../subworkflows/local/utils_stage_
 include { readGroupMeta            } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { attachSingleEnd          } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow              } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
-
-// A row of the BioVAT samplesheet
-record Sample {
-    sample     : String
-    library_id : String
-    flowcell_id: String
-    lane       : Integer
-    platform   : String
-    fastq_1    : Path?
-    fastq_2    : Path?
-    bam        : Path?
-    single_end : Boolean?
-}
+include { Sample                    } from '../../types/samplesheet'
 
 record Reads {
     id        : String     // sample name
@@ -63,8 +51,8 @@ workflow {
         reads = params.samplesheet
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
-            .filter { row -> row[0].input_type == 'fastq' }
-            .map { row -> record(id: row[0].id, meta: readGroupMeta(row[0]), reads: row[1], single_end: row[0].single_end) }
+            .filter { row -> row.meta.input_type == 'fastq' }
+            .map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), reads: row.files, single_end: row.meta.single_end) }
     } else {
         reads = params.reads
     }
@@ -130,7 +118,7 @@ workflow {
                             "--gpusort",
                             "--no-markdups",
                             "--gpuwrite"
-                        ].findAll { arg -> arg != "" }.join(" "),
+                        ].join(" "),
                         output_prefix         : r.meta.read_group
                     )
                 }
@@ -155,7 +143,7 @@ workflow {
         // The reference has its fai index when this stage needed it. Pass it on, so that it is not created twice
         qc_fai = params.fai
         if ( params.riker || params.cram_format ) {
-            qc_fai = reference.map { ref -> ref.fai } as Value<Path>
+            qc_fai = reference.map { ref -> ref.fai }
         }
         alignment_qc = ALIGNMENT_QC(
             record(
@@ -174,7 +162,7 @@ workflow {
     }
 
     publish:
-    alignments    = alignments // record(meta, alignment, index)
+    alignments    = alignments // record(id, meta, alignment, index, single_end)
     flagstat      = qc_flagstat
     riker         = qc_riker
     qualimap      = qc_qualimap
