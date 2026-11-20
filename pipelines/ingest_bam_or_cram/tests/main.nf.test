@@ -2,6 +2,7 @@ nextflow_pipeline {
 
     name "Test pipeline ingest_bam_or_cram"
     script "../main.nf"
+    config "./nextflow.config"
     tag "pipelines"
     tag "pipelines/ingest_bam_or_cram"
 
@@ -50,7 +51,7 @@ nextflow_pipeline {
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
             new File("${launchDir}/samplesheet.csv").text = [
-                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
                 "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,",
                 "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false",
                 "PUN-R-MT,1,SRR9309471,2,ILLUMINA,,,${data}/PUN-R-MT_1_repeat2.cram,false"
@@ -80,13 +81,13 @@ nextflow_pipeline {
         }
     }
 
-    test("a samplesheet row with neither fastq nor bam fails") {
+    test("a samplesheet row with neither fastq nor alignment fails") {
 
         options "-stub -output-dir ${outputDir}"
 
         setup {
             new File("${launchDir}/samplesheet.csv").text = [
-                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end",
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
                 "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,,,,"
             ].join("\n") + "\n"
         }
@@ -101,7 +102,7 @@ nextflow_pipeline {
         then {
             // The stage skips the rows of the other input type, but still checks them
             assert workflow.failed
-            assert (workflow.stdout + workflow.stderr).toString().contains("has neither fastq_1 nor bam")
+            assert (workflow.stdout + workflow.stderr).toString().contains("has neither fastq_1 nor alignment")
         }
     }
 
@@ -111,7 +112,7 @@ nextflow_pipeline {
 
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
-            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end\nPUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false\n"
+            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end\nPUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false\n"
             new File("${launchDir}/bam_cram.yml").text = "- {meta: {library: '2', flowcell: SRR9309891, lane: 3, pl: ILLUMINA, read_group: PUN-R-ELF.2.SRR9309891.3, platform_unit: SRR9309891.3.PUN-R-ELF_2}, id: PUN-R-ELF, single_end: false, bam_cram: ${data}/PUN-R-ELF_2.bam}\n"
         }
 
@@ -151,7 +152,7 @@ nextflow_pipeline {
 
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
-            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end\nPUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,\n"
+            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end\nPUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,\n"
         }
 
         when {
@@ -173,7 +174,7 @@ nextflow_pipeline {
 
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
-            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end\nPUN-R-MT,1,SRR9309471,2,ILLUMINA,,,${data}/PUN-R-MT_1_repeat2.cram,false\n"
+            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end\nPUN-R-MT,1,SRR9309471,2,ILLUMINA,,,${data}/PUN-R-MT_1_repeat2.cram,false\n"
         }
 
         when {
@@ -195,7 +196,7 @@ nextflow_pipeline {
 
         setup {
             def data = "${projectDir}/tests/data/monkeyflower"
-            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end\nPUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,\n"
+            new File("${launchDir}/samplesheet.csv").text = "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end\nPUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,\n"
         }
 
         when {

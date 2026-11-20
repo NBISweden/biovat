@@ -27,13 +27,13 @@ record Sample {
     platform   : String
     fastq_1    : Path?
     fastq_2    : Path?
-    bam        : Path?
+    alignment  : Path?
     single_end : Boolean?
 }
 
 params {
     samples  : Channel<Sample> // BioVAT samplesheet, loaded by Nextflow as a channel of records
-    reference: Path            // reference fasta
+    fasta    : Path            // reference fasta
 }
 
 workflow {
@@ -44,7 +44,7 @@ workflow {
     biovat = BIOVAT(
         record(
             samplesheet    : params.samples,
-            reference      : params.reference,
+            fasta          : params.fasta,
             validate_params: false
         )
     )

@@ -15,13 +15,13 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
-                    "description": "BioVAT samplesheet (CSV), the same file as for the main pipeline. Columns: sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, bam, single_end. Rows with a bam instead of fastq files are skipped.",
+                    "description": "BioVAT samplesheet (CSV), the same file as for the main pipeline. Columns: sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, alignment, index (optional) and single_end. Rows with an alignment instead of fastq files are skipped.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "reads": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to --samplesheet, for YAML or JSON files and for calling pipelines. One entry per read group, with meta (a map with at least read_group) and reads (a list of fastq files, in order). Give either --samplesheet or --reads.",
+                    "description": "Alternative to --samplesheet, for YAML or JSON files and for calling pipelines. One entry per read group, with id (sample name), single_end, meta (a map with at least read_group) and reads (a list of fastq files, in order). Give either --samplesheet or --reads.",
                     "fa_icon": "fas fa-file"
                 },
                 "adapter_fasta": {

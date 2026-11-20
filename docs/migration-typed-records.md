@@ -193,7 +193,7 @@ record Sample {
     platform   : String
     fastq_1    : Path?
     fastq_2    : Path?
-    bam        : Path?
+    alignment  : Path?
     single_end : Boolean?
 }
 
@@ -203,7 +203,7 @@ record Reads {
 }
 
 params {
-    samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with a bam instead of fastq files are skipped
+    samplesheet: Channel<Sample>? // BioVAT samplesheet (CSV). Rows with an alignment instead of fastq files are skipped
     reads      : Channel<Reads>?  // alternative to the samplesheet: reads with their meta record, from a YAML or JSON file or a calling pipeline
     help     : Boolean = false
     help_full: Boolean = false
@@ -260,12 +260,12 @@ A step is a stage when it can run on an input of its own, a CSV or a records cha
 
 Each stage takes the flat `samplesheet.csv` with `--samplesheet`, so a stage can be run with the same file as BioVAT. `samplesheet` is a `Channel` of a named record type, which Nextflow loads from the CSV (the type has to be named and its files `Path` fields, otherwise the paths stay strings and the process fails with "Not a valid path value"). Empty cells are `null`, and the stage keeps the rows that apply to it and builds `meta` with `sampleToRow()`, the same function BioVAT uses.
 
-| Stage                                                       | `--samplesheet` CSV columns                                                                           | Rows used           |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------- |
-| `read_qc`, `trim_reads`, `align_reads`                      | the BioVAT samplesheet (`sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,bam,single_end`) | rows with `fastq_1` |
-| `ingest_bam_or_cram`                                        | the BioVAT samplesheet                                                                                | rows with `bam`     |
-| `merge`, `mark_duplicates`, `call_variants`, `alignment_qc` | `sample,library_id,platform,single_end,alignment,index`                                               | all rows            |
-| `variant_qc`                                                | `id,vcf,index`                                                                                        | all rows            |
+| Stage                                                       | `--samplesheet` CSV columns                                                                                 | Rows used             |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------- |
+| `read_qc`, `trim_reads`, `align_reads`                      | the BioVAT samplesheet (`sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end`) | rows with `fastq_1`   |
+| `ingest_bam_or_cram`                                        | the BioVAT samplesheet                                                                                      | rows with `alignment` |
+| `merge`, `mark_duplicates`, `call_variants`, `alignment_qc` | `sample,library_id,platform,single_end,alignment,index`                                                     | all rows              |
+| `variant_qc`                                                | `id,vcf,index`                                                                                              | all rows              |
 
 `--sample_metadata` for `call_variants` is a CSV with the columns `sample,population`. The nested route (`--reads`, `--bam_cram`, `--alignments`, `--variant_calls`, a YAML or JSON file with `meta`) is kept for calling pipelines; give either `--samplesheet` or that param, not both:
 
@@ -337,7 +337,7 @@ include { workflow as BIOVAT } from '../../main.nf'
 
 params {
     samples  : Channel<Sample> // BioVAT samplesheet, loaded by Nextflow as a channel of records
-    reference: Path
+    fasta    : Path
 }
 
 workflow {
@@ -345,7 +345,7 @@ workflow {
     biovat = BIOVAT(
         record(
             samplesheet    : params.samples,
-            reference      : params.reference,   // every other param has a default
+            fasta          : params.fasta,       // every other param has a default
             validate_params: false
         )
     )

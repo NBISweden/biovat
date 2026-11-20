@@ -15,13 +15,13 @@
                     "type": "string",
                     "format": "file-path",
                     "pattern": "^\\S+\\.csv$",
-                    "description": "BioVAT samplesheet (CSV) with the columns sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, bam and single_end. Rows with a bam are used and rows with fastq files are skipped. Read group information is built from the columns.",
+                    "description": "BioVAT samplesheet (CSV) with the columns sample, library_id, flowcell_id, lane, platform, fastq_1, fastq_2, alignment, index (optional) and single_end. Rows with an alignment are used and rows with fastq files are skipped. Read group information is built from the columns.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "bam_cram": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per BAM/CRAM file. Fields: meta (a map with id, library, pl, platform_unit and read_group) and bam_cram (the file). Use either --samplesheet or --bam_cram.",
+                    "description": "Alternative to --samplesheet: a YAML or JSON file with one entry per BAM/CRAM file. Fields: id (sample name), single_end, meta (a map with library, pl, platform_unit and read_group) and bam_cram (the file). Use either --samplesheet or --bam_cram.",
                     "fa_icon": "fas fa-file"
                 },
                 "fasta": {

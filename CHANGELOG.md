@@ -20,14 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Raw read quality check subworkflow using FastQC added as raw_read_qc stage
 - Implemented workflow outputs (replaced publishDir)
 - nft-bam plugin for BAM content snapshots
-- Reference utilities subworkflow for creating generic reference supplementary files used across many subworkflows (currently gated on `params.reference`)
+- Reference utilities subworkflow for creating generic reference supplementary files used across many subworkflows (currently gated on `params.fasta`)
 - BAM QC workflow
 - Test dataset composed of reference and multiple samples per population
 - Variant calling workflow with BCFtools (multi-sample variant calling)
 - Genome chunking support for parallelized variant calling; `--chunk_size` defaults to the largest of either: 1) the longest chromosome or 2) 1/50 of the genome (after min-length removal). This is to avoid excessive chunk count for highly fragmented assemblies. Regions excluded by `--min_length` are published (`excluded_regions.tsv`), summarised in MultiQC, and warned about on the console when over 5% of the reference
 - Variant QC workflow
 - Optional sample-level metadata sheet (`--sample_metadata`, one row per sample) kept separate from the samplesheet; currently holds `population`. When provided with variant calling enabled, samples are grouped into populations in `bcftools call` (`--group-samples`), replacing a dedicated `--enable_group_samples` flag
-- BAM/CRAM samplesheet input (`bam` column): each file's `@RG` header is validated against its samplesheet row; files with no `@RG` line get one built from the samplesheet (`samtools addreplacerg`), and files with several `@RG` lines or missing/mismatched tags are rejected (`PL` is matched case-insensitively, per the SAM spec)
+- BAM/CRAM samplesheet input (`alignment` column): each file's `@RG` header is validated against its samplesheet row; files with no `@RG` line get one built from the samplesheet (`samtools addreplacerg`), and files with several `@RG` lines or missing/mismatched tags are rejected (`PL` is matched case-insensitively, per the SAM spec)
 - Samplesheet `platform` restricted to the uppercase SAM spec `@RG PL` values (e.g. `ILLUMINA`). EDIT: currently limited to a subset of these, either short read technologies that can go through the standard preprocessing, or long reads that pass schema validation (but are filtered out until that path is supported)
 - Each analysis stage is now a pipeline under `pipelines/` (`read_qc`, `trim_reads`, `align_reads`, `alignment_qc`, `ingest_bam_or_cram`, `merge`, `mark_duplicates`) with its own typed `params` block, `output` block, `nextflow.config`, `nextflow_schema.json` (for `--help`) and nf-test. Each stage can run on its own with a samplesheet file (CSV, JSON or YAML) as input, and be composed with other pipelines (pipeline composition, Nextflow 26.10)
 - Every stage pipeline accepts `--samplesheet` with a flat CSV (the BioVAT samplesheet for the read and BAM/CRAM stages; `sample,library_id,platform,single_end,alignment,index` for merge, mark_duplicates and call_variants; `id,vcf,index` for variant_qc; the same columns as merge plus `--level` for alignment_qc). The nested YAML/JSON params are kept for calling pipelines. `--sample_metadata` columns are now `sample,population`
@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GATK4 joint variant calling (`--variant_caller gatk`), following the GATK germline short variant Best Practices: per-sample `HaplotypeCaller` in GVCF mode, then `GenomicsDBImport` and `GenotypeGVCFs`, each run per genome chunk. The reference sequence dictionary is created by `REFERENCE_UTILS` when needed. Output is not yet filtered
 - `alignment_qc` is a stage pipeline with a required `--level` param. `align_reads`, `ingest_bam_or_cram`, `merge` and `mark_duplicates` include it under their own alias, so their QC outputs and the MultiQC files are kept
 - Sample, library and flowcell names (no spaces or full stops) and the platform are checked on every samplesheet row of the stages and of the `samplesheet` channel, as the schema does for `--input`
-- The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--reference` is reported with BioVAT's own message before any stage is set up
+- The samplesheet channel route of `main.nf` checks unique read groups and `single_end` for BAM/CRAM rows, as the schema does for `--input`, and a missing `--fasta` is reported with BioVAT's own message before any stage is set up
 - Real-data `call_variants` tests (bcftools and GATK, several chunks, one chunk, one callset per platform), run from the monkeyflower alignments with the `.crai`, `.fai` and `.dict` added to the test data
 - `id` is a field of the records of every stage (`Reads`, `BamCram`, `Alignment` and `VariantCall`), and `single_end` of the records of the stages that need it (`Reads`, `BamCram` and `Alignment` of the read and alignment stages), not a silent requirement on `meta`, as the nf-core guidelines for records ask. A YAML or JSON record without one is rejected when it is loaded, with a message that names the field and the record type. `meta` no longer holds `id` or `single_end` (`readGroupMeta()` leaves them out and no stage adds them back), and the records that a stage emits carry them as fields, so they can go straight into the next stage
 - Tests that run the tools and read their command: the optical distance (samtools and picard) and the CRAM switch reach the tools. A stub run does not run the command
@@ -60,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Changed`
 
 - `meta.id` and `meta.single_end` are `null` in every process. A user config that reads them does not fail: `ext.prefix = { "${meta.id}" }` gives `null.*` files and `process.when = { meta.id != 'X' }` matches nothing. Read `id` and `single_end` from the process input record instead. Nothing in `conf/` uses them
+- **Breaking:** the reference parameter of BioVAT is `--fasta`, as in the stage pipelines (it was `--reference`)
+- **Breaking:** the BAM/CRAM column of the samplesheet is `alignment`, as in the stage pipelines (it was `bam`). An optional `index` column is accepted and not used by BioVAT, so that a samplesheet with only alignment rows is valid for BioVAT and for the stages that start from alignments
 - `BWAMEM3_INDEX` requests 4 CPUs, the `-t` of `bwa-mem3 index`, set next to its size-based memory in the module (a `label` would replace that memory). On a 122 Mb genome 4 threads take 10 s against 19 s with one
 - Removed the `schema-build` pixi task. `nf-core pipelines schema build` does not read typed `params` blocks and removes their parameters from the schema, so the schemas are edited by hand. `docs/CONTRIBUTING.md` describes where parameters are declared
 - All processes use static types and follow the module spec: one record as input, one record as output, a required `id` and an optional `meta` that the process code never reads, `ext [ ... ]` closure directives, and software versions sent to the `versions` topic as `record(process, tool, version)`. nf-core modules are converted locally and tracked with `nf-core modules patch` (`*.diff` files next to each module)
@@ -77,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- `--help` of BioVAT and of every stage suggests `--help_full` and `--show_hidden`, the parameters that exist. It suggested `--helpFull` and `--showHidden`, which are not declared
+- The `--alignments`, `--reads` and `--bam_cram` descriptions of the stage schemas list the fields the records have: `id` and `single_end` are fields of their own, not part of `meta`. A YAML written as the old text said was rejected
+- The typical command of the BioVAT help includes `--fasta`, `assets/nf-params.yml` points to the test samplesheet so that the example runs, and `docs/output.md` lists the files of `pipeline_info/`
+- `docs/usage.md` has a section on running a stage on its own, with the parameters that differ from BioVAT
 - `SPLITGENOME` runs its script with `python3`, so it does not depend on the file mode surviving the copy into the task
 - `merge` passes `--fasta` to `samtools merge` whenever it is given, so CRAM inputs can be merged to BAM
 - `requires.fai` counts CRAM output whenever it is on, so the fai is made once and not by each stage

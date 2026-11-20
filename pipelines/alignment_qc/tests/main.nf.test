@@ -2,6 +2,7 @@ nextflow_pipeline {
 
     name "Test pipeline alignment_qc"
     script "../main.nf"
+    config "./nextflow.config"
     tag "pipelines"
     tag "pipelines/alignment_qc"
 

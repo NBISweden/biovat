@@ -13,7 +13,7 @@ record Sample {
     platform   : String
     fastq_1    : Path?
     fastq_2    : Path?
-    bam        : Path?
+    alignment  : Path?
     single_end : Boolean?
 }
 
