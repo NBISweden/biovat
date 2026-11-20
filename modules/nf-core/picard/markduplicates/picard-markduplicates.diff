@@ -1,0 +1,574 @@
+Changes in component 'nf-core/picard/markduplicates'
+'modules/nf-core/picard/markduplicates/environment.yml' is unchanged
+Changes in 'picard/markduplicates/meta.yml':
+--- modules/nf-core/picard/markduplicates/meta.yml
++++ modules/nf-core/picard/markduplicates/meta.yml
+@@ -17,11 +17,14 @@
+       licence: ["MIT"]
+       identifier: biotools:picard_tools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Sample identifier, used for the task tag and the default output prefix
++    - meta:
+         type: map
+         description: |
+-          Groovy Map containing sample information
+-          e.g. [ id:'test', single_end:false ]
++          Optional Groovy Map with sample information, passed on to the output.
++          It is not used by the process itself
+     - reads:
+         type: file
+         description: Sequence reads file, can be SAM/BAM/CRAM format
+
+Changes in 'picard/markduplicates/main.nf':
+--- modules/nf-core/picard/markduplicates/main.nf
++++ modules/nf-core/picard/markduplicates/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process PICARD_MARKDUPLICATES {
+-    tag "${meta.id}"
++    tag "${id}"
+     label 'process_medium'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,23 +9,36 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b4/b474c6f12c0502377b95062b75ef4b7778864b1353c7fc1d5a3b1f3b3017fd2e/data'
+         : 'community.wave.seqera.io/library/picard:3.5.0--842d4c70c98af9b4'}"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { picard_markduplicates_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(reads)
+-    tuple val(meta2), path(fasta), path(fai)
++    record(
++        id: String,
++        meta: Record?,
++        reads: Path,
++        fasta: Path?,
++        fai: Path?,
++        picard_markduplicates_args: String?,
++        output_prefix: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("*.bam"), emit: bam, optional: true
+-    tuple val(meta), path("*.bai"), emit: bai, optional: true
+-    tuple val(meta), path("*.cram"), emit: cram, optional: true
+-    tuple val(meta), path("*.metrics.txt"), emit: metrics
+-    tuple val("${task.process}"), val('picard'), eval("picard MarkDuplicates --version 2>&1 | sed -n 's/.*Version://p'"), topic: versions, emit: versions_picard
++    record(
++        id: id,
++        meta: meta,
++        bam: file("*.bam", optional: true),
++        bai: file("*.bai", optional: true),
++        cram: file("*.cram", optional: true),
++        metrics: file("*.metrics.txt")
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'picard', version: eval("picard MarkDuplicates --version 2>&1 | sed -n 's/.*Version://p'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+     def suffix = reads.getExtension()
+     def reference = fasta ? "--REFERENCE_SEQUENCE ${fasta}" : ""
+     def avail_mem = 3072
+@@ -31,32 +46,31 @@
+         log.info('[Picard MarkDuplicates] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.')
+     }
+     else {
+-        avail_mem = (task.memory.mega * 0.8).intValue()
++        avail_mem = (task.memory.toMega() * 0.8).intValue()
+     }
+ 
+-    if ("${reads}" == "${prefix}.${suffix}") {
++    if ("${reads}" == "${task.ext.prefix}.${suffix}") {
+         error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
+     }
+     """
+     picard \\
+         -Xmx${avail_mem}M \\
+         MarkDuplicates \\
+-        ${args} \\
++        ${task.ext.args} \\
+         --INPUT ${reads} \\
+-        --OUTPUT ${prefix}.${suffix} \\
++        --OUTPUT ${task.ext.prefix}.${suffix} \\
+         ${reference} \\
+-        --METRICS_FILE ${prefix}.metrics.txt
++        --METRICS_FILE ${task.ext.prefix}.metrics.txt
+     """
+ 
+     stub:
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+     def suffix = reads.getExtension()
+-    if ("${reads}" == "${prefix}.${suffix}") {
++    if ("${reads}" == "${task.ext.prefix}.${suffix}") {
+         error("Input and output names are the same, use \"task.ext.prefix\" to disambiguate!")
+     }
+     """
+-    touch ${prefix}.${suffix}
+-    touch ${prefix}.${suffix}.bai
+-    touch ${prefix}.metrics.txt
++    touch ${task.ext.prefix}.${suffix}
++    touch ${task.ext.prefix}.${suffix}.bai
++    touch ${task.ext.prefix}.metrics.txt
+     """
+ }
+
+Changes in 'picard/markduplicates/tests/main.nf.test.snap':
+--- modules/nf-core/picard/markduplicates/tests/main.nf.test.snap
++++ modules/nf-core/picard/markduplicates/tests/main.nf.test.snap
+@@ -2,97 +2,49 @@
+     "sarscov2 [sorted bam] - stub": {
+         "content": [
+             {
+-                "bai": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "bai": "test.md.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "bam": "test.md.bam:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "cram": null,
++                        "id": "test",
++                        "meta": {
+                             "id": "test",
+                             "single_end": false
+                         },
+-                        "test.md.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "bam": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        "test.md.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "metrics": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        "test.md.metrics.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_picard": [
+-                    [
+-                        "PICARD_MARKDUPLICATES",
+-                        "picard",
+-                        "3.5.0"
+-                    ]
++                        "metrics": "test.md.metrics.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-02-19T17:43:13.544887277",
++        "timestamp": "2026-10-21T09:51:14.999341",
+         "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 [unsorted bam] - stub": {
+         "content": [
+             {
+-                "bai": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "bai": "test.md.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "bam": "test.md.bam:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "cram": null,
++                        "id": "test",
++                        "meta": {
+                             "id": "test",
+                             "single_end": false
+                         },
+-                        "test.md.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "bam": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        "test.md.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "metrics": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        "test.md.metrics.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_picard": [
+-                    [
+-                        "PICARD_MARKDUPLICATES",
+-                        "picard",
+-                        "3.5.0"
+-                    ]
++                        "metrics": "test.md.metrics.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-02-19T17:43:06.193033248",
++        "timestamp": "2026-10-21T09:50:58.483411",
+         "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 [unsorted bam]": {
+@@ -104,21 +56,12 @@
+                 "## htsjdk.samtools.metrics.StringHeader",
+                 "# MarkDuplicates --INPUT test.paired_end.bam --OUTPUT test.md.bam --METRICS_FILE test.md.metrics.txt --ASSUME_SORT_ORDER queryname --MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP 50000 --MAX_FILE_HANDLES_FOR_READ_ENDS_MAP 8000 --SORTING_COLLECTION_SIZE_RATIO 0.25 --TAG_DUPLICATE_SET_MEMBERS false --REMOVE_SEQUENCING_DUPLICATES false --TAGGING_POLICY DontTag --CLEAR_DT true --DUPLEX_UMI false --FLOW_MODE false --FLOW_DUP_STRATEGY FLOW_QUALITY_SUM_STRATEGY --FLOW_USE_END_IN_UNPAIRED_READS false --FLOW_USE_UNPAIRED_CLIPPED_END false --FLOW_UNPAIRED_END_UNCERTAINTY 0 --FLOW_UNPAIRED_START_UNCERTAINTY 0 --FLOW_SKIP_FIRST_N_FLOWS 0 --FLOW_Q_IS_KNOWN_END false --FLOW_EFFECTIVE_QUALITY_THRESHOLD 15 --ADD_PG_TAG_TO_READS true --REMOVE_DUPLICATES false --ASSUME_SORTED false --DUPLICATE_SCORING_STRATEGY SUM_OF_BASE_QUALITIES --PROGRAM_RECORD_ID MarkDuplicates --PROGRAM_GROUP_NAME MarkDuplicates --READ_NAME_REGEX <optimized capture of last three ':' separated fields as numeric values> --OPTICAL_DUPLICATE_PIXEL_DISTANCE 100 --MAX_OPTICAL_DUPLICATE_SET_SIZE 300000 --VERBOSITY INFO --QUIET false --VALIDATION_STRINGENCY STRICT --COMPRESSION_LEVEL 5 --MAX_RECORDS_IN_RAM 500000 --CREATE_INDEX false --CREATE_MD5_FILE false --help false --version false --showHidden false --USE_JDK_DEFLATER false --USE_JDK_INFLATER false",
+                 "## htsjdk.samtools.metrics.StringHeader"
+-            ],
+-            {
+-                "versions_picard": [
+-                    [
+-                        "PICARD_MARKDUPLICATES",
+-                        "picard",
+-                        "3.5.0"
+-                    ]
+-                ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-08-19T18:40:56.948628",
++        "timestamp": "2026-10-19T11:29:42.337422",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 [sorted bam]": {
+@@ -130,21 +73,12 @@
+                 "## htsjdk.samtools.metrics.StringHeader",
+                 "# MarkDuplicates --INPUT test.paired_end.sorted.bam --OUTPUT test.md.bam --METRICS_FILE test.md.metrics.txt --ASSUME_SORT_ORDER queryname --MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP 50000 --MAX_FILE_HANDLES_FOR_READ_ENDS_MAP 8000 --SORTING_COLLECTION_SIZE_RATIO 0.25 --TAG_DUPLICATE_SET_MEMBERS false --REMOVE_SEQUENCING_DUPLICATES false --TAGGING_POLICY DontTag --CLEAR_DT true --DUPLEX_UMI false --FLOW_MODE false --FLOW_DUP_STRATEGY FLOW_QUALITY_SUM_STRATEGY --FLOW_USE_END_IN_UNPAIRED_READS false --FLOW_USE_UNPAIRED_CLIPPED_END false --FLOW_UNPAIRED_END_UNCERTAINTY 0 --FLOW_UNPAIRED_START_UNCERTAINTY 0 --FLOW_SKIP_FIRST_N_FLOWS 0 --FLOW_Q_IS_KNOWN_END false --FLOW_EFFECTIVE_QUALITY_THRESHOLD 15 --ADD_PG_TAG_TO_READS true --REMOVE_DUPLICATES false --ASSUME_SORTED false --DUPLICATE_SCORING_STRATEGY SUM_OF_BASE_QUALITIES --PROGRAM_RECORD_ID MarkDuplicates --PROGRAM_GROUP_NAME MarkDuplicates --READ_NAME_REGEX <optimized capture of last three ':' separated fields as numeric values> --OPTICAL_DUPLICATE_PIXEL_DISTANCE 100 --MAX_OPTICAL_DUPLICATE_SET_SIZE 300000 --VERBOSITY INFO --QUIET false --VALIDATION_STRINGENCY STRICT --COMPRESSION_LEVEL 5 --MAX_RECORDS_IN_RAM 500000 --CREATE_INDEX false --CREATE_MD5_FILE false --help false --version false --showHidden false --USE_JDK_DEFLATER false --USE_JDK_INFLATER false",
+                 "## htsjdk.samtools.metrics.StringHeader"
+-            ],
+-            {
+-                "versions_picard": [
+-                    [
+-                        "PICARD_MARKDUPLICATES",
+-                        "picard",
+-                        "3.5.0"
+-                    ]
+-                ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-08-19T18:41:17.239873",
++        "timestamp": "2026-10-19T11:30:08.77881",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "homo_sapiens [cram]": {
+@@ -156,69 +90,36 @@
+                 "## htsjdk.samtools.metrics.StringHeader",
+                 "# MarkDuplicates --INPUT test.paired_end.sorted.cram --OUTPUT test.md.cram --METRICS_FILE test.md.metrics.txt --ASSUME_SORT_ORDER queryname --REFERENCE_SEQUENCE genome.fasta --MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP 50000 --MAX_FILE_HANDLES_FOR_READ_ENDS_MAP 8000 --SORTING_COLLECTION_SIZE_RATIO 0.25 --TAG_DUPLICATE_SET_MEMBERS false --REMOVE_SEQUENCING_DUPLICATES false --TAGGING_POLICY DontTag --CLEAR_DT true --DUPLEX_UMI false --FLOW_MODE false --FLOW_DUP_STRATEGY FLOW_QUALITY_SUM_STRATEGY --FLOW_USE_END_IN_UNPAIRED_READS false --FLOW_USE_UNPAIRED_CLIPPED_END false --FLOW_UNPAIRED_END_UNCERTAINTY 0 --FLOW_UNPAIRED_START_UNCERTAINTY 0 --FLOW_SKIP_FIRST_N_FLOWS 0 --FLOW_Q_IS_KNOWN_END false --FLOW_EFFECTIVE_QUALITY_THRESHOLD 15 --ADD_PG_TAG_TO_READS true --REMOVE_DUPLICATES false --ASSUME_SORTED false --DUPLICATE_SCORING_STRATEGY SUM_OF_BASE_QUALITIES --PROGRAM_RECORD_ID MarkDuplicates --PROGRAM_GROUP_NAME MarkDuplicates --READ_NAME_REGEX <optimized capture of last three ':' separated fields as numeric values> --OPTICAL_DUPLICATE_PIXEL_DISTANCE 100 --MAX_OPTICAL_DUPLICATE_SET_SIZE 300000 --VERBOSITY INFO --QUIET false --VALIDATION_STRINGENCY STRICT --COMPRESSION_LEVEL 5 --MAX_RECORDS_IN_RAM 500000 --CREATE_INDEX false --CREATE_MD5_FILE false --help false --version false --showHidden false --USE_JDK_DEFLATER false --USE_JDK_INFLATER false",
+                 "## htsjdk.samtools.metrics.StringHeader"
+-            ],
+-            {
+-                "versions_picard": [
+-                    [
+-                        "PICARD_MARKDUPLICATES",
+-                        "picard",
+-                        "3.5.0"
+-                    ]
+-                ]
+-            }
++            ]
+         ],
+-        "timestamp": "2026-08-19T18:41:41.238597",
++        "timestamp": "2026-10-19T11:27:49.054338",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "homo_sapiens [cram] - stub": {
+         "content": [
+             {
+-                "bai": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "bai": "test.md.cram.bai:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "bam": null,
++                        "cram": "test.md.cram:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "id": "test",
++                        "meta": {
+                             "id": "test",
+                             "single_end": false
+                         },
+-                        "test.md.cram.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "bam": [
+-                    
+-                ],
+-                "cram": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        "test.md.cram:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "metrics": [
+-                    [
+-                        {
+-                            "id": "test",
+-                            "single_end": false
+-                        },
+-                        "test.md.metrics.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_picard": [
+-                    [
+-                        "PICARD_MARKDUPLICATES",
+-                        "picard",
+-                        "3.5.0"
+-                    ]
++                        "metrics": "test.md.metrics.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-02-19T17:43:20.676018462",
++        "timestamp": "2026-10-21T09:51:32.003927",
+         "meta": {
+-            "nf-test": "0.9.4",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+Changes in 'picard/markduplicates/tests/nextflow.config':
+--- modules/nf-core/picard/markduplicates/tests/nextflow.config
++++ modules/nf-core/picard/markduplicates/tests/nextflow.config
+@@ -1,6 +1,6 @@
+ process {
+     withName: PICARD_MARKDUPLICATES {
+-        ext.prefix = { "${meta.id}.md" }
++        ext.prefix = { "${id}.md" }
+         ext.args   = '--ASSUME_SORT_ORDER queryname'
+     }
+ }
+
+Changes in 'picard/markduplicates/tests/main.nf.test':
+--- modules/nf-core/picard/markduplicates/tests/main.nf.test
++++ modules/nf-core/picard/markduplicates/tests/main.nf.test
+@@ -14,11 +14,15 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
+-                ])
+-                input[1] = [ [:], [], [] ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    reads: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
++                    fasta: null,
++                    fai: null,
++                    picard_markduplicates_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -27,9 +31,8 @@
+             assertAll(
+                 { assert process.success },
+                 { assert snapshot(
+-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
+-                    path(process.out.metrics.get(0).get(1)).readLines()[0..2],
+-                    process.out.findAll { key, val -> key.startsWith("versions") })
++                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
++                    path(process.out[0][0].metrics).readLines()[0..2])
+                 .match() }
+             )
+         }
+@@ -40,11 +43,15 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+-                ])
+-                input[1] = [ [:], [], [] ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    reads: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    fasta: null,
++                    fai: null,
++                    picard_markduplicates_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -53,9 +60,8 @@
+             assertAll(
+                 { assert process.success },
+                 { assert snapshot(
+-                    process.out.bam.collect{meta, bam_ ->  file(bam_).name + ':readsMD5,' + bam(bam_).getReadsMD5()},
+-                    path(process.out.metrics.get(0).get(1)).readLines()[0..2],
+-                    process.out.findAll { key, val -> key.startsWith("versions") })
++                    process.out[0].collect { r -> file(r.bam).name + ':readsMD5,' + bam(r.bam).getReadsMD5() },
++                    path(process.out[0][0].metrics).readLines()[0..2])
+                 .match() }
+             )
+         }
+@@ -66,15 +72,15 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true)
+-                ])
+-                input[1] = Channel.of([
+-                    [ id:'genome' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    reads: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    picard_markduplicates_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -84,9 +90,8 @@
+             assertAll(
+                 { assert process.success },
+                 { assert snapshot(
+-                    process.out.cram.collect{meta, cram_ ->  file(cram_).name + ':readsMD5,' + cram(cram_, fasta).getReadsMD5()},
+-                    path(process.out.metrics.get(0).get(1)).readLines()[0..2],
+-                    process.out.findAll { key, val -> key.startsWith("versions") }
++                    process.out[0].collect { r -> file(r.cram).name + ':readsMD5,' + cram(r.cram, fasta).getReadsMD5() },
++                    path(process.out[0][0].metrics).readLines()[0..2]
+                 ).match() }
+             )
+         }
+@@ -97,11 +102,15 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true)
+-                ])
+-                input[1] = [ [:], [], [] ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    reads: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.bam', checkIfExists: true),
++                    fasta: null,
++                    fai: null,
++                    picard_markduplicates_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -119,11 +128,15 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true)
+-                ])
+-                input[1] = [ [:], [], [] ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    reads: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    fasta: null,
++                    fai: null,
++                    picard_markduplicates_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -141,15 +154,15 @@
+         when {
+             process {
+                 """
+-                input[0] = Channel.of([
+-                    [ id:'test', single_end:false ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true)
+-                ])
+-                input[1] = Channel.of([
+-                    [ id:'genome' ],
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true)
+-                ])
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test', single_end:false ],
++                    reads: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/cram/test.paired_end.sorted.cram', checkIfExists: true),
++                    fasta: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.fasta.fai', checkIfExists: true),
++                    picard_markduplicates_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+
+************************************************************

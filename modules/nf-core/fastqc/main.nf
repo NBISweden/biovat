@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process FASTQC {
-    tag "${meta.id}"
+    tag "${id}"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
@@ -7,24 +9,42 @@ process FASTQC {
 ?         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/81/816bda6dd014e810753f642611232443ddeabb2b47f9681ad43f9044816f00ff/data'
 :         'community.wave.seqera.io/library/fastqc:0.13.0--b342db7b694c9af4' }"
 
+    ext [
+        prefix: { output_prefix ?: "${id}" },
+        args: { fastqc_args ?: '' }
+    ]
+
     input:
-    tuple val(meta), path(reads, stageAs: '?/*')
+    record(
+        id: String,
+        meta: Record?,
+        reads: List<Path>,
+        fastqc_args: String?,
+        output_prefix: String?
+    )
+
+    stage:
+    stageAs reads, '?/*'
 
     output:
-    tuple val(meta), path("*.html"), emit: html
-    tuple val(meta), path("*.zip"), emit: zip
-    tuple val("${task.process}"), val('fastqc'), eval('fastqc --version | sed "/FastQC v/!d; s/.*v//"'), emit: versions_fastqc, topic: versions
+    record(
+        id: id,
+        meta: meta,
+        html: files("*.html"),
+        zip: files("*.zip")
+    )
 
-    when:
-    task.ext.when == null || task.ext.when
+    topic:
+    record(process: "${task.process}", tool: 'fastqc', version: eval('fastqc --version | sed "/FastQC v/!d; s/.*v//"')) >> 'versions'
 
     script:
-    def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
     // Make list of old name and new name pairs to use for renaming in the bash while loop
-    def old_new_pairs = reads instanceof Path || reads.size() == 1 ? [[reads, "${prefix}.${reads.extension}"]] : reads.withIndex().collect { entry, index -> [entry, "${prefix}_${index + 1}.${entry.extension}"] }
-    def rename_to = old_new_pairs*.join(' ').join(' ')
-    def renamed_files = old_new_pairs.collect { _old_name, new_name -> new_name }.join(' ')
+    def indices = 0..<reads.size()
+    def new_names = indices.collect { i ->
+        reads.size() == 1 ? "${task.ext.prefix}.${reads[i].extension}" : "${task.ext.prefix}_${i + 1}.${reads[i].extension}"
+    }
+    def rename_to = indices.collect { i -> "${reads[i]} ${new_names.toList()[i]}" }.join(' ')
+    def renamed_files = new_names.join(' ')
 
     // The total amount of allocated RAM by FastQC is equal to the number of threads defined (--threads) time the amount of RAM defined (--memory)
     // https://github.com/s-andrews/FastQC/blob/1faeea0412093224d7f6a07f777fad60a5650795/fastqc#L211-L222
@@ -42,16 +62,15 @@ process FASTQC {
     done
 
     fastqc \\
-        ${args} \\
+        ${task.ext.args} \\
         --threads ${task.cpus} \\
         ${fastqc_memory_arg} \\
         ${renamed_files}
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.html
-    touch ${prefix}.zip
+    touch ${task.ext.prefix}.html
+    touch ${task.ext.prefix}.zip
     """
 }

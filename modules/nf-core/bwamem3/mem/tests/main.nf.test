@@ -15,10 +15,13 @@ nextflow_process {
             script "../../index/main.nf"
             process {
                 """
-                input[0] = Channel.of([
-                    [:], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
-                ])
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [:],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    bwamem3_index_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -29,13 +32,19 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ], // meta map
-                    [file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)]
-                ])
-                input[1] = BWAMEM3_INDEX.out.index
-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
-                input[3] = false
+                input[0] = BWAMEM3_INDEX.out.map { idx ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:true ],
+                        reads: [file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)],
+                        index: idx.index,
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        sort_bam: false,
+                        bwamem3_mem_args: null,
+                        samtools_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -44,9 +53,8 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(
-                    bam(process.out.aligned[0][1]).getHeaderMD5(),
-                    bam(process.out.aligned[0][1]).getReadsMD5(),
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    bam(process.out[0][0].aligned).getHeaderMD5(),
+                    bam(process.out[0][0].aligned).getReadsMD5()
                 ).match() }
             )
         }
@@ -57,13 +65,19 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ], // meta map
-                    [file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)]
-                ])
-                input[1] = BWAMEM3_INDEX.out.index
-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
-                input[3] = true
+                input[0] = BWAMEM3_INDEX.out.map { idx ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:true ],
+                        reads: [file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)],
+                        index: idx.index,
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        sort_bam: true,
+                        bwamem3_mem_args: null,
+                        samtools_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -72,9 +86,8 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(
-                    bam(process.out.aligned[0][1]).getHeaderMD5(),
-                    bam(process.out.aligned[0][1]).getReadsMD5(),
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    bam(process.out[0][0].aligned).getHeaderMD5(),
+                    bam(process.out[0][0].aligned).getReadsMD5()
                 ).match() }
             )
         }
@@ -85,16 +98,22 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = BWAMEM3_INDEX.out.map { idx ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:false ],
+                        reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
-                    ]
-                ])
-                input[1] = BWAMEM3_INDEX.out.index
-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
-                input[3] = false
+                    ],
+                        index: idx.index,
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        sort_bam: false,
+                        bwamem3_mem_args: null,
+                        samtools_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -103,9 +122,8 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(
-                    bam(process.out.aligned[0][1]).getHeaderMD5(),
-                    bam(process.out.aligned[0][1]).getReadsMD5(),
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    bam(process.out[0][0].aligned).getHeaderMD5(),
+                    bam(process.out[0][0].aligned).getReadsMD5()
                 ).match() }
             )
         }
@@ -116,16 +134,22 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = BWAMEM3_INDEX.out.map { idx ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:false ],
+                        reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
-                    ]
-                ])
-                input[1] = BWAMEM3_INDEX.out.index
-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
-                input[3] = true
+                    ],
+                        index: idx.index,
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        sort_bam: true,
+                        bwamem3_mem_args: null,
+                        samtools_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -134,9 +158,8 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(
-                    bam(process.out.aligned[0][1]).getHeaderMD5(),
-                    bam(process.out.aligned[0][1]).getReadsMD5(),
-                    process.out.findAll { key, val -> key.startsWith("versions") }
+                    bam(process.out[0][0].aligned).getHeaderMD5(),
+                    bam(process.out[0][0].aligned).getReadsMD5()
                 ).match() }
             )
         }
@@ -149,16 +172,22 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = BWAMEM3_INDEX.out.map { idx ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:false ],
+                        reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
-                    ]
-                ])
-                input[1] = BWAMEM3_INDEX.out.index
-                input[2] = Channel.of([[:], file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)])
-                input[3] = true
+                    ],
+                        index: idx.index,
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        sort_bam: true,
+                        bwamem3_mem_args: null,
+                        samtools_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -166,7 +195,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(sanitizeOutput(process.out)).match() }
+                { assert snapshot(process.out[0][0].meta, file(process.out[0][0].aligned.toString()).name, process.out[0][0].index ? file(process.out[0][0].index.toString()).name : null).match() }
             )
         }
     }

@@ -18,10 +18,13 @@ nextflow_process {
             script "../../../bwa/index/main.nf"
             process {
                 """
-                input[0] = Channel.of([
-                    [ id:'test' ], // meta map
-                    file('https://github.com/nf-core/test-datasets/raw/methylseq/reference/genome.fa', checkIfExists: true)
-                ])
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file('https://github.com/nf-core/test-datasets/raw/methylseq/reference/genome.fa', checkIfExists: true),
+                    bwa_index_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -30,10 +33,13 @@ nextflow_process {
             script "../../../bwa/index/main.nf"
             process {
                 """
-                input[0] = Channel.of([
-                    [ id:'test' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
-                ])
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    bwa_index_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -42,10 +48,13 @@ nextflow_process {
             script "../../../bwa/index/main.nf"
             process {
                 """
-                input[0] = [
-                    [id: 'test'],
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
-                ]
+                input[0] = channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test' ],
+                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                    bwa_index_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -62,20 +71,24 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = Channel.of([
-				    [ id:'test', single_end:true ], // meta map
-				    [
-				        file('https://github.com/nf-core/test-datasets/raw/methylseq/testdata/SRR389222_sub1.fastq.gz', checkIfExists: true)
-				    ]
-				])
-                input[1] = Channel.of([
-                    [ id:'test' ], // meta map
-                    file('https://github.com/nf-core/test-datasets/raw/methylseq/reference/genome.fa', checkIfExists: true)
-                ])
-				input[2] = BWA_INDEX.out.index
-                input[3] = [ [], [] ]
-                input[4] = [ [], [], [] ]
-                input[5] = 'bam'
+                input[0] = BWA_INDEX.out.map { bwa ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:true ],
+                        single_end: true,
+                        reads: [
+                            file('https://github.com/nf-core/test-datasets/raw/methylseq/testdata/SRR389222_sub1.fastq.gz', checkIfExists: true)
+                        ],
+                        fasta: file('https://github.com/nf-core/test-datasets/raw/methylseq/reference/genome.fa', checkIfExists: true),
+                        index: bwa.index,
+                        intervals: null,
+                        known_sites: null,
+                        known_sites_index: null,
+                        output_fmt: 'bam',
+                        parabricks_fq2bam_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -84,9 +97,8 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(
-                    bam(process.out.bam[0][1]).getReadsMD5(),
-                    file(process.out.bai[0][1]).name,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    bam(process.out[0][0].bam).getReadsMD5(),
+                    file(process.out[0][0].bai).name
                 ).match() }
             )
         }
@@ -103,20 +115,24 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = Channel.of([
-				    [ id:'test', single_end:true ], // meta map
-				    [
-				        file('https://github.com/nf-core/test-datasets/raw/methylseq/testdata/SRR389222_sub1.fastq.gz', checkIfExists: true)
-				    ]
-				])
-                input[1] = Channel.of([
-                    [ id:'test' ], // meta map
-                    file('https://github.com/nf-core/test-datasets/raw/methylseq/reference/genome.fa', checkIfExists: true)
-                ])
-				input[2] = BWA_INDEX.out.index
-                input[3] = [ [], [] ]
-                input[4] = [ [], [], [] ]
-                input[5] = 'bam'
+                input[0] = BWA_INDEX.out.map { bwa ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:true ],
+                        single_end: true,
+                        reads: [
+                            file('https://github.com/nf-core/test-datasets/raw/methylseq/testdata/SRR389222_sub1.fastq.gz', checkIfExists: true)
+                        ],
+                        fasta: file('https://github.com/nf-core/test-datasets/raw/methylseq/reference/genome.fa', checkIfExists: true),
+                        index: bwa.index,
+                        intervals: null,
+                        known_sites: null,
+                        known_sites_index: null,
+                        output_fmt: 'bam',
+                        parabricks_fq2bam_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -126,7 +142,7 @@ nextflow_process {
                 { assert process.success },
                 { assert snapshot(
                     process.out,
-                    path(process.out.compatible_versions.get(0)).yaml
+                    path(process.out[0][0].compatible_versions).yaml
                     ).match() }
             )
         }
@@ -141,21 +157,25 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test', single_end:false ], // meta map
-                    [
-                        file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
-                        file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
-                    ]
-                ]
-                input[1] = Channel.of([
-                    [ id:'test' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
-                ])
-                input[2] = BWA_INDEX_PE.out.index
-                input[3] = [ [], [] ]
-                input[4] = [ [], [], [] ]
-                input[5] = 'bam'
+                input[0] = BWA_INDEX_PE.out.map { bwa ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:false ],
+                        single_end: false,
+                        reads: [
+                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
+                        ],
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        index: bwa.index,
+                        intervals: null,
+                        known_sites: null,
+                        known_sites_index: null,
+                        output_fmt: 'bam',
+                        parabricks_fq2bam_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -164,9 +184,8 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert snapshot(
-                    bam(process.out.bam[0][1]).getReadsMD5(),
-                    file(process.out.bai[0][1]).name,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    bam(process.out[0][0].bam).getReadsMD5(),
+                    file(process.out[0][0].bai).name
                 ).match() }
             )
         }
@@ -184,21 +203,25 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test', single_end:false ], // meta map
-                    [
-                        file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
-                        file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
-                    ]
-                ]
-                input[1] = Channel.of([
-                    [ id:'test' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
-                ])
-                input[2] = BWA_INDEX_PE.out.index
-                input[3] = [ [], [] ]
-                input[4] = [ [], [], [] ]
-                input[5] = 'bam'
+                input[0] = BWA_INDEX_PE.out.map { bwa ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:false ],
+                        single_end: false,
+                        reads: [
+                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
+                        ],
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        index: bwa.index,
+                        intervals: null,
+                        known_sites: null,
+                        known_sites_index: null,
+                        output_fmt: 'bam',
+                        parabricks_fq2bam_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -208,7 +231,7 @@ nextflow_process {
                 { assert process.success },
                 { assert snapshot(
                     process.out,
-                    path(process.out.compatible_versions.get(0)).yaml
+                    path(process.out[0][0].compatible_versions).yaml
                     ).match() }
             )
         }
@@ -224,17 +247,24 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test', single_end:true ], // meta map
-                    [
-                        file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)
-                    ]
-                ]
-                input[1] = [[id: 'test'],file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)]
-                input[2] = BWA_INDEX_CRAM.out.index
-                input[3] = [ [], [] ]
-                input[4] = [ [], [], [] ]
-                input[5] = 'cram'
+                input[0] = BWA_INDEX_CRAM.out.map { bwa ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:true ],
+                        single_end: true,
+                        reads: [
+                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true)
+                        ],
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        index: bwa.index,
+                        intervals: null,
+                        known_sites: null,
+                        known_sites_index: null,
+                        output_fmt: 'cram',
+                        parabricks_fq2bam_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }
@@ -245,11 +275,10 @@ nextflow_process {
                 { assert process.success },
                 { assert snapshot(
                     cram(
-                        process.out.cram[0][1],
+                        process.out[0][0].cram,
                         fasta,
                         ).getReadsMD5(),
-                    file(process.out.crai[0][1]).name,
-                    process.out.findAll { key, val -> key.startsWith('versions') }
+                    file(process.out[0][0].crai).name
                 ).match() }
             )
         }
@@ -267,21 +296,25 @@ nextflow_process {
             }
             process {
                 """
-                input[0] = [
-                    [ id:'test', single_end:false ], // meta map
-                    [
-                        file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
-                        file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
-                    ]
-                ]
-                input[1] = Channel.of([
-                    [ id:'test' ], // meta map
-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
-                ])
-                input[2] = BWA_INDEX_PE.out.index
-                input[3] = [ [], [] ]
-                input[4] = [ [], [], [] ]
-                input[5] = 'cram'
+                input[0] = BWA_INDEX_PE.out.map { bwa ->
+                    record(
+                        id: 'test',
+                        meta: [ id:'test', single_end:false ],
+                        single_end: false,
+                        reads: [
+                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                            file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
+                        ],
+                        fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+                        index: bwa.index,
+                        intervals: null,
+                        known_sites: null,
+                        known_sites_index: null,
+                        output_fmt: 'cram',
+                        parabricks_fq2bam_args: null,
+                        output_prefix: null
+                    )
+                }
                 """
             }
         }

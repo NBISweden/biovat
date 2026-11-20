@@ -19,10 +19,13 @@ tools:
       licence: ["GPL-2.0-only"]
       identifier: biotools:fastqc
 input:
-  - - meta:
+  - - id:
+        type: string
+        description: Identifier of the sample or reference, used to name the outputs
+    - meta:
         type: map
         description: |
-          Groovy Map containing sample information
+          Optional groovy Map containing sample information
           e.g. [ id:'test', single_end:false ]
     - reads:
         type: file
@@ -32,10 +35,13 @@ input:
         ontologies: []
 output:
   html:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference, used to name the outputs
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
+            Optional groovy Map containing sample information
             e.g. [ id:'test', single_end:false ]
       - "*.html":
           type: file
@@ -43,10 +49,13 @@ output:
           pattern: "*_{fastqc.html}"
           ontologies: []
   zip:
-    - - meta:
+    - - id:
+          type: string
+          description: Identifier of the sample or reference, used to name the outputs
+      - meta:
           type: map
           description: |
-            Groovy Map containing sample information
+            Optional groovy Map containing sample information
             e.g. [ id:'test', single_end:false ]
       - "*.zip":
           type: file

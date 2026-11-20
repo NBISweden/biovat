@@ -13,19 +13,23 @@ nextflow_process {
 
             process {
                 """
-                adapter_fasta        = [] // empty list for no adapter file!
+                adapter_fasta        = null // no adapter file
                 discard_trimmed_pass = false
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ],
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:true ],
+                    single_end: true,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -33,13 +37,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("single end (151 cycles)") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("reads passed filter: 99") },
+                { assert path(process.out[0][0].html).getText().contains("single end (151 cycles)") },
+                { assert path(process.out[0][0].log).getText().contains("reads passed filter: 99") },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.reads_fail,
-                    process.out.reads_merged,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match()
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match()
                 }
             )
         }
@@ -51,22 +54,26 @@ nextflow_process {
 
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
                     ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -74,13 +81,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("The input has little adapter percentage (~0.000000%), probably it's trimmed before.") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("Q30 bases: 12281(88.3716%)") },
+                { assert path(process.out[0][0].html).getText().contains("The input has little adapter percentage (~0.000000%), probably it's trimmed before.") },
+                { assert path(process.out[0][0].log).getText().contains("Q30 bases: 12281(88.3716%)") },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.reads_fail,
-                    process.out.reads_merged,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match() }
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match() }
             )
         }
     }
@@ -91,19 +97,23 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ], // meta map
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_interleaved.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:true ],
+                    single_end: true,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_interleaved.fastq.gz', checkIfExists: true) ],
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -111,13 +121,14 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("paired end (151 cycles + 151 cycles)") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("reads passed filter: 162") },
-                { assert process.out.reads_fail == [] },
-                { assert process.out.reads_merged == [] },
+                { assert path(process.out[0][0].html).getText().contains("paired end (151 cycles + 151 cycles)") },
+                { assert path(process.out[0][0].log).getText().contains("reads passed filter: 162") },
+                { assert process.out[0][0].reads_fail.isEmpty() },
+                { assert process.out[0][0].reads_merged == null },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match() }
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match() }
             )
         }
     }
@@ -128,19 +139,23 @@ nextflow_process {
 
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = true
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ], // meta map
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:true ],
+                    single_end: true,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -148,13 +163,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("single end (151 cycles)") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("reads passed filter: 99") },
+                { assert path(process.out[0][0].html).getText().contains("single end (151 cycles)") },
+                { assert path(process.out[0][0].log).getText().contains("reads passed filter: 99") },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.reads_fail,
-                    process.out.reads_merged,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match() }
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match() }
             )
         }
     }
@@ -165,22 +179,26 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = true
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
                     ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -188,13 +206,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("The input has little adapter percentage (~0.000000%), probably it's trimmed before.") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("reads passed filter: 162") },
+                { assert path(process.out[0][0].html).getText().contains("The input has little adapter percentage (~0.000000%), probably it's trimmed before.") },
+                { assert path(process.out[0][0].log).getText().contains("reads passed filter: 162") },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.reads_fail,
-                    process.out.reads_merged,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match() }
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match() }
             )
         }
     }
@@ -204,22 +221,26 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = false
                 save_merged          = true
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
                     ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -227,13 +248,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("The input has little adapter percentage (~0.000000%), probably it's trimmed before.") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("total reads: 75") },
+                { assert path(process.out[0][0].html).getText().contains("The input has little adapter percentage (~0.000000%), probably it's trimmed before.") },
+                { assert path(process.out[0][0].log).getText().contains("total reads: 75") },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.reads_fail,
-                    process.out.reads_merged,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match() },
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match() },
             )
         }
     }
@@ -248,17 +268,21 @@ nextflow_process {
                 save_trimmed_fail    = false
                 save_merged          = true
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
                     ],
-                    adapter_fasta
-                ])
-                input[1] = false
-                input[2] = false
-                input[3] = true
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -266,13 +290,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("<div id='After_filtering__merged__quality'>") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("total bases: 13683") },
+                { assert path(process.out[0][0].html).getText().contains("<div id='After_filtering__merged__quality'>") },
+                { assert path(process.out[0][0].log).getText().contains("total bases: 13683") },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.reads_fail,
-                    process.out.reads_merged,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match() }
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match() }
             )
         }
     }
@@ -282,20 +305,23 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = true
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ],
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:true ],
+                    single_end: true,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -303,16 +329,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("single end (151 cycles)") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("reads passed filter: 99") },
+                { assert path(process.out[0][0].html).getText().contains("single end (151 cycles)") },
+                { assert path(process.out[0][0].log).getText().contains("reads passed filter: 99") },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.reads,
-                    process.out.reads_fail,
-                    process.out.reads_fail,
-                    process.out.reads_merged,
-                    process.out.reads_merged,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match() }
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match() }
             )
         }
     }
@@ -322,22 +344,26 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = true
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
                     ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -345,16 +371,12 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert path(process.out.html.get(0).get(1)).getText().contains("The input has little adapter percentage (~0.000000%), probably it's trimmed before.") },
-                { assert path(process.out.log.get(0).get(1)).getText().contains("Q30 bases: 12281(88.3716%)") },
+                { assert path(process.out[0][0].html).getText().contains("The input has little adapter percentage (~0.000000%), probably it's trimmed before.") },
+                { assert path(process.out[0][0].log).getText().contains("Q30 bases: 12281(88.3716%)") },
                 { assert snapshot(
-                    process.out.reads,
-                    process.out.reads,
-                    process.out.reads_fail,
-                    process.out.reads_fail,
-                    process.out.reads_merged,
-                    process.out.reads_merged,
-                    process.out.findAll { key, val -> key.startsWith('versions') }).match() }
+                    process.out[0][0].reads.sort(),
+                    process.out[0][0].reads_fail.sort(),
+                    process.out[0][0].reads_merged).match() }
             )
         }
     }
@@ -367,19 +389,23 @@ nextflow_process {
 
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ],
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:true ],
+                    single_end: true,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -387,7 +413,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }
@@ -400,20 +426,24 @@ nextflow_process {
 
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                     file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -421,7 +451,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }
@@ -434,19 +464,23 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ], // meta map
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_interleaved.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:true ],
+                    single_end: true,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_interleaved.fastq.gz', checkIfExists: true) ],
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -454,7 +488,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }
@@ -467,19 +501,23 @@ nextflow_process {
 
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = true
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ], // meta map
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:true ],
+                    single_end: true,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -487,7 +525,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }
@@ -500,20 +538,24 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = true
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                     file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -521,7 +563,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }
@@ -533,20 +575,24 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = false
                 save_trimmed_fail    = false
                 save_merged          = true
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                     file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -554,7 +600,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }
@@ -571,17 +617,21 @@ nextflow_process {
                 save_trimmed_fail    = false
                 save_merged          = true
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                         file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true)
                     ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -589,7 +639,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }
@@ -601,19 +651,23 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = true
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:true ],
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:true ],
+                    single_end: true,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true) ],
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -621,7 +675,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }
@@ -633,20 +687,24 @@ nextflow_process {
         when {
             process {
                 """
-                adapter_fasta        = []
+                adapter_fasta        = null
                 discard_trimmed_pass = true
                 save_trimmed_fail    = false
                 save_merged          = false
 
-                input[0] = Channel.of([
-                    [ id:'test', single_end:false ], // meta map
-                    [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
+                input[0] = Channel.of(record(
+                    id: 'test',
+                    meta: [ id:'test', single_end:false ],
+                    single_end: false,
+                    reads: [ file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_1.fastq.gz', checkIfExists: true),
                     file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/fastq/test_2.fastq.gz', checkIfExists: true) ],
-                    adapter_fasta
-                ])
-                input[1] = discard_trimmed_pass
-                input[2] = save_trimmed_fail
-                input[3] = save_merged
+                    adapter_fasta: adapter_fasta,
+                    discard_trimmed_pass: discard_trimmed_pass,
+                    save_trimmed_fail: save_trimmed_fail,
+                    save_merged: save_merged,
+                    fastp_args: null,
+                    output_prefix: null
+                ))
                 """
             }
         }
@@ -654,7 +712,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
-                { assert snapshot(process.out).match() }
+                { assert snapshot(process.out[0].collect { rec -> rec.collectEntries { k, v -> [k, v instanceof Collection ? v.sort() : v] } }).match() }
             )
         }
     }

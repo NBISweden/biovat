@@ -1,0 +1,496 @@
+Changes in component 'nf-core/samtools/sormadup'
+'modules/nf-core/samtools/sormadup/environment.yml' is unchanged
+Changes in 'samtools/sormadup/meta.yml':
+--- modules/nf-core/samtools/sormadup/meta.yml
++++ modules/nf-core/samtools/sormadup/meta.yml
+@@ -72,7 +72,11 @@
+       args_id: "$args5"
+       identifier: biotools:samtools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample or reference. Used as the default prefix of the output files
++    - meta:
++        optional: true
+         type: map
+         description: |
+           Groovy Map containing sample information
+@@ -99,7 +103,11 @@
+         ontologies: []
+ output:
+   bam:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -110,7 +118,11 @@
+           pattern: "*.bam"
+           ontologies: []
+   cram:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -121,7 +133,11 @@
+           pattern: "*.cram"
+           ontologies: []
+   csi:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -132,7 +148,11 @@
+           pattern: "*.csi"
+           ontologies: []
+   crai:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+@@ -143,7 +163,11 @@
+           pattern: "*.crai"
+           ontologies: []
+   metrics:
+-    - - meta:
++    - - id:
++          type: string
++          description: Identifier of the sample or reference. Used as the default prefix of the output files
++      - meta:
++          optional: true
+           type: map
+           description: |
+             Groovy Map containing sample information
+
+Changes in 'samtools/sormadup/main.nf':
+--- modules/nf-core/samtools/sormadup/main.nf
++++ modules/nf-core/samtools/sormadup/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process SAMTOOLS_SORMADUP {
+-    tag "${meta.id}"
++    tag "${id}"
+     label 'process_medium'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,51 +9,67 @@
+         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
+         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { samtools_cat_args ?: '' },
++        args2: { samtools_collate_args ?: '' },
++        args3: { samtools_fixmate_args ?: '' },
++        args4: { samtools_sort_args ?: '' },
++        args5: { samtools_markdup_args ?: '' }
++    ]
++
+     input:
+-    tuple val(meta), path(input)
+-    tuple val(meta2), path(fasta), path(fai)
++    record(
++        id: String,
++        meta: Record?,
++        input: Path,
++        fasta: Path?,
++        fai: Path?,
++        samtools_cat_args: String?,
++        samtools_collate_args: String?,
++        samtools_fixmate_args: String?,
++        samtools_sort_args: String?,
++        samtools_markdup_args: String?,
++        output_prefix: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("*.bam"), emit: bam, optional: true
+-    tuple val(meta), path("*.cram"), emit: cram, optional: true
+-    tuple val(meta), path("*.csi"), emit: csi, optional: true
+-    tuple val(meta), path("*.crai"), emit: crai, optional: true
+-    tuple val(meta), path("*.metrics"), emit: metrics
+-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
++    record(
++        id: id,
++        meta: meta,
++        bam: file("*.bam", optional: true),
++        cram: file("*.cram", optional: true),
++        csi: file("*.csi", optional: true),
++        crai: file("*.crai", optional: true),
++        metrics: file("*.metrics")
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+-    def args2 = task.ext.args2 ?: ''
+-    def args3 = task.ext.args3 ?: ''
+-    def args4 = task.ext.args4 ?: ''
+-    def args5 = task.ext.args5 ?: ''
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+-    def extension = args5.contains("--output-fmt sam")
++    def extension = task.ext.args5.contains("--output-fmt sam")
+         ? "sam"
+-        : args5.contains("--output-fmt cram")
++        : task.ext.args5.contains("--output-fmt cram")
+             ? "cram"
+             : "bam"
+     def reference = fasta ? "--reference ${fasta}" : ""
+-
+     """
+     samtools cat \\
+-        ${args} \\
++        ${task.ext.args} \\
+         ${input}  \\
+     | \\
+     samtools collate \\
+-        ${args2} \\
++        ${task.ext.args2} \\
+         -O \\
+         -u \\
+-        -T ${prefix}.collate \\
++        -T ${task.ext.prefix}.collate \\
+         --threads ${task.cpus} \\
+         ${reference} \\
+         - \\
+     | \\
+     samtools fixmate \\
+-        ${args3} \\
++        ${task.ext.args3} \\
+         -m \\
+         -u \\
+         --threads ${task.cpus} \\
+@@ -59,34 +77,34 @@
+         - \\
+     | \\
+     samtools sort \\
+-        ${args4} \\
++        ${task.ext.args4} \\
+         -u \\
+-        -T ${prefix}.sort \\
++        -T ${task.ext.prefix}.sort \\
+         --threads ${task.cpus} \\
+         - \\
+     | \\
+     samtools markdup \\
+-        -T ${prefix} \\
+-        -f ${prefix}.metrics \\
++        -T ${task.ext.prefix} \\
++        -f ${task.ext.prefix}.metrics \\
+         --threads ${task.cpus} \\
+         ${reference} \\
+-        ${args5} \\
++        ${task.ext.args5} \\
+         - \\
+-        ${prefix}.${extension}
+-
++        ${task.ext.prefix}.${extension}
+     """
+ 
+     stub:
+-    def args5 = task.ext.args5 ?: ''
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+-    def extension = args5.contains("--output-fmt sam")
++    def extension = task.ext.args5.contains("--output-fmt sam")
+         ? "sam"
+-        : args5.contains("--output-fmt cram")
++        : task.ext.args5.contains("--output-fmt cram")
+             ? "cram"
+             : "bam"
+-
++    def index = task.ext.args5.contains("--write-index")
++        ? "touch ${task.ext.prefix}.${extension}.${extension == 'cram' ? 'crai' : 'csi'}"
++        : ""
+     """
+-    touch ${prefix}.${extension}
+-    touch ${prefix}.metrics
++    touch ${task.ext.prefix}.${extension}
++    touch ${task.ext.prefix}.metrics
++    ${index}
+     """
+ }
+
+Changes in 'samtools/sormadup/tests/main.nf.test.snap':
+--- modules/nf-core/samtools/sormadup/tests/main.nf.test.snap
++++ modules/nf-core/samtools/sormadup/tests/main.nf.test.snap
+@@ -2,115 +2,61 @@
+     "sarscov2 - bam - stub": {
+         "content": [
+             {
+-                "bam": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "bam": "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "crai": null,
++                        "cram": null,
++                        "csi": null,
++                        "id": "test",
++                        "meta": {
+                             "id": "test"
+                         },
+-                        "test.bam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "crai": [
+-                    
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "csi": [
+-                    
+-                ],
+-                "metrics": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.metrics:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORMADUP",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++                        "metrics": "test.metrics:md5,d41d8cd98f00b204e9800998ecf8427e"
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-07-10T16:09:23.851588322",
++        "timestamp": "2026-10-21T09:39:32.129789",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - cram": {
+         "content": [
+             "5a5baeea55f04def40fd3070318e5a3",
+             "test.merged.cram.crai",
+-            [
+-                [
+-                    {
+-                        "id": "test"
+-                    },
+-                    "test.merged.metrics:md5,02eebd31b097e165e1b18d84b023f18d"
+-                ]
+-            ],
+-            {
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORMADUP",
+-                        "samtools",
+-                        "1.24"
+-                    ]
+-                ]
+-            }
++            "test.merged.metrics:md5,d02fa0978bcd24b8f632eb0faee01d9c"
+         ],
+-        "timestamp": "2026-03-19T09:03:52.7035",
++        "timestamp": "2026-10-16T17:18:12.584212",
+         "meta": {
+-            "nf-test": "0.9.3",
+-            "nextflow": "25.10.4"
++            "nf-test": "0.9.5",
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - bam": {
+         "content": [
+             {
+-                "bam": [
+-                    [
+-                        {
++                "0": [
++                    {
++                        "bam": "test.bam:md5,54926ec7b058fd5f7ba38600fa6f5421",
++                        "crai": null,
++                        "cram": null,
++                        "csi": null,
++                        "id": "test",
++                        "meta": {
+                             "id": "test"
+                         },
+-                        "test.bam:md5,5ba398077fcb6258f65477176d82681e"
+-                    ]
+-                ],
+-                "crai": [
+-                    
+-                ],
+-                "cram": [
+-                    
+-                ],
+-                "csi": [
+-                    
+-                ],
+-                "metrics": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.metrics:md5,6093d8853805578a1868f22ff68177e7"
+-                    ]
+-                ],
+-                "versions_samtools": [
+-                    [
+-                        "SAMTOOLS_SORMADUP",
+-                        "samtools",
+-                        "1.24"
+-                    ]
++                        "metrics": "test.metrics:md5,bd546828bedb85947443ae1b4d85cba5"
++                    }
+                 ]
+             }
+         ],
+-        "timestamp": "2026-07-10T16:09:12.316289173",
++        "timestamp": "2026-10-21T09:39:15.492294",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.4"
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+'modules/nf-core/samtools/sormadup/tests/bam.config' is unchanged
+'modules/nf-core/samtools/sormadup/tests/cram.config' is unchanged
+Changes in 'samtools/sormadup/tests/main.nf.test':
+--- modules/nf-core/samtools/sormadup/tests/main.nf.test
++++ modules/nf-core/samtools/sormadup/tests/main.nf.test
+@@ -13,15 +13,19 @@
+         when {
+             process {
+                 """
+-                input[0] = [
+-                    [id: 'test'],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+-                ]
+-                input[1] = [
+-                    [ id:'fasta' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [id: 'test'],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    samtools_cat_args: null,
++                    samtools_collate_args: null,
++                    samtools_fixmate_args: null,
++                    samtools_sort_args: null,
++                    samtools_markdup_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -42,15 +46,19 @@
+             }
+             process {
+                 """
+-                input[0] = [
+-                    [id: 'test'],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+-                ]
+-                input[1] = [
+-                    [ id:'fasta' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [id: 'test'],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    samtools_cat_args: null,
++                    samtools_collate_args: null,
++                    samtools_fixmate_args: null,
++                    samtools_sort_args: null,
++                    samtools_markdup_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -58,13 +66,13 @@
+         then {
+             def fasta = params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta'
+             assert process.success
++            def out = process.out[0][0]
+             assertAll(
+                 {
+                     assert snapshot(
+-                        cram(process.out.cram[0][1], fasta).getReadsMD5(),
+-                        file(process.out.crai[0][1]).name,
+-                        process.out.metrics,
+-                        process.out.findAll { key, val -> key.startsWith("versions") }
++                        cram(out.cram, fasta).getReadsMD5(),
++                        file(out.crai).name,
++                        out.metrics
+                     ).match()
+                 }
+             )
+@@ -79,15 +87,19 @@
+         when {
+             process {
+                 """
+-                input[0] = [
+-                    [id: 'test'],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+-                ]
+-                input[1] = [
+-                    [ id:'fasta' ],
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+-                ]
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [id: 'test'],
++                    input: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
++                    fasta: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true),
++                    fai: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true),
++                    samtools_cat_args: null,
++                    samtools_collate_args: null,
++                    samtools_fixmate_args: null,
++                    samtools_sort_args: null,
++                    samtools_markdup_args: null,
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+
+************************************************************

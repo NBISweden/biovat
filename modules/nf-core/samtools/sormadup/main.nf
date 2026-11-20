@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process SAMTOOLS_SORMADUP {
-    tag "${meta.id}"
+    tag "${id}"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -7,51 +9,67 @@ process SAMTOOLS_SORMADUP {
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
 
+    ext [
+        prefix: { output_prefix ?: "${id}" },
+        args: { samtools_cat_args ?: '' },
+        args2: { samtools_collate_args ?: '' },
+        args3: { samtools_fixmate_args ?: '' },
+        args4: { samtools_sort_args ?: '' },
+        args5: { samtools_markdup_args ?: '' }
+    ]
+
     input:
-    tuple val(meta), path(input)
-    tuple val(meta2), path(fasta), path(fai)
+    record(
+        id: String,
+        meta: Record?,
+        input: Path,
+        fasta: Path?,
+        fai: Path?,
+        samtools_cat_args: String?,
+        samtools_collate_args: String?,
+        samtools_fixmate_args: String?,
+        samtools_sort_args: String?,
+        samtools_markdup_args: String?,
+        output_prefix: String?
+    )
 
     output:
-    tuple val(meta), path("*.bam"), emit: bam, optional: true
-    tuple val(meta), path("*.cram"), emit: cram, optional: true
-    tuple val(meta), path("*.csi"), emit: csi, optional: true
-    tuple val(meta), path("*.crai"), emit: crai, optional: true
-    tuple val(meta), path("*.metrics"), emit: metrics
-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
+    record(
+        id: id,
+        meta: meta,
+        bam: file("*.bam", optional: true),
+        cram: file("*.cram", optional: true),
+        csi: file("*.csi", optional: true),
+        crai: file("*.crai", optional: true),
+        metrics: file("*.metrics")
+    )
 
-    when:
-    task.ext.when == null || task.ext.when
+    topic:
+    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
 
     script:
-    def args = task.ext.args ?: ''
-    def args2 = task.ext.args2 ?: ''
-    def args3 = task.ext.args3 ?: ''
-    def args4 = task.ext.args4 ?: ''
-    def args5 = task.ext.args5 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def extension = args5.contains("--output-fmt sam")
+    def extension = task.ext.args5.contains("--output-fmt sam")
         ? "sam"
-        : args5.contains("--output-fmt cram")
+        : task.ext.args5.contains("--output-fmt cram")
             ? "cram"
             : "bam"
     def reference = fasta ? "--reference ${fasta}" : ""
-
     """
     samtools cat \\
-        ${args} \\
+        ${task.ext.args} \\
         ${input}  \\
     | \\
     samtools collate \\
-        ${args2} \\
+        ${task.ext.args2} \\
         -O \\
         -u \\
-        -T ${prefix}.collate \\
+        -T ${task.ext.prefix}.collate \\
         --threads ${task.cpus} \\
         ${reference} \\
         - \\
     | \\
     samtools fixmate \\
-        ${args3} \\
+        ${task.ext.args3} \\
         -m \\
         -u \\
         --threads ${task.cpus} \\
@@ -59,34 +77,34 @@ process SAMTOOLS_SORMADUP {
         - \\
     | \\
     samtools sort \\
-        ${args4} \\
+        ${task.ext.args4} \\
         -u \\
-        -T ${prefix}.sort \\
+        -T ${task.ext.prefix}.sort \\
         --threads ${task.cpus} \\
         - \\
     | \\
     samtools markdup \\
-        -T ${prefix} \\
-        -f ${prefix}.metrics \\
+        -T ${task.ext.prefix} \\
+        -f ${task.ext.prefix}.metrics \\
         --threads ${task.cpus} \\
         ${reference} \\
-        ${args5} \\
+        ${task.ext.args5} \\
         - \\
-        ${prefix}.${extension}
-
+        ${task.ext.prefix}.${extension}
     """
 
     stub:
-    def args5 = task.ext.args5 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def extension = args5.contains("--output-fmt sam")
+    def extension = task.ext.args5.contains("--output-fmt sam")
         ? "sam"
-        : args5.contains("--output-fmt cram")
+        : task.ext.args5.contains("--output-fmt cram")
             ? "cram"
             : "bam"
-
+    def index = task.ext.args5.contains("--write-index")
+        ? "touch ${task.ext.prefix}.${extension}.${extension == 'cram' ? 'crai' : 'csi'}"
+        : ""
     """
-    touch ${prefix}.${extension}
-    touch ${prefix}.metrics
+    touch ${task.ext.prefix}.${extension}
+    touch ${task.ext.prefix}.metrics
+    ${index}
     """
 }

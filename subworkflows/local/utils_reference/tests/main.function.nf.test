@@ -39,7 +39,7 @@ nextflow_function {
         then {
             assertAll(
                 { assert function.failed },
-                { assert function.stdout.any { line -> line.contains("does not support indexing contigs longer than 2^29 bp (536,870,912): chrBig (536870913 bp)") } }
+                { assert (function.stdout + function.stderr).any { line -> line.contains("does not support indexing contigs longer than 2^29 bp (536,870,912): chrBig (536870913 bp)") } }
             )
         }
     }

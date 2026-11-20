@@ -1,5 +1,7 @@
+nextflow.enable.types = true
+
 process SAMTOOLS_FAIDX {
-    tag "${fasta}"
+    tag "${id}"
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
@@ -7,28 +9,40 @@ process SAMTOOLS_FAIDX {
         ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/e9/e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859/data'
         : 'community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd'}"
 
+    ext [
+        args: { samtools_faidx_args ?: '' }
+    ]
+
     input:
-    tuple val(meta), path(fasta), path(fai)
-    val get_sizes
+    record(
+        id: String,
+        meta: Record?,
+        fasta: Path,
+        fai: Path?,
+        get_sizes: Boolean,
+        samtools_faidx_args: String?
+    )
 
     output:
-    tuple val(meta), path("*.{fa,fasta}"), emit: fa, optional: true
-    tuple val(meta), path("*.sizes"), emit: sizes, optional: true
-    tuple val(meta), path("*.fai"), emit: fai, optional: true
-    tuple val(meta), path("*.gzi"), emit: gzi, optional: true
-    tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), topic: versions, emit: versions_samtools
+    record(
+        id: id,
+        meta: meta,
+        fa: file("*.{fa,fasta}", optional: true),
+        sizes: file("*.sizes", optional: true),
+        fai: file("*.fai", optional: true),
+        gzi: file("*.gzi", optional: true)
+    )
 
-    when:
-    task.ext.when == null || task.ext.when
+    topic:
+    record(process: "${task.process}", tool: 'samtools', version: eval("samtools version | sed '1!d;s/.* //'")) >> 'versions'
 
     script:
-    def args = task.ext.args ?: ''
     def get_sizes_command = get_sizes ? "cut -f 1,2 ${fasta}.fai > ${fasta}.sizes" : ''
     """
     samtools \\
         faidx \\
         ${fasta} \\
-        ${args}
+        ${task.ext.args}
 
     ${get_sizes_command}
     """

@@ -1,0 +1,3306 @@
+Changes in component 'nf-core/vcftools'
+'modules/nf-core/vcftools/environment.yml' is unchanged
+Changes in 'vcftools/meta.yml':
+--- modules/nf-core/vcftools/meta.yml
++++ modules/nf-core/vcftools/meta.yml
+@@ -15,11 +15,14 @@
+         - "LGPL"
+       identifier: biotools:vcftools
+ input:
+-  - - meta:
++  - - id:
++        type: string
++        description: Identifier of the sample, used for the default output prefix
++    - meta:
+         type: map
+         description: |
+-          Groovy Map containing sample information
+-          e.g. [ id:'test', single_end:false ]
++          Optional Groovy Map with sample metadata, passed through to the output.
++          It is not used by the module itself.
+     - variant_file:
+         type: file
+         description: variant input file which can be vcf, vcf.gz, or bcf format.
+@@ -36,77 +39,98 @@
+       ontologies: []
+ output:
+   vcf:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.vcf":
+           type: file
+           description: vcf file (optional)
+           pattern: "*.vcf"
+           ontologies: []
+   bcf:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.bcf":
+           type: file
+           description: bcf file (optional)
+           pattern: "*.bcf"
+           ontologies: []
+   frq:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.frq":
+           type: file
+           description: Allele frequency for each site (optional)
+           pattern: "*.frq"
+           ontologies: []
+   frq_count:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.frq.count":
+           type: file
+           description: Allele counts for each site (optional)
+           pattern: "*.frq.count"
+           ontologies: []
+   idepth:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.idepth":
+           type: file
+           description: mean depth per individual (optional)
+           pattern: "*.idepth"
+           ontologies: []
+   ldepth:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.ldepth":
+           type: file
+           description: depth per site summed across individuals (optional)
+           pattern: "*.ildepth"
+           ontologies: []
+   ldepth_mean:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.ldepth.mean":
+           type: file
+           description: mean depth per site calculated across individuals
+@@ -114,33 +138,42 @@
+           pattern: "*.ldepth.mean"
+           ontologies: []
+   gdepth:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.gdepth":
+           type: file
+           description: depth for each genotype in vcf file (optional)
+           pattern: "*.gdepth"
+           ontologies: []
+   hap_ld:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.hap.ld":
+           type: file
+           description: r2, D, and D’ statistics using phased haplotypes (optional)
+           pattern: "*.hap.ld"
+           ontologies: []
+   geno_ld:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.geno.ld":
+           type: file
+           description: squared correlation coefficient between genotypes encoded
+@@ -149,11 +182,14 @@
+           pattern: "*.geno.ld"
+           ontologies: []
+   geno_chisq:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.geno.chisq":
+           type: file
+           description: test for genotype independence via the chi-squared
+@@ -161,11 +197,14 @@
+           pattern: "*.geno.chisq"
+           ontologies: []
+   list_hap_ld:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.list.hap.ld":
+           type: file
+           description: r2 statistics of the sites contained in the provided input
+@@ -173,11 +212,14 @@
+           pattern: "*.list.hap.ld"
+           ontologies: []
+   list_geno_ld:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.list.geno.ld":
+           type: file
+           description: r2 statistics of the sites contained in the provided input
+@@ -185,11 +227,14 @@
+           pattern: "*.list.geno.ld"
+           ontologies: []
+   interchrom_hap_ld:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.interchrom.hap.ld":
+           type: file
+           description: r2 statistics for sites (haplotypes) on different
+@@ -197,11 +242,14 @@
+           pattern: "*.interchrom.hap.ld"
+           ontologies: []
+   interchrom_geno_ld:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.interchrom.geno.ld":
+           type: file
+           description: r2 statistics for sites (genotypes) on different
+@@ -209,11 +257,14 @@
+           pattern: "*.interchrom.geno.ld"
+           ontologies: []
+   tstv:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.TsTv":
+           type: file
+           description: Transition / Transversion ratio in bins of size defined in
+@@ -221,22 +272,28 @@
+           pattern: "*.TsTv"
+           ontologies: []
+   tstv_summary:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.TsTv.summary":
+           type: file
+           description: Summary of all Transitions and Transversions (optional)
+           pattern: "*.TsTv.summary"
+           ontologies: []
+   tstv_count:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.TsTv.count":
+           type: file
+           description: Transition / Transversion ratio as a function of
+@@ -244,11 +301,14 @@
+           pattern: "*.TsTv.count"
+           ontologies: []
+   tstv_qual:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.TsTv.qual":
+           type: file
+           description: Transition / Transversion ratio as a function of SNP
+@@ -256,11 +316,14 @@
+           pattern: "*.TsTv.qual"
+           ontologies: []
+   filter_summary:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.FILTER.summary":
+           type: file
+           description: Summary of the number of SNPs and Ts/Tv ratio for each
+@@ -268,22 +331,28 @@
+           pattern: "*.FILTER.summary"
+           ontologies: []
+   sites_pi:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.sites.pi":
+           type: file
+           description: Nucleotide divergency on a per-site basis (optional)
+           pattern: "*.sites.pi"
+           ontologies: []
+   windowed_pi:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.windowed.pi":
+           type: file
+           description: Nucleotide diversity in windows, with window size
+@@ -291,11 +360,14 @@
+           pattern: "*windowed.pi"
+           ontologies: []
+   weir_fst:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.weir.fst":
+           type: file
+           description: Fst estimate from Weir and Cockerham’s 1984 paper
+@@ -303,22 +375,28 @@
+           pattern: "*.weir.fst"
+           ontologies: []
+   heterozygosity:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.het":
+           type: file
+           description: Heterozygosity on a per-individual basis (optional)
+           pattern: "*.het"
+           ontologies: []
+   hwe:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.hwe":
+           type: file
+           description: Contains the Observed numbers of Homozygotes and
+@@ -327,11 +405,14 @@
+           pattern: "*.hwe"
+           ontologies: []
+   tajima_d:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.Tajima.D":
+           type: file
+           description: Tajima’s D statistic in bins with size of the specified
+@@ -339,11 +420,14 @@
+           pattern: "*.Tajima.D"
+           ontologies: []
+   freq_burden:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.ifreqburden":
+           type: file
+           description: Number of variants within each individual of a specific
+@@ -351,22 +435,28 @@
+           pattern: "*.ifreqburden"
+           ontologies: []
+   lroh:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.LROH":
+           type: file
+           description: Long Runs of Homozygosity (optional)
+           pattern: "*.LROH"
+           ontologies: []
+   relatedness:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.relatedness":
+           type: file
+           description: Relatedness statistic based on the method of Yang et al,
+@@ -374,11 +464,14 @@
+           pattern: "*.relatedness"
+           ontologies: []
+   relatedness2:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.relatedness2":
+           type: file
+           description: Relatedness statistic based on the method of Manichaikul et
+@@ -387,44 +480,56 @@
+           pattern: "*.relatedness2"
+           ontologies: []
+   lqual:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.lqual":
+           type: file
+           description: per-site SNP quality (optional)
+           pattern: "*.lqual"
+           ontologies: []
+   missing_individual:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.imiss":
+           type: file
+           description: Missingness on a per-individual basis (optional)
+           pattern: "*.imiss"
+           ontologies: []
+   missing_site:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.lmiss":
+           type: file
+           description: Missingness on a per-site basis (optional)
+           pattern: "*.lmiss"
+           ontologies: []
+   snp_density:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.snpden":
+           type: file
+           description: Number and density of SNPs in bins of size defined by
+@@ -432,33 +537,42 @@
+           pattern: "*.snpden"
+           ontologies: []
+   kept_sites:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.kept.sites":
+           type: file
+           description: All sites that have been kept after filtering (optional)
+           pattern: "*.kept.sites"
+           ontologies: []
+   removed_sites:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.removed.sites":
+           type: file
+           description: All sites that have been removed after filtering (optional)
+           pattern: "*.removed.sites"
+           ontologies: []
+   singeltons:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.singletons":
+           type: file
+           description: Location of singletons, and the individual they occur in
+@@ -466,11 +580,14 @@
+           pattern: "*.singeltons"
+           ontologies: []
+   indel_hist:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.indel.hist":
+           type: file
+           description: Histogram file of the length of all indels (including SNPs)
+@@ -478,33 +595,42 @@
+           pattern: "*.indel_hist"
+           ontologies: []
+   hapcount:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.hapcount":
+           type: file
+           description: Unique haplotypes within user specified bins (optional)
+           pattern: "*.hapcount"
+           ontologies: []
+   mendel:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.mendel":
+           type: file
+           description: Mendel errors identified in trios (optional)
+           pattern: "*.mendel"
+           ontologies: []
+   format:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.FORMAT":
+           type: file
+           description: Extracted information from the genotype fields in the VCF
+@@ -512,11 +638,14 @@
+           pattern: "*.FORMAT"
+           ontologies: []
+   info:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.INFO":
+           type: file
+           description: Extracted information from the INFO field in the VCF file
+@@ -524,11 +653,14 @@
+           pattern: "*.INFO"
+           ontologies: []
+   genotypes_matrix:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.012":
+           type: file
+           description: |
+@@ -539,11 +671,14 @@
+           pattern: "*.012"
+           ontologies: []
+   genotypes_matrix_individual:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.012.indv":
+           type: file
+           description: Details the individuals included in the main
+@@ -551,11 +686,14 @@
+           pattern: "*.012.indv"
+           ontologies: []
+   genotypes_matrix_position:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.012.pos":
+           type: file
+           description: Details the site locations included in the main
+@@ -563,11 +701,14 @@
+           pattern: "*.012.pos"
+           ontologies: []
+   impute_hap:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.impute.hap":
+           type: file
+           description: Phased haplotypes in IMPUTE reference-panel format
+@@ -575,121 +716,154 @@
+           pattern: "*.impute.hap"
+           ontologies: []
+   impute_hap_legend:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.impute.hap.legend":
+           type: file
+           description: Impute haplotype legend file (optional)
+           pattern: "*.impute.hap.legend"
+           ontologies: []
+   impute_hap_indv:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.impute.hap.indv":
+           type: file
+           description: Impute haplotype individuals file (optional)
+           pattern: "*.impute.hap.indv"
+           ontologies: []
+   ldhat_sites:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.ldhat.sites":
+           type: file
+           description: Output data in LDhat format, sites (optional)
+           pattern: "*.ldhat.sites"
+           ontologies: []
+   ldhat_locs:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.ldhat.locs":
+           type: file
+           description: output data in LDhat format, locations (optional)
+           pattern: "*.ldhat.locs"
+           ontologies: []
+   beagle_gl:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.BEAGLE.GL":
+           type: file
+           description: Genotype likelihoods for biallelic sites (optional)
+           pattern: "*.BEAGLE.GL"
+           ontologies: []
+   beagle_pl:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.BEAGLE.PL":
+           type: file
+           description: Genotype likelihoods for biallelic sites (optional)
+           pattern: "*.BEAGLE.PL"
+           ontologies: []
+   ped:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.ped":
+           type: file
+           description: output the genotype data in PLINK PED format (optional)
+           pattern: "*.ped"
+           ontologies: []
+   map_:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.map":
+           type: file
+           description: output the genotype data in PLINK PED format (optional)
+           pattern: "*.map"
+           ontologies: []
+   tped:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.tped":
+           type: file
+           description: output the genotype data in PLINK PED format (optional)
+           pattern: "*.tped"
+           ontologies: []
+   tfam:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.tfam":
+           type: file
+           description: output the genotype data in PLINK PED format (optional)
+           pattern: "*.tfam"
+           ontologies: []
+   diff_sites_in_files:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.diff.sites_in_files":
+           type: file
+           description: Sites that are common / unique to each file specified in
+@@ -697,11 +871,14 @@
+           pattern: "*.diff.sites.in.files"
+           ontologies: []
+   diff_indv_in_files:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.diff.indv_in_files":
+           type: file
+           description: Individuals that are common / unique to each file specified
+@@ -709,11 +886,14 @@
+           pattern: "*.diff.indv.in.files"
+           ontologies: []
+   diff_sites:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.diff.sites":
+           type: file
+           description: Discordance on a site by site basis, specified in optional
+@@ -721,11 +901,14 @@
+           pattern: "*.diff.sites"
+           ontologies: []
+   diff_indv:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.diff.indv":
+           type: file
+           description: Discordance on a individual by individual basis, specified
+@@ -733,11 +916,14 @@
+           pattern: "*.diff.indv"
+           ontologies: []
+   diff_discd_matrix:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.diff.discordance.matrix":
+           type: file
+           description: Discordance matrix between files specified in optional
+@@ -745,11 +931,14 @@
+           pattern: "*.diff.discordance.matrix"
+           ontologies: []
+   diff_switch_error:
+-    - - meta:
+-          type: map
+-          description: |
+-            Groovy Map containing sample information
+-            e.g. [ id:'test', single_end:false ]
++    - - id:
++          type: string
++          description: Identifier of the sample, used for the default output prefix
++      - meta:
++          type: map
++          description: |
++            Optional Groovy Map with sample metadata, passed through to the output.
++            It is not used by the module itself.
+       - "*.diff.switch":
+           type: file
+           description: Switch errors found between sites (optional)
+
+Changes in 'vcftools/main.nf':
+--- modules/nf-core/vcftools/main.nf
++++ modules/nf-core/vcftools/main.nf
+@@ -1,5 +1,7 @@
++nextflow.enable.types = true
++
+ process VCFTOOLS {
+-    tag "$meta.id"
++    tag "${id}"
+     label 'process_single'
+ 
+     conda "${moduleDir}/environment.yml"
+@@ -7,183 +9,188 @@
+         'https://depot.galaxyproject.org/singularity/vcftools:0.1.17--pl5321h077b44d_0' :
+         'quay.io/biocontainers/vcftools:0.1.17--pl5321h077b44d_0' }"
+ 
++    ext [
++        prefix: { output_prefix ?: "${id}" },
++        args: { vcftools_args ?: '' }
++    ]
++
+     input:
+     // Owing to the nature of vcftools we here provide solutions to working with optional bed files and optional
+     // alternative variant files, for use with the 'diff' suite of tools.
+     // Other optional input files can be utilised in a similar way to below but we do not exhaustively iterate through all
+     // possible options. Instead we leave that to the user.
+-    tuple val(meta), path(variant_file)
+-    path  bed
+-    path  diff_variant_file
++    record(
++        id: String,
++        meta: Record?,
++        variant_file: Path,
++        bed: Path?,
++        diff_variant_file: Path?,
++        vcftools_args: String?,
++        output_prefix: String?
++    )
+ 
+     output:
+-    tuple val(meta), path("*.vcf")                    , optional:true, emit: vcf
+-    tuple val(meta), path("*.bcf")                    , optional:true, emit: bcf
+-    tuple val(meta), path("*.frq")                    , optional:true, emit: frq
+-    tuple val(meta), path("*.frq.count")              , optional:true, emit: frq_count
+-    tuple val(meta), path("*.idepth")                 , optional:true, emit: idepth
+-    tuple val(meta), path("*.ldepth")                 , optional:true, emit: ldepth
+-    tuple val(meta), path("*.ldepth.mean")            , optional:true, emit: ldepth_mean
+-    tuple val(meta), path("*.gdepth")                 , optional:true, emit: gdepth
+-    tuple val(meta), path("*.hap.ld")                 , optional:true, emit: hap_ld
+-    tuple val(meta), path("*.geno.ld")                , optional:true, emit: geno_ld
+-    tuple val(meta), path("*.geno.chisq")             , optional:true, emit: geno_chisq
+-    tuple val(meta), path("*.list.hap.ld")            , optional:true, emit: list_hap_ld
+-    tuple val(meta), path("*.list.geno.ld")           , optional:true, emit: list_geno_ld
+-    tuple val(meta), path("*.interchrom.hap.ld")      , optional:true, emit: interchrom_hap_ld
+-    tuple val(meta), path("*.interchrom.geno.ld")     , optional:true, emit: interchrom_geno_ld
+-    tuple val(meta), path("*.TsTv")                   , optional:true, emit: tstv
+-    tuple val(meta), path("*.TsTv.summary")           , optional:true, emit: tstv_summary
+-    tuple val(meta), path("*.TsTv.count")             , optional:true, emit: tstv_count
+-    tuple val(meta), path("*.TsTv.qual")              , optional:true, emit: tstv_qual
+-    tuple val(meta), path("*.FILTER.summary")         , optional:true, emit: filter_summary
+-    tuple val(meta), path("*.sites.pi")               , optional:true, emit: sites_pi
+-    tuple val(meta), path("*.windowed.pi")            , optional:true, emit: windowed_pi
+-    tuple val(meta), path("*.weir.fst")               , optional:true, emit: weir_fst
+-    tuple val(meta), path("*.het")                    , optional:true, emit: heterozygosity
+-    tuple val(meta), path("*.hwe")                    , optional:true, emit: hwe
+-    tuple val(meta), path("*.Tajima.D")               , optional:true, emit: tajima_d
+-    tuple val(meta), path("*.ifreqburden")            , optional:true, emit: freq_burden
+-    tuple val(meta), path("*.LROH")                   , optional:true, emit: lroh
+-    tuple val(meta), path("*.relatedness")            , optional:true, emit: relatedness
+-    tuple val(meta), path("*.relatedness2")           , optional:true, emit: relatedness2
+-    tuple val(meta), path("*.lqual")                  , optional:true, emit: lqual
+-    tuple val(meta), path("*.imiss")                  , optional:true, emit: missing_individual
+-    tuple val(meta), path("*.lmiss")                  , optional:true, emit: missing_site
+-    tuple val(meta), path("*.snpden")                 , optional:true, emit: snp_density
+-    tuple val(meta), path("*.kept.sites")             , optional:true, emit: kept_sites
+-    tuple val(meta), path("*.removed.sites")          , optional:true, emit: removed_sites
+-    tuple val(meta), path("*.singletons")             , optional:true, emit: singeltons
+-    tuple val(meta), path("*.indel.hist")             , optional:true, emit: indel_hist
+-    tuple val(meta), path("*.hapcount")               , optional:true, emit: hapcount
+-    tuple val(meta), path("*.mendel")                 , optional:true, emit: mendel
+-    tuple val(meta), path("*.FORMAT")                 , optional:true, emit: format
+-    tuple val(meta), path("*.INFO")                   , optional:true, emit: info
+-    tuple val(meta), path("*.012")                    , optional:true, emit: genotypes_matrix
+-    tuple val(meta), path("*.012.indv")               , optional:true, emit: genotypes_matrix_individual
+-    tuple val(meta), path("*.012.pos")                , optional:true, emit: genotypes_matrix_position
+-    tuple val(meta), path("*.impute.hap")             , optional:true, emit: impute_hap
+-    tuple val(meta), path("*.impute.hap.legend")      , optional:true, emit: impute_hap_legend
+-    tuple val(meta), path("*.impute.hap.indv")        , optional:true, emit: impute_hap_indv
+-    tuple val(meta), path("*.ldhat.sites")            , optional:true, emit: ldhat_sites
+-    tuple val(meta), path("*.ldhat.locs")             , optional:true, emit: ldhat_locs
+-    tuple val(meta), path("*.BEAGLE.GL")              , optional:true, emit: beagle_gl
+-    tuple val(meta), path("*.BEAGLE.PL")              , optional:true, emit: beagle_pl
+-    tuple val(meta), path("*.ped")                    , optional:true, emit: ped
+-    tuple val(meta), path("*.map")                    , optional:true, emit: map_
+-    tuple val(meta), path("*.tped")                   , optional:true, emit: tped
+-    tuple val(meta), path("*.tfam")                   , optional:true, emit: tfam
+-    tuple val(meta), path("*.diff.sites_in_files")    , optional:true, emit: diff_sites_in_files
+-    tuple val(meta), path("*.diff.indv_in_files")     , optional:true, emit: diff_indv_in_files
+-    tuple val(meta), path("*.diff.sites")             , optional:true, emit: diff_sites
+-    tuple val(meta), path("*.diff.indv")              , optional:true, emit: diff_indv
+-    tuple val(meta), path("*.diff.discordance.matrix"), optional:true, emit: diff_discd_matrix
+-    tuple val(meta), path("*.diff.switch")            , optional:true, emit: diff_switch_error
+-    tuple val("${task.process}"), val('vcftools'), eval('vcftools --version 2>&1 | sed "s/^.*VCFtools (//;s/).*//"'), emit: versions_vcftools, topic: versions
++    record(
++        id: id,
++        meta: meta,
++        vcf: file("*.vcf", optional: true),
++        bcf: file("*.bcf", optional: true),
++        frq: file("*.frq", optional: true),
++        frq_count: file("*.frq.count", optional: true),
++        idepth: file("*.idepth", optional: true),
++        ldepth: file("*.ldepth", optional: true),
++        ldepth_mean: file("*.ldepth.mean", optional: true),
++        gdepth: file("*.gdepth", optional: true),
++        hap_ld: files("*.hap.ld", optional: true),
++        geno_ld: files("*.geno.ld", optional: true),
++        geno_chisq: file("*.geno.chisq", optional: true),
++        list_hap_ld: file("*.list.hap.ld", optional: true),
++        list_geno_ld: file("*.list.geno.ld", optional: true),
++        interchrom_hap_ld: file("*.interchrom.hap.ld", optional: true),
++        interchrom_geno_ld: file("*.interchrom.geno.ld", optional: true),
++        tstv: file("*.TsTv", optional: true),
++        tstv_summary: file("*.TsTv.summary", optional: true),
++        tstv_count: file("*.TsTv.count", optional: true),
++        tstv_qual: file("*.TsTv.qual", optional: true),
++        filter_summary: file("*.FILTER.summary", optional: true),
++        sites_pi: file("*.sites.pi", optional: true),
++        windowed_pi: file("*.windowed.pi", optional: true),
++        weir_fst: file("*.weir.fst", optional: true),
++        heterozygosity: file("*.het", optional: true),
++        hwe: file("*.hwe", optional: true),
++        tajima_d: file("*.Tajima.D", optional: true),
++        freq_burden: file("*.ifreqburden", optional: true),
++        lroh: file("*.LROH", optional: true),
++        relatedness: file("*.relatedness", optional: true),
++        relatedness2: file("*.relatedness2", optional: true),
++        lqual: file("*.lqual", optional: true),
++        missing_individual: file("*.imiss", optional: true),
++        missing_site: file("*.lmiss", optional: true),
++        snp_density: file("*.snpden", optional: true),
++        kept_sites: file("*.kept.sites", optional: true),
++        removed_sites: file("*.removed.sites", optional: true),
++        singeltons: file("*.singletons", optional: true),
++        indel_hist: file("*.indel.hist", optional: true),
++        hapcount: file("*.hapcount", optional: true),
++        mendel: file("*.mendel", optional: true),
++        format: file("*.FORMAT", optional: true),
++        info: file("*.INFO", optional: true),
++        genotypes_matrix: file("*.012", optional: true),
++        genotypes_matrix_individual: file("*.012.indv", optional: true),
++        genotypes_matrix_position: file("*.012.pos", optional: true),
++        impute_hap: file("*.impute.hap", optional: true),
++        impute_hap_legend: file("*.impute.hap.legend", optional: true),
++        impute_hap_indv: file("*.impute.hap.indv", optional: true),
++        ldhat_sites: file("*.ldhat.sites", optional: true),
++        ldhat_locs: file("*.ldhat.locs", optional: true),
++        beagle_gl: file("*.BEAGLE.GL", optional: true),
++        beagle_pl: file("*.BEAGLE.PL", optional: true),
++        ped: file("*.ped", optional: true),
++        map_: file("*.map", optional: true),
++        tped: file("*.tped", optional: true),
++        tfam: file("*.tfam", optional: true),
++        diff_sites_in_files: file("*.diff.sites_in_files", optional: true),
++        diff_indv_in_files: file("*.diff.indv_in_files", optional: true),
++        diff_sites: file("*.diff.sites", optional: true),
++        diff_indv: file("*.diff.indv", optional: true),
++        diff_discd_matrix: file("*.diff.discordance.matrix", optional: true),
++        diff_switch_error: file("*.diff.switch", optional: true),
++    )
+ 
+-    when:
+-    task.ext.when == null || task.ext.when
++    topic:
++    record(process: "${task.process}", tool: 'vcftools', version: eval('vcftools --version 2>&1 | sed "s/^.*VCFtools (//;s/).*//"')) >> 'versions'
+ 
+     script:
+-    def args = task.ext.args ?: ''
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+-    def args_list = args.tokenize()
++    def bed_arg  = (task.ext.args.contains('--bed')) ? "--bed ${bed}" :
++        (task.ext.args.contains('--exclude-bed')) ? "--exclude-bed ${bed}" :
++        (task.ext.args.contains('--hapcount')) ? "--hapcount ${bed}" :
++        (task.ext.args.contains('--positions')) ? "--positions ${bed}" :
++        (task.ext.args.contains('--exclude-positions')) ? "--exclude-positions ${bed}"  : ''
+ 
+-    def bed_arg  = (args.contains('--bed')) ? "--bed ${bed}" :
+-        (args.contains('--exclude-bed')) ? "--exclude-bed ${bed}" :
+-        (args.contains('--hapcount')) ? "--hapcount ${bed}" :
+-        (args.contains('--positions')) ? "--positions ${bed}" :
+-        (args.contains('--exclude-positions')) ? "--exclude-positions ${bed}"  : ''
+-    args_list.removeIf { arg -> arg.contains('--bed') }
+-    args_list.removeIf { arg -> arg.contains('--exclude-bed') }
+-    args_list.removeIf { arg -> arg.contains('--hapcount') }
+-    args_list.removeIf { arg -> arg.contains('--positions') }
+-    args_list.removeIf { arg -> arg.contains('--exclude-positions') }
++    def diff_variant_arg = (task.ext.args.contains('--diff')) ? "--diff ${diff_variant_file}" :
++        (task.ext.args.contains('--gzdiff')) ? "--gzdiff ${diff_variant_file}" :
++        (task.ext.args.contains('--diff-bcf')) ? "--diff-bcf ${diff_variant_file}" : ''
+ 
+-    def diff_variant_arg = (args.contains('--diff')) ? "--diff ${diff_variant_file}" :
+-        (args.contains('--gzdiff')) ? "--gzdiff ${diff_variant_file}" :
+-        (args.contains('--diff-bcf')) ? "--diff-bcf ${diff_variant_file}" : ''
+-    args_list.removeIf { arg -> arg.contains('--diff') }
+-    args_list.removeIf { arg -> arg.contains('--gzdiff') }
+-    args_list.removeIf { arg -> arg.contains('--diff-bcf') }
++    // The flags that take the bed and diff files are given through those inputs, so they are dropped from the other arguments
++    def file_flags = ['--bed', '--exclude-bed', '--hapcount', '--positions', '--exclude-positions', '--diff', '--gzdiff', '--diff-bcf']
++    def args_list = task.ext.args.tokenize().findAll { arg -> !file_flags.any { flag -> arg.contains(flag) } }
+ 
+-    def input_file = ("$variant_file".endsWith(".vcf")) ? "--vcf ${variant_file}" :
+-        ("$variant_file".endsWith(".vcf.gz")) ? "--gzvcf ${variant_file}" :
+-        ("$variant_file".endsWith(".bcf")) ? "--bcf ${variant_file}" : ''
++    def input_file = (variant_file.name.endsWith(".vcf")) ? "--vcf ${variant_file}" :
++        (variant_file.name.endsWith(".vcf.gz")) ? "--gzvcf ${variant_file}" :
++        (variant_file.name.endsWith(".bcf")) ? "--bcf ${variant_file}" : ''
+ 
+     """
+     vcftools \\
+-        $input_file \\
+-        --out $prefix \\
++        ${input_file} \\
++        --out ${task.ext.prefix} \\
+         ${args_list.join(' ')} \\
+-        $bed_arg \\
+-        $diff_variant_arg
++        ${bed_arg} \\
++        ${diff_variant_arg}
+     """
+ 
+     stub:
+-    def prefix = task.ext.prefix ?: "${meta.id}"
+     """
+-    touch ${prefix}.vcf
+-    touch ${prefix}.bcf
+-    touch ${prefix}.frq
+-    touch ${prefix}.frq.count
+-    touch ${prefix}.idepth
+-    touch ${prefix}.ldepth
+-    touch ${prefix}.ldepth.mean
+-    touch ${prefix}.gdepth
+-    touch ${prefix}.hap.ld
+-    touch ${prefix}.geno.ld
+-    touch ${prefix}.geno.chisq
+-    touch ${prefix}.list.hap.ld
+-    touch ${prefix}.list.geno.ld
+-    touch ${prefix}.interchrom.hap.ld
+-    touch ${prefix}.interchrom.geno.ld
+-    touch ${prefix}.TsTv
+-    touch ${prefix}.TsTv.summary
+-    touch ${prefix}.TsTv.count
+-    touch ${prefix}.TsTv.qual
+-    touch ${prefix}.FILTER.summary
+-    touch ${prefix}.sites.pi
+-    touch ${prefix}.windowed.pi
+-    touch ${prefix}.weir.fst
+-    touch ${prefix}.het
+-    touch ${prefix}.hwe
+-    touch ${prefix}.Tajima.D
+-    touch ${prefix}.ifreqburden
+-    touch ${prefix}.LROH
+-    touch ${prefix}.relatedness
+-    touch ${prefix}.relatedness2
+-    touch ${prefix}.lqual
+-    touch ${prefix}.imiss
+-    touch ${prefix}.lmiss
+-    touch ${prefix}.snpden
+-    touch ${prefix}.kept.sites
+-    touch ${prefix}.removed.sites
+-    touch ${prefix}.singletons
+-    touch ${prefix}.indel.hist
+-    touch ${prefix}.hapcount
+-    touch ${prefix}.mendel
+-    touch ${prefix}.FORMAT
+-    touch ${prefix}.INFO
+-    touch ${prefix}.012
+-    touch ${prefix}.012.indv
+-    touch ${prefix}.012.pos
+-    touch ${prefix}.impute.hap
+-    touch ${prefix}.impute.hap.legend
+-    touch ${prefix}.impute.hap.indv
+-    touch ${prefix}.ldhat.sites
+-    touch ${prefix}.ldhat.locs
+-    touch ${prefix}.BEAGLE.GL
+-    touch ${prefix}.BEAGLE.PL
+-    touch ${prefix}.ped
+-    touch ${prefix}.map
+-    touch ${prefix}.tped
+-    touch ${prefix}.tfam
+-    touch ${prefix}.diff.sites_in_files
+-    touch ${prefix}.diff.indv_in_files
+-    touch ${prefix}.diff.sites
+-    touch ${prefix}.diff.indv
+-    touch ${prefix}.diff.discordance.matrix
+-    touch ${prefix}.diff.switch
++    touch ${task.ext.prefix}.vcf
++    touch ${task.ext.prefix}.bcf
++    touch ${task.ext.prefix}.frq
++    touch ${task.ext.prefix}.frq.count
++    touch ${task.ext.prefix}.idepth
++    touch ${task.ext.prefix}.ldepth
++    touch ${task.ext.prefix}.ldepth.mean
++    touch ${task.ext.prefix}.gdepth
++    touch ${task.ext.prefix}.hap.ld
++    touch ${task.ext.prefix}.geno.ld
++    touch ${task.ext.prefix}.geno.chisq
++    touch ${task.ext.prefix}.list.hap.ld
++    touch ${task.ext.prefix}.list.geno.ld
++    touch ${task.ext.prefix}.interchrom.hap.ld
++    touch ${task.ext.prefix}.interchrom.geno.ld
++    touch ${task.ext.prefix}.TsTv
++    touch ${task.ext.prefix}.TsTv.summary
++    touch ${task.ext.prefix}.TsTv.count
++    touch ${task.ext.prefix}.TsTv.qual
++    touch ${task.ext.prefix}.FILTER.summary
++    touch ${task.ext.prefix}.sites.pi
++    touch ${task.ext.prefix}.windowed.pi
++    touch ${task.ext.prefix}.weir.fst
++    touch ${task.ext.prefix}.het
++    touch ${task.ext.prefix}.hwe
++    touch ${task.ext.prefix}.Tajima.D
++    touch ${task.ext.prefix}.ifreqburden
++    touch ${task.ext.prefix}.LROH
++    touch ${task.ext.prefix}.relatedness
++    touch ${task.ext.prefix}.relatedness2
++    touch ${task.ext.prefix}.lqual
++    touch ${task.ext.prefix}.imiss
++    touch ${task.ext.prefix}.lmiss
++    touch ${task.ext.prefix}.snpden
++    touch ${task.ext.prefix}.kept.sites
++    touch ${task.ext.prefix}.removed.sites
++    touch ${task.ext.prefix}.singletons
++    touch ${task.ext.prefix}.indel.hist
++    touch ${task.ext.prefix}.hapcount
++    touch ${task.ext.prefix}.mendel
++    touch ${task.ext.prefix}.FORMAT
++    touch ${task.ext.prefix}.INFO
++    touch ${task.ext.prefix}.012
++    touch ${task.ext.prefix}.012.indv
++    touch ${task.ext.prefix}.012.pos
++    touch ${task.ext.prefix}.impute.hap
++    touch ${task.ext.prefix}.impute.hap.legend
++    touch ${task.ext.prefix}.impute.hap.indv
++    touch ${task.ext.prefix}.ldhat.sites
++    touch ${task.ext.prefix}.ldhat.locs
++    touch ${task.ext.prefix}.BEAGLE.GL
++    touch ${task.ext.prefix}.BEAGLE.PL
++    touch ${task.ext.prefix}.ped
++    touch ${task.ext.prefix}.map
++    touch ${task.ext.prefix}.tped
++    touch ${task.ext.prefix}.tfam
++    touch ${task.ext.prefix}.diff.sites_in_files
++    touch ${task.ext.prefix}.diff.indv_in_files
++    touch ${task.ext.prefix}.diff.sites
++    touch ${task.ext.prefix}.diff.indv
++    touch ${task.ext.prefix}.diff.discordance.matrix
++    touch ${task.ext.prefix}.diff.switch
+     """
+ }
+
+Changes in 'vcftools/tests/main.nf.test.snap':
+--- modules/nf-core/vcftools/tests/main.nf.test.snap
++++ modules/nf-core/vcftools/tests/main.nf.test.snap
+@@ -1,1360 +1,185 @@
+ {
+     "sarscov2 - vcfgz - bed": {
+         "content": [
+-            {
+-                "bcf": [
+-                    
+-                ],
+-                "beagle_gl": [
+-                    
+-                ],
+-                "beagle_pl": [
+-                    
+-                ],
+-                "diff_discd_matrix": [
+-                    
+-                ],
+-                "diff_indv": [
+-                    
+-                ],
+-                "diff_indv_in_files": [
+-                    
+-                ],
+-                "diff_sites": [
+-                    
+-                ],
+-                "diff_sites_in_files": [
+-                    
+-                ],
+-                "diff_switch_error": [
+-                    
+-                ],
+-                "filter_summary": [
+-                    
+-                ],
+-                "format": [
+-                    
+-                ],
+-                "freq_burden": [
+-                    
+-                ],
+-                "frq": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.frq:md5,7f126655f17268fd1a338734f62868e9"
+-                    ]
+-                ],
+-                "frq_count": [
+-                    
+-                ],
+-                "gdepth": [
+-                    
+-                ],
+-                "geno_chisq": [
+-                    
+-                ],
+-                "geno_ld": [
+-                    
+-                ],
+-                "genotypes_matrix": [
+-                    
+-                ],
+-                "genotypes_matrix_individual": [
+-                    
+-                ],
+-                "genotypes_matrix_position": [
+-                    
+-                ],
+-                "hap_ld": [
+-                    
+-                ],
+-                "hapcount": [
+-                    
+-                ],
+-                "heterozygosity": [
+-                    
+-                ],
+-                "hwe": [
+-                    
+-                ],
+-                "idepth": [
+-                    
+-                ],
+-                "impute_hap": [
+-                    
+-                ],
+-                "impute_hap_indv": [
+-                    
+-                ],
+-                "impute_hap_legend": [
+-                    
+-                ],
+-                "indel_hist": [
+-                    
+-                ],
+-                "info": [
+-                    
+-                ],
+-                "interchrom_geno_ld": [
+-                    
+-                ],
+-                "interchrom_hap_ld": [
+-                    
+-                ],
+-                "kept_sites": [
+-                    
+-                ],
+-                "ldepth": [
+-                    
+-                ],
+-                "ldepth_mean": [
+-                    
+-                ],
+-                "ldhat_locs": [
+-                    
+-                ],
+-                "ldhat_sites": [
+-                    
+-                ],
+-                "list_geno_ld": [
+-                    
+-                ],
+-                "list_hap_ld": [
+-                    
+-                ],
+-                "lqual": [
+-                    
+-                ],
+-                "lroh": [
+-                    
+-                ],
+-                "map_": [
+-                    
+-                ],
+-                "mendel": [
+-                    
+-                ],
+-                "missing_individual": [
+-                    
+-                ],
+-                "missing_site": [
+-                    
+-                ],
+-                "ped": [
+-                    
+-                ],
+-                "relatedness": [
+-                    
+-                ],
+-                "relatedness2": [
+-                    
+-                ],
+-                "removed_sites": [
+-                    
+-                ],
+-                "singeltons": [
+-                    
+-                ],
+-                "sites_pi": [
+-                    
+-                ],
+-                "snp_density": [
+-                    
+-                ],
+-                "tajima_d": [
+-                    
+-                ],
+-                "tfam": [
+-                    
+-                ],
+-                "tped": [
+-                    
+-                ],
+-                "tstv": [
+-                    
+-                ],
+-                "tstv_count": [
+-                    
+-                ],
+-                "tstv_qual": [
+-                    
+-                ],
+-                "tstv_summary": [
+-                    
+-                ],
+-                "vcf": [
+-                    
+-                ],
+-                "versions_vcftools": [
+-                    [
+-                        "VCFTOOLS",
+-                        "vcftools",
+-                        "0.1.17"
+-                    ]
+-                ],
+-                "weir_fst": [
+-                    
+-                ],
+-                "windowed_pi": [
+-                    
+-                ]
+-            }
++            [
++                {
++                    "frq": "test.frq:md5,7f126655f17268fd1a338734f62868e9",
++                    "geno_ld": [
++                        
++                    ],
++                    "hap_ld": [
++                        
++                    ],
++                    "id": "test",
++                    "meta": {
++                        "id": "test"
++                    }
++                }
++            ]
+         ],
+-        "timestamp": "2026-07-15T08:48:01.178228204",
++        "timestamp": "2026-10-21T09:37:25.603366",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - vcf": {
+         "content": [
+-            {
+-                "bcf": [
+-                    
+-                ],
+-                "beagle_gl": [
+-                    
+-                ],
+-                "beagle_pl": [
+-                    
+-                ],
+-                "diff_discd_matrix": [
+-                    
+-                ],
+-                "diff_indv": [
+-                    
+-                ],
+-                "diff_indv_in_files": [
+-                    
+-                ],
+-                "diff_sites": [
+-                    
+-                ],
+-                "diff_sites_in_files": [
+-                    
+-                ],
+-                "diff_switch_error": [
+-                    
+-                ],
+-                "filter_summary": [
+-                    
+-                ],
+-                "format": [
+-                    
+-                ],
+-                "freq_burden": [
+-                    
+-                ],
+-                "frq": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.frq:md5,7f126655f17268fd1a338734f62868e9"
+-                    ]
+-                ],
+-                "frq_count": [
+-                    
+-                ],
+-                "gdepth": [
+-                    
+-                ],
+-                "geno_chisq": [
+-                    
+-                ],
+-                "geno_ld": [
+-                    
+-                ],
+-                "genotypes_matrix": [
+-                    
+-                ],
+-                "genotypes_matrix_individual": [
+-                    
+-                ],
+-                "genotypes_matrix_position": [
+-                    
+-                ],
+-                "hap_ld": [
+-                    
+-                ],
+-                "hapcount": [
+-                    
+-                ],
+-                "heterozygosity": [
+-                    
+-                ],
+-                "hwe": [
+-                    
+-                ],
+-                "idepth": [
+-                    
+-                ],
+-                "impute_hap": [
+-                    
+-                ],
+-                "impute_hap_indv": [
+-                    
+-                ],
+-                "impute_hap_legend": [
+-                    
+-                ],
+-                "indel_hist": [
+-                    
+-                ],
+-                "info": [
+-                    
+-                ],
+-                "interchrom_geno_ld": [
+-                    
+-                ],
+-                "interchrom_hap_ld": [
+-                    
+-                ],
+-                "kept_sites": [
+-                    
+-                ],
+-                "ldepth": [
+-                    
+-                ],
+-                "ldepth_mean": [
+-                    
+-                ],
+-                "ldhat_locs": [
+-                    
+-                ],
+-                "ldhat_sites": [
+-                    
+-                ],
+-                "list_geno_ld": [
+-                    
+-                ],
+-                "list_hap_ld": [
+-                    
+-                ],
+-                "lqual": [
+-                    
+-                ],
+-                "lroh": [
+-                    
+-                ],
+-                "map_": [
+-                    
+-                ],
+-                "mendel": [
+-                    
+-                ],
+-                "missing_individual": [
+-                    
+-                ],
+-                "missing_site": [
+-                    
+-                ],
+-                "ped": [
+-                    
+-                ],
+-                "relatedness": [
+-                    
+-                ],
+-                "relatedness2": [
+-                    
+-                ],
+-                "removed_sites": [
+-                    
+-                ],
+-                "singeltons": [
+-                    
+-                ],
+-                "sites_pi": [
+-                    
+-                ],
+-                "snp_density": [
+-                    
+-                ],
+-                "tajima_d": [
+-                    
+-                ],
+-                "tfam": [
+-                    
+-                ],
+-                "tped": [
+-                    
+-                ],
+-                "tstv": [
+-                    
+-                ],
+-                "tstv_count": [
+-                    
+-                ],
+-                "tstv_qual": [
+-                    
+-                ],
+-                "tstv_summary": [
+-                    
+-                ],
+-                "vcf": [
+-                    
+-                ],
+-                "versions_vcftools": [
+-                    [
+-                        "VCFTOOLS",
+-                        "vcftools",
+-                        "0.1.17"
+-                    ]
+-                ],
+-                "weir_fst": [
+-                    
+-                ],
+-                "windowed_pi": [
+-                    
+-                ]
+-            }
++            [
++                {
++                    "frq": "test.frq:md5,7f126655f17268fd1a338734f62868e9",
++                    "geno_ld": [
++                        
++                    ],
++                    "hap_ld": [
++                        
++                    ],
++                    "id": "test",
++                    "meta": {
++                        "id": "test"
++                    }
++                }
++            ]
+         ],
+-        "timestamp": "2026-07-15T08:47:44.088852297",
++        "timestamp": "2026-10-21T09:37:10.750669",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - vcfgz": {
+         "content": [
+-            {
+-                "bcf": [
+-                    
+-                ],
+-                "beagle_gl": [
+-                    
+-                ],
+-                "beagle_pl": [
+-                    
+-                ],
+-                "diff_discd_matrix": [
+-                    
+-                ],
+-                "diff_indv": [
+-                    
+-                ],
+-                "diff_indv_in_files": [
+-                    
+-                ],
+-                "diff_sites": [
+-                    
+-                ],
+-                "diff_sites_in_files": [
+-                    
+-                ],
+-                "diff_switch_error": [
+-                    
+-                ],
+-                "filter_summary": [
+-                    
+-                ],
+-                "format": [
+-                    
+-                ],
+-                "freq_burden": [
+-                    
+-                ],
+-                "frq": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.frq:md5,7f126655f17268fd1a338734f62868e9"
+-                    ]
+-                ],
+-                "frq_count": [
+-                    
+-                ],
+-                "gdepth": [
+-                    
+-                ],
+-                "geno_chisq": [
+-                    
+-                ],
+-                "geno_ld": [
+-                    
+-                ],
+-                "genotypes_matrix": [
+-                    
+-                ],
+-                "genotypes_matrix_individual": [
+-                    
+-                ],
+-                "genotypes_matrix_position": [
+-                    
+-                ],
+-                "hap_ld": [
+-                    
+-                ],
+-                "hapcount": [
+-                    
+-                ],
+-                "heterozygosity": [
+-                    
+-                ],
+-                "hwe": [
+-                    
+-                ],
+-                "idepth": [
+-                    
+-                ],
+-                "impute_hap": [
+-                    
+-                ],
+-                "impute_hap_indv": [
+-                    
+-                ],
+-                "impute_hap_legend": [
+-                    
+-                ],
+-                "indel_hist": [
+-                    
+-                ],
+-                "info": [
+-                    
+-                ],
+-                "interchrom_geno_ld": [
+-                    
+-                ],
+-                "interchrom_hap_ld": [
+-                    
+-                ],
+-                "kept_sites": [
+-                    
+-                ],
+-                "ldepth": [
+-                    
+-                ],
+-                "ldepth_mean": [
+-                    
+-                ],
+-                "ldhat_locs": [
+-                    
+-                ],
+-                "ldhat_sites": [
+-                    
+-                ],
+-                "list_geno_ld": [
+-                    
+-                ],
+-                "list_hap_ld": [
+-                    
+-                ],
+-                "lqual": [
+-                    
+-                ],
+-                "lroh": [
+-                    
+-                ],
+-                "map_": [
+-                    
+-                ],
+-                "mendel": [
+-                    
+-                ],
+-                "missing_individual": [
+-                    
+-                ],
+-                "missing_site": [
+-                    
+-                ],
+-                "ped": [
+-                    
+-                ],
+-                "relatedness": [
+-                    
+-                ],
+-                "relatedness2": [
+-                    
+-                ],
+-                "removed_sites": [
+-                    
+-                ],
+-                "singeltons": [
+-                    
+-                ],
+-                "sites_pi": [
+-                    
+-                ],
+-                "snp_density": [
+-                    
+-                ],
+-                "tajima_d": [
+-                    
+-                ],
+-                "tfam": [
+-                    
+-                ],
+-                "tped": [
+-                    
+-                ],
+-                "tstv": [
+-                    
+-                ],
+-                "tstv_count": [
+-                    
+-                ],
+-                "tstv_qual": [
+-                    
+-                ],
+-                "tstv_summary": [
+-                    
+-                ],
+-                "vcf": [
+-                    
+-                ],
+-                "versions_vcftools": [
+-                    [
+-                        "VCFTOOLS",
+-                        "vcftools",
+-                        "0.1.17"
+-                    ]
+-                ],
+-                "weir_fst": [
+-                    
+-                ],
+-                "windowed_pi": [
+-                    
+-                ]
+-            }
++            [
++                {
++                    "frq": "test.frq:md5,7f126655f17268fd1a338734f62868e9",
++                    "geno_ld": [
++                        
++                    ],
++                    "hap_ld": [
++                        
++                    ],
++                    "id": "test",
++                    "meta": {
++                        "id": "test"
++                    }
++                }
++            ]
+         ],
+-        "timestamp": "2026-07-15T08:47:49.908202898",
++        "timestamp": "2026-10-21T09:37:15.978368",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - vcf - bed": {
+         "content": [
+-            {
+-                "bcf": [
+-                    
+-                ],
+-                "beagle_gl": [
+-                    
+-                ],
+-                "beagle_pl": [
+-                    
+-                ],
+-                "diff_discd_matrix": [
+-                    
+-                ],
+-                "diff_indv": [
+-                    
+-                ],
+-                "diff_indv_in_files": [
+-                    
+-                ],
+-                "diff_sites": [
+-                    
+-                ],
+-                "diff_sites_in_files": [
+-                    
+-                ],
+-                "diff_switch_error": [
+-                    
+-                ],
+-                "filter_summary": [
+-                    
+-                ],
+-                "format": [
+-                    
+-                ],
+-                "freq_burden": [
+-                    
+-                ],
+-                "frq": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.frq:md5,7f126655f17268fd1a338734f62868e9"
+-                    ]
+-                ],
+-                "frq_count": [
+-                    
+-                ],
+-                "gdepth": [
+-                    
+-                ],
+-                "geno_chisq": [
+-                    
+-                ],
+-                "geno_ld": [
+-                    
+-                ],
+-                "genotypes_matrix": [
+-                    
+-                ],
+-                "genotypes_matrix_individual": [
+-                    
+-                ],
+-                "genotypes_matrix_position": [
+-                    
+-                ],
+-                "hap_ld": [
+-                    
+-                ],
+-                "hapcount": [
+-                    
+-                ],
+-                "heterozygosity": [
+-                    
+-                ],
+-                "hwe": [
+-                    
+-                ],
+-                "idepth": [
+-                    
+-                ],
+-                "impute_hap": [
+-                    
+-                ],
+-                "impute_hap_indv": [
+-                    
+-                ],
+-                "impute_hap_legend": [
+-                    
+-                ],
+-                "indel_hist": [
+-                    
+-                ],
+-                "info": [
+-                    
+-                ],
+-                "interchrom_geno_ld": [
+-                    
+-                ],
+-                "interchrom_hap_ld": [
+-                    
+-                ],
+-                "kept_sites": [
+-                    
+-                ],
+-                "ldepth": [
+-                    
+-                ],
+-                "ldepth_mean": [
+-                    
+-                ],
+-                "ldhat_locs": [
+-                    
+-                ],
+-                "ldhat_sites": [
+-                    
+-                ],
+-                "list_geno_ld": [
+-                    
+-                ],
+-                "list_hap_ld": [
+-                    
+-                ],
+-                "lqual": [
+-                    
+-                ],
+-                "lroh": [
+-                    
+-                ],
+-                "map_": [
+-                    
+-                ],
+-                "mendel": [
+-                    
+-                ],
+-                "missing_individual": [
+-                    
+-                ],
+-                "missing_site": [
+-                    
+-                ],
+-                "ped": [
+-                    
+-                ],
+-                "relatedness": [
+-                    
+-                ],
+-                "relatedness2": [
+-                    
+-                ],
+-                "removed_sites": [
+-                    
+-                ],
+-                "singeltons": [
+-                    
+-                ],
+-                "sites_pi": [
+-                    
+-                ],
+-                "snp_density": [
+-                    
+-                ],
+-                "tajima_d": [
+-                    
+-                ],
+-                "tfam": [
+-                    
+-                ],
+-                "tped": [
+-                    
+-                ],
+-                "tstv": [
+-                    
+-                ],
+-                "tstv_count": [
+-                    
+-                ],
+-                "tstv_qual": [
+-                    
+-                ],
+-                "tstv_summary": [
+-                    
+-                ],
+-                "vcf": [
+-                    
+-                ],
+-                "versions_vcftools": [
+-                    [
+-                        "VCFTOOLS",
+-                        "vcftools",
+-                        "0.1.17"
+-                    ]
+-                ],
+-                "weir_fst": [
+-                    
+-                ],
+-                "windowed_pi": [
+-                    
+-                ]
+-            }
++            [
++                {
++                    "frq": "test.frq:md5,7f126655f17268fd1a338734f62868e9",
++                    "geno_ld": [
++                        
++                    ],
++                    "hap_ld": [
++                        
++                    ],
++                    "id": "test",
++                    "meta": {
++                        "id": "test"
++                    }
++                }
++            ]
+         ],
+-        "timestamp": "2026-07-15T08:47:55.721117178",
++        "timestamp": "2026-10-21T09:37:20.852711",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     },
+     "sarscov2 - vcfgz - stub": {
+         "content": [
+-            {
+-                "bcf": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.bcf:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "beagle_gl": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.BEAGLE.GL:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "beagle_pl": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.BEAGLE.PL:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "diff_discd_matrix": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.diff.discordance.matrix:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "diff_indv": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.diff.indv:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "diff_indv_in_files": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.diff.indv_in_files:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "diff_sites": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.diff.sites:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "diff_sites_in_files": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.diff.sites_in_files:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "diff_switch_error": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.diff.switch:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "filter_summary": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.FILTER.summary:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "format": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.FORMAT:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "freq_burden": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.ifreqburden:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "frq": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.frq:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "frq_count": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.frq.count:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "gdepth": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.gdepth:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "geno_chisq": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.geno.chisq:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "geno_ld": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        [
+-                            "test.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
+-                            "test.interchrom.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
+-                            "test.list.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                        ]
+-                    ]
+-                ],
+-                "genotypes_matrix": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.012:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "genotypes_matrix_individual": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.012.indv:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "genotypes_matrix_position": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.012.pos:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "hap_ld": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        [
+-                            "test.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
+-                            "test.interchrom.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
+-                            "test.list.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                        ]
+-                    ]
+-                ],
+-                "hapcount": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.hapcount:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "heterozygosity": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.het:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "hwe": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.hwe:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "idepth": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.idepth:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "impute_hap": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.impute.hap:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "impute_hap_indv": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.impute.hap.indv:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "impute_hap_legend": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.impute.hap.legend:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "indel_hist": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.indel.hist:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "info": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.INFO:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "interchrom_geno_ld": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.interchrom.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "interchrom_hap_ld": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.interchrom.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "kept_sites": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.kept.sites:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "ldepth": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.ldepth:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "ldepth_mean": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.ldepth.mean:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "ldhat_locs": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.ldhat.locs:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "ldhat_sites": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.ldhat.sites:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "list_geno_ld": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
++            [
++                {
++                    "bcf": "test.bcf:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "beagle_gl": "test.BEAGLE.GL:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "beagle_pl": "test.BEAGLE.PL:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "diff_discd_matrix": "test.diff.discordance.matrix:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "diff_indv": "test.diff.indv:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "diff_indv_in_files": "test.diff.indv_in_files:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "diff_sites": "test.diff.sites:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "diff_sites_in_files": "test.diff.sites_in_files:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "diff_switch_error": "test.diff.switch:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "filter_summary": "test.FILTER.summary:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "format": "test.FORMAT:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "freq_burden": "test.ifreqburden:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "frq": "test.frq:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "frq_count": "test.frq.count:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "gdepth": "test.gdepth:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "geno_chisq": "test.geno.chisq:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "geno_ld": [
++                        "test.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "test.interchrom.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
+                         "test.list.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "list_hap_ld": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
++                    ],
++                    "genotypes_matrix": "test.012:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "genotypes_matrix_individual": "test.012.indv:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "genotypes_matrix_position": "test.012.pos:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "hap_ld": [
++                        "test.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
++                        "test.interchrom.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
+                         "test.list.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "lqual": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.lqual:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "lroh": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.LROH:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "map_": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.map:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "mendel": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.mendel:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "missing_individual": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.imiss:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "missing_site": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.lmiss:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "ped": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.ped:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "relatedness": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.relatedness:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "relatedness2": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.relatedness2:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "removed_sites": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.removed.sites:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "singeltons": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.singletons:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "sites_pi": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.sites.pi:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "snp_density": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.snpden:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "tajima_d": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.Tajima.D:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "tfam": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.tfam:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "tped": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.tped:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "tstv": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.TsTv:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "tstv_count": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.TsTv.count:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "tstv_qual": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.TsTv.qual:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "tstv_summary": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.TsTv.summary:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "vcf": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.vcf:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "versions_vcftools": [
+-                    [
+-                        "VCFTOOLS",
+-                        "vcftools",
+-                        "0.1.17"
+-                    ]
+-                ],
+-                "weir_fst": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.weir.fst:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ],
+-                "windowed_pi": [
+-                    [
+-                        {
+-                            "id": "test"
+-                        },
+-                        "test.windowed.pi:md5,d41d8cd98f00b204e9800998ecf8427e"
+-                    ]
+-                ]
+-            }
++                    ],
++                    "hapcount": "test.hapcount:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "heterozygosity": "test.het:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "hwe": "test.hwe:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "id": "test",
++                    "idepth": "test.idepth:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "impute_hap": "test.impute.hap:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "impute_hap_indv": "test.impute.hap.indv:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "impute_hap_legend": "test.impute.hap.legend:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "indel_hist": "test.indel.hist:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "info": "test.INFO:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "interchrom_geno_ld": "test.interchrom.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "interchrom_hap_ld": "test.interchrom.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "kept_sites": "test.kept.sites:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "ldepth": "test.ldepth:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "ldepth_mean": "test.ldepth.mean:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "ldhat_locs": "test.ldhat.locs:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "ldhat_sites": "test.ldhat.sites:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "list_geno_ld": "test.list.geno.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "list_hap_ld": "test.list.hap.ld:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "lqual": "test.lqual:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "lroh": "test.LROH:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "map_": "test.map:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "mendel": "test.mendel:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "meta": {
++                        "id": "test"
++                    },
++                    "missing_individual": "test.imiss:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "missing_site": "test.lmiss:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "ped": "test.ped:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "relatedness": "test.relatedness:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "relatedness2": "test.relatedness2:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "removed_sites": "test.removed.sites:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "singeltons": "test.singletons:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "sites_pi": "test.sites.pi:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "snp_density": "test.snpden:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "tajima_d": "test.Tajima.D:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "tfam": "test.tfam:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "tped": "test.tped:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "tstv": "test.TsTv:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "tstv_count": "test.TsTv.count:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "tstv_qual": "test.TsTv.qual:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "tstv_summary": "test.TsTv.summary:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "vcf": "test.vcf:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "weir_fst": "test.weir.fst:md5,d41d8cd98f00b204e9800998ecf8427e",
++                    "windowed_pi": "test.windowed.pi:md5,d41d8cd98f00b204e9800998ecf8427e"
++                }
++            ]
+         ],
+-        "timestamp": "2026-07-15T08:48:06.826236623",
++        "timestamp": "2026-10-21T09:37:30.497515",
+         "meta": {
+             "nf-test": "0.9.5",
+-            "nextflow": "26.04.6"
++            "nextflow": "26.10.0"
+         }
+     }
+ }
+'modules/nf-core/vcftools/tests/nextflow.config' is unchanged
+Changes in 'vcftools/tests/main.nf.test':
+--- modules/nf-core/vcftools/tests/main.nf.test
++++ modules/nf-core/vcftools/tests/main.nf.test
+@@ -7,24 +7,21 @@
+     tag "modules"
+     tag "modules_nfcore"
+     tag "vcftools"
+-    config "./nextflow.config"
+ 
+     test("sarscov2 - vcf") {
+ 
+         when {
+-            params {
+-                module_args = '--freq'
+-            }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf', checkIfExists: true)
+-                ]
+-                // bed
+-                input[1] = []
+-                // diff_variant_file
+-                input[2] = []
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    variant_file: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf', checkIfExists: true),
++                    bed: null,
++                    diff_variant_file: null,
++                    vcftools_args: '--freq',
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -32,7 +29,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                { assert snapshot(process.out[0].collect { r -> r.findAll { k, v -> v != null }.collectEntries { k, v -> [ (k): v instanceof Collection ? v.sort { f -> file(f).name } : v ] } }).match() }
+             )
+         }
+ 
+@@ -41,19 +38,17 @@
+     test("sarscov2 - vcfgz") {
+ 
+         when {
+-            params {
+-                module_args = '--freq'
+-            }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true)
+-                ]
+-                // bed
+-                input[1] = []
+-                // diff_variant_file
+-                input[2] = []
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    variant_file: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    bed: null,
++                    diff_variant_file: null,
++                    vcftools_args: '--freq',
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -61,7 +56,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                { assert snapshot(process.out[0].collect { r -> r.findAll { k, v -> v != null }.collectEntries { k, v -> [ (k): v instanceof Collection ? v.sort { f -> file(f).name } : v ] } }).match() }
+             )
+         }
+ 
+@@ -70,19 +65,17 @@
+     test("sarscov2 - vcf - bed") {
+ 
+         when {
+-            params {
+-                module_args = '--freq --exclude-bed'
+-            }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf', checkIfExists: true)
+-                ]
+-                // bed
+-                input[1] = file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true)
+-                // diff_variant_file
+-                input[2] = []
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    variant_file: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf', checkIfExists: true),
++                    bed: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true),
++                    diff_variant_file: null,
++                    vcftools_args: '--freq --exclude-bed',
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -90,7 +83,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                { assert snapshot(process.out[0].collect { r -> r.findAll { k, v -> v != null }.collectEntries { k, v -> [ (k): v instanceof Collection ? v.sort { f -> file(f).name } : v ] } }).match() }
+             )
+         }
+ 
+@@ -99,19 +92,17 @@
+     test("sarscov2 - vcfgz - bed") {
+ 
+         when {
+-            params {
+-                module_args = '--freq --exclude-bed'
+-            }
+             process {
+                 """
+-                input[0] = [
+-                    [ id:'test' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true)
+-                ]
+-                // bed
+-                input[1] = file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true)
+-                // diff_variant_file
+-                input[2] = []
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    variant_file: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    bed: file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true),
++                    diff_variant_file: null,
++                    vcftools_args: '--freq --exclude-bed',
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -119,7 +110,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                { assert snapshot(process.out[0].collect { r -> r.findAll { k, v -> v != null }.collectEntries { k, v -> [ (k): v instanceof Collection ? v.sort { f -> file(f).name } : v ] } }).match() }
+             )
+         }
+ 
+@@ -130,20 +121,18 @@
+         options "-stub"
+ 
+         when {
+-            params {
+-                module_args = ''
+-            }
+             process {
+ 
+                 """
+-                input[0] = [
+-                    [ id:'test' ], // meta map
+-                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true)
+-                ]
+-                // bed
+-                input[1] = []
+-                // diff_variant_file
+-                input[2] = []
++                input[0] = channel.of(record(
++                    id: 'test',
++                    meta: [ id:'test' ],
++                    variant_file: file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/vcf/test.vcf.gz', checkIfExists: true),
++                    bed: null,
++                    diff_variant_file: null,
++                    vcftools_args: '',
++                    output_prefix: null
++                ))
+                 """
+             }
+         }
+@@ -151,7 +140,7 @@
+         then {
+             assertAll(
+                 { assert process.success },
+-                { assert snapshot(sanitizeOutput(process.out)).match() }
++                { assert snapshot(process.out[0].collect { r -> r.findAll { k, v -> v != null }.collectEntries { k, v -> [ (k): v instanceof Collection ? v.sort { f -> file(f).name } : v ] } }).match() }
+             )
+         }
+ 
+
+************************************************************

@@ -1,0 +1,37 @@
+{
+    "BioVAT samplesheet - stub, bam rows are skipped": {
+        "content": [
+            [
+                "fastqc/PUN-R-ELF.1.SRR9309791.1.html",
+                "fastqc/PUN-R-ELF.1.SRR9309791.1.zip",
+                "fastqc/PUN-R-JMC.1.SRR9309467.1.html",
+                "fastqc/PUN-R-JMC.1.SRR9309467.1.zip",
+                "multiqc_files/PUN-R-ELF.1.SRR9309791.1.zip",
+                "multiqc_files/PUN-R-JMC.1.SRR9309467.1.zip"
+            ]
+        ],
+        "timestamp": "2026-10-21T13:43:43.858612",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    },
+    "two read groups - stub": {
+        "content": [
+            2,
+            [
+                "fastqc/PUN-R-ELF.1.SRR9309791.1.html",
+                "fastqc/PUN-R-ELF.1.SRR9309791.1.zip",
+                "fastqc/PUN-R-JMC.1.SRR9309467.1.html",
+                "fastqc/PUN-R-JMC.1.SRR9309467.1.zip",
+                "multiqc_files/PUN-R-ELF.1.SRR9309791.1.zip",
+                "multiqc_files/PUN-R-JMC.1.SRR9309467.1.zip"
+            ]
+        ],
+        "timestamp": "2026-10-20T13:35:57.867591",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    }
+}
