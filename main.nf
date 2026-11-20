@@ -37,7 +37,7 @@ include { workflow as MERGE_TO_LIBRARY   } from './pipelines/merge'
 include { workflow as MARK_DUPLICATES    } from './pipelines/mark_duplicates'
 include { workflow as MERGE_TO_SAMPLE    } from './pipelines/merge'
 include { workflow as CALL_VARIANTS      } from './pipelines/call_variants'
-include { workflow as MULTIQC            } from './pipelines/multiqc'
+include { MULTIQC_REPORT                 } from './subworkflows/local/multiqc_report/main'
 
 // A row of the samplesheet
 record Sample {
@@ -461,15 +461,13 @@ workflow {
     }
 
     // MultiQC and software versions
-    multiqc = MULTIQC(
-        record(
-            multiqc_files              : multiqc_files.map { f -> record(file: f) },
-            multiqc_config             : params.multiqc_config,
-            multiqc_logo               : params.multiqc_logo,
-            multiqc_title              : params.multiqc_title,
-            multiqc_methods_description: params.multiqc_methods_description,
-            workflow_summary           : paramsSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${moduleDir}/nextflow_schema.json"))
-        )
+    multiqc = MULTIQC_REPORT(
+        multiqc_files,
+        params.multiqc_config,
+        params.multiqc_logo,
+        params.multiqc_title,
+        params.multiqc_methods_description,
+        paramsSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${moduleDir}/nextflow_schema.json"))
     )
 
     PIPELINE_COMPLETION(params.monochrome_logs)
