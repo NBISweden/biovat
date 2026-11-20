@@ -34,14 +34,14 @@ params {
     align_qc   : Boolean = true    // run quality checks on the alignments
     riker      : Boolean = true    // run Riker during alignment QC
     qualimap   : Boolean = false   // run Qualimap during alignment QC
-    help       : Boolean = false
-    help_full  : Boolean = false
+    help       : String? = null
+    helpFull   : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/ingest_bam_or_cram --samplesheet samplesheet.csv --fasta genome.fa')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/ingest_bam_or_cram --samplesheet samplesheet.csv --fasta genome.fa')
     checkStageInput(params.samplesheet, params.bam_cram, 'bam_cram')
     checkQualimapCram(params.cram_format, params.align_qc, params.qualimap)
     bam_cram = channel.empty()

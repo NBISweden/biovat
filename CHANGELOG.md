@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Changed`
 
 - `meta.id` and `meta.single_end` are `null` in every process. A user config that reads them does not fail: `ext.prefix = { "${meta.id}" }` gives `null.*` files and `process.when = { meta.id != 'X' }` matches nothing. Read `id` and `single_end` from the process input record instead. Nothing in `conf/` uses them
+- Updated Nextflow to 26.10.6, nf-core tools to 4.2.2, nf-test to 0.9.5, nft-utils to 1.3.0 and nf-schema to 3.1.0. `--help <parameter>` describes one parameter
 - **Breaking:** the reference parameter of BioVAT is `--fasta`, as in the stage pipelines (it was `--reference`)
 - **Breaking:** the BAM/CRAM column of the samplesheet is `alignment`, as in the stage pipelines (it was `bam`). An optional `index` column is accepted and not used by BioVAT, so that a samplesheet with only alignment rows is valid for BioVAT and for the stages that start from alignments
 - `BWAMEM3_INDEX` requests 4 CPUs, the `-t` of `bwa-mem3 index`, set next to its size-based memory in the module (a `label` would replace that memory). On a 122 Mb genome 4 threads take 10 s against 19 s with one
@@ -79,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
-- `--help` of BioVAT and of every stage suggests `--help_full` and `--show_hidden`, the parameters that exist. It suggested `--helpFull` and `--showHidden`, which are not declared
+- `-profile test` works from any directory, e.g. `nextflow run NBISweden/biovat -profile test`. The paths of the test samplesheet were relative to the repository root, so it failed anywhere else. nf-schema's `allowParamsSubstitution` does not help: the check of `--input` runs before the substitution
+- `--help` of BioVAT and of every stage prints the parameters that exist, and `--help <parameter>` describes one. `--helpFull` and `--showHidden` are the names that the nf-schema 3.0 message prints, so the renames to `--help_full` and `--show_hidden` are not needed
 - The `--alignments`, `--reads` and `--bam_cram` descriptions of the stage schemas list the fields the records have: `id` and `single_end` are fields of their own, not part of `meta`. A YAML written as the old text said was rejected
 - The typical command of the BioVAT help includes `--fasta`, `assets/nf-params.yml` points to the test samplesheet so that the example runs, and `docs/output.md` lists the files of `pipeline_info/`
 - `docs/usage.md` has a section on running a stage on its own, with the parameters that differ from BioVAT
@@ -97,6 +99,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Dependencies`
 
-- Nextflow >=26.10.0 (pipeline composition)
+- Nextflow >=26.10.6 (pipeline composition; earlier 26.10 releases do not resume typed records reliably); CI tests 26.10.6
 - updated nf-core to 4.1.0
 - Updated the pixi lock file to v7

@@ -5,19 +5,30 @@ nextflow_pipeline {
     tag "pipeline"
     tag "help"
 
-    test("--help") {
+    test("--helpFull") {
 
         when {
             params {
-                help = true
+                helpFull = true
             }
         }
 
         then {
-            // The help message itself is not captured by nf-test. This checks that --help is reached and exits
-            // cleanly, i.e. that no required parameter blocks it
             assert workflow.success
             assert workflow.trace.tasks().size() == 0
+        }
+    }
+
+    test("--help of a parameter that does not exist fails") {
+
+        when {
+            params {
+                help = "nonexistent"
+            }
+        }
+
+        then {
+            assert workflow.failed
         }
     }
 }

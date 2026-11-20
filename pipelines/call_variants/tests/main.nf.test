@@ -37,6 +37,7 @@ nextflow_pipeline {
 
         when {
             params {
+                callset_prefix  = 'Diplacus_puniceus_red_yellow' // named in the snapshots, set here so the tests do not depend on the root test profile
                 alignments      = "${launchDir}/alignments.yml"
                 sample_metadata = null // the test profile of the repository sets a path that does not exist for a stage
                 fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
@@ -65,6 +66,7 @@ nextflow_pipeline {
 
         when {
             params {
+                callset_prefix  = 'Diplacus_puniceus_red_yellow' // named in the snapshots, set here so the tests do not depend on the root test profile
                 samplesheet     = "${launchDir}/alignments.csv"
                 sample_metadata = null
                 fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
@@ -94,6 +96,7 @@ nextflow_pipeline {
 
         when {
             params {
+                callset_prefix  = 'Diplacus_puniceus_red_yellow' // named in the snapshots, set here so the tests do not depend on the root test profile
                 alignments      = "${launchDir}/alignments.yml"
                 sample_metadata = "${launchDir}/sample_metadata.csv"
                 group_samples   = true
@@ -115,36 +118,6 @@ nextflow_pipeline {
         }
     }
 
-    test("gatk - stub") {
-
-        options "-stub -output-dir ${outputDir}"
-
-        setup {
-            setupFiles(launchDir)
-        }
-
-        when {
-            params {
-                alignments      = "${launchDir}/alignments.yml"
-                sample_metadata = null
-                variant_caller  = "gatk"
-                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
-                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
-                dict            = "${launchDir}/M_aurantiacus_v1_splitline_ordered.dict"
-            }
-        }
-
-        then {
-            assert workflow.success
-            assertAll(
-                { assert workflow.trace.tasks().any { task -> task.name.contains('GATK4_GENOTYPEGVCFS') } },
-                { assert snapshot(
-                    workflow.trace.succeeded().size(),
-                    getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
-                ).match() }
-            )
-        }
-    }
 
     // The tests below run the callers on the monkeyflower test data. The reference is split into two chunks of the
     // default size, unless a test sets chunk_size
@@ -611,23 +584,6 @@ nextflow_pipeline {
         then {
             assert workflow.failed
             assert (workflow.stdout + workflow.stderr).toString().contains("requires --sample_metadata to list the samples")
-        }
-    }
-
-    test("--help") {
-
-        when {
-            params {
-                help            = true
-                sample_metadata = null // the test profile of the repository sets a path that does not exist for a stage
-            }
-        }
-
-        then {
-            // nf-test does not capture the help message. This checks that --help is reached and exits cleanly,
-            // i.e. that the schema loads and no required parameter blocks it
-            assert workflow.success
-            assert workflow.trace.tasks().size() == 0
         }
     }
 }

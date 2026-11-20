@@ -25,14 +25,14 @@ params {
     adapter_fasta    : Path?           // adapter fasta file, if provided
     save_trimmed_fail: Boolean = false // save files that failed to pass trimming thresholds
     save_merged      : Boolean = false // save all merged reads
-    help             : Boolean = false
-    help_full        : Boolean = false
+    help             : String? = null
+    helpFull         : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/trim_reads --samplesheet samplesheet.csv')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/trim_reads --samplesheet samplesheet.csv')
     checkStageInput(params.samplesheet, params.reads, 'reads')
     reads = channel.empty()
     if ( params.samplesheet ) {

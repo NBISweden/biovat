@@ -26,6 +26,7 @@
                 "sample_metadata": {
                     "type": "string",
                     "format": "file-path",
+                    "pattern": "^\\S+\\.csv$",
                     "description": "CSV with one row per sample and the columns sample and population, as for the --sample_metadata of BioVAT. Only used with --group_samples.",
                     "fa_icon": "fas fa-file"
                 },
@@ -65,17 +66,20 @@
                 "callset_prefix": {
                     "type": "string",
                     "default": "all_samples",
+                    "pattern": "^[A-Za-z0-9_-]+$",
                     "description": "File name prefix of the VCF with all samples. The caller is appended, e.g. all_samples.gatk.vcf.gz.",
                     "fa_icon": "fas fa-tag"
                 },
                 "chunk_size": {
                     "type": "integer",
+                    "minimum": 1,
                     "description": "Chunk size (bp) for splitting the genome into chunks for parallel calling. Default is chosen dynamically.",
                     "fa_icon": "fas fa-cut"
                 },
                 "min_length": {
                     "type": "integer",
                     "default": 1000,
+                    "minimum": 0,
                     "description": "Minimum contig/scaffold length (bp) to be kept for variant calling. Set to 0 to keep all regions.",
                     "fa_icon": "fas fa-ruler"
                 },
@@ -147,9 +151,9 @@
                     "description": "Display the help message.",
                     "fa_icon": "fas fa-question-circle"
                 },
-                "help_full": {
+                "helpFull": {
                     "type": "boolean",
-                    "description": "Display the full help message.",
+                    "description": "Display the full help message, with nested parameters.",
                     "fa_icon": "fas fa-question-circle"
                 }
             }

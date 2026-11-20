@@ -53,14 +53,14 @@ params {
     fai                   : Value<Path>?            // fai index of the reference fasta, required
     dict                  : Value<Path>?            // sequence dictionary of the reference fasta, required for gatk
     variant_qc            : Boolean = true          // run quality checks on the joint callset
-    help                  : Boolean = false
-    help_full             : Boolean = false
+    help                  : String? = null
+    helpFull              : Boolean = false
 }
 
 workflow {
 
     main:
-    STAGE_HELP(params.help, params.help_full, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/call_variants --samplesheet alignments.csv --fasta reference.fasta --fai reference.fasta.fai')
+    STAGE_HELP(params.help, params.helpFull, "${moduleDir}/nextflow_schema.json", 'nextflow run pipelines/call_variants --samplesheet alignments.csv --fasta reference.fasta --fai reference.fasta.fai')
     checkStageInput(params.samplesheet, params.alignments, 'alignments')
     if ( !params.fasta || !params.fai ) {
         error "Variant calling requires --fasta and --fai"

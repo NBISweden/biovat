@@ -12,20 +12,20 @@ include { paramsHelp } from 'plugin/nf-schema'
 workflow STAGE_HELP {
 
     take:
-    help             : Boolean // show help message
-    help_full        : Boolean // show full help message
+    help             : String? // show help message: true, or the name of a parameter to describe
+    helpFull         : Boolean // show the nested parameters too
     parameters_schema: String  // path to the JSON schema of the stage parameters
     command          : String  // an example command of the stage
 
     main:
-    if ( help || help_full ) {
+    // --help false is no help, as it was when help was a Boolean
+    def show_help = help != null && help != 'false'
+    if ( show_help || helpFull ) {
         def message = paramsHelp(
-            [
-                command         : command,
-                fullHelp        : help_full,
-                parametersSchema: parameters_schema,
-            ],
-            ""
+            parameter        : help == null || help in ['true', 'false'] ? null : help,
+            command          : command,
+            fullHelp         : helpFull,
+            parameters_schema: parameters_schema,
         )
         log.info message
         exit(0, '')

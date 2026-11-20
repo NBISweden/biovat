@@ -1,0 +1,307 @@
+nextflow_pipeline {
+
+    name "Test the root pipeline in stub mode"
+    script "../main.nf"
+    tag "pipeline"
+
+    // Each gate switches its processes off. The other gates stay on, so a gate that does nothing, or one that switches
+    // off more than it names, is found by the processes that are left
+    test("enable_raw_read_qc false switches off READ_QC:FASTQC - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                enable_raw_read_qc = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MULTIQC') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('READ_QC:FASTQC') } },
+                // A gate leaves the rest of the pipeline running
+                { assert workflow.trace.tasks().size() > 10 }
+            )
+        }
+    }
+
+    test("enable_trim false switches off TRIM_READS:FASTP - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                enable_trim = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MULTIQC') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('TRIM_READS:FASTP') } },
+                // A gate leaves the rest of the pipeline running
+                { assert workflow.trace.tasks().size() > 10 }
+            )
+        }
+    }
+
+    test("enable_align false switches off ALIGN_READS:BWAMEM3_MEM - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                enable_align = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MULTIQC') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('ALIGN_READS:BWAMEM3_MEM') } },
+                // A gate leaves the rest of the pipeline running
+                { assert workflow.trace.tasks().size() > 10 }
+            )
+        }
+    }
+
+    test("enable_align_qc false switches off SAMTOOLS_FLAGSTAT - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                enable_align_qc = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MULTIQC') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('SAMTOOLS_FLAGSTAT') } },
+                // A gate leaves the rest of the pipeline running
+                { assert workflow.trace.tasks().size() > 10 }
+            )
+        }
+    }
+
+    test("enable_riker false switches off RIKER_MULTI - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                enable_riker = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MULTIQC') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('RIKER_MULTI') } },
+                // A gate leaves the rest of the pipeline running
+                { assert workflow.trace.tasks().size() > 10 }
+            )
+        }
+    }
+
+    test("enable_mark_duplicates false switches off MARK_DUPLICATES:SAMTOOLS_SORMADUP - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                enable_mark_duplicates = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MULTIQC') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('MARK_DUPLICATES:SAMTOOLS_SORMADUP') } },
+                // A gate leaves the rest of the pipeline running
+                { assert workflow.trace.tasks().size() > 10 }
+            )
+        }
+    }
+
+    test("enable_variant_calling false switches off CALL_VARIANTS: - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                enable_variant_calling = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MULTIQC') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('CALL_VARIANTS:') } },
+                // A gate leaves the rest of the pipeline running
+                { assert workflow.trace.tasks().size() > 10 }
+            )
+        }
+    }
+
+    test("enable_variant_qc false switches off VARIANT_QC: - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                enable_variant_qc = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('MULTIQC') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('VARIANT_QC:') } },
+                // A gate leaves the rest of the pipeline running
+                { assert workflow.trace.tasks().size() > 10 }
+            )
+        }
+    }
+
+    test("single-end FASTQ - stub") {
+
+        options "-stub"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/single_end.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                outdir          = "$outputDir"
+                input           = "${launchDir}/single_end.csv"
+                sample_metadata = null
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('TRIM_READS:FASTP') } },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('CALL_VARIANTS:') } }
+            )
+        }
+    }
+
+    // BAM or CRAM only, with every step that needs the reference switched off, runs without --fasta
+    test("a BAM and no reference - stub") {
+
+        options "-stub"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/bam_only.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
+                "PUN-R-ELF,2,SRR9309891,3,ILLUMINA,,,${data}/PUN-R-ELF_2.bam,false"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                outdir                 = "$outputDir"
+                input                  = "${launchDir}/bam_only.csv"
+                fasta                  = null
+                sample_metadata        = null
+                enable_align           = false
+                enable_riker           = false
+                enable_variant_calling = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('INGEST_BAM_OR_CRAM') } },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('ALIGN_READS') } }
+            )
+        }
+    }
+
+    // Long-read rows are branched off and left out until a long-read path exists. The warning goes to .nextflow.log, which nf-test does not read
+    test("a samplesheet of long reads only - stub") {
+
+        options "-stub"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/ont_only.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ONT,${data}/PUN-R-ELF_1_R1.fastq.gz,,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                outdir                 = "$outputDir"
+                input                  = "${launchDir}/ont_only.csv"
+                sample_metadata        = null
+                enable_variant_calling = false
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert !workflow.trace.tasks().any { task -> task.name.contains('TRIM_READS') || task.name.contains('BWAMEM3_MEM') } }
+            )
+        }
+    }
+
+    // A pipeline that includes BioVAT gives the samplesheet as a channel, not as --input
+    test("the samplesheet as a channel param - stub") {
+
+        options "-stub"
+
+        setup {
+            def data = "${projectDir}/tests/data/monkeyflower"
+            new File("${launchDir}/channel.csv").text = [
+                "sample,library_id,flowcell_id,lane,platform,fastq_1,fastq_2,alignment,single_end",
+                "PUN-R-ELF,1,SRR9309791,1,ILLUMINA,${data}/PUN-R-ELF_1_R1.fastq.gz,${data}/PUN-R-ELF_1_R2.fastq.gz,,"
+            ].join("\n") + "\n"
+        }
+
+        when {
+            params {
+                outdir          = "$outputDir"
+                input           = null
+                samplesheet     = "${launchDir}/channel.csv"
+                sample_metadata = null
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.trace.tasks().any { task -> task.name.contains('ALIGN_READS:BWAMEM3_MEM') } }
+            )
+        }
+    }
+}

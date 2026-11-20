@@ -16,6 +16,7 @@ include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
 include { checkSampleFields       } from '../utils_stage_help/main'
 include { checkMergeLayouts       } from '../utils_stage_help/main'
 include { inputError              } from '../utils_stage_help/main'
+include { checkQualimapCram       } from '../utils_stage_help/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,8 +33,8 @@ workflow PIPELINE_INITIALISATION {
     nextflow_cli_args // array: List of positional nextflow CLI args
     outdir            // string: The output directory where the results will be saved
     help              // boolean: Display help message and exit
-    help_full         // boolean: Show the full help message
-    show_hidden       // boolean: Show hidden parameters in the help message
+    helpFull          // boolean: Show the full help message
+    showHidden        // boolean: Show hidden parameters in the help message
     enable            // record: stage/tool gating flags
 
     main:
@@ -69,11 +70,12 @@ workflow PIPELINE_INITIALISATION {
         validate_params,
         "${moduleDir}/../../../nextflow_schema.json",
         help,
-        help_full,
-        show_hidden,
+        helpFull,
+        showHidden,
         before_text,
         after_text,
-        command
+        command,
+        null
     )
 
     //
@@ -83,8 +85,8 @@ workflow PIPELINE_INITIALISATION {
         nextflow_cli_args
     )
 
-    // Validation pipeline parameters
-    validateInputParameters(enable)
+    // Qualimap cannot read the CRAM that the stages write. The stages make the same check
+    checkQualimapCram(enable.cram_format, enable.align_qc, enable.qualimap)
 
     emit:
     dummy_emit = true
@@ -191,14 +193,6 @@ def versionEntryToLine(entry) {
 
 def validationError(message) {
     error "\033[0;91mERROR\033[0m: ${message}"
-}
-
-def validateInputParameters(enable) {
-
-    // If CRAM format is requested, qualimap cannot be run
-    if ( enable.cram_format && enable.align_qc && enable.qualimap ) {
-        validationError("Qualimap cannot be run when CRAM output is enabled.")
-    }
 }
 
 // Reject a samplesheet whose rows can't be merged consistently. Alignments are merged from read group -> library
