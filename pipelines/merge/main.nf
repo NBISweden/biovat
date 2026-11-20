@@ -79,34 +79,34 @@ workflow {
     grouped = alignments
         .map { aln ->
             // library is dropped (null) when merging libraries to sample level
-            def group_meta = record(
+            def group_key = record(
                 id        : aln.id,
                 library   : params.level == 'sample' ? null : aln.meta.library,
                 pl        : aln.meta.pl,
                 single_end: aln.single_end
             )
-            tuple(group_meta, aln)
+            tuple(group_key, aln)
         }
         .groupBy()
-        .map { group_meta, alns ->
+        .map { group_key, alns ->
             // groupBy order reflects non-deterministic arrival timing.
             // sort by filename so SAMTOOLS_MERGE always stages in the same subdirectories.
             // (samtools merge breaks position ties using input file order)
-            tuple(group_meta, alns.toSorted { a, b -> a.alignment.name <=> b.alignment.name })
+            tuple(group_key, alns.toSorted { a, b -> a.alignment.name <=> b.alignment.name })
         }
-    to_merge = grouped.filter { _group_meta, alns -> alns.size() > 1 }
+    to_merge = grouped.filter { _group_key, alns -> alns.size() > 1 }
     skipped  = grouped
-        .filter { _group_meta, alns -> alns.size() == 1 }
-        .map { group_meta, alns -> record(id: group_meta.id, meta: record(library: group_meta.library, pl: group_meta.pl), alignment: alns[0].alignment, index: alns[0].index, single_end: group_meta.single_end) }
+        .filter { _group_key, alns -> alns.size() == 1 }
+        .map { group_key, alns -> record(id: group_key.id, meta: record(library: group_key.library, pl: group_key.pl), alignment: alns[0].alignment, index: alns[0].index, single_end: group_key.single_end) }
 
     // Merge alignments
     merged = SAMTOOLS_MERGE(
         to_merge
             .combine(reference)
-            .map { group_meta, alns, ref ->
+            .map { group_key, alns, ref ->
                 record(
-                    id                 : group_meta.id,
-                    meta               : record(library: group_meta.library, pl: group_meta.pl),
+                    id                 : group_key.id,
+                    meta               : record(library: group_key.library, pl: group_key.pl),
                     input_files        : alns.collect { aln -> aln.alignment }.toList(),
                     index_files        : alns.collect { aln -> aln.index }.toList(),
                     // The reference is needed to read CRAM input and to write CRAM output
@@ -116,15 +116,15 @@ workflow {
                     index_format       : params.cram_format ? 'crai' : 'csi',
                     samtools_merge_args: null,
                     output_prefix      : params.level == 'sample'
-                        ? "${group_meta.id}_${group_meta.pl}"
-                        : "${group_meta.id}_${group_meta.library}_${group_meta.pl}"
+                        ? "${group_key.id}_${group_key.pl}"
+                        : "${group_key.id}_${group_key.library}_${group_key.pl}"
                 )
             }
     )
 
     // Merged alignments with their indexes, for alignment QC and publishing.
     // The merged alignment gets its single_end back from its group, which holds alignments of one layout
-    groups = grouped.map { group_meta, _alns -> record(id: group_meta.id, meta: record(library: group_meta.library, pl: group_meta.pl), single_end: group_meta.single_end) }
+    groups = grouped.map { group_key, _alns -> record(id: group_key.id, meta: record(library: group_key.library, pl: group_key.pl), single_end: group_key.single_end) }
     merged_alignments = attachSingleEnd(merged, groups)
         .map { j -> record(id: j.out.id, meta: j.out.meta, alignment: j.out.cram ?: j.out.bam, index: j.out.index, single_end: j.single_end) }
 
