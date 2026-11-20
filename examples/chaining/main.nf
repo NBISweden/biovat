@@ -53,7 +53,7 @@ workflow {
     // had nothing to merge
     flagstat = SAMTOOLS_FLAGSTAT(
         biovat.outputs_alignments.map { aln ->
-            record(id: aln.meta.id, meta: aln.meta, bam: aln.alignment, bai: aln.index, output_prefix: "downstream_${aln.meta.id}_${aln.meta.pl}")
+            record(id: aln.id, meta: aln.meta, bam: aln.alignment, bai: aln.index, output_prefix: "downstream_${aln.id}_${aln.meta.pl}")
         }
     )
 

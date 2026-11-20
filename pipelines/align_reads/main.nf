@@ -14,6 +14,8 @@ include { REFERENCE_VALUE          } from '../../subworkflows/local/utils_refere
 include { STAGE_HELP               } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput          } from '../../subworkflows/local/utils_stage_help/main'
 include { checkQualimapCram           } from '../../subworkflows/local/utils_stage_help/main'
+include { readGroupMeta                } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { attachSingleEnd             } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow              } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 
 // A row of the BioVAT samplesheet
@@ -30,8 +32,10 @@ record Sample {
 }
 
 record Reads {
-    meta : Record     // sample information, requires id, library, pl, platform_unit and read_group
-    reads: List<Path> // fastq files, in order
+    id        : String     // sample name
+    meta      : Record     // read group information, requires library, pl, platform_unit and read_group
+    reads     : List<Path> // fastq files, in order
+    single_end: Boolean    // whether the reads are single-end
 }
 
 params {
@@ -60,7 +64,7 @@ workflow {
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
             .filter { row -> row[0].input_type == 'fastq' }
-            .map { row -> record(meta: record(row[0]), reads: row[1]) }
+            .map { row -> record(id: row[0].id, meta: readGroupMeta(row[0]), reads: row[1], single_end: row[0].single_end) }
     } else {
         reads = params.reads
     }
@@ -75,7 +79,7 @@ workflow {
     // Alignment
     if ( params.aligner == 'bwa-mem3' ) {
         index = BWAMEM3_INDEX(
-            reference.map { ref -> record(id: ref.meta.id, meta: ref.meta, fasta: ref.fasta, bwamem3_index_args: null, output_prefix: null) }
+            reference.map { ref -> record(id: ref.id, meta: null, fasta: ref.fasta, bwamem3_index_args: null, output_prefix: null) }
         )
         mem = BWAMEM3_MEM(
             reads
@@ -83,23 +87,24 @@ workflow {
                 .combine(reference)
                 .map { r, idx, ref ->
                     record(
-                        id              : r.meta.id,
+                        id              : r.id,
                         meta            : r.meta,
                         reads           : r.reads,
                         index           : idx.index,
                         fasta           : ref.fasta,
                         sort_bam        : true, // Enforce sorting of BAM/CRAM
-                        bwamem3_mem_args: "-R '@RG\\tID:${r.meta.platform_unit}\\tSM:${r.meta.id}\\tLB:${r.meta.library}\\tPU:${r.meta.platform_unit}\\tPL:${r.meta.pl}'",
+                        bwamem3_mem_args: "-R '@RG\\tID:${r.meta.platform_unit}\\tSM:${r.id}\\tLB:${r.meta.library}\\tPU:${r.meta.platform_unit}\\tPL:${r.meta.pl}'",
                         samtools_args   : [ "--write-index", params.cram_format ? "--output-fmt cram" : "" ].findAll { arg -> arg != "" }.join(" "),
                         output_prefix   : r.meta.read_group
                     )
                 }
         )
-        alignments = mem.map { out -> record(meta: out.meta, alignment: out.aligned, index: out.index) }
+        alignments = attachSingleEnd(mem, reads)
+            .map { j -> record(id: j.out.id, meta: j.out.meta, alignment: j.out.aligned, index: j.out.index, single_end: j.single_end) }
     } else if ( params.aligner == 'parabricks' ) {
         // Parabricks requires BWA v0.7.x indexes
         index = BWA_INDEX(
-            reference.map { ref -> record(id: ref.meta.id, meta: ref.meta, fasta: ref.fasta, bwa_index_args: null, output_prefix: null) }
+            reference.map { ref -> record(id: ref.id, meta: null, fasta: ref.fasta, bwa_index_args: null, output_prefix: null) }
         )
         fq2bam = PARABRICKS_FQ2BAM(
             reads
@@ -107,9 +112,9 @@ workflow {
                 .combine(reference)
                 .map { r, idx, ref ->
                     record(
-                        id                    : r.meta.id,
+                        id                    : r.id,
                         meta                  : r.meta,
-                        single_end            : r.meta.single_end,
+                        single_end            : r.single_end,
                         reads                 : r.reads,
                         fasta                 : ref.fasta,
                         index                 : idx.index,
@@ -118,7 +123,7 @@ workflow {
                         known_sites_index     : null,
                         output_fmt            : params.cram_format ? 'cram' : 'bam',
                         parabricks_fq2bam_args: [
-                            "--read-group-sm ${r.meta.id}",
+                            "--read-group-sm ${r.id}",
                             "--read-group-lb ${r.meta.library}",
                             "--read-group-pl ${r.meta.pl}",
                             "--read-group-id-prefix ${r.meta.platform_unit}",
@@ -133,9 +138,10 @@ workflow {
         indexed = SAMTOOLS_INDEX(
             fq2bam.map { out -> record(id: out.id, meta: out.meta, input: out.bam ?: out.cram, samtools_index_args: '--csi') }
         )
-        alignments = fq2bam
-            .map { out -> record(meta: out.meta, alignment: out.bam ?: out.cram) }
-            .join(indexed.map { out -> record(meta: out.meta, index: out.index) }, by: 'meta')
+        alignments = attachSingleEnd(fq2bam, reads)
+            .map { j -> record(key: record(id: j.out.id, meta: j.out.meta), id: j.out.id, meta: j.out.meta, alignment: j.out.bam ?: j.out.cram, single_end: j.single_end) }
+            .join(indexed.map { out -> record(key: record(id: out.id, meta: out.meta), index: out.index) }, by: 'key')
+            .map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
     } else {
         error "Unknown aligner '${params.aligner}', expected bwa-mem3 or parabricks"
     }

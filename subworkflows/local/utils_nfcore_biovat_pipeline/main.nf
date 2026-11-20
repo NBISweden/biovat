@@ -17,6 +17,7 @@ include { UTILS_NFCORE_PIPELINE   } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE } from '../../nf-core/utils_nextflow_pipeline'
 include { stageError               } from '../utils_stage_help/main'
 include { checkSampleFields        } from '../utils_stage_help/main'
+include { checkMergeLayouts        } from '../utils_stage_help/main'
 include { inputError               } from '../utils_stage_help/main'
 
 /*
@@ -166,6 +167,11 @@ def sampleToRow(sample) {
     return buildSampleRow(meta, sample.fastq_1, sample.fastq_2, sample.bam)
 }
 
+// The meta of a stage record holds the read group information. The id and single_end are fields of the record
+def readGroupMeta(meta) {
+    return record(library: meta.library, flowcell: meta.flowcell, lane: meta.lane, pl: meta.pl, read_group: meta.read_group, platform_unit: meta.platform_unit)
+}
+
 // Add the read group information to the meta of a samplesheet row
 def buildSampleRow(meta, fastq_1, fastq_2, bam) {
     // We define read_group separately as an intuitive/readable @RG-level file prefix
@@ -201,7 +207,7 @@ def validateInputParameters(enable) {
 // Reject a samplesheet whose rows can't be merged consistently. Alignments are merged from read group -> library
 // (grouped on sample, library and platform) -> sample (grouped on sample and platform):
 //  - a library is prepared for a single sequencing platform. Its read groups must agree on platform
-//  - every alignment in a merge group must agree on single_end, or it is merged into a single BAM with
+//  - every alignment in a merge group must agree on single_end (checkMergeLayouts), or it is merged into a single BAM with
 //    inconsistent read pairing. A sample may span platforms (e.g. paired-end ILLUMINA and single-end ONT),
 //    so libraries are only compared within a platform
 def validateMergeGroups(rows) {
@@ -213,18 +219,9 @@ def validateMergeGroups(rows) {
             if (platforms.size() > 1) {
                 validationError("Sample '${sample_id}', library '${library_id}' mixes sequencing platforms (${platforms.join(', ')}) - all lanes of a library must share the same platform.")
             }
-            if (group.collect { row -> row.meta.single_end }.unique().size() > 1) {
-                validationError("Sample '${sample_id}', library '${library_id}' mixes single-end and paired-end reads across lanes - all lanes of a library must share the same read layout.")
-            }
         }
-    rows
-        .groupBy { row -> [ row.meta.id, row.meta.pl ] }
-        .each { key, group ->
-            def (sample_id, platform) = key
-            if (group.collect { row -> row.meta.single_end }.unique().size() > 1) {
-                validationError("Sample '${sample_id}' mixes single-end and paired-end reads across its ${platform} libraries - all libraries of a sample sequenced on the same platform must share the same read layout.")
-            }
-        }
+    // The read layout rules are shared with the merge stage
+    checkMergeLayouts(rows.collect { row -> [ id: row.meta.id, library: row.meta.library, pl: row.meta.pl, single_end: row.meta.single_end ] }, true)
 }
 
 // Read and validate the sample metadata sheet with nf-schema, returning one meta map per sample

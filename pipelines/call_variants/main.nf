@@ -28,7 +28,8 @@ record AlignmentSample {
 }
 
 record Alignment {
-    meta     : Record // sample information, requires id and pl
+    id       : String // sample name
+    meta     : Record // read group information, requires pl
     alignment: Path   // BAM or CRAM file
     index    : Path   // index of the BAM or CRAM file
 }
@@ -88,7 +89,8 @@ workflow {
     if ( params.samplesheet ) {
         samplesheet_alignments = params.samplesheet.map { s ->
             record(
-                meta     : record(id: s.sample, pl: s.platform),
+                id       : s.sample,
+                meta     : record(pl: s.platform),
                 alignment: s.alignment,
                 index    : s.index
             )
@@ -96,13 +98,13 @@ workflow {
     }
     given_alignments = channel.empty()
     if ( params.alignments ) {
-        given_alignments = params.alignments.map { a -> record(meta: record(id: a.meta.id, pl: a.meta.pl), alignment: a.alignment, index: a.index) }
+        given_alignments = params.alignments.map { a -> record(id: a.id, meta: record(pl: a.meta.pl), alignment: a.alignment, index: a.index) }
     }
     alignments = samplesheet_alignments.mix(given_alignments)
 
     // Split the reference genome into chunks (BED intervals) for parallelization
     splitgenome = SPLITGENOME(
-        reference.map { ref -> record(id: ref.meta.id, meta: ref.meta, fai: ref.fai, chunk_size: params.chunk_size, min_length: params.min_length, splitgenome_args: null) }
+        reference.map { ref -> record(id: ref.id, meta: null, fai: ref.fai, chunk_size: params.chunk_size, min_length: params.min_length, splitgenome_args: null) }
     )
     // Carry the chunk count so that concatenation knows when all chunks are there
     bed_intervals = splitgenome.flatMap { out ->
@@ -142,10 +144,10 @@ workflow {
             .map { group, alns ->
                 // sort by sample id so the VCF sample columns don't depend on channel arrival order
                 // a sample can have several alignments (e.g. one per library), so order those by file name as well
-                def sorted = alns.toSorted { a, b -> "${a.meta.id}/${a.alignment.name}" <=> "${b.meta.id}/${b.alignment.name}" }
+                def sorted = alns.toSorted { a, b -> "${a.id}/${a.alignment.name}" <=> "${b.id}/${b.alignment.name}" }
                 record(
                     id     : group,
-                    samples: sorted.collect { aln -> aln.meta.id }.toList(),
+                    samples: sorted.collect { aln -> aln.id }.toList(),
                     bams   : sorted.collect { aln -> aln.alignment }.toList(),
                     indexes: sorted.collect { aln -> aln.index }.toList()
                 )
@@ -159,7 +161,7 @@ workflow {
                 .map { group, bed, ref, pop ->
                     record(
                         id                   : "${group.id}.${bed.chunk}",
-                        meta                 : record(id: "${group.id}.${bed.chunk}", group_id: group.id, samples: group.samples, chunk: bed.chunk, n_chunks: bed.n_chunks),
+                        meta                 : record(group_id: group.id, samples: group.samples, chunk: bed.chunk, n_chunks: bed.n_chunks),
                         bams                 : group.bams,
                         indexes              : group.indexes,
                         intervals            : bed.chunk_bed,
@@ -190,8 +192,8 @@ workflow {
                 .combine(params.dict)
                 .map { aln, bed, ref, dict ->
                     record(
-                        id                        : aln.meta.id,
-                        meta                      : record(id: aln.meta.id, pl: aln.meta.pl, chunk: bed.chunk),
+                        id                        : aln.id,
+                        meta                      : record(pl: aln.meta.pl, chunk: bed.chunk),
                         input                     : aln.alignment,
                         input_index               : aln.index,
                         intervals                 : bed.chunk_bed,
@@ -203,7 +205,7 @@ workflow {
                         dbsnp_tbi                 : null,
                         // Per-sample GVCFs for joint genotyping. The .g suffix gives *.g.vcf.gz, which GATK expects for GVCFs
                         gatk4_haplotypecaller_args: '--emit-ref-confidence GVCF',
-                        output_prefix             : "${aln.meta.id}.${bed.chunk}.g"
+                        output_prefix             : "${aln.id}.${bed.chunk}.g"
                     )
                 }
         )
@@ -212,7 +214,7 @@ workflow {
         gvcfs_by_workspace = haplotypecaller
             .map { out ->
                 def callset = params.callset_prefix + '.' + out.meta.pl
-                tuple(record(id: callset + '.' + out.meta.chunk, callset: callset, chunk: out.meta.chunk), record(sample: out.meta.id, gvcf: out.vcf))
+                tuple(record(id: callset + '.' + out.meta.chunk, callset: callset, chunk: out.meta.chunk), record(sample: out.id, gvcf: out.vcf))
             }
             .groupBy()
             .map { workspace, gvcfs ->
@@ -231,7 +233,7 @@ workflow {
                 .map { chunk ->
                     record(
                         id                         : chunk.id,
-                        meta                       : record(id: chunk.id, group_id: chunk.callset, samples: chunk.samples, chunk: chunk.chunk, n_chunks: chunk.n_chunks),
+                        meta                       : record(group_id: chunk.callset, samples: chunk.samples, chunk: chunk.chunk, n_chunks: chunk.n_chunks),
                         vcf                        : chunk.gvcfs,
                         tbi                        : chunk.tbis,
                         interval_file              : chunk.chunk_bed,
@@ -256,13 +258,13 @@ workflow {
         // and drop --merge-contigs-into-num-partitions from GATK4_GENOMICSDBIMPORT, which needs whole contigs
         genotypegvcfs = GATK4_GENOTYPEGVCFS(
             genomicsdbimport
-                .map { out -> record(meta: out.meta, chunk: out.meta.chunk, genomicsdb: out.genomicsdb) }
+                .map { out -> record(id: out.id, meta: out.meta, chunk: out.meta.chunk, genomicsdb: out.genomicsdb) }
                 .join(bed_intervals, by: 'chunk')
                 .combine(reference)
                 .combine(params.dict)
                 .map { chunk, ref, dict ->
                     record(
-                        id                      : chunk.meta.id,
+                        id                      : chunk.id,
                         meta                    : chunk.meta,
                         input                   : chunk.genomicsdb,
                         gvcf_index              : null,
@@ -295,7 +297,7 @@ workflow {
             // sort files by chunk id (e.g. "chunk_00002") to preserve genomic order
             def sorted = calls.toSorted { a, b -> a.chunk <=> b.chunk }
             def id = "${sorted[0].meta.group_id}.${params.variant_caller}"
-            record(id: id, meta: record(id: id, samples: sorted[0].meta.samples), vcfs: sorted.collect { c -> c.vcf }.toList())
+            record(id: id, meta: record(samples: sorted[0].meta.samples), vcfs: sorted.collect { c -> c.vcf }.toList())
         }
     // The index files are only staged next to the VCFs, so they are grouped on their own to get a bag
     chunk_indexes = chunk_calls
@@ -307,11 +309,11 @@ workflow {
     to_concat = chunk_groups.filter { group -> group.vcfs.size() > 1 }
     skipped   = chunk_groups
         .filter { group -> group.vcfs.size() == 1 }
-        .map { group -> record(meta: group.meta, vcf: group.vcfs[0], index: group.tbi.toList()[0]) }
+        .map { group -> record(id: group.id, meta: group.meta, vcf: group.vcfs[0], index: group.tbi.toList()[0]) }
     concat = BCFTOOLS_CONCAT(
         to_concat.map { group ->
             record(
-                id                  : group.meta.id,
+                id                  : group.id,
                 meta                : group.meta,
                 vcfs                : group.vcfs,
                 tbi                 : group.tbi,
@@ -322,7 +324,7 @@ workflow {
     )
     // The concatenated VCFs with their indexes, for variant QC and publishing
     variant_calls = concat
-        .map { out -> record(meta: out.meta, vcf: out.vcf, index: out.index) }
+        .map { out -> record(id: out.id, meta: out.meta, vcf: out.vcf, index: out.index) }
         .mix(skipped)
 
     // CALL_VARIANTS:VARIANT_QC
@@ -365,8 +367,8 @@ output {
     variant_calls          : Channel<Record> {
         path { call ->
             // Named from the group meta, as a single-chunk call skips BCFTOOLS_CONCAT and keeps its chunk file name
-            call.vcf   >> "variant_calls/${call.meta.id}.vcf.gz"
-            call.index >> "variant_calls/${call.meta.id}.vcf.gz.${call.index.extension}"
+            call.vcf   >> "variant_calls/${call.id}.vcf.gz"
+            call.index >> "variant_calls/${call.id}.vcf.gz.${call.index.extension}"
         }
     }
     mpileup                : Channel<Record> { path 'mpileup' }
