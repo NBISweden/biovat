@@ -154,7 +154,7 @@ def sampleToRow(sample) {
         inputError("Sample '${sample.sample}', library '${sample.library_id}' has a BAM/CRAM but no single_end (true or false)")
     }
     def meta = [
-        id        : sample.sample,
+        sample    : sample.sample,
         library   : sample.library_id,
         flowcell  : sample.flowcell_id,
         lane      : sample.lane,
@@ -174,9 +174,9 @@ def readGroupMeta(meta) {
 // Add the read group information to the meta of a samplesheet row
 def buildSampleRow(meta, fastq_1, fastq_2, alignment) {
     // We define read_group separately as an intuitive/readable @RG-level file prefix
-    def read_group = "${meta.id}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
+    def read_group = "${meta.sample}.${meta.library}.${meta.flowcell}.${meta.lane}".toString()
     // GATK format @RG ID/PU written by the aligners/samtools, and expected by VALIDATE_READGROUP_HEADER
-    def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.id}_${meta.library}".toString()
+    def platform_unit = "${meta.flowcell}.${meta.lane}.${meta.sample}_${meta.library}".toString()
     def extra = alignment
         ? [ read_group:read_group, platform_unit:platform_unit, input_type:'bam_cram' ]
         : [ read_group:read_group, platform_unit:platform_unit, input_type:'fastq', single_end:!fastq_2 ]
@@ -203,7 +203,7 @@ def validationError(message) {
 //    so libraries are only compared within a platform
 def validateMergeGroups(rows) {
     rows
-        .groupBy { row -> [ row.meta.id, row.meta.library ] }
+        .groupBy { row -> [ row.meta.sample, row.meta.library ] }
         .each { key, group ->
             def (sample_id, library_id) = key
             def platforms = group.collect { row -> row.meta.pl }.unique()
@@ -212,7 +212,7 @@ def validateMergeGroups(rows) {
             }
         }
     // The read layout rules are shared with the merge stage
-    checkMergeLayouts(rows.collect { row -> [ id: row.meta.id, library: row.meta.library, pl: row.meta.pl, single_end: row.meta.single_end ] }, true)
+    checkMergeLayouts(rows.collect { row -> [ id: row.meta.sample, library: row.meta.library, pl: row.meta.pl, single_end: row.meta.single_end ] }, true)
 }
 
 // Read and validate the sample metadata sheet with nf-schema, returning one meta map per sample
@@ -236,13 +236,13 @@ def validateSampleMetadata(rows, metadata_rows, enable, options) {
     if ( !options.multiallelic_caller ) {
         validationError("Population grouping with '--sample_metadata' requires the multiallelic caller. Set '--enable_multiallelic_caller true' or remove '--sample_metadata'.")
     }
-    def samplesheet_samples = rows.collect { row -> row.meta.id }.unique()
-    def metadata_supplied   = metadata_rows.collect { meta -> meta.id }
+    def samplesheet_samples = rows.collect { row -> row.meta.sample }.unique()
+    def metadata_supplied   = metadata_rows.collect { meta -> meta.sample }
     def extra_samples       = metadata_supplied - samplesheet_samples
     if ( extra_samples ) {
         log.warn("--sample_metadata lists sample(s) with no short-read rows in --input, which will be ignored: ${extra_samples.join(', ')}")
     }
-    def missing_metadata    = samplesheet_samples - metadata_rows.findAll { meta -> meta.population }.collect { meta -> meta.id }
+    def missing_metadata    = samplesheet_samples - metadata_rows.findAll { meta -> meta.population }.collect { meta -> meta.sample }
     if ( missing_metadata ) {
         validationError("Variant calling with --sample_metadata groups samples into populations, which requires a 'population' for every sample. Missing for: ${missing_metadata.join(', ')}")
     }
@@ -296,7 +296,7 @@ def validateReferenceRequirements(rows, has_reference, enable) {
     }
     // A CRAM input row needs --fasta to decode (SAMTOOLS_SORT in INGEST_BAM_OR_CRAM)
     if ( !cram_rows.isEmpty() ) {
-        def cram_samples = cram_rows.collect { row -> row.meta.id }.unique()
+        def cram_samples = cram_rows.collect { row -> row.meta.sample }.unique()
         reasons.add("decoding CRAM input (sample(s): ${cram_samples.join(', ')})")
     }
     if ( rikerActive(enable, has_bam_cram_rows) ) {

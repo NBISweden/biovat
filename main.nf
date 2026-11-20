@@ -227,17 +227,17 @@ workflow {
     // Short read path: branch on whether preprocessing or BAM/CRAM ingestion is needed
     fastq_rows    = short_read_rows.filter { row -> row.meta.input_type == 'fastq' }
     bam_cram_rows = short_read_rows.filter { row -> row.meta.input_type == 'bam_cram' }
-    reads         = fastq_rows.map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), reads: row.files, single_end: row.meta.single_end) }
+    reads         = fastq_rows.map { row -> record(id: row.meta.sample, meta: readGroupMeta(row.meta), reads: row.files, single_end: row.meta.single_end) }
 
     // The populations of the samples in the run. --sample_metadata can list samples that are not in --input, and those
     // are left out. The rows of a samplesheet channel are only known once they have all arrived
     run_sample_metadata = short_read_rows
-        .map { row -> row.meta.id }
+        .map { row -> row.meta.sample }
         .collect()
         .flatMap { ids ->
             sample_metadata_rows
-                .findAll { meta -> meta.id in ids.toSet() }
-                .collect { meta -> record(sample: meta.id, population: meta.population) }
+                .findAll { meta -> meta.sample in ids.toSet() }
+                .collect { meta -> record(sample: meta.sample, population: meta.population) }
         }
 
     // Reference: the fasta and, if needed, its fai index. Stages take them as separate Value params
@@ -310,7 +310,7 @@ workflow {
     // We assume they are aligned, but enforce sorting/indexing to ensure compatibility
     ingest = INGEST_BAM_OR_CRAM(
         record(
-            bam_cram   : bam_cram_rows.map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), bam_cram: row.files[0], single_end: row.meta.single_end) },
+            bam_cram   : bam_cram_rows.map { row -> record(id: row.meta.sample, meta: readGroupMeta(row.meta), bam_cram: row.files[0], single_end: row.meta.single_end) },
             fasta      : fasta,
             fai        : fai,
             // validateReferenceRequirements has already required --fasta for the rows that need it, so without

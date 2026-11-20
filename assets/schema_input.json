@@ -13,7 +13,7 @@
                 "type": "string",
                 "pattern": "^[^\\s.]+$",
                 "errorMessage": "Sample name must be provided, cannot contain spaces or full stops",
-                "meta": ["id"]
+                "meta": ["sample"]
             },
             "library_id": {
                 "type": ["string", "integer"],

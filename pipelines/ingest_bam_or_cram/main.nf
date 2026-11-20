@@ -50,7 +50,7 @@ workflow {
             // Every row is checked, including the ones this stage skips
             .map { sample -> sampleToRow(sample) }
             .filter { row -> row.meta.input_type == 'bam_cram' }
-            .map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), bam_cram: row.files[0], single_end: row.meta.single_end) }
+            .map { row -> record(id: row.meta.sample, meta: readGroupMeta(row.meta), bam_cram: row.files[0], single_end: row.meta.single_end) }
     } else {
         bam_cram = params.bam_cram
     }
