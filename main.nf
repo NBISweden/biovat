@@ -13,20 +13,20 @@
 
 nextflow.enable.types = true
 
-include { PIPELINE_INITIALISATION    } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { PIPELINE_COMPLETION        } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { readSamplesheet            } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { readSampleMetadata         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { readGroupMeta                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { sampleToRow                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { validateSamplesheetRows    } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { validateReferenceGates     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { rikerActive                } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { isLongReadPlatform         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
-include { logRootCause               } from './subworkflows/local/utils_stage_help/main'
-include { REFERENCE_UTILS            } from './subworkflows/local/utils_reference/main'
-include { paramsSummaryMap           } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc       } from './subworkflows/nf-core/utils_nfcore_pipeline'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { readSamplesheet         } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { readSampleMetadata      } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { readGroupMeta           } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { sampleToRow             } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { validateSamplesheetRows } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { validateReferenceGates  } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { rikerActive             } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { isLongReadPlatform      } from './subworkflows/local/utils_nfcore_biovat_pipeline'
+include { logRootCause            } from './subworkflows/local/utils_stage_help/main'
+include { REFERENCE_UTILS         } from './subworkflows/local/utils_reference/main'
+include { paramsSummaryMap        } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc    } from './subworkflows/nf-core/utils_nfcore_pipeline'
 
 // Each analysis stage is a pipeline, composed here with regular dataflow logic
 include { workflow as READ_QC            } from './pipelines/read_qc'
@@ -56,68 +56,68 @@ record Sample {
 params {
 
     // Input options
-    input                       : String?              // path to the samplesheet, validated against assets/schema_input.json
-    samplesheet                 : Channel<Sample>?     // alternative to input for pipelines that include BioVAT
-    sample_metadata             : String?              // path to the sample metadata sheet, validated against assets/schema_sample_metadata.json
-    reference                   : Path?
+    input                      : String?              // path to the samplesheet, validated against assets/schema_input.json
+    samplesheet                : Channel<Sample>?     // alternative to input for pipelines that include BioVAT
+    sample_metadata            : String?              // path to the sample metadata sheet, validated against assets/schema_sample_metadata.json
+    reference                  : Path?
 
     // Workflow stage gating options
-    enable_raw_read_qc          : Boolean = true
-    enable_trim                 : Boolean = true
-    enable_align                : Boolean = true
-    enable_align_qc             : Boolean = true
-    enable_mark_duplicates      : Boolean = true
-    enable_variant_calling      : Boolean = true
-    enable_variant_qc           : Boolean = true
+    enable_raw_read_qc         : Boolean = true
+    enable_trim                : Boolean = true
+    enable_align               : Boolean = true
+    enable_align_qc            : Boolean = true
+    enable_mark_duplicates     : Boolean = true
+    enable_variant_calling     : Boolean = true
+    enable_variant_qc          : Boolean = true
 
     // Read trimming options
-    adapter_fasta               : Path?
-    enable_save_trimmed_fail    : Boolean = false
-    enable_save_merged          : Boolean = false
+    adapter_fasta              : Path?
+    enable_save_trimmed_fail   : Boolean = false
+    enable_save_merged         : Boolean = false
 
     // Alignment options
-    aligner                     : String = 'bwa-mem3'
-    enable_cram_format          : Boolean = false
+    aligner                    : String = 'bwa-mem3'
+    enable_cram_format         : Boolean = false
 
     // Alignment QC options
-    enable_riker                : Boolean = true
-    enable_qualimap             : Boolean = false
+    enable_riker               : Boolean = true
+    enable_qualimap            : Boolean = false
 
     // Duplicate marking options
-    duplicate_marker            : String = 'samtools'
-    enable_remove_duplicates    : Boolean = false
-    optical_distance            : Integer = 100
+    duplicate_marker           : String = 'samtools'
+    enable_remove_duplicates   : Boolean = false
+    optical_distance           : Integer = 100
 
     // Variant calling options
-    callset_prefix              : String = 'all_samples'
-    variant_caller              : String = 'bcftools_multisample'
-    chunk_size                  : Integer?
-    min_length                  : Integer = 1000
+    callset_prefix             : String = 'all_samples'
+    variant_caller             : String = 'bcftools_multisample'
+    chunk_size                 : Integer?
+    min_length                 : Integer = 1000
 
     // BCFtools multi-sample variant calling options
-    enable_save_mpileup         : Boolean = false
-    enable_baq                  : Boolean = false
-    enable_multiallelic_caller  : Boolean = true
-    enable_variants_only        : Boolean = true
-    bcftools_mpileup_extra      : String = ''
-    bcftools_call_extra         : String = ''
+    enable_save_mpileup        : Boolean = false
+    enable_baq                 : Boolean = false
+    enable_multiallelic_caller : Boolean = true
+    enable_variants_only       : Boolean = true
+    bcftools_mpileup_extra     : String = ''
+    bcftools_call_extra        : String = ''
 
     // MultiQC options
-    multiqc_config              : Path?
-    multiqc_title               : String?
-    multiqc_logo                : Path?
-    multiqc_methods_description : Path?
+    multiqc_config             : Path?
+    multiqc_title              : String?
+    multiqc_logo               : Path?
+    multiqc_methods_description: Path?
 
     // Boilerplate options
-    outdir                      : String?
-    monochrome_logs             : Boolean = false
-    help                        : Boolean = false
-    help_full                   : Boolean = false
-    show_hidden                 : Boolean = false
-    version                     : Boolean = false
+    outdir                     : String?
+    monochrome_logs            : Boolean = false
+    help                       : Boolean = false
+    help_full                  : Boolean = false
+    show_hidden                : Boolean = false
+    version                    : Boolean = false
 
     // Schema validation. Set to false when including BioVAT in another pipeline
-    validate_params             : Boolean = true
+    validate_params            : Boolean = true
 
 }
 
@@ -270,7 +270,7 @@ workflow {
     // Raw read quality checks
     raw_read_qc = channel.empty()
     if ( enable.raw_read_qc ) {
-        read_qc = READ_QC(record(reads: reads))
+        read_qc       = READ_QC(record(reads: reads))
         raw_read_qc   = read_qc.fastqc
         multiqc_files = multiqc_files.mix(read_qc.multiqc_files)
     }
@@ -412,21 +412,21 @@ workflow {
         )
         alignments_to_process = merge_sample.alignments.map { a -> record(id: a.id, meta: a.meta, alignment: a.alignment, index: a.index, single_end: a.single_end) }
         sample_alignments     = merge_sample.merged
-        sample_flagstat   = merge_sample.flagstat
-        sample_riker      = merge_sample.riker
-        sample_qualimap   = merge_sample.qualimap
-        multiqc_files     = multiqc_files.mix(merge_sample.multiqc_files)
+        sample_flagstat       = merge_sample.flagstat
+        sample_riker          = merge_sample.riker
+        sample_qualimap       = merge_sample.qualimap
+        multiqc_files         = multiqc_files.mix(merge_sample.multiqc_files)
     }
 
     // Variant calling
-    genome_chunks = channel.empty()
-    variant_calls = channel.empty()
-    mpileup       = channel.empty()
-    bcftools_stats                = channel.empty()
-    vcftools_tstv_counts          = channel.empty()
-    vcftools_tstv_qual            = channel.empty()
-    vcftools_filter_summary       = channel.empty()
-    vcftools_relatedness2         = channel.empty()
+    genome_chunks           = channel.empty()
+    variant_calls           = channel.empty()
+    mpileup                 = channel.empty()
+    bcftools_stats          = channel.empty()
+    vcftools_tstv_counts    = channel.empty()
+    vcftools_tstv_qual      = channel.empty()
+    vcftools_filter_summary = channel.empty()
+    vcftools_relatedness2   = channel.empty()
     if ( enable.variant_calling ) {
         call_variants = CALL_VARIANTS(
             record(
@@ -449,10 +449,10 @@ workflow {
                 variant_qc            : enable.variant_qc
             )
         )
-        genome_chunks = channel.empty().mix(call_variants.genome_chunks)
-        variant_calls = call_variants.variant_calls
-        mpileup       = call_variants.mpileup
-        multiqc_files = multiqc_files.mix(call_variants.multiqc_files)
+        genome_chunks           = channel.empty().mix(call_variants.genome_chunks)
+        variant_calls           = call_variants.variant_calls
+        mpileup                 = call_variants.mpileup
+        multiqc_files           = multiqc_files.mix(call_variants.multiqc_files)
         bcftools_stats          = call_variants.bcftools_stats
         vcftools_tstv_counts    = call_variants.vcftools_tstv_counts
         vcftools_tstv_qual      = call_variants.vcftools_tstv_qual
@@ -473,29 +473,29 @@ workflow {
     PIPELINE_COMPLETION(params.monochrome_logs)
 
     publish:
-    outputs_raw_read_qc              = raw_read_qc
-    outputs_input_flagstat           = ingest.flagstat
-    outputs_input_riker              = ingest.riker
-    outputs_input_qualimap           = ingest.qualimap
-    outputs_trim_reads               = trim_reads
-    outputs_read_group               = read_group_alignments
-    outputs_read_group_flagstat      = read_group_flagstat
-    outputs_read_group_riker         = read_group_riker
-    outputs_read_group_qualimap      = read_group_qualimap
-    outputs_library                  = library_alignments
-    outputs_library_flagstat         = library_flagstat
-    outputs_library_riker            = library_riker
-    outputs_library_qualimap         = library_qualimap
-    outputs_mark_duplicates          = mark_duplicates_alignments
-    outputs_mark_duplicates_metrics  = mark_duplicates_metrics
-    outputs_mark_duplicates_flagstat = mark_duplicates_flagstat
-    outputs_mark_duplicates_riker    = mark_duplicates_riker
-    outputs_mark_duplicates_qualimap = mark_duplicates_qualimap
-    outputs_sample                   = sample_alignments
-    outputs_sample_flagstat          = sample_flagstat
-    outputs_sample_riker             = sample_riker
-    outputs_sample_qualimap          = sample_qualimap
-    outputs_alignments               = alignments_to_process
+    outputs_raw_read_qc                           = raw_read_qc
+    outputs_input_flagstat                        = ingest.flagstat
+    outputs_input_riker                           = ingest.riker
+    outputs_input_qualimap                        = ingest.qualimap
+    outputs_trim_reads                            = trim_reads
+    outputs_read_group                            = read_group_alignments
+    outputs_read_group_flagstat                   = read_group_flagstat
+    outputs_read_group_riker                      = read_group_riker
+    outputs_read_group_qualimap                   = read_group_qualimap
+    outputs_library                               = library_alignments
+    outputs_library_flagstat                      = library_flagstat
+    outputs_library_riker                         = library_riker
+    outputs_library_qualimap                      = library_qualimap
+    outputs_mark_duplicates                       = mark_duplicates_alignments
+    outputs_mark_duplicates_metrics               = mark_duplicates_metrics
+    outputs_mark_duplicates_flagstat              = mark_duplicates_flagstat
+    outputs_mark_duplicates_riker                 = mark_duplicates_riker
+    outputs_mark_duplicates_qualimap              = mark_duplicates_qualimap
+    outputs_sample                                = sample_alignments
+    outputs_sample_flagstat                       = sample_flagstat
+    outputs_sample_riker                          = sample_riker
+    outputs_sample_qualimap                       = sample_qualimap
+    outputs_alignments                            = alignments_to_process
     outputs_genome_chunks                         = genome_chunks
     outputs_variant_calls                         = variant_calls
     outputs_mpileup                               = mpileup
@@ -504,8 +504,8 @@ workflow {
     outputs_call_variants_vcftools_tstv_qual      = vcftools_tstv_qual
     outputs_call_variants_vcftools_filter_summary = vcftools_filter_summary
     outputs_call_variants_vcftools_relatedness2   = vcftools_relatedness2
-    outputs_multiqc                  = multiqc.multiqc
-    outputs_versions                 = multiqc.versions
+    outputs_multiqc                               = multiqc.multiqc
+    outputs_versions                              = multiqc.versions
 
 }
 
