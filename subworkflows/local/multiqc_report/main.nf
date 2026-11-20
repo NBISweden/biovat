@@ -25,7 +25,7 @@ workflow MULTIQC_REPORT {
         .unique()
         .map { entry -> versionEntryToLine(entry) }
         .groupBy()
-        .map { process, tool_versions -> "${process}:\n${tool_versions.toSet().toList().toSorted().join('\n')}" }
+        .map { process, tool_versions -> "${process}:\n${tool_versions.toSet().toSorted().join('\n')}" }
         .mix(channel.of(workflowVersionToYAML()))
     versions = versions_strings.collectFile(name: 'biovat_software_mqc_versions.yml', sort: true, newLine: true)
 
