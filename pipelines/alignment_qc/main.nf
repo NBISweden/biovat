@@ -15,6 +15,9 @@ include { checkStageInput   } from '../../subworkflows/local/utils_stage_help/ma
 include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
 include { checkReferenceForInput      } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
+include { MULTIQC_REPORT        } from '../../subworkflows/local/multiqc_report/main'
+include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc   } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // A row of the alignments samplesheet (CSV)
 record AlignmentSample {
@@ -42,6 +45,11 @@ params {
     fai        : Value<Path>?              // fai index of the reference fasta, needed by Riker and to decode CRAM
     riker      : Boolean = true            // run Riker
     qualimap   : Boolean = false           // run Qualimap
+    stage_multiqc              : Boolean = true // run MultiQC on the files of this stage. A calling pipeline that runs MultiQC on the files of all its stages sets it to false. multiqc_files is emitted either way
+    multiqc_config             : Path?
+    multiqc_title              : String?
+    multiqc_logo               : Path?
+    multiqc_methods_description: Path?
     help       : Boolean = false
     help_full  : Boolean = false
 }
@@ -141,14 +149,34 @@ workflow {
         )
     }
 
-    publish:
-    flagstat      = flagstat.map { out -> record(id: out.id, meta: out.meta, flagstat: out.flagstat) }
-    riker         = riker_out // record(meta, <riker metric files>)
-    qualimap      = qualimap_out.map { out -> record(id: out.id, meta: out.meta, results: out.results) }
     multiqc_files = flagstat
         .map { out -> out.flagstat }
         .mix(riker_out.flatMap { out -> rikerFiles(out) })
         .mix(qualimap_out.map { out -> out.results })
+
+    // MultiQC and software versions of this stage
+    multiqc  = channel.empty()
+    versions = channel.empty()
+    if ( params.stage_multiqc ) {
+        report   = MULTIQC_REPORT(
+            multiqc_files,
+            params.multiqc_config,
+            params.multiqc_logo,
+            params.multiqc_title,
+            params.multiqc_methods_description,
+            paramsSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${moduleDir}/nextflow_schema.json"))
+        )
+        multiqc  = channel.empty().mix(report.multiqc)
+        versions = report.versions
+    }
+
+    publish:
+    flagstat      = flagstat.map { out -> record(id: out.id, meta: out.meta, flagstat: out.flagstat) }
+    riker         = riker_out // record(meta, <riker metric files>)
+    qualimap      = qualimap_out.map { out -> record(id: out.id, meta: out.meta, results: out.results) }
+    multiqc_files = multiqc_files
+    multiqc       = multiqc
+    versions      = versions
 
 }
 
@@ -156,7 +184,12 @@ output {
     flagstat     : Channel<Record> { path 'flagstat' }
     riker        : Channel<Record> { path 'riker' }
     qualimap     : Channel<Record> { path 'qualimap' }
-    multiqc_files: Channel<Path> { path 'multiqc_files' }
+    multiqc_files: Channel<Path> {
+        path 'multiqc_files'
+        enabled !params.stage_multiqc // published only when the stage report is off, for a MultiQC run of your own
+    }
+    multiqc      : Channel<Record> { path 'multiqc' }
+    versions     : Channel<Path> { path 'pipeline_info' }
 }
 
 def rikerFiles(riker: Record) {

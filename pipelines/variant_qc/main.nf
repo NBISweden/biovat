@@ -12,6 +12,9 @@ include { VCFTOOLS as VCFTOOLS_RELATEDNESS2 } from '../../modules/nf-core/vcftoo
 include { REFERENCE_VALUE                   } from '../../subworkflows/local/utils_reference/main'
 include { STAGE_HELP                        } from '../../subworkflows/local/utils_stage_help/main'
 include { checkStageInput                   } from '../../subworkflows/local/utils_stage_help/main'
+include { MULTIQC_REPORT        } from '../../subworkflows/local/multiqc_report/main'
+include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc   } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // A row of the variant calls samplesheet (CSV)
 record VariantCallSample {
@@ -32,6 +35,11 @@ params {
     variant_calls: Channel<VariantCall>?       // alternative to the samplesheet: variant calls with their meta record, from a YAML or JSON file or a calling pipeline
     fasta        : Value<Path>?          // reference fasta, used by bcftools stats
     level        : String?               // prefix of the output files, to tell apart calls from different stages (default: none)
+    stage_multiqc              : Boolean = true // run MultiQC on the files of this stage. A calling pipeline that runs MultiQC on the files of all its stages sets it to false. multiqc_files is emitted either way
+    multiqc_config             : Path?
+    multiqc_title              : String?
+    multiqc_logo               : Path?
+    multiqc_methods_description: Path?
     help         : Boolean = false
     help_full    : Boolean = false
 }
@@ -90,17 +98,37 @@ workflow {
         vcftools_calls.map { call -> vcftoolsInput(call, params.level, '--relatedness2') }
     )
 
+    multiqc_files = bcftools_stats.map { out -> out.stats }
+        .mix(vcftools_tstv_counts.map { out -> out.tstv_count })
+        .mix(vcftools_tstv_qual.map { out -> out.tstv_qual })
+        .mix(vcftools_filter_summary.map { out -> out.filter_summary })
+        .mix(vcftools_relatedness2.map { out -> out.relatedness2 })
+
+    // MultiQC and software versions of this stage
+    multiqc  = channel.empty()
+    versions = channel.empty()
+    if ( params.stage_multiqc ) {
+        report   = MULTIQC_REPORT(
+            multiqc_files,
+            params.multiqc_config,
+            params.multiqc_logo,
+            params.multiqc_title,
+            params.multiqc_methods_description,
+            paramsSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${moduleDir}/nextflow_schema.json"))
+        )
+        multiqc  = channel.empty().mix(report.multiqc)
+        versions = report.versions
+    }
+
     publish:
     bcftools_stats        = bcftools_stats.map { out -> record(meta: out.meta, stats: out.stats) }
     vcftools_tstv_counts  = vcftools_tstv_counts.map { out -> record(meta: out.meta, tstv_count: out.tstv_count) }
     vcftools_tstv_qual    = vcftools_tstv_qual.map { out -> record(meta: out.meta, tstv_qual: out.tstv_qual) }
     vcftools_filter_summary = vcftools_filter_summary.map { out -> record(meta: out.meta, filter_summary: out.filter_summary) }
     vcftools_relatedness2 = vcftools_relatedness2.map { out -> record(meta: out.meta, relatedness2: out.relatedness2) }
-    multiqc_files         = bcftools_stats.map { out -> out.stats }
-        .mix(vcftools_tstv_counts.map { out -> out.tstv_count })
-        .mix(vcftools_tstv_qual.map { out -> out.tstv_qual })
-        .mix(vcftools_filter_summary.map { out -> out.filter_summary })
-        .mix(vcftools_relatedness2.map { out -> out.relatedness2 })
+    multiqc_files           = multiqc_files
+    multiqc                 = multiqc
+    versions                = versions
 
 }
 
@@ -110,7 +138,12 @@ output {
     vcftools_tstv_qual     : Channel<Record> { path 'vcftools' }
     vcftools_filter_summary: Channel<Record> { path 'vcftools' }
     vcftools_relatedness2  : Channel<Record> { path 'vcftools' }
-    multiqc_files          : Channel<Path> { path 'multiqc_files' }
+    multiqc_files          : Channel<Path> {
+        path 'multiqc_files'
+        enabled !params.stage_multiqc // published only when the stage report is off, for a MultiQC run of your own
+    }
+    multiqc                : Channel<Record> { path 'multiqc' }
+    versions               : Channel<Path> { path 'pipeline_info' }
 }
 
 // Output file prefix: the callset id, behind the level when one is given

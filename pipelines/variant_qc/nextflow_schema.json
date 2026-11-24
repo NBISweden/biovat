@@ -36,6 +36,43 @@
                 }
             }
         },
+        "multiqc_options": {
+            "title": "MultiQC options",
+            "type": "object",
+            "fa_icon": "fas fa-chart-bar",
+            "description": "MultiQC report of this stage.",
+            "properties": {
+                "stage_multiqc": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run MultiQC on the files of this stage. A calling pipeline that runs MultiQC on the files of all its stages sets it to false; the files are emitted either way.",
+                    "fa_icon": "fas fa-chart-bar"
+                },
+                "multiqc_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Custom config file to supply to MultiQC.",
+                    "fa_icon": "fas fa-cog"
+                },
+                "multiqc_title": {
+                    "type": "string",
+                    "description": "MultiQC report title. Printed as page header, used for the filename if not otherwise specified.",
+                    "fa_icon": "fas fa-heading"
+                },
+                "multiqc_logo": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Custom logo file to supply to MultiQC.",
+                    "fa_icon": "fas fa-image"
+                },
+                "multiqc_methods_description": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Custom MultiQC yaml file containing HTML including a methods description.",
+                    "fa_icon": "fas fa-file-alt"
+                }
+            }
+        },
         "generic_options": {
             "title": "Generic options",
             "type": "object",
@@ -58,6 +95,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_options"
+        },
+        {
+            "$ref": "#/$defs/multiqc_options"
         },
         {
             "$ref": "#/$defs/generic_options"

@@ -270,7 +270,7 @@ workflow {
     // Raw read quality checks
     raw_read_qc = channel.empty()
     if ( enable.raw_read_qc ) {
-        read_qc = READ_QC(record(reads: reads))
+        read_qc = READ_QC(record(reads: reads, stage_multiqc: false)) // MultiQC runs once below, on the multiqc_files of all stages
         raw_read_qc   = read_qc.fastqc
         multiqc_files = multiqc_files.mix(read_qc.multiqc_files)
     }
@@ -280,6 +280,7 @@ workflow {
     if ( enable.trim ) {
         trim = TRIM_READS(
             record(
+                stage_multiqc: false, // MultiQC runs once below, on the multiqc_files of all stages
                 reads            : reads,
                 adapter_fasta    : params.adapter_fasta,
                 save_trimmed_fail: params.enable_save_trimmed_fail,
@@ -299,6 +300,7 @@ workflow {
     if ( enable.align ) {
         align = ALIGN_READS(
             record(
+                stage_multiqc: false, // MultiQC runs once below, on the multiqc_files of all stages
                 reads      : reads,
                 aligner    : params.aligner,
                 fasta      : fasta,
@@ -320,6 +322,7 @@ workflow {
     // We assume they are aligned, but enforce sorting/indexing to ensure compatibility
     ingest = INGEST_BAM_OR_CRAM(
         record(
+            stage_multiqc: false, // MultiQC runs once below, on the multiqc_files of all stages
             bam_cram   : bam_cram_rows.map { row -> record(id: row.meta.id, meta: readGroupMeta(row.meta), bam_cram: row.files[0], single_end: row.meta.single_end) },
             fasta      : fasta,
             fai        : fai,
@@ -344,6 +347,7 @@ workflow {
     if ( requires.merge_to_library ) {
         merge_library = MERGE_TO_LIBRARY(
             record(
+                stage_multiqc: false, // MultiQC runs once below, on the multiqc_files of all stages
                 alignments : alignments_to_process,
                 level      : 'library',
                 fasta      : fasta,
@@ -371,6 +375,7 @@ workflow {
     if ( enable.mark_duplicates ) {
         markdup = MARK_DUPLICATES(
             record(
+                stage_multiqc: false, // MultiQC runs once below, on the multiqc_files of all stages
                 alignments       : alignments_to_process,
                 duplicate_marker : params.duplicate_marker,
                 remove_duplicates: params.enable_remove_duplicates,
@@ -400,6 +405,7 @@ workflow {
     if ( requires.merge_to_sample ) {
         merge_sample = MERGE_TO_SAMPLE(
             record(
+                stage_multiqc: false, // MultiQC runs once below, on the multiqc_files of all stages
                 alignments : alignments_to_process,
                 level      : 'sample',
                 fasta      : fasta,
@@ -430,6 +436,7 @@ workflow {
     if ( enable.variant_calling ) {
         call_variants = CALL_VARIANTS(
             record(
+                stage_multiqc: false, // MultiQC runs once below, on the multiqc_files of all stages
                 alignments            : alignments_to_process,
                 sample_metadata       : run_sample_metadata,
                 variant_caller        : params.variant_caller,

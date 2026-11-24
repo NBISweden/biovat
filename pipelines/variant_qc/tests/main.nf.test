@@ -27,11 +27,41 @@ nextflow_pipeline {
         then {
             assert workflow.success
             assertAll(
-                { assert workflow.trace.succeeded().size() == 5 },
+                { assert workflow.trace.succeeded().size() == 6 }, // five QC tasks and MULTIQC
                 { assert snapshot(
                     workflow.trace.succeeded().size(),
                     getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
                 ).match() }
+            )
+        }
+    }
+
+    test("stage_multiqc false - multiqc_files hold the bcftools and vcftools files - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            new File("${launchDir}/callset.vcf.gz").text = ""
+            new File("${launchDir}/callset.vcf.gz.csi").text = ""
+            new File("${launchDir}/variant_calls.yml").text = "- {meta: {}, id: callset.bcftools_multisample, vcf: ${launchDir}/callset.vcf.gz, index: ${launchDir}/callset.vcf.gz.csi}\n"
+        }
+
+        when {
+            params {
+                variant_calls = "${launchDir}/variant_calls.yml"
+                fasta         = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                stage_multiqc = false
+            }
+        }
+
+        then {
+            assert workflow.success
+            def published = getAllFilesFromDir(outputDir, relative: true, includeDir: false)
+            assertAll(
+                // No MultiQC task, no report folder, and the files that MultiQC would read are published
+                { assert workflow.trace.succeeded().size() == 5 },
+                { assert published.every { name -> !name.startsWith("multiqc/") && !name.startsWith("pipeline_info/") } },
+                { assert snapshot(published.findAll { name -> name.startsWith("multiqc_files/") }).match() }
             )
         }
     }
@@ -56,7 +86,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
             assertAll(
-                { assert workflow.trace.succeeded().size() == 5 },
+                { assert workflow.trace.succeeded().size() == 6 }, // five QC tasks and MULTIQC
                 { assert snapshot(
                     workflow.trace.succeeded().size(),
                     getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),
@@ -86,7 +116,7 @@ nextflow_pipeline {
         then {
             assert workflow.success
             assertAll(
-                { assert workflow.trace.succeeded().size() == 5 },
+                { assert workflow.trace.succeeded().size() == 6 }, // five QC tasks and MULTIQC
                 { assert snapshot(
                     workflow.trace.succeeded().size(),
                     getAllFilesFromDir(outputDir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}']),

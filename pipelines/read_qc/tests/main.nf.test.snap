@@ -6,11 +6,13 @@
                 "fastqc/PUN-R-ELF.1.SRR9309791.1.zip",
                 "fastqc/PUN-R-JMC.1.SRR9309467.1.html",
                 "fastqc/PUN-R-JMC.1.SRR9309467.1.zip",
-                "multiqc_files/PUN-R-ELF.1.SRR9309791.1.zip",
-                "multiqc_files/PUN-R-JMC.1.SRR9309467.1.zip"
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info/biovat_software_mqc_versions.yml"
             ]
         ],
-        "timestamp": "2026-10-21T13:43:43.858612",
+        "timestamp": "2026-11-24T15:10:54.834064",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"
@@ -18,17 +20,19 @@
     },
     "two read groups - stub": {
         "content": [
-            2,
+            3,
             [
                 "fastqc/PUN-R-ELF.1.SRR9309791.1.html",
                 "fastqc/PUN-R-ELF.1.SRR9309791.1.zip",
                 "fastqc/PUN-R-JMC.1.SRR9309467.1.html",
                 "fastqc/PUN-R-JMC.1.SRR9309467.1.zip",
-                "multiqc_files/PUN-R-ELF.1.SRR9309791.1.zip",
-                "multiqc_files/PUN-R-JMC.1.SRR9309467.1.zip"
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info/biovat_software_mqc_versions.yml"
             ]
         ],
-        "timestamp": "2026-10-20T13:35:57.867591",
+        "timestamp": "2026-11-24T15:10:44.236268",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"

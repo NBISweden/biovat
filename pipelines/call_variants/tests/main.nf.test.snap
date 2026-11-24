@@ -1,7 +1,7 @@
 {
     "bcftools_multisample, population grouping - stub": {
         "content": [
-            13,
+            14,
             [
                 "bcftools_stats",
                 "bcftools_stats/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.bcftools_stats.txt",
@@ -12,18 +12,14 @@
                 "mpileup",
                 "mpileup/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.mpileup.bcf",
                 "mpileup/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.mpileup.bcf",
-                "multiqc_files",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.FILTER.summary",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.count",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.qual",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.relatedness2",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.FILTER.summary",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.TsTv.count",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.TsTv.qual",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2",
-                "multiqc_files/genome_chunking_mqc.tsv",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml",
                 "variant_calls",
                 "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz",
                 "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz.csi",
@@ -40,7 +36,7 @@
                 "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-30T10:30:53.429345334",
+        "timestamp": "2026-11-24T15:25:18.923998",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"
@@ -48,7 +44,7 @@
     },
     "gatk - stub": {
         "content": [
-            18,
+            19,
             [
                 "bcftools_stats",
                 "bcftools_stats/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.bcftools_stats.txt",
@@ -56,18 +52,14 @@
                 "genome_chunk_bed_files",
                 "genome_chunk_bed_files/chunk_00001.bed",
                 "genome_chunk_bed_files/excluded_regions.tsv",
-                "multiqc_files",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.FILTER.summary",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.TsTv.count",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.TsTv.qual",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.bcftools_stats.txt",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.relatedness2",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.FILTER.summary",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.TsTv.count",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.TsTv.qual",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.bcftools_stats.txt",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.relatedness2",
-                "multiqc_files/genome_chunking_mqc.tsv",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml",
                 "variant_calls",
                 "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.vcf.gz",
                 "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.gatk.vcf.gz.tbi",
@@ -84,7 +76,7 @@
                 "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.gatk.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-30T10:31:35.099347477",
+        "timestamp": "2026-11-24T15:25:34.853644",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"
@@ -92,7 +84,7 @@
     },
     "bcftools_multisample - stub": {
         "content": [
-            13,
+            14,
             [
                 "bcftools_stats",
                 "bcftools_stats/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.bcftools_stats.txt",
@@ -103,18 +95,14 @@
                 "mpileup",
                 "mpileup/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.mpileup.bcf",
                 "mpileup/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.mpileup.bcf",
-                "multiqc_files",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.FILTER.summary",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.count",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.qual",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.relatedness2",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.FILTER.summary",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.TsTv.count",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.TsTv.qual",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2",
-                "multiqc_files/genome_chunking_mqc.tsv",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml",
                 "variant_calls",
                 "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz",
                 "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz.csi",
@@ -131,7 +119,7 @@
                 "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-30T10:30:00.205666627",
+        "timestamp": "2026-11-24T15:24:48.182385",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"
@@ -139,7 +127,7 @@
     },
     "bcftools_multisample, from a CSV samplesheet - stub": {
         "content": [
-            13,
+            14,
             [
                 "bcftools_stats",
                 "bcftools_stats/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.bcftools_stats.txt",
@@ -150,18 +138,14 @@
                 "mpileup",
                 "mpileup/Diplacus_puniceus_red_yellow.ILLUMINA.chunk_00001.mpileup.bcf",
                 "mpileup/Diplacus_puniceus_red_yellow.IONTORRENT.chunk_00001.mpileup.bcf",
-                "multiqc_files",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.FILTER.summary",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.count",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.TsTv.qual",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.relatedness2",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.FILTER.summary",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.TsTv.count",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.TsTv.qual",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2",
-                "multiqc_files/genome_chunking_mqc.tsv",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml",
                 "variant_calls",
                 "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz",
                 "variant_calls/Diplacus_puniceus_red_yellow.ILLUMINA.bcftools_multisample.vcf.gz.csi",
@@ -178,7 +162,7 @@
                 "vcftools/Diplacus_puniceus_red_yellow.IONTORRENT.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-30T10:30:25.581601884",
+        "timestamp": "2026-11-24T15:25:04.541543",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"

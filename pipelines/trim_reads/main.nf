@@ -10,6 +10,9 @@ include { checkStageInput } from '../../subworkflows/local/utils_stage_help/main
 include { readGroupMeta             } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
 include { attachSingleEnd            } from '../../subworkflows/local/utils_stage_help/main'
 include { sampleToRow     } from '../../subworkflows/local/utils_nfcore_biovat_pipeline'
+include { MULTIQC_REPORT        } from '../../subworkflows/local/multiqc_report/main'
+include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc   } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // A row of the BioVAT samplesheet
 record Sample {
@@ -37,6 +40,11 @@ params {
     adapter_fasta    : Path?           // adapter fasta file, if provided
     save_trimmed_fail: Boolean = false // save files that failed to pass trimming thresholds
     save_merged      : Boolean = false // save all merged reads
+    stage_multiqc              : Boolean = true // run MultiQC on the files of this stage. A calling pipeline that runs MultiQC on the files of all its stages sets it to false. multiqc_files is emitted either way
+    multiqc_config             : Path?
+    multiqc_title              : String?
+    multiqc_logo               : Path?
+    multiqc_methods_description: Path?
     help             : Boolean = false
     help_full        : Boolean = false
 }
@@ -75,16 +83,41 @@ workflow {
         }
     )
 
+    multiqc_files = fastp.map { out -> out.json }
+
+    // MultiQC and software versions of this stage
+    multiqc  = channel.empty()
+    versions = channel.empty()
+    if ( params.stage_multiqc ) {
+        report   = MULTIQC_REPORT(
+            multiqc_files,
+            params.multiqc_config,
+            params.multiqc_logo,
+            params.multiqc_title,
+            params.multiqc_methods_description,
+            paramsSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${moduleDir}/nextflow_schema.json"))
+        )
+        multiqc  = channel.empty().mix(report.multiqc)
+        versions = report.versions
+    }
+
     publish:
     fastp         = fastp                                                                                                     // record(meta, reads, json, html, log, reads_fail, reads_merged)
     trimmed_reads = attachSingleEnd(fastp, reads)
         .map { j -> record(id: j.out.id, meta: j.out.meta, reads: j.out.reads.toList().toSorted { a, b -> a.name <=> b.name }, single_end: j.single_end) } // record(id, meta, reads, single_end)
-    multiqc_files = fastp.map { out -> out.json }
+    multiqc_files = multiqc_files
+    multiqc       = multiqc
+    versions      = versions
 
 }
 
 output {
     fastp        : Channel<Record> { path 'fastp' }
     trimmed_reads: Channel<Record> { path 'trimmed_reads' }
-    multiqc_files: Channel<Path> { path 'multiqc_files' }
+    multiqc_files: Channel<Path> {
+        path 'multiqc_files'
+        enabled !params.stage_multiqc // published only when the stage report is off, for a MultiQC run of your own
+    }
+    multiqc      : Channel<Record> { path 'multiqc' }
+    versions     : Channel<Path> { path 'pipeline_info' }
 }

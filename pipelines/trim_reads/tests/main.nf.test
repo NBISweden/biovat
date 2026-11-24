@@ -64,7 +64,7 @@ nextflow_pipeline {
             def published = getAllFilesFromDir(outputDir, relative: true, includeDir: false)
             assertAll(
                 // two fastq rows, one fastp task each. The bam row did not run
-                { assert workflow.trace.succeeded().size() == 2 },
+                { assert workflow.trace.succeeded().size() == 3 }, // two FASTP tasks and MULTIQC
                 { assert snapshot(workflow.trace.succeeded().size(), published).match() }
             )
         }

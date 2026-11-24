@@ -20,6 +20,9 @@ include { checkStageInput              } from '../../subworkflows/local/utils_st
 include { checkSampleFields           } from '../../subworkflows/local/utils_stage_help/main'
 include { checkNoRepeats             } from '../../subworkflows/local/utils_stage_help/main'
 include { stageError      } from '../../subworkflows/local/utils_stage_help/main'
+include { MULTIQC_REPORT        } from '../../subworkflows/local/multiqc_report/main'
+include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc   } from '../../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // A row of the alignments samplesheet (CSV)
 record AlignmentSample {
@@ -62,6 +65,11 @@ params {
     fasta                 : Value<Path>?            // reference fasta, required
     fai                   : Value<Path>?            // fai index of the reference fasta, required
     dict                  : Value<Path>?            // sequence dictionary of the reference fasta, required for gatk
+    stage_multiqc              : Boolean = true // run MultiQC on the files of this stage. A calling pipeline that runs MultiQC on the files of all its stages sets it to false. multiqc_files is emitted either way
+    multiqc_config             : Path?
+    multiqc_title              : String?
+    multiqc_logo               : Path?
+    multiqc_methods_description: Path?
     help                  : Boolean = false
     help_full             : Boolean = false
 }
@@ -364,6 +372,7 @@ workflow {
     if ( params.variant_qc ) {
         variant_qc = VARIANT_QC(
             record(
+                stage_multiqc: false,
                 variant_calls: variant_calls,
                 fasta        : params.fasta
             )
@@ -376,6 +385,24 @@ workflow {
         qc_multiqc_files        = variant_qc.multiqc_files
     }
 
+    multiqc_files = splitgenome.map { out -> out.summary }.mix(qc_multiqc_files)
+
+    // MultiQC and software versions of this stage
+    multiqc  = channel.empty()
+    versions = channel.empty()
+    if ( params.stage_multiqc ) {
+        report   = MULTIQC_REPORT(
+            multiqc_files,
+            params.multiqc_config,
+            params.multiqc_logo,
+            params.multiqc_title,
+            params.multiqc_methods_description,
+            paramsSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${moduleDir}/nextflow_schema.json"))
+        )
+        multiqc  = channel.empty().mix(report.multiqc)
+        versions = report.versions
+    }
+
     publish:
     genome_chunks           = splitgenome.map { out -> record(meta: out.meta, chunks: out.chunks, excluded: out.excluded) } // record(meta, chunks, excluded)
     variant_calls           = variant_calls                                                                                  // record(meta, vcf, index)
@@ -385,7 +412,9 @@ workflow {
     vcftools_tstv_qual      = vcftools_tstv_qual
     vcftools_filter_summary = vcftools_filter_summary
     vcftools_relatedness2   = vcftools_relatedness2
-    multiqc_files           = splitgenome.map { out -> out.summary }.mix(qc_multiqc_files)
+    multiqc_files           = multiqc_files
+    multiqc               = multiqc
+    versions               = versions
 
 }
 
@@ -404,7 +433,12 @@ output {
     vcftools_tstv_qual     : Channel<Record> { path 'vcftools' }
     vcftools_filter_summary: Channel<Record> { path 'vcftools' }
     vcftools_relatedness2  : Channel<Record> { path 'vcftools' }
-    multiqc_files          : Channel<Path> { path 'multiqc_files' }
+    multiqc_files          : Channel<Path> {
+        path 'multiqc_files'
+        enabled !params.stage_multiqc // published only when the stage report is off, for a MultiQC run of your own
+    }
+    multiqc                : Channel<Record> { path 'multiqc' }
+    versions               : Channel<Path> { path 'pipeline_info' }
 }
 
 // Warn when the contigs left out by min_length cover more than 5% of the reference

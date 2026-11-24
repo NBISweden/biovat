@@ -1,16 +1,18 @@
 {
     "one callset - stub": {
         "content": [
-            5,
+            6,
             [
                 "bcftools_stats",
                 "bcftools_stats/callset.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files",
-                "multiqc_files/callset.bcftools_multisample.FILTER.summary",
-                "multiqc_files/callset.bcftools_multisample.TsTv.count",
-                "multiqc_files/callset.bcftools_multisample.TsTv.qual",
-                "multiqc_files/callset.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/callset.bcftools_multisample.relatedness2",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml",
                 "vcftools",
                 "vcftools/callset.bcftools_multisample.FILTER.summary",
                 "vcftools/callset.bcftools_multisample.TsTv.count",
@@ -18,7 +20,7 @@
                 "vcftools/callset.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-20T15:03:18.807844",
+        "timestamp": "2026-11-24T20:01:42.433783",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"
@@ -26,16 +28,18 @@
     },
     "--level prefixes the output files - stub": {
         "content": [
-            5,
+            6,
             [
                 "bcftools_stats",
                 "bcftools_stats/joint_callset.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files",
-                "multiqc_files/joint_callset.bcftools_multisample.FILTER.summary",
-                "multiqc_files/joint_callset.bcftools_multisample.TsTv.count",
-                "multiqc_files/joint_callset.bcftools_multisample.TsTv.qual",
-                "multiqc_files/joint_callset.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/joint_callset.bcftools_multisample.relatedness2",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml",
                 "vcftools",
                 "vcftools/joint_callset.bcftools_multisample.FILTER.summary",
                 "vcftools/joint_callset.bcftools_multisample.TsTv.count",
@@ -43,7 +47,7 @@
                 "vcftools/joint_callset.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-27T13:15:43.746108",
+        "timestamp": "2026-11-24T20:02:02.04509",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"
@@ -51,16 +55,18 @@
     },
     "one callset, from a CSV samplesheet - stub": {
         "content": [
-            5,
+            6,
             [
                 "bcftools_stats",
                 "bcftools_stats/callset.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files",
-                "multiqc_files/callset.bcftools_multisample.FILTER.summary",
-                "multiqc_files/callset.bcftools_multisample.TsTv.count",
-                "multiqc_files/callset.bcftools_multisample.TsTv.qual",
-                "multiqc_files/callset.bcftools_multisample.bcftools_stats.txt",
-                "multiqc_files/callset.bcftools_multisample.relatedness2",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/biovat_software_mqc_versions.yml",
                 "vcftools",
                 "vcftools/callset.bcftools_multisample.FILTER.summary",
                 "vcftools/callset.bcftools_multisample.TsTv.count",
@@ -68,7 +74,23 @@
                 "vcftools/callset.bcftools_multisample.relatedness2"
             ]
         ],
-        "timestamp": "2026-10-21T13:53:39.529388",
+        "timestamp": "2026-11-24T20:01:55.006701",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.0"
+        }
+    },
+    "stage_multiqc false - multiqc_files hold the bcftools and vcftools files - stub": {
+        "content": [
+            [
+                "multiqc_files/callset.bcftools_multisample.FILTER.summary",
+                "multiqc_files/callset.bcftools_multisample.TsTv.count",
+                "multiqc_files/callset.bcftools_multisample.TsTv.qual",
+                "multiqc_files/callset.bcftools_multisample.bcftools_stats.txt",
+                "multiqc_files/callset.bcftools_multisample.relatedness2"
+            ]
+        ],
+        "timestamp": "2026-11-24T20:01:48.404357",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.0"

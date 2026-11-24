@@ -230,15 +230,33 @@ workflow {
         reads.map { r -> record(id: r.id, meta: r.meta, reads: r.reads, fastqc_args: '--quiet', output_prefix: r.meta.read_group) }
     )
 
+    multiqc_files = fastqc.flatMap { out -> out.zip.toList() }
+
+    // MultiQC of this stage. A calling pipeline that runs MultiQC on the files of all its stages sets stage_multiqc to false
+    multiqc  = channel.empty()
+    versions = channel.empty()
+    if ( params.stage_multiqc ) {
+        report   = MULTIQC_REPORT(multiqc_files, params.multiqc_config, params.multiqc_logo, params.multiqc_title, params.multiqc_methods_description, paramsSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${moduleDir}/nextflow_schema.json")))
+        multiqc  = channel.empty().mix(report.multiqc)
+        versions = report.versions
+    }
+
     publish:
     fastqc        = fastqc                                         // record(meta, html, zip)
-    multiqc_files = fastqc.flatMap { out -> out.zip.toList() }
+    multiqc_files = multiqc_files
+    multiqc       = multiqc                                        // record(meta, report, data, plots)
+    versions      = versions
 
 }
 
 output {
     fastqc       : Channel<Record> { path 'fastqc' }
-    multiqc_files: Channel<Path> { path 'multiqc_files' }
+    multiqc_files: Channel<Path> {
+        path 'multiqc_files'
+        enabled !params.stage_multiqc // published only when the stage report is off, for a MultiQC run of your own
+    }
+    multiqc      : Channel<Record> { path 'multiqc' }
+    versions     : Channel<Path> { path 'pipeline_info' }
 }
 ```
 
@@ -466,5 +484,5 @@ Outputs are the same as before for the test profile. The differences are:
 2. Add `nextflow.config` (include `conf/stage.config`), a hand-written `nextflow_schema.json`, and `tests/main.nf.test` with a stub test.
 3. Pass tool arguments and prefixes to the processes in record fields.
 4. Add the include and the call to `main.nf`, behind a gate. Give a second call of the same stage its own alias.
-5. Mix the stage's `multiqc_files` into the MultiQC input.
+5. Call `MULTIQC_REPORT` in the stage behind `params.stage_multiqc`, and mix the stage's `multiqc_files` into the MultiQC input of `main.nf`. Pass `stage_multiqc: false` in the record of the call in `main.nf`, and in the calls of `alignment_qc` and `variant_qc` inside a stage. The param only switches off the report of the stage; the files still reach the caller in `multiqc_files`.
 6. Add the stage outputs to the `publish:` section and the `output` block of `main.nf`.
