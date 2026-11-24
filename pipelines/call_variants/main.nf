@@ -80,6 +80,9 @@ workflow {
     if ( params.variant_caller == 'gatk' && !params.dict ) {
         error "--variant_caller gatk requires --dict"
     }
+    if ( params.sample_metadata && !params.group_samples ) {
+        log.warn "--sample_metadata is ignored without --group_samples"
+    }
     if ( params.group_samples && !params.sample_metadata ) {
         error "--group_samples requires --sample_metadata"
     }

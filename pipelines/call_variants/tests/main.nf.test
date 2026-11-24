@@ -588,6 +588,32 @@ nextflow_pipeline {
         }
     }
 
+    test("--sample_metadata without --group_samples warns and is ignored - stub") {
+
+        options "-stub -output-dir ${outputDir}"
+
+        setup {
+            setupFiles(launchDir)
+        }
+
+        when {
+            params {
+                alignments      = "${launchDir}/alignments.yml"
+                sample_metadata = "${launchDir}/sample_metadata.csv"
+                variant_caller  = "gatk"
+                dict            = "${launchDir}/M_aurantiacus_v1_splitline_ordered.dict"
+                fasta           = "${projectDir}/tests/data/monkeyflower/M_aurantiacus_v1_splitline_ordered.fasta"
+                fai             = "${launchDir}/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+            }
+        }
+
+        then {
+            assert workflow.success
+            // log.warn reaches nextflow.log, not the captured stdout
+            assert file("${launchDir}/meta/nextflow.log").text.contains("--sample_metadata is ignored without --group_samples")
+        }
+    }
+
     test("--help") {
 
         when {
