@@ -8,7 +8,8 @@ include { schemaProperties } from './schema_params'
 
 // Every parameter of a stage is the same parameter of the root pipeline, as --x or --enable_x: same type, default,
 // choices and limits. stage_only lists the parameters that the root pipeline has no counterpart for, such as the
-// channel inputs of a stage. A boolean that is false by default has no default in the schema
+// channel inputs of a stage. A boolean that is false by default has no default in the schema. The keys that make
+// nf-schema check a file (exists, mimetype, schema) are not compared: a stage schema only prints the help
 def rootStageDiff(root_json, stage_json, stage_only) {
     def root = schemaProperties(new File(root_json).text)
     def stage = schemaProperties(new File(stage_json).text)

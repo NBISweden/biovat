@@ -99,6 +99,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Dependencies`
 
-- Nextflow >=26.10.6 (pipeline composition; earlier 26.10 releases do not resume typed records reliably); CI tests 26.10.6
+- Nextflow >=26.10.6 (pipeline composition; 26.10.4 fixes the task hash of records returned by typed functions (nextflow-io/nextflow#7887) and 26.10.6 fixes resume for enums declared in script modules (nextflow-io/nextflow#8049)); CI tests 26.10.6
 - updated nf-core to 4.1.0
 - Updated the pixi lock file to v7
